@@ -480,6 +480,7 @@ After behavioral proof, test Sidecar Lite as a packaging experiment. That sequen
 | D-023 | Use AkuBrowser as the primary product brand; do not use Signal as the product brand | Confirmed |
 | D-024 | Implement bounded scrolling natively in AkuBridge source adapters and use Computer Use only as an explicit fallback | Confirmed after Gate 0A pilot |
 | D-025 | Keep browser acquisition independent of ReasoningProvider so a future open-source provider does not require proprietary Computer Use | Confirmed |
+| D-026 | Preserve provenance lanes explicitly as native post, canonical source page, or external reference; never label one lane as another | Confirmed after LinkedIn Gate 0A pilot |
 
 ## 16. Change Discipline
 

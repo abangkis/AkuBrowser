@@ -38,3 +38,6 @@ The token is generated and persisted by AkuSidecar. All bridge command endpoints
 - No source tab is silently opened when `openIfMissing` is false.
 - A Gate 0A run performs zero bridge-directed scrolls.
 - Browser observations are untrusted evidence and every promoted item must retain a URL present in that observation.
+- `block.permalink` is an exact native post URL or `null`; it must not fall back to the feed URL.
+- `observation.pageUrl` is the canonical source page and descendant `block.links` are external or contextual references.
+- Every result item declares `sourceUrlKind` as `native_post`, `source_page`, or `external_reference`; external references must never be labeled as native posts.
