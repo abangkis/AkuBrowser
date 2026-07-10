@@ -1,0 +1,20 @@
+{
+  "name": "@aku-browser/integration",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "AkuBrowser architecture, canonical contracts, and cross-repository development orchestration",
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "start": "npm --prefix ../AkuSidecar run start",
+    "dev": "npm --prefix ../AkuSidecar run dev",
+    "check": "npm run check:contracts && npm run check:bridge && npm run check:sidecar",
+    "check:contracts": "node scripts/check-contract-sync.mjs",
+    "check:bridge": "npm --prefix ../AkuBridge run check",
+    "check:sidecar": "npm --prefix ../AkuSidecar run check",
+    "smoke:http": "npm --prefix ../AkuSidecar run smoke:http",
+    "smoke:codex": "npm --prefix ../AkuSidecar run smoke:codex"
+  }
+}
