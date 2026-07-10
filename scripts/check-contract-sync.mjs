@@ -15,8 +15,13 @@ assert.deepEqual(sidecarSchema, canonicalSchema, "AkuSidecar reasoning schema dr
 const bridgeService = readText(path.join(bridgeRoot, "service-worker.js"));
 const bridgeTab = readText(path.join(bridgeRoot, "aku-browser-tab-bridge.js"));
 const bridgeContent = readText(path.join(bridgeRoot, "content-script.js"));
+const bridgeCapturePolicy = readText(path.join(bridgeRoot, "bounded-capture-policy.js"));
 const sidecarHttp = readText(path.join(sidecarRoot, "src", "http", "app.mjs"));
 const sidecarUi = readText(path.join(sidecarRoot, "public", "app.js"));
+const sidecarContracts = readText(path.join(sidecarRoot, "src", "core", "contracts.mjs"));
+const sidecarBrowserAdapter = readText(
+  path.join(sidecarRoot, "src", "browser", "browser-adapter-contract.mjs"),
+);
 
 for (const value of [
   "aku-browser.bridge.v1",
@@ -40,6 +45,23 @@ for (const value of [
 
 assert.match(bridgeService, /AKU_BROWSER_COLLECT_VISIBLE/);
 assert.match(bridgeContent, /AKU_BROWSER_COLLECT_VISIBLE/);
+for (const value of [
+  "browserAdapter",
+  "requestedScrolls",
+  "performedScrolls",
+  "scrollStopReason",
+  "scrollContainer",
+  "pendingNewContent",
+  "pendingNewContentAction",
+  "restoreAttempted",
+  "restored",
+  "feedPosition",
+]) {
+  assert.match(bridgeContent, new RegExp(escapeRegExp(value)));
+  assert.match(sidecarContracts, new RegExp(escapeRegExp(value)));
+}
+assert.match(bridgeCapturePolicy, /maxScrolls: 2/);
+assert.match(sidecarBrowserAdapter, /NATIVE_BROWSER_ADAPTER = "aku-bridge"/);
 console.log("AkuBrowser cross-repository contracts are synchronized.");
 
 function readJson(file) {

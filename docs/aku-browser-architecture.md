@@ -152,6 +152,17 @@ This isolates transport, authenticated browser-state access, provider invocation
 
 Gate 0B, only after Gate 0A passes, introduces the target `ReasoningProvider -> BrowserAdapter` tool loop for bounded navigation and scrolling. Scrolling is implemented by AkuBridge source adapters first, with Computer Use reserved for observable failure recovery. The full logical architecture in Section 5 remains the target rather than a claim about the first slice.
 
+### 6.2 Gate 0B implementation sequence
+
+Gate 0B is split into two evidence gates so browser movement is proven independently from model judgment:
+
+1. **Gate 0B.1 — native bounded acquisition.** AkuSidecar issues a deterministic capture plan and AkuBridge performs `capture -> scroll -> capture -> restore` inside the source adapter. The plan has fixed budgets for scroll count, scroll distance, elapsed time, snapshots, and blocks. Coverage reports requested versus performed scrolls, stop reason, adapter identity, fallback use, and whether the original position was restored.
+2. **Gate 0B.2 — provider-directed acquisition.** After native movement is proven reliable on X and LinkedIn, the same operations are exposed as provider-neutral `BrowserAdapter` tools. A `ReasoningProvider` may decide whether another bounded observation is warranted, but deterministic policy in the JobEngine remains the authority for budgets and allowed actions.
+
+Gate 0B.1 does not silently become an infinite feed reader: the initial experiment permits at most two native scrolls, three snapshots, one promoted result, and 45 seconds of browser acquisition. A failed native adapter may later request an explicit Computer Use fallback, but that fallback must require policy approval and appear in coverage.
+
+Source adapters also detect platform-owned fresh-content signals such as LinkedIn's `New posts` banner or X's `Show posts` control. Gate 0B.1 records the signal in coverage but does not activate it. Revealing pending content is a distinct read-only navigation action because it can replace or reorder the rendered feed and may prevent an exact semantic restoration of the user's prior view. Gate 0B.2 must make that action explicit and auditable; the preferred future experiment is a dedicated background working tab so the user's source tab is not unexpectedly rewritten.
+
 ## 7. Initial Interaction Modes
 
 ### 7.1 Catch Up — initial mode
@@ -175,6 +186,23 @@ Focused monitoring of a named event such as an earthquake, unrest, a product lau
 ### 7.5 Explore — future
 
 Controlled discovery outside the user's primary topics, governed by an explicit discovery budget.
+
+### 7.6 Behavioral personalization — future
+
+Explicit session intent remains the highest-authority signal, but it should not be the only personalization input forever. AkuBrowser may build a local, inspectable preference model from repeated user behavior such as Useful, Correct lane, Wrong lane, Duplicate, source opening, dismissal, and recurring topic choices.
+
+The platform feed itself is also a useful upstream prior. X and LinkedIn already order content using behavior learned within their own products; AkuBrowser can benefit from the presented ordering without scraping private platform profiles or pretending that platform rank equals user value. The source algorithm answers "what this platform predicts may engage the user," while AkuBrowser must still answer "what materially advances this user's current intent and knowledge frontier."
+
+Behavioral signals must therefore obey these constraints:
+
+- explicit user intent and safety policy override inferred preference;
+- inferred preferences are stored separately from explicit rules and can be inspected, corrected, reset, or disabled;
+- negative feedback and deliberate exploration budgets prevent a self-reinforcing filter bubble;
+- platform ordering is recorded as contextual evidence, not ground truth;
+- passive behavior is not treated as consent for account-changing actions or broader data collection; and
+- personalization changes ranking, not provenance or evidence requirements.
+
+The initial Gate 0 data model preserves explicit feedback, run history, and observed feed position, but no implicit behavioral preference is applied to ranking until the pilot has enough representative interactions to evaluate it.
 
 ## 8. Priority Lanes
 
@@ -481,6 +509,9 @@ After behavioral proof, test Sidecar Lite as a packaging experiment. That sequen
 | D-024 | Implement bounded scrolling natively in AkuBridge source adapters and use Computer Use only as an explicit fallback | Confirmed after Gate 0A pilot |
 | D-025 | Keep browser acquisition independent of ReasoningProvider so a future open-source provider does not require proprietary Computer Use | Confirmed |
 | D-026 | Preserve provenance lanes explicitly as native post, canonical source page, or external reference; never label one lane as another | Confirmed after LinkedIn Gate 0A pilot |
+| D-027 | Evolve ranking from explicit intent toward an inspectable behavioral preference model while treating each platform's feed order only as an upstream prior | Confirmed as future direction; implementation deferred until pilot evidence exists |
+| D-028 | Split Gate 0B into native bounded acquisition first and provider-directed acquisition only after scroll and restoration behavior pass live testing | Confirmed |
+| D-029 | Detect platform fresh-content banners in Gate 0B.1, but defer activation to an explicit auditable BrowserAdapter action that does not silently rewrite the user's feed view | Confirmed after LinkedIn live test |
 
 ## 16. Change Discipline
 
