@@ -85,3 +85,16 @@ The capture command may explicitly add:
 When and only when that policy is present, AkuBridge may invoke one visible allowlisted control whose normalized label matches LinkedIn `New post(s)`/`Show new post(s)` or X `New post(s)`/`Show [N] post(s)`. It performs at most one activation attempt. It does not click arbitrary page controls and it still cannot like, reply, follow, message, or post.
 
 Hiding or removing the platform signal is not sufficient proof because LinkedIn can temporarily empty the feed while loading. If activation does not produce a non-empty visible-feed fingerprint different from the pre-action fingerprint within the deadline, browser capture fails rather than classifying stale or loading-state content. After a successful reveal, AkuBridge sets the latest feed to the top, records `pendingNewContentAction: activated`, `pendingContentActivationEvidence: feed_fingerprint_changed`, `feedMutation: true`, `sameTabMutation: true`, and `restorationScope: post_reveal_start`, then runs the normal bounded scroll plan. `preActionScrollY` retains the former position; `originalScrollY` and `finalScrollY` describe the post-reveal capture baseline. If no signal is detected, the action remains `not_detected` and restoration scope remains `pre_run_position`.
+
+## Gate 0B.3 provider-directed follow-up behavior
+
+After round one, the ReasoningProvider may return only `finish` or `request_follow_up` under `acquisition-plan.schema.json`. JobEngine remains the authority for every browser parameter. A permitted follow-up has these fixed properties:
+
+- `acquisitionRound: 2` with `maxAcquisitionRounds: 2`;
+- exactly one requested scroll;
+- the same run source and already-open source tab;
+- `pendingContentPolicy: "detect_only"` and `sameTabMutationAllowed: false`;
+- a continuation containing the final round-one `startScrollY` and at most three permalink-or-text anchor keys; and
+- no URL selection, navigation, arbitrary click, Computer Use fallback, or third acquisition round.
+
+AkuBridge positions the same tab at the supplied frontier, captures before moving, and must observe at least one exact anchor key in that first follow-up snapshot. Failure to match the frontier fails browser capture. A successful observation reports `acquisitionRound`, `continuationRequested`, `continuationAnchorMatched`, and `captureStartScrollY`, then restores the tab to its pre-follow-up position. AkuSidecar validates those fields against the issued command, persists both observations, deduplicates their evidence, and exposes whether the provider requested and executed the follow-up in final coverage.

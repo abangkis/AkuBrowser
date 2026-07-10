@@ -11,6 +11,17 @@ const sidecarRoot = path.join(workspaceRoot, "AkuSidecar");
 const canonicalSchema = readJson(path.join(projectRoot, "contracts", "reasoning-result.schema.json"));
 const sidecarSchema = readJson(path.join(sidecarRoot, "schemas", "reasoning-result.schema.json"));
 assert.deepEqual(sidecarSchema, canonicalSchema, "AkuSidecar reasoning schema drifted from AkuBrowser");
+const canonicalAcquisitionPlanSchema = readJson(
+  path.join(projectRoot, "contracts", "acquisition-plan.schema.json"),
+);
+const sidecarAcquisitionPlanSchema = readJson(
+  path.join(sidecarRoot, "schemas", "acquisition-plan.schema.json"),
+);
+assert.deepEqual(
+  sidecarAcquisitionPlanSchema,
+  canonicalAcquisitionPlanSchema,
+  "AkuSidecar acquisition-plan schema drifted from AkuBrowser",
+);
 
 const bridgeService = readText(path.join(bridgeRoot, "service-worker.js"));
 const bridgeTab = readText(path.join(bridgeRoot, "aku-browser-tab-bridge.js"));
@@ -61,14 +72,24 @@ for (const value of [
   "restoreAttempted",
   "restored",
   "feedPosition",
+  "acquisitionRound",
+  "continuationRequested",
+  "continuationAnchorMatched",
+  "captureStartScrollY",
 ]) {
   assert.match(bridgeContent, new RegExp(escapeRegExp(value)));
   assert.match(sidecarContracts, new RegExp(escapeRegExp(value)));
 }
 assert.match(bridgeCapturePolicy, /maxScrolls: 2/);
 assert.match(bridgeCapturePolicy, /sameTabMutationAllowed/);
+assert.match(bridgeCapturePolicy, /acquisitionRound/);
+assert.match(bridgeCapturePolicy, /continuation/);
 assert.match(sidecarBrowserAdapter, /NATIVE_BROWSER_ADAPTER = "aku-bridge"/);
-assert.match(sidecarBrowserAdapter, /pendingContentPolicy: "reveal_if_present"/);
+assert.match(
+  sidecarBrowserAdapter,
+  /pendingContentPolicy: revealPendingContent \? "reveal_if_present" : "detect_only"/,
+);
+assert.match(sidecarBrowserAdapter, /buildObservationContinuation/);
 console.log("AkuBrowser cross-repository contracts are synchronized.");
 
 function readJson(file) {
