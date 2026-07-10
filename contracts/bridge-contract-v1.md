@@ -72,3 +72,16 @@ Coverage adds these auditable fields:
 These fields are additive to `aku-browser.bridge.v1`. An observation that omits them remains a valid Gate 0A fixture, while a Gate 0B run must surface them through the final coverage object. Computer Use is not an implicit execution path; any future fallback must be separately approved and reported with `fallbackUsed: true`.
 
 Gate 0B.1 recognizes a visible platform signal such as `New posts` or `Show posts` and reports `pendingNewContentAction: not_activated`. It must not click that control. `not_detected` is reported when no signal is present. Future activation requires a separate BrowserAdapter command because it changes the rendered stream and has different restoration semantics from scrolling.
+
+## Gate 0B.2 same-tab reveal behavior
+
+The capture command may explicitly add:
+
+- `pendingContentPolicy: "reveal_if_present"`;
+- `sameTabMutationAllowed: true`;
+- `pendingContentTimeoutMs`, currently capped at `5000`; and
+- `pendingContentSettleMs`, currently capped at `2000`.
+
+When and only when that policy is present, AkuBridge may invoke one visible allowlisted control whose normalized label matches LinkedIn `New post(s)`/`Show new post(s)` or X `New post(s)`/`Show [N] post(s)`. It performs at most one activation attempt. It does not click arbitrary page controls and it still cannot like, reply, follow, message, or post.
+
+Hiding or removing the platform signal is not sufficient proof because LinkedIn can temporarily empty the feed while loading. If activation does not produce a non-empty visible-feed fingerprint different from the pre-action fingerprint within the deadline, browser capture fails rather than classifying stale or loading-state content. After a successful reveal, AkuBridge sets the latest feed to the top, records `pendingNewContentAction: activated`, `pendingContentActivationEvidence: feed_fingerprint_changed`, `feedMutation: true`, `sameTabMutation: true`, and `restorationScope: post_reveal_start`, then runs the normal bounded scroll plan. `preActionScrollY` retains the former position; `originalScrollY` and `finalScrollY` describe the post-reveal capture baseline. If no signal is detected, the action remains `not_detected` and restoration scope remains `pre_run_position`.

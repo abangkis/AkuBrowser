@@ -94,6 +94,8 @@ The implementation uses a neutral parent workspace containing three independent 
 
 The parent workspace is not a repository and does not own dependencies. Each project has its own Git history, package manifest, lockfile, tests, and README. AkuBridge and AkuSidecar must not import each other's implementation source. They communicate only through the versioned HTTP/message contract so either side can later be replaced, released, or bundled independently.
 
+During local development, AkuSidecar remains one process on `127.0.0.1:47821`. Vite is mounted as frontend middleware on the existing Sidecar HTTP server rather than exposed through a second proxy port. Vite owns HMR for UI assets; Node's built-in watcher restarts the same visible process for backend-module changes. Production-style `npm start` keeps the static file path and does not require Vite at runtime.
+
 ## 5. Logical Architecture
 
 ```mermaid
@@ -154,14 +156,15 @@ Gate 0B, only after Gate 0A passes, introduces the target `ReasoningProvider -> 
 
 ### 6.2 Gate 0B implementation sequence
 
-Gate 0B is split into two evidence gates so browser movement is proven independently from model judgment:
+Gate 0B is split into three evidence gates so browser movement and feed mutation are proven independently from model judgment:
 
 1. **Gate 0B.1 — native bounded acquisition.** AkuSidecar issues a deterministic capture plan and AkuBridge performs `capture -> scroll -> capture -> restore` inside the source adapter. The plan has fixed budgets for scroll count, scroll distance, elapsed time, snapshots, and blocks. Coverage reports requested versus performed scrolls, stop reason, adapter identity, fallback use, and whether the original position was restored.
-2. **Gate 0B.2 — provider-directed acquisition.** After native movement is proven reliable on X and LinkedIn, the same operations are exposed as provider-neutral `BrowserAdapter` tools. A `ReasoningProvider` may decide whether another bounded observation is warranted, but deterministic policy in the JobEngine remains the authority for budgets and allowed actions.
+2. **Gate 0B.2 — same-tab fresh-content reveal.** AkuBridge may activate one allowlisted platform control such as `New posts` or `Show posts`, then must prove that a changed, non-empty visible feed is ready before bounded capture begins. Feed mutation and the post-reveal restoration baseline remain explicit in coverage.
+3. **Gate 0B.3 — provider-directed acquisition.** After native movement and same-tab reveal are proven reliable on X and LinkedIn, the same operations are exposed as provider-neutral `BrowserAdapter` tools. A `ReasoningProvider` may decide whether another bounded observation is warranted, but deterministic policy in the JobEngine remains the authority for budgets and allowed actions.
 
 Gate 0B.1 does not silently become an infinite feed reader: the initial experiment permits at most two native scrolls, three snapshots, one promoted result, and 45 seconds of browser acquisition. A failed native adapter may later request an explicit Computer Use fallback, but that fallback must require policy approval and appear in coverage.
 
-Source adapters also detect platform-owned fresh-content signals such as LinkedIn's `New posts` banner or X's `Show posts` control. Gate 0B.1 records the signal in coverage but does not activate it. Revealing pending content is a distinct read-only navigation action because it can replace or reorder the rendered feed and may prevent an exact semantic restoration of the user's prior view. Gate 0B.2 must make that action explicit and auditable; the preferred future experiment is a dedicated background working tab so the user's source tab is not unexpectedly rewritten.
+Source adapters also detect platform-owned fresh-content signals such as LinkedIn's `New posts` banner or X's `Show posts` control. Gate 0B.1 records the signal in coverage but does not activate it. Gate 0B.2 adds one explicit allowlisted `reveal_pending_content` action in the same source tab used by the personal Chrome-development pilot. If activated, the platform may replace or reorder the rendered feed; AkuBridge therefore waits for a changed, non-empty visible-feed fingerprint, establishes that revealed feed as a new capture baseline, restores scrolling only to that post-reveal baseline, and records that the pre-run feed view was intentionally changed. Signal removal alone is not readiness evidence because a platform may temporarily render a loading state. A dedicated managed tab remains a possible consumer-product isolation strategy rather than a requirement for this pilot.
 
 ## 7. Initial Interaction Modes
 
@@ -510,8 +513,11 @@ After behavioral proof, test Sidecar Lite as a packaging experiment. That sequen
 | D-025 | Keep browser acquisition independent of ReasoningProvider so a future open-source provider does not require proprietary Computer Use | Confirmed |
 | D-026 | Preserve provenance lanes explicitly as native post, canonical source page, or external reference; never label one lane as another | Confirmed after LinkedIn Gate 0A pilot |
 | D-027 | Evolve ranking from explicit intent toward an inspectable behavioral preference model while treating each platform's feed order only as an upstream prior | Confirmed as future direction; implementation deferred until pilot evidence exists |
-| D-028 | Split Gate 0B into native bounded acquisition first and provider-directed acquisition only after scroll and restoration behavior pass live testing | Confirmed |
+| D-028 | Split Gate 0B into native bounded acquisition, same-tab reveal, then provider-directed acquisition only after deterministic movement and restoration behavior pass live testing | Confirmed |
 | D-029 | Detect platform fresh-content banners in Gate 0B.1, but defer activation to an explicit auditable BrowserAdapter action that does not silently rewrite the user's feed view | Confirmed after LinkedIn live test |
+| D-030 | For the Gate 0B.2 personal pilot, activate allowlisted fresh-content controls in the same source tab and restore only the post-reveal baseline; reconsider a dedicated managed tab for consumer use | Confirmed |
+| D-031 | Use one-port AkuSidecar development: Vite middleware handles frontend HMR and Node watch restarts backend changes in the same visible process | Confirmed |
+| D-032 | Reserve Gate 0B.2 for same-tab fresh-content reveal and move provider-directed acquisition to Gate 0B.3 | Confirmed |
 
 ## 16. Change Discipline
 

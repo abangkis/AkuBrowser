@@ -26,9 +26,10 @@ Install dependencies in each runtime repository first, then run:
 npm run check
 npm run smoke:http
 $env:AKU_REASONING_PROVIDER='codex-sdk'
-npm start
+npm run dev
 ```
 
 Load `..\AkuBridge` as an unpacked Chrome extension and open `http://127.0.0.1:47821`.
+AkuSidecar development keeps this single URL: Vite provides frontend HMR while Node automatically restarts backend changes in the same visible terminal.
 
 See [the architecture reference](docs/aku-browser-architecture.md) and [bridge contract v1](contracts/bridge-contract-v1.md).

@@ -53,6 +53,11 @@ for (const value of [
   "scrollContainer",
   "pendingNewContent",
   "pendingNewContentAction",
+  "pendingContentActivationEvidence",
+  "pendingContentPolicy",
+  "feedMutation",
+  "sameTabMutation",
+  "restorationScope",
   "restoreAttempted",
   "restored",
   "feedPosition",
@@ -61,7 +66,9 @@ for (const value of [
   assert.match(sidecarContracts, new RegExp(escapeRegExp(value)));
 }
 assert.match(bridgeCapturePolicy, /maxScrolls: 2/);
+assert.match(bridgeCapturePolicy, /sameTabMutationAllowed/);
 assert.match(sidecarBrowserAdapter, /NATIVE_BROWSER_ADAPTER = "aku-bridge"/);
+assert.match(sidecarBrowserAdapter, /pendingContentPolicy: "reveal_if_present"/);
 console.log("AkuBrowser cross-repository contracts are synchronized.");
 
 function readJson(file) {
