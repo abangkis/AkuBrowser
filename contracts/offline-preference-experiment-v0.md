@@ -33,6 +33,12 @@ The first model is a deterministic, class-balanced, smoothed additive model. It 
 
 The model emits a shadow preference probability. That probability is not a relevance fact and is never written back into historical candidate decisions.
 
+## Shadow comparison
+
+After a snapshot is current for the active dataset, AkuBrowser may compare its probability against the provider's persisted `selected` or `excluded` decision. The comparison reports `would_move_up`, `would_move_down`, or `unchanged`, plus bounded feature contributions. It does not invent a numeric provider baseline score and does not alter historical decisions.
+
+`GET /api/preferences/shadow-comparison` returns an explicit unavailable state while no current snapshot exists. Every response declares `liveInfluence: false`. A reusable synthetic dataset may exercise fitting, explanation, and comparison contracts in tests, but synthetic signals are never written to the pilot database or counted toward readiness.
+
 ## Evaluation
 
 Each snapshot records:
@@ -58,5 +64,6 @@ Fitted snapshots are stored in AkuSidecar SQLite by unique dataset fingerprint. 
 
 - `GET /api/preferences/experiment`
 - `POST /api/preferences/experiment/fit`
+- `GET /api/preferences/shadow-comparison`
 
 The Review Inbox exposes status, gate progress, snapshot evaluation, and a Fit button that is enabled only for `ready_to_fit`.
