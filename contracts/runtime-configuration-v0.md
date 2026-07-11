@@ -1,6 +1,6 @@
 # Runtime Configuration Contract v0
 
-> Status: **Initial setting implemented**
+> Status: **Initial live and startup settings implemented**
 > Date: **2026-07-11**
 
 ## Purpose
@@ -23,6 +23,8 @@ The dashboard must show the effective value, persisted value, source, and apply 
 - `fail_fast`: initial acquisition fails when no eligible tab exists.
 
 The setting applies to the next run without restarting AkuSidecar. Follow-up acquisition always behaves as fail-fast because its observation must remain anchored to the existing tab frontier.
+
+`defaultPresentation` accepts `source` or `brief`. It applies immediately to newly rendered Unified View and Review Inbox items. The built-in default is `source`; an individual item can still be switched without changing the saved default.
 
 ## Startup reasoning settings
 

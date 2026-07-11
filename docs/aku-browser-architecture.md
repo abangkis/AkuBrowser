@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
 > Status: **Learning Loop foundation implemented — live candidate-label collection pending**
-> Version: **0.10**
+> Version: **0.11**
 > Last updated: **2026-07-11**
 > Working name: **AkuBrowser**
 
@@ -605,9 +605,10 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-060 | Time-box LinkedIn adapter stabilization; after the bounded readiness milestone still reports `feed_not_visible`, mark LinkedIn degraded, preserve X-backed partial Unified Sessions, and move selector/visibility investigation to the adapter backlog | Confirmed to resume product calibration |
 | D-061 | Introduce Preference Engine v0 first as deterministic offline replay with explicit sample gates and `liveInfluence: false`; require a later evidence-backed decision before learned weights affect presentation | Confirmed for product calibration |
 | D-062 | Use symmetric `More like this` and `Less like this` as routine contextual-interest signals; route incorrect presentation to bug/error feedback | Confirmed for Learning Loop v0 |
-| D-063 | Offer `Brief` and captured `Source layout` as alternate presentations of the same bounded evidence; do not re-fetch or claim an exact live-DOM reproduction | Confirmed for finite result UX |
+| D-063 | Offer `Brief` and captured `Source layout` as alternate presentations of the same bounded evidence; do not re-fetch or claim an exact live-DOM reproduction | Confirmed; presentation control refined by D-066 |
 | D-064 | During single-user development, delete retired preference rows and remove their API/profile/replay compatibility paths instead of carrying legacy behavior | Confirmed until external compatibility is required |
 | D-065 | Progressively append Review Inbox history in batches of 10 as the user approaches the bottom, with an explicit maximum browsing window of 50; keep aggregate cohort metrics separate from the currently rendered history | Confirmed for bounded calibration UX |
+| D-066 | Default each item to configurable `Source layout`, replace page-level presentation tabs with an item-local switch, and reuse the same presentation component in Unified View and Review Inbox | Confirmed for daily-use reading UX |
 
 ## 16. Change Discipline
 
