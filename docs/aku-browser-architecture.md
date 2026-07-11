@@ -170,7 +170,7 @@ Gate 0B.3 gives the ReasoningProvider one narrow acquisition decision after the 
 
 ### 6.3 Gate 0 closure status
 
-Gate 0 is technically passed. The personal Chrome pilot has completed the full path on X and LinkedIn through AkuBridge, bounded native movement, restoration, Codex SDK structured reasoning, SQLite persistence, and the AkuBrowser result tab. Provider-directed follow-up is contract- and integration-tested; live runs on both sources correctly selected `finish` when their first bounded sample was sufficient. A naturally triggered live follow-up and another post-fix appearance of a platform fresh-content banner remain useful opportunistic observations, not release blockers for the next product-learning phase.
+Gate 0 is technically passed. The personal Chrome pilot has completed the full path on X and LinkedIn through AkuBridge, bounded native movement, restoration, Codex SDK structured reasoning, SQLite persistence, and the AkuBrowser result tab. Live runs on both sources have now exercised provider-directed, frontier-anchored follow-up. X also exercised post-fix `Show posts` activation with a changed-feed readiness proof and restoration to the post-reveal baseline. Repeat runs on both sources demonstrated intent-scoped negative knowledge suppression; a fully known LinkedIn initial sample completed in one round without provider planning.
 
 | Gate 0 question | Evidence | Status |
 |---|---|---|
@@ -288,12 +288,12 @@ The initial continuity layer now preserves and uses:
 - `observed_at` and first-seen time;
 - a deterministic `evidenceKey` for each validated post block;
 - a checkpoint scoped by source and interaction mode;
-- exact suppression only after evidence has actually been delivered to the user;
+- exact suppression after evidence has been delivered to the user, or after the user explicitly confirms that an empty result correctly excluded the observed evidence for the same source, mode, and intent;
 - a provider-assigned stable `eventKey` bound to observed evidence;
 - `new_event`, `material_update`, `context`, or `contradiction` delta semantics; and
 - append-only event versions so a new update never destructively overwrites history.
 
-The current frontier is source-and-mode scoped. Cross-source event merging, semantic supersession calibration, retention policy, and the History Mode UI remain deferred until pilot data demonstrates the required behavior.
+Delivered knowledge remains source-and-mode scoped. User-confirmed negative knowledge is additionally scoped by a normalized intent fingerprint so changing intent makes the evidence eligible again. Cross-source event merging, semantic supersession calibration, retention policy, and the History Mode UI remain deferred until pilot data demonstrates the required behavior.
 
 ## 11. Trust and Security Boundaries
 
@@ -544,7 +544,9 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-032 | Reserve Gate 0B.2 for same-tab fresh-content reveal and move provider-directed acquisition to Gate 0B.3 | Confirmed |
 | D-033 | Limit Gate 0B.3 provider authority to `finish` or one same-source, one-scroll, frontier-anchored follow-up; keep all browser parameters under deterministic JobEngine policy | Confirmed |
 | D-034 | Mark Gate 0 technical feasibility passed; treat naturally triggered follow-up and fresh-content re-observation as opportunistic evidence rather than blockers | Confirmed |
-| D-035 | Advance checkpoints only after completed runs; suppress only previously delivered exact evidence; preserve semantic updates as append-only event versions | Confirmed |
+| D-035 | Advance checkpoints only after completed runs; suppress previously delivered exact evidence by default; preserve semantic updates as append-only event versions | Confirmed |
+| D-036 | Treat `Correctly empty` as explicit, intent-scoped negative knowledge; suppress the confirmed evidence only for the same source, mode, and normalized intent | Confirmed after repeat-run pilot |
+| D-037 | Stop after the initial bounded acquisition without provider planning when every observed evidence block was already evaluated for the same intent | Confirmed after LinkedIn repeat-run pilot |
 
 ## 16. Change Discipline
 

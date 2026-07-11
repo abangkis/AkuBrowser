@@ -104,7 +104,12 @@ for (const value of [
 ]) {
   assert.match(sidecarContracts + sidecarJobEngine, new RegExp(escapeRegExp(value)));
 }
-for (const table of ["checkpoints", "knowledge_events", "knowledge_versions"]) {
+for (const table of [
+  "checkpoints",
+  "knowledge_events",
+  "knowledge_versions",
+  "evidence_dispositions",
+]) {
   assert.match(sidecarStateStore, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}`));
 }
 console.log("AkuBrowser cross-repository contracts are synchronized.");
