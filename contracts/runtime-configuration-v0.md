@@ -26,6 +26,8 @@ The setting applies to the next run without restarting AkuSidecar. Follow-up acq
 
 `defaultPresentation` accepts `source` or `brief`. It applies immediately to newly rendered Unified View and Review Inbox items. The built-in default is `source`; an individual item can still be switched without changing the saved default.
 
+`streamWidth` accepts `compact`, `social`, `comfortable`, or `wide`. It applies live to Session and Review Inbox while leaving Settings at the full application width. The built-in `social` default is 640 px including panel padding, producing a reading column close to the primary feeds on X and LinkedIn.
+
 ## Startup reasoning settings
 
 The dashboard also persists the existing reasoning startup configuration:

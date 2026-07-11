@@ -612,6 +612,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-067 | Implement Preference Model v1 as a deterministic, versioned, SQLite-persisted offline snapshot with stable run-level holdout evaluation; hard-block fitting until every replay gate passes and keep all live influence, exploration, and comeback behavior disabled | Confirmed for shadow calibration |
 | D-068 | Capture at most four rendered, allowlisted source images or video posters per evidence block; persist them with candidate evidence and lazy-render them only in Source layout without sending media URLs to text reasoning | Confirmed for source-faithful reading UX |
 | D-069 | Present X above LinkedIn inside every Review Inbox Unified Session group, including groups reconstructed across progressive-loading batch boundaries | Confirmed for consistent unified review UX |
+| D-070 | Constrain Session and Review Inbox to a configurable reading width, defaulting to a 640 px social-feed column while keeping Settings at full application width | Confirmed for lower-effort daily reading |
 
 ## 16. Change Discipline
 
