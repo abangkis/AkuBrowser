@@ -618,6 +618,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-073 | Report deterministic rolling health over the latest 20 terminal source runs separately from historical pilot totals, with stable failure categories and diagnostic-only healthy/degraded/unstable labels | Confirmed for current reliability visibility |
 | D-074 | Prepare a shadow comparison that contrasts persisted provider selection state with preference probability and bounded feature contributions, using synthetic fixtures for tests while keeping every result observational and live influence disabled | Confirmed for pre-fit inspection infrastructure |
 | D-075 | Require every ReasoningProvider to pass a vendor-neutral conformance harness and publish a capability manifest; structural conformance remains separate from pilot-quality equivalence | Confirmed for replaceable reasoning runtimes |
+| D-076 | Provide explicit local-only SQLite health, verified non-overwriting backup, raw-observation-free analysis export, and preview-only retention tooling; expose no autonomous deletion path | Confirmed for reversible pilot-data operability |
 
 ## 16. Change Discipline
 

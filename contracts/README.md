@@ -8,6 +8,7 @@ The reasoning-result contract also carries knowledge-continuity identity. Every 
 
 Current contract artifacts:
 
+- `local-data-operability-v0.md` — reversible SQLite health, backup, analysis-export, and retention-preview boundaries.
 - `reasoning-provider-conformance-v0.md` — provider capability manifests and the vendor-neutral structural acceptance harness.
 
 - `reasoning-result.schema.json` — validated provider-neutral result items.
