@@ -51,7 +51,7 @@ Acquisition planning uses `deterministic_sparse_gap`: skip provider planning whe
 
 ## UI behavior
 
-Review Inbox opens the newest run by default. It shows selected and unselected evaluated candidates, decision state, structured assessment, source link, and preference controls. Each run card places separate Candidate Evaluation and Acquisition Planning model/effort/token usage at the top so economic inspection does not require scrolling past candidate content. Other runs remain collapsed. Unified View exposes both `More like this` and `Less like this` for every promoted item. The user can accept the recommended set by doing nothing.
+Review Inbox opens the newest run by default. It shows selected and unselected evaluated candidates, decision state, structured assessment, source link, and preference controls. Each run card places separate Candidate Evaluation and Acquisition Planning model/effort/token usage at the top so economic inspection does not require scrolling past candidate content. Other runs remain collapsed and their detailed content is mounted only while expanded. Review history is paged by 10 runs up to a maximum browsing window of 50; aggregate pilot metrics continue to describe the disclosed cohort rather than only the visible page. Unified View exposes both `More like this` and `Less like this` for every promoted item. The user can accept the recommended set by doing nothing.
 
 The finite result offers two presentation tabs over the same captured evidence. `Brief` keeps AkuBrowser's normalized summary. `Source layout` reconstructs a source-inspired reading layout from the captured candidate text and provenance, without another browser fetch and without claiming to reproduce the live source DOM exactly.
 
@@ -67,9 +67,10 @@ The finite result offers two presentation tabs over the same captured evidence. 
 - Codex usage fields are persisted without estimation when returned by the SDK and aggregated separately by reasoning phase.
 - Terra High returns a structured assessment for every supplied candidate in the same evaluation invocation.
 - Review Inbox defaults to the newest run expanded and remains finite.
+- Review Inbox pages 10 runs at a time, stops at 50, and never renders collapsed run details.
 
 ## Current implementation status
 
-The additive SQLite ledger, append-only preference events, provider invocation telemetry, explicit Codex configuration, Review Inbox default, newest-run expansion, symmetric Unified View signals, and captured Source layout are implemented. The active preference vocabulary contains only `more_like_this` and `less_like_this`; retired development events are removed. Historical runs remain readable but are not falsely backfilled as evaluated candidates because their exact provider prompt boundary cannot be reconstructed. Preference profile v0 intentionally remains in `collecting` state; learned ranking weights and exploration do not activate until natural candidate labels exist.
+The additive SQLite ledger, append-only preference events, provider invocation telemetry, explicit Codex configuration, bounded paged Review Inbox, newest-run expansion, symmetric Unified View signals, and captured Source layout are implemented. The active preference vocabulary contains only `more_like_this` and `less_like_this`; retired development events are removed. Historical runs remain readable but are not falsely backfilled as evaluated candidates because their exact provider prompt boundary cannot be reconstructed. Preference profile v0 intentionally remains in `collecting` state; learned ranking weights and exploration do not activate until natural candidate labels exist.
 
 An inspectable engine dashboard is deferred until real labels establish which parameters need operator control. It should eventually expose active thresholds, preference tendencies, exploration budget, comeback triggers, policy version, and outcome/economic metrics without allowing UI settings to bypass hard safety constraints.
