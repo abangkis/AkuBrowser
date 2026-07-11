@@ -33,6 +33,24 @@ assert.deepEqual(
   canonicalUnifiedSessionSchema,
   "AkuSidecar unified-session schema drifted from AkuBrowser",
 );
+for (const schemaName of [
+  "candidate-evaluation.schema.json",
+  "preference-feedback.schema.json",
+  "preference-profile.schema.json",
+  "selection-decision.schema.json",
+  "reasoning-invocation.schema.json",
+]) {
+  assert.deepEqual(
+    readJson(path.join(sidecarRoot, "schemas", schemaName)),
+    readJson(path.join(projectRoot, "contracts", schemaName)),
+    `AkuSidecar ${schemaName} drifted from AkuBrowser`,
+  );
+}
+assert.deepEqual(
+  readJson(path.join(sidecarRoot, "config", "reasoning.json")),
+  readJson(path.join(projectRoot, "contracts", "reasoning-routing-v0.json")),
+  "AkuSidecar reasoning routing defaults drifted from AkuBrowser",
+);
 
 const bridgeService = readText(path.join(bridgeRoot, "service-worker.js"));
 const bridgeTab = readText(path.join(bridgeRoot, "aku-browser-tab-bridge.js"));
@@ -120,6 +138,9 @@ for (const table of [
   "knowledge_events",
   "knowledge_versions",
   "evidence_dispositions",
+  "candidate_evaluations",
+  "preference_feedback_events",
+  "reasoning_invocations",
 ]) {
   assert.match(sidecarStateStore, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}`));
 }
