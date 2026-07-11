@@ -598,6 +598,9 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-053 | Treat `More like this` as a positive-interest signal, not an immediate presentation command; preserve legacy `should_show` as an alias | Confirmed for Learning Loop semantics |
 | D-054 | Have Terra High emit structured candidate features in the existing evaluation invocation, without adding a second model call | Confirmed for engine-ready observations |
 | D-055 | Report token usage separately for Candidate Evaluation and Acquisition Planning | Confirmed for quality/economic tuning |
+| D-056 | Default initial acquisition to opening one inactive canonical source tab when missing; retain configurable `fail_fast`, and never replace a tab during anchored follow-up | Confirmed for daily-use resilience |
+| D-057 | Add an allowlisted dashboard configuration layer persisted in SQLite, with environment override, dashboard value, and built-in default precedence; begin with `missingSourceTabPolicy` | Confirmed for runtime operability |
+| D-058 | Expose existing provider, phase model, phase effort, planning policy, and timeout configuration as persisted startup settings; never restart or hot-swap the active reasoning provider invisibly | Confirmed for transparent operations |
 
 ## 16. Change Discipline
 

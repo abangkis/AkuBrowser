@@ -20,3 +20,4 @@ Current contract artifacts:
 - `selection-decision.schema.json` — the deterministic selection audit record.
 - `reasoning-invocation.schema.json` — provider configuration, outcome, latency, and observed token usage.
 - `reasoning-routing-v0.json` — explicit phase-level model, effort, and planning-policy defaults.
+- `runtime-configuration-v0.md` — allowlisted dashboard settings, persistence, precedence, and apply-mode boundary.

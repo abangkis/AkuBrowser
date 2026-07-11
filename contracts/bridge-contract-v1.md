@@ -33,9 +33,9 @@ The token is generated and persisted by AkuSidecar. All bridge command endpoints
 
 ## Gate 0A behavior
 
-- Catch Up requires an already-open canonical feed: `https://x.com/home` or `https://www.linkedin.com/feed/`.
+- Catch Up targets a canonical feed: `https://x.com/home` or `https://www.linkedin.com/feed/`.
 - Manual Live may use the active tab for the selected source.
-- No source tab is silently opened when `openIfMissing` is false.
+- `openIfMissing: true` may create one inactive canonical source tab for an initial acquisition; `openIfMissing: false` fails fast.
 - A Gate 0A run performs zero bridge-directed scrolls.
 - Browser observations are untrusted evidence and every promoted item must retain a URL present in that observation.
 - `block.permalink` is an exact native post URL or `null`; it must not fall back to the feed URL.
@@ -54,6 +54,7 @@ The `collect_visible` command may carry a bounded native-capture plan:
 - `maxBlocksPerSnapshot` and `maxBlockCharacters`: evidence-size budgets;
 - `restoreScroll: true`; and
 - `browserAdapter: "aku-bridge"`.
+- `openIfMissing`, controlled by the Sidecar's `open_missing_tab` or `fail_fast` policy.
 
 AkuBridge captures before moving, performs only native DOM scrolling, stops when the budget/deadline/no-movement condition is reached, and attempts to restore the original position in a `finally` path. Browser focus, clicking, engagement, and account mutation remain outside the contract.
 
@@ -93,6 +94,7 @@ After round one, the ReasoningProvider may return only `finish` or `request_foll
 - `acquisitionRound: 2` with `maxAcquisitionRounds: 2`;
 - exactly one requested scroll;
 - the same run source and already-open source tab;
+- `openIfMissing: false`, because a replacement tab cannot satisfy the prior frontier;
 - `pendingContentPolicy: "detect_only"` and `sameTabMutationAllowed: false`;
 - a continuation containing the final round-one `startScrollY` and at most three permalink-or-text anchor keys; and
 - no URL selection, navigation, arbitrary click, Computer Use fallback, or third acquisition round.
