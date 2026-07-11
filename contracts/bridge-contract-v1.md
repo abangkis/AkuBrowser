@@ -119,3 +119,9 @@ AkuBridge positions the same tab at the supplied frontier, captures before movin
 The probe reports total and visible selector counts plus loading/root state only; it does not expand evidence collection. `feed_ready` requires at least one visible feed candidate, not merely a stale or off-viewport matching node. If a background LinkedIn tab is not ready, AkuBridge may temporarily activate it, wait up to the fixed readiness deadline, and restore the previously active tab. During this reliability phase, every LinkedIn capture uses `detect_only` for pending content; X retains its separately validated reveal behavior.
 
 If the first LinkedIn capture still produces zero evidence, AkuBridge may perform exactly one readiness-and-capture retry in the same tab. It cannot open a second tab, add scroll budget, or invoke reasoning. Coverage records readiness state, wait duration, selector count, loading/root state, whether the tab was opened or temporarily activated, its initial background state, and retry count. A zero-evidence result after this bounded recovery fails at `source_readiness`, not `reasoning`.
+
+## Stale source-tab recovery
+
+Chrome may close or replace a tab after AkuBridge discovers it but before capture begins. During acquisition round one only, an explicit stale-tab error permits exactly one new discovery attempt. The configured missing-tab policy remains authoritative: `open_missing_tab` may create the canonical feed if rediscovery finds none, while `fail_fast` may only use another already-open eligible tab. The observation reports `sourceTabRecoveryCount` as `0` or `1`.
+
+Acquisition round two never uses this recovery. A provider-directed follow-up is bound to the prior observation frontier, so losing its tab must fail explicitly rather than silently rebinding to a different page state.
