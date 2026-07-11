@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
 > Status: **Gate 0 technical feasibility passed — knowledge continuity active**
-> Version: **0.7**
+> Version: **0.8**
 > Last updated: **2026-07-11**
 > Working name: **AkuBrowser**
 
@@ -180,6 +180,22 @@ Gate 0 is technically passed. The personal Chrome pilot has completed the full p
 | Source identity and timestamps | Provenance lanes, evidence keys, observed time, and source URLs persist in SQLite | Passed |
 | Non-disruptive bounded operation | Native background-tab scrolling, fixed budgets, and restoration coverage verified | Passed for personal pilot |
 | Finite completion and truthful coverage | Runs stop with explicit result, failure, cancellation, or bounded follow-up state | Passed |
+
+### 6.4 Pilot Review evaluation surface
+
+After technical feasibility, the next question is whether AkuBrowser's bounded results are trustworthy enough to change the user's information-consumption behavior. The pinned local page therefore has a `Pilot Review` view alongside `Session`. It is an evaluation surface, not a third interaction mode and not a replacement feed.
+
+The review cohort begins with the first run that receives explicit feedback. The current implementation summarizes at most the latest 500 cohort runs and discloses both the cohort start and any truncation. A source filter changes the metric population; a verdict filter changes only the displayed review queue, so selecting `Needs review` does not make the headline quality rates silently describe only unreviewed runs.
+
+The initial product evidence is deliberately small and inspectable:
+
+- completed, failed, and reviewed-run counts;
+- empty-result trust, calculated only from empty runs explicitly marked `Correctly empty` or `Missed something`;
+- positive reviewed-item rate, calculated from items explicitly marked `Useful` or `Correct lane`;
+- median completion time, acquisition rounds, follow-up use, and restoration failures; and
+- exact-evidence suppression split between previously delivered evidence and intent-scoped confirmed exclusions.
+
+Every displayed ratio includes its numerator and denominator. A zero denominator is shown as unrated rather than 0% or 100%. `Correctly empty` and `Missed something` are mutually exclusive verdicts for completed empty runs, and a missed verdict requires a note describing the absent information. Item-level feedback is accepted only for an item in that completed result. Duplicate submissions are idempotent. Raw browser observations remain in SQLite and are not returned by the review endpoint.
 
 ## 7. Initial Interaction Modes
 
@@ -547,6 +563,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-035 | Advance checkpoints only after completed runs; suppress previously delivered exact evidence by default; preserve semantic updates as append-only event versions | Confirmed |
 | D-036 | Treat `Correctly empty` as explicit, intent-scoped negative knowledge; suppress the confirmed evidence only for the same source, mode, and normalized intent | Confirmed after repeat-run pilot |
 | D-037 | Stop after the initial bounded acquisition without provider planning when every observed evidence block was already evaluated for the same intent | Confirmed after LinkedIn repeat-run pilot |
+| D-038 | Keep Pilot Review separate from consumption modes; scope metrics to a disclosed feedback-bearing cohort and require contextual, idempotent feedback with a note for missed empty results | Confirmed |
 
 ## 16. Change Discipline
 
