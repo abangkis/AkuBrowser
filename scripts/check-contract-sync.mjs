@@ -30,6 +30,10 @@ const bridgeCapturePolicy = readText(path.join(bridgeRoot, "bounded-capture-poli
 const sidecarHttp = readText(path.join(sidecarRoot, "src", "http", "app.mjs"));
 const sidecarUi = readText(path.join(sidecarRoot, "public", "app.js"));
 const sidecarContracts = readText(path.join(sidecarRoot, "src", "core", "contracts.mjs"));
+const sidecarJobEngine = readText(path.join(sidecarRoot, "src", "core", "job-engine.mjs"));
+const sidecarStateStore = readText(
+  path.join(sidecarRoot, "src", "store", "sqlite-state-store.mjs"),
+);
 const sidecarBrowserAdapter = readText(
   path.join(sidecarRoot, "src", "browser", "browser-adapter-contract.mjs"),
 );
@@ -72,6 +76,7 @@ for (const value of [
   "restoreAttempted",
   "restored",
   "feedPosition",
+  "platformId",
   "acquisitionRound",
   "continuationRequested",
   "continuationAnchorMatched",
@@ -90,6 +95,18 @@ assert.match(
   /pendingContentPolicy: revealPendingContent \? "reveal_if_present" : "detect_only"/,
 );
 assert.match(sidecarBrowserAdapter, /buildObservationContinuation/);
+for (const value of [
+  "evidenceKey",
+  "eventKey",
+  "knowledgeDelta",
+  "exactDuplicatesSuppressed",
+  "previousCheckpointRunId",
+]) {
+  assert.match(sidecarContracts + sidecarJobEngine, new RegExp(escapeRegExp(value)));
+}
+for (const table of ["checkpoints", "knowledge_events", "knowledge_versions"]) {
+  assert.match(sidecarStateStore, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}`));
+}
 console.log("AkuBrowser cross-repository contracts are synchronized.");
 
 function readJson(file) {

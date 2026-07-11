@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
-> Status: **Active implementation baseline — Gate 0 pilot**  
-> Version: **0.6**
+> Status: **Gate 0 technical feasibility passed — knowledge continuity active**
+> Version: **0.7**
 > Last updated: **2026-07-11**
 > Working name: **AkuBrowser**
 
@@ -168,6 +168,19 @@ Source adapters also detect platform-owned fresh-content signals such as LinkedI
 
 Gate 0B.3 gives the ReasoningProvider one narrow acquisition decision after the first validated observation: `finish` or `request_follow_up`. The provider cannot choose a source, URL, browser action, scroll count, position, timeout, or mutation policy. If a follow-up is requested, JobEngine may issue exactly one additional one-scroll command, locked to the same source and anchored to the final viewport of round one. AkuBridge must find at least one supplied frontier anchor before moving, cannot reveal pending content again, and restores the source tab to its pre-follow-up position. Both observations are persisted and merged for final reasoning. A missing or shifted anchor fails explicitly rather than turning the follow-up into an unbounded search.
 
+### 6.3 Gate 0 closure status
+
+Gate 0 is technically passed. The personal Chrome pilot has completed the full path on X and LinkedIn through AkuBridge, bounded native movement, restoration, Codex SDK structured reasoning, SQLite persistence, and the AkuBrowser result tab. Provider-directed follow-up is contract- and integration-tested; live runs on both sources correctly selected `finish` when their first bounded sample was sufficient. A naturally triggered live follow-up and another post-fix appearance of a platform fresh-content banner remain useful opportunistic observations, not release blockers for the next product-learning phase.
+
+| Gate 0 question | Evidence | Status |
+|---|---|---|
+| Browser access from the selected reasoning surface | Minimal authenticated AkuBridge contract used from the local Codex SDK flow | Passed through accepted fallback |
+| Signed-in X and LinkedIn consumption | Canonical feeds captured from the development Chrome profile | Passed |
+| Structured observations and results | Provider-neutral schemas validated in unit, HTTP, SDK smoke, and live runs | Passed |
+| Source identity and timestamps | Provenance lanes, evidence keys, observed time, and source URLs persist in SQLite | Passed |
+| Non-disruptive bounded operation | Native background-tab scrolling, fixed budgets, and restoration coverage verified | Passed for personal pilot |
+| Finite completion and truthful coverage | Runs stop with explicit result, failure, cancellation, or bounded follow-up state | Passed |
+
 ## 7. Initial Interaction Modes
 
 ### 7.1 Catch Up — initial mode
@@ -265,18 +278,22 @@ The relevant measure is therefore not only post age. It is whether the post adva
 - An older post may still surface when it contains the original source, unique evidence, a contradiction, causal context, or another material addition.
 - A deliberate History Mode can reconstruct the chronology when the user wants to understand how an event developed.
 
-### Compatibility requirement for the initial data model
+### Implemented continuity foundation
 
-The initial system does not need to implement supersession. It should, however, avoid blocking the feature by preserving at least:
+The initial continuity layer now preserves and uses:
 
 - stable source/platform identity;
 - source URL or post identifier;
 - `published_at` when available;
 - `observed_at` and first-seen time;
-- the related topic/event key when classification produces one; and
-- prior observations instead of destructively overwriting them.
+- a deterministic `evidenceKey` for each validated post block;
+- a checkpoint scoped by source and interaction mode;
+- exact suppression only after evidence has actually been delivered to the user;
+- a provider-assigned stable `eventKey` bound to observed evidence;
+- `new_event`, `material_update`, `context`, or `contradiction` delta semantics; and
+- append-only event versions so a new update never destructively overwrites history.
 
-The exact retention policy and event-versioning algorithm remain deferred.
+The current frontier is source-and-mode scoped. Cross-source event merging, semantic supersession calibration, retention policy, and the History Mode UI remain deferred until pilot data demonstrates the required behavior.
 
 ## 11. Trust and Security Boundaries
 
@@ -314,19 +331,24 @@ The gate should answer these questions before the full classification system is 
 
 The accepted fallback for question 1 is the minimal custom AkuBridge. This is a resolved product decision, not a blocker.
 
-## 13. Deliberately Unresolved Technical Decisions
+## 13. Technical Decisions After Gate 0
 
-These choices should be resolved by evidence from Feasibility Gate 0 rather than assumed now:
+Gate 0 resolved the immediate implementation choices:
 
-- whether the existing first-party Chrome integration is callable from the chosen Codex integration surface;
-- the exact Codex integration surface, such as App Server, SDK, or another supported interface;
-- the extension-to-sidecar transport, such as native messaging or a constrained local endpoint;
-- whether browser observation can operate without disruptive focus changes;
-- the exact frontend and sidecar implementation stack;
-- the first structured observation and result schemas;
-- storage limits and retention policy;
-- run budgets for time, scroll depth, items observed, and model usage; and
-- calibration thresholds for P0–P4 classification.
+- Codex SDK is the initial replaceable ReasoningProvider;
+- the accepted browser path is the minimal authenticated AkuBridge;
+- extension-to-sidecar transport is the versioned constrained localhost contract;
+- AkuSidecar uses Node, SQLite, and Vite middleware on one visible process and port;
+- browser acquisition uses fixed native budgets and reports restoration/fallback coverage; and
+- observation, acquisition-plan, and reasoning-result schemas are canonical contracts owned by AkuBrowser.
+
+Still unresolved by design:
+
+- storage retention and compaction after representative pilot volume;
+- semantic event-key calibration and cross-source event merging;
+- thresholds and notification policy for P0;
+- the first open-source ReasoningProvider that passes the pilot evaluation set; and
+- the eventual consumer packaging choice between hosted single-extension and local-first installer.
 
 ## 14. Deployment and Packaging Roadmap
 
@@ -474,7 +496,7 @@ Potential future providers include a local OpenAI-compatible inference server, a
 
 ### 14.5 Current recommendation
 
-Do not collapse the sidecar before Feasibility Gate 0. First validate the complete behavior with the three-component research architecture. During that work:
+Gate 0 has passed. Keep the three-component research architecture through the initial knowledge-continuity pilot while:
 
 1. keep orchestration logic portable and independent of Node-, Python-, or OS-only APIs where practical;
 2. keep persistence behind `StateStore` rather than allowing business rules to depend directly on SQLite queries;
@@ -482,7 +504,7 @@ Do not collapse the sidecar before Feasibility Gate 0. First validate the comple
 4. keep Chrome operations behind `BrowserAdapter`; and
 5. make every job resumable from persisted checkpoints.
 
-After behavioral proof, test Sidecar Lite as a packaging experiment. That sequence reduces consumer-installation complexity without allowing packaging concerns to distort the first product experiment.
+After behavioral proof and retention evidence, test Sidecar Lite as a packaging experiment. That sequence reduces consumer-installation complexity without allowing packaging concerns to distort the first product experiment.
 
 ## 15. Decision Log
 
@@ -521,6 +543,8 @@ After behavioral proof, test Sidecar Lite as a packaging experiment. That sequen
 | D-031 | Use one-port AkuSidecar development: Vite middleware handles frontend HMR and Node watch restarts backend changes in the same visible process | Confirmed |
 | D-032 | Reserve Gate 0B.2 for same-tab fresh-content reveal and move provider-directed acquisition to Gate 0B.3 | Confirmed |
 | D-033 | Limit Gate 0B.3 provider authority to `finish` or one same-source, one-scroll, frontier-anchored follow-up; keep all browser parameters under deterministic JobEngine policy | Confirmed |
+| D-034 | Mark Gate 0 technical feasibility passed; treat naturally triggered follow-up and fresh-content re-observation as opportunistic evidence rather than blockers | Confirmed |
+| D-035 | Advance checkpoints only after completed runs; suppress only previously delivered exact evidence; preserve semantic updates as append-only event versions | Confirmed |
 
 ## 16. Change Discipline
 
