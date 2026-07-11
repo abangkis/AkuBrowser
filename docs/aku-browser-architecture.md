@@ -607,7 +607,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-062 | Use symmetric `More like this` and `Less like this` as routine contextual-interest signals; route incorrect presentation to bug/error feedback | Confirmed for Learning Loop v0 |
 | D-063 | Offer `Brief` and captured `Source layout` as alternate presentations of the same bounded evidence; do not re-fetch or claim an exact live-DOM reproduction | Confirmed for finite result UX |
 | D-064 | During single-user development, delete retired preference rows and remove their API/profile/replay compatibility paths instead of carrying legacy behavior | Confirmed until external compatibility is required |
-| D-065 | Page Review Inbox by 10 runs with an explicit maximum browsing window of 50; keep aggregate cohort metrics separate from the currently rendered page | Confirmed for bounded calibration UX |
+| D-065 | Progressively append Review Inbox history in batches of 10 as the user approaches the bottom, with an explicit maximum browsing window of 50; keep aggregate cohort metrics separate from the currently rendered history | Confirmed for bounded calibration UX |
 
 ## 16. Change Discipline
 

@@ -51,7 +51,7 @@ Acquisition planning uses `deterministic_sparse_gap`: skip provider planning whe
 
 ## UI behavior
 
-Review Inbox opens the newest run by default. It shows selected and unselected evaluated candidates, decision state, structured assessment, source link, and preference controls. Each run card places separate Candidate Evaluation and Acquisition Planning model/effort/token usage at the top so economic inspection does not require scrolling past candidate content. Other runs remain collapsed and their detailed content is mounted only while expanded. Review history is paged by 10 runs up to a maximum browsing window of 50; aggregate pilot metrics continue to describe the disclosed cohort rather than only the visible page. Unified View exposes both `More like this` and `Less like this` for every promoted item. The user can accept the recommended set by doing nothing.
+Review Inbox opens the newest run by default. It shows selected and unselected evaluated candidates, decision state, structured assessment, source link, and preference controls. Each run card places separate Candidate Evaluation and Acquisition Planning model/effort/token usage at the top so economic inspection does not require scrolling past candidate content. Other runs remain collapsed and their detailed content is mounted only while expanded. As the user approaches the bottom, review history appends another batch of 10 runs up to a maximum browsing window of 50; there are no Previous/Next controls, and the finite end remains explicit. Aggregate pilot metrics continue to describe the disclosed cohort rather than only the loaded history. Unified View exposes both `More like this` and `Less like this` for every promoted item. The user can accept the recommended set by doing nothing.
 
 The finite result offers two presentation tabs over the same captured evidence. `Brief` keeps AkuBrowser's normalized summary. `Source layout` reconstructs a source-inspired reading layout from the captured candidate text and provenance, without another browser fetch and without claiming to reproduce the live source DOM exactly.
 
@@ -67,7 +67,7 @@ The finite result offers two presentation tabs over the same captured evidence. 
 - Codex usage fields are persisted without estimation when returned by the SDK and aggregated separately by reasoning phase.
 - Terra High returns a structured assessment for every supplied candidate in the same evaluation invocation.
 - Review Inbox defaults to the newest run expanded and remains finite.
-- Review Inbox pages 10 runs at a time, stops at 50, and never renders collapsed run details.
+- Review Inbox appends 10 runs near the scroll boundary, stops at 50, and never renders collapsed run details.
 
 ## Current implementation status
 
