@@ -1,6 +1,6 @@
 # AkuBrowser — Architecture Reference
 
-> Status: **Gate 0 passed — Unified Session experiment contracted**
+> Status: **Unified Session live orchestration verified — positive-result product gate pending**
 > Version: **0.9**
 > Last updated: **2026-07-11**
 > Working name: **AkuBrowser**
@@ -528,7 +528,7 @@ Potential future providers include a local OpenAI-compatible inference server, a
 
 ### 14.5 Current recommendation
 
-Gate 0 and the initial knowledge-continuity proof have passed. The next product experiment is the accepted Unified Session v0: make the daily-use surface combine sequential X and LinkedIn child runs into one finite brief while keeping the three-component research architecture. During that experiment:
+Gate 0 and the initial knowledge-continuity proof have passed. Unified Session v0 is implemented, and its live Chrome pilot has verified sequential X and LinkedIn orchestration, bounded pending-content recovery, UI restoration after reload, and finite completion. A source capture with zero visible evidence is now reported as acquisition-unavailable and excluded from empty-result trust metrics instead of being presented as a correctly empty feed. The remaining experiment is product calibration with natural sessions that contain promoted items. During that experiment:
 
 1. keep orchestration logic portable and independent of Node-, Python-, or OS-only APIs where practical;
 2. keep persistence behind `StateStore` rather than allowing business rules to depend directly on SQLite queries;

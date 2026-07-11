@@ -11,4 +11,5 @@ Current contract artifacts:
 - `reasoning-result.schema.json` — validated provider-neutral result items.
 - `acquisition-plan.schema.json` — the finite provider acquisition decision.
 - `bridge-contract-v1.md` — the constrained localhost and page-message bridge protocol.
-- `unified-session-experiment-v0.md` — the accepted product, lifecycle, merge, feedback, and finite-scroll boundary for the unified X + LinkedIn experiment. Its machine-readable schema is deliberately deferred to the implementation phase.
+- `unified-session-experiment-v0.md` — the accepted product, lifecycle, merge, feedback, and finite-scroll boundary for the unified X + LinkedIn experiment.
+- `unified-session.schema.json` — the persisted parent-session, child-run, aggregate-result, and coverage resource contract.

@@ -1,6 +1,6 @@
 # Unified Session Experiment Contract v0
 
-> Status: **Accepted product baseline; runtime implementation pending**
+> Status: **Implemented; live orchestration and recovery verified, positive-result product gate pending**
 > Date: **2026-07-11**
 > Owner: **AkuBrowser**
 
@@ -258,3 +258,8 @@ Do not increase scrolling merely because a session returns fewer than ten items.
 6. Add lifecycle, restart, partial-failure, merge-order, feedback-routing, and HTTP tests.
 7. Run deterministic smoke tests, then live Chrome pilot on X and LinkedIn.
 
+### Current implementation status
+
+Steps 1 through 6 are implemented in AkuSidecar. The existing source-specific bridge protocol remains unchanged. Automated coverage includes sequential completion, persistence across restart, partial success after a source failure, cancellation, deterministic merge order, request validation, and HTTP lifecycle.
+
+A live unified run in the development Chrome profile verified sequential X-to-LinkedIn orchestration, finite completion, same-session UI recovery after a reload, and one bounded LinkedIn fallback from pending-content reveal to native detect-only acquisition. That run also exposed an important truthfulness boundary: a source with zero visible evidence blocks is acquisition-unavailable, not a trustworthy empty result. The runtime now fails that source explicitly, preserves a partial result from the other source, and excludes the non-evidence run from empty-result review metrics. The remaining product gate is to collect natural sessions with promoted items and complete item-level usefulness review as defined above.

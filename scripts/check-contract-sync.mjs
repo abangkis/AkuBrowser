@@ -22,6 +22,17 @@ assert.deepEqual(
   canonicalAcquisitionPlanSchema,
   "AkuSidecar acquisition-plan schema drifted from AkuBrowser",
 );
+const canonicalUnifiedSessionSchema = readJson(
+  path.join(projectRoot, "contracts", "unified-session.schema.json"),
+);
+const sidecarUnifiedSessionSchema = readJson(
+  path.join(sidecarRoot, "schemas", "unified-session.schema.json"),
+);
+assert.deepEqual(
+  sidecarUnifiedSessionSchema,
+  canonicalUnifiedSessionSchema,
+  "AkuSidecar unified-session schema drifted from AkuBrowser",
+);
 
 const bridgeService = readText(path.join(bridgeRoot, "service-worker.js"));
 const bridgeTab = readText(path.join(bridgeRoot, "aku-browser-tab-bridge.js"));
