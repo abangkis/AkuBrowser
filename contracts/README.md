@@ -8,6 +8,7 @@ The reasoning-result contract also carries knowledge-continuity identity. Every 
 
 Current contract artifacts:
 
+- `trust-regression-v0.md` — executable prompt-isolation, bounded-evidence, diagnostic-disclosure, and least-authority regression boundaries.
 - `operational-diagnostics-v0.md` — read-only AkuDoctor, component version sync, and extension package-fingerprint boundaries.
 - `local-data-operability-v0.md` — reversible SQLite health, backup, analysis-export, and retention-preview boundaries.
 - `reasoning-provider-conformance-v0.md` — provider capability manifests and the vendor-neutral structural acceptance harness.
