@@ -31,6 +31,17 @@ The token is generated and persisted by AkuSidecar. All bridge command endpoints
 
 - `AKU_BROWSER_COLLECT_VISIBLE`
 
+## Additive capability handshake
+
+`AKU_BROWSER_BRIDGE_READY` may include a `capabilities` object. Its current fields are:
+
+- `bridgeId`, `extensionVersion`, `contractVersion`, and `manifestVersion`;
+- supported `sources` and `actions`;
+- `authority: "read_only_bounded"`; and
+- fixed `captureLimits` for scrolls, snapshots, and blocks per snapshot.
+
+The handshake is diagnostic metadata. It does not grant new browser authority, contain DOM or account data, or replace server-side contract validation. Older AkuBrowser clients may ignore it. The extension also accepts the internal `AKU_BRIDGE_GET_CAPABILITIES` message from its local tab bridge.
+
 ## Gate 0A behavior
 
 - Catch Up targets a canonical feed: `https://x.com/home` or `https://www.linkedin.com/feed/`.
@@ -124,4 +135,14 @@ If the first LinkedIn capture still produces zero evidence, AkuBridge may perfor
 
 Chrome may close or replace a tab after AkuBridge discovers it but before capture begins. During acquisition round one only, an explicit stale-tab error permits exactly one new discovery attempt. The configured missing-tab policy remains authoritative: `open_missing_tab` may create the canonical feed if rediscovery finds none, while `fail_fast` may only use another already-open eligible tab. The observation reports `sourceTabRecoveryCount` as `0` or `1`.
 
+Each observation also reports the selected `adapterVersion` and a bounded `adapterCapabilities` list. Every capability entry identifies its `source`, adapter `version`, and read-only `actions`; consumers must preserve this additive diagnostic metadata without treating it as new authority.
+
 Acquisition round two never uses this recovery. A provider-directed follow-up is bound to the prior observation frontier, so losing its tab must fail explicitly rather than silently rebinding to a different page state.
+
+## Source adapter and tab-lease behavior
+
+X and LinkedIn DOM knowledge is registered through separate source adapters behind the same content-runtime contract. The shared runtime owns bounded movement, restoration, normalization, and extension messaging. An adapter owns source-page matching, feed candidate discovery, author discovery, source-specific media exclusions, and pending-content labels.
+
+Before capture, AkuBridge binds a short-lived lease containing the tab id, window id, source, and bound URL. It validates the lease immediately before and after collection. Navigation within the same approved source remains valid; a closed or replaced tab, changed window identity, or navigation outside the approved source fails closed. Structured failure payloads add stable `code`, `stage`, and safe `details` fields while retaining the human-readable `message` required by existing clients.
+
+A runtime-generation command guard prevents duplicate terminal submissions for the same command id. Durable idempotency across Manifest V3 service-worker restarts remains owned by AkuSidecar's authenticated command-claim contract.
