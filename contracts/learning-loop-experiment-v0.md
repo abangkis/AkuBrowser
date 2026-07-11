@@ -10,6 +10,8 @@ AkuBrowser must learn from corrections without turning review into another infin
 
 Pilot Analytics remains an aggregate diagnostic surface. Review Inbox becomes the default calibration workbench during the bootstrap phase; it is not a requirement to label every candidate.
 
+Aggregate cohort totals and current source reliability are separate views. Cohort totals remain historically truthful; a deterministic rolling-health window summarizes only the latest 20 terminal source runs so superseded pilot failures do not masquerade as current adapter health.
+
 ## Fixed boundaries
 
 1. Only evidence blocks supplied to reasoning may be called evaluated candidates.
@@ -49,6 +51,12 @@ The initial accepted route is Luna High for the narrow acquisition-planning fall
 
 Acquisition planning uses `deterministic_sparse_gap`: skip provider planning when there is no unseen evidence, when at least three unseen candidates already support bounded evaluation, or when browser movement cannot justify another viewport. Invoke Luna High only for one or two unseen candidates after the initial scroll budget was exhausted and one anchored follow-up remains technically possible.
 
+## Rolling source health
+
+The telemetry rail classifies terminal source failures into stable operational categories: `missing_tab`, `stale_tab`, `source_readiness`, `pending_content`, `frontier_mismatch`, `capture_timeout`, `zero_evidence`, `reasoning_contract`, or `other`. Classification is deterministic and does not invoke a model.
+
+The latest 20 terminal source runs form the default health window. Fewer than five runs is `insufficient`; otherwise completion of at least 90% with no restoration failure is `healthy`, at least 70% is `degraded`, and a lower rate is `unstable`. These labels are diagnostic only and cannot change selection, acquisition budgets, preference gates, or live ranking.
+
 ## UI behavior
 
 Review Inbox opens the newest run by default. It shows selected and unselected evaluated candidates, decision state, structured assessment, source link, and preference controls. Within every Unified Session group, the X run is presented above the LinkedIn run regardless of completion timestamps or pagination boundaries. Each run card places separate Candidate Evaluation and Acquisition Planning model/effort/token usage at the top so economic inspection does not require scrolling past candidate content. Other runs remain collapsed and their detailed content is mounted only while expanded. As the user approaches the bottom, review history appends another batch of 10 runs up to a maximum browsing window of 50; there are no Previous/Next controls, and the finite end remains explicit. Aggregate pilot metrics continue to describe the disclosed cohort rather than only the loaded history. Unified View exposes both `More like this` and `Less like this` for every promoted item. The user can accept the recommended set by doing nothing.
@@ -70,6 +78,7 @@ Every promoted or reviewed item can switch independently between two presentatio
 - Review Inbox appends 10 runs near the scroll boundary, stops at 50, and never renders collapsed run details.
 - Unified View and Review Inbox reuse the same per-item layout switch and honor the persisted default presentation.
 - Source layout shows at most four validated source images/posters per candidate; media remains presentation-only and absent from reasoning prompts.
+- Rolling health reports the latest terminal source window separately from historical cohort totals and exposes deterministic failure categories.
 
 ## Current implementation status
 
