@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
-> Status: **Gate 0 technical feasibility passed — knowledge continuity active**
-> Version: **0.8**
+> Status: **Gate 0 passed — Unified Session experiment contracted**
+> Version: **0.9**
 > Last updated: **2026-07-11**
 > Working name: **AkuBrowser**
 
@@ -131,6 +131,22 @@ Keeping these capabilities behind `BrowserAdapter` means the `ReasoningProvider`
 10. The sidecar writes the run, observations, checkpoints, and results to SQLite as a transaction.
 11. The AkuBrowser tab refreshes from the sidecar and displays a finite, source-backed result.
 12. The user can open a source when deeper context is needed without being required to consume the raw feed.
+
+### Daily-use Unified Session target
+
+The Gate 0 UI used one source and one promoted item to isolate technical risks. The accepted daily-use target is now a `UnifiedSession`: one parent request creates sequential X and LinkedIn child runs, preserves their source-specific checkpoints and evidence, then renders one finite result list containing at most five items per source and ten total. Five is a ceiling rather than a quota, and the browser-acquisition budget does not increase merely because the presentation budget increases.
+
+```mermaid
+flowchart TD
+    U["User starts Unified Session"] --> S["Persist parent session"]
+    S --> X["Run bounded X child"]
+    X --> L["Run bounded LinkedIn child"]
+    L --> M["Deterministic priority merge"]
+    M --> R["Finite unified scroll"]
+    R --> E["Explicit end of catch-up"]
+```
+
+The child runs remain the execution and audit units. A partial session keeps a completed source result visible when the other source fails. Unified ordering is deterministic by priority with source interleaving; semantic cross-source deduplication remains deferred until pilot evidence can calibrate it. Single-source operation remains available as an Advanced/Pilot path rather than the default daily-use surface. The normative experiment boundary is recorded in [`Unified Session Experiment Contract v0`](../contracts/unified-session-experiment-v0.md).
 
 ### 6.1 Gate 0A implementation topology
 
@@ -512,13 +528,14 @@ Potential future providers include a local OpenAI-compatible inference server, a
 
 ### 14.5 Current recommendation
 
-Gate 0 has passed. Keep the three-component research architecture through the initial knowledge-continuity pilot while:
+Gate 0 and the initial knowledge-continuity proof have passed. The next product experiment is the accepted Unified Session v0: make the daily-use surface combine sequential X and LinkedIn child runs into one finite brief while keeping the three-component research architecture. During that experiment:
 
 1. keep orchestration logic portable and independent of Node-, Python-, or OS-only APIs where practical;
 2. keep persistence behind `StateStore` rather than allowing business rules to depend directly on SQLite queries;
 3. keep Codex behind `ReasoningProvider`;
 4. keep Chrome operations behind `BrowserAdapter`; and
-5. make every job resumable from persisted checkpoints.
+5. make every child run and parent session resumable from persisted checkpoints; and
+6. keep attention-budget changes separate from browser-acquisition-budget changes.
 
 After behavioral proof and retention evidence, test Sidecar Lite as a packaging experiment. That sequence reduces consumer-installation complexity without allowing packaging concerns to distort the first product experiment.
 
@@ -564,6 +581,11 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-036 | Treat `Correctly empty` as explicit, intent-scoped negative knowledge; suppress the confirmed evidence only for the same source, mode, and normalized intent | Confirmed after repeat-run pilot |
 | D-037 | Stop after the initial bounded acquisition without provider planning when every observed evidence block was already evaluated for the same intent | Confirmed after LinkedIn repeat-run pilot |
 | D-038 | Keep Pilot Review separate from consumption modes; scope metrics to a disclosed feedback-bearing cohort and require contextual, idempotent feedback with a note for missed empty results | Confirmed |
+| D-039 | Make a unified X + LinkedIn dashboard the default daily-use surface while retaining source-specific runs and an Advanced/Pilot single-source path | Confirmed |
+| D-040 | Model a Unified Session as a persisted parent with sequential X then LinkedIn child runs; preserve source-specific checkpoints, feedback, coverage, and partial results | Confirmed for experiment v0 |
+| D-041 | Allow at most five promoted items per source and ten per Unified Session as ceilings, not quotas; do not increase browser acquisition budgets without evidence | Confirmed for experiment v0 |
+| D-042 | Use deterministic priority-lane and source-interleaved merging without a second reasoning pass; defer semantic cross-source deduplication | Confirmed for experiment v0 |
+| D-043 | Preserve scrolling as a finite, known result list with an explicit end and no automatic continuation or infinite loading | Confirmed |
 
 ## 16. Change Discipline
 
