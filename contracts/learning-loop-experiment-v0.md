@@ -19,7 +19,7 @@ Pilot Analytics remains an aggregate diagnostic surface. Review Inbox becomes th
 5. Hard provenance, security, duplicate, acquisition, and attention constraints remain deterministic.
 6. Codex may extract features and propose decisions, but provider-specific objects never become the preference contract.
 7. A future local or open-source provider must be able to emit the same contracts.
-8. `should_not_show` is a contextual negative preference signal, not a permanent ban. New evidence, material change, unusual popularity, or network-level relevance may make a topic eligible again under a future comeback policy.
+8. `more_like_this` and `less_like_this` are symmetric contextual-interest signals. Neither is a direct presentation command, and both remain eligible for future reinterpretation as context changes.
 9. Permanent blocking is a separate explicit capability and is outside experiment v0.
 10. A future learned selector must preserve a bounded exploration lane for useful content outside established preferences; preference learning must not collapse into a closed filter bubble.
 
@@ -30,11 +30,12 @@ Each unique evaluated evidence block has one current provider decision: `selecte
 ## User signals
 
 - `more_like_this`: this candidate is interesting and should strengthen future prioritization. It is not a command to present the item immediately; the engine still owns timing, ordering, deferral, and the finite attention boundary. It may target a selected or unselected candidate.
-- `should_show`: legacy alias for `more_like_this`, retained for historical data and API compatibility.
-- `should_not_show`: a selected candidate should not have appeared.
+- `less_like_this`: this candidate is less interesting in the current context and should weaken similar future prioritization. It is not a permanent block and may target a selected or unselected candidate.
 - Existing `useful`, `correct_lane`, `wrong_lane`, and `duplicate` signals remain valid for selected items.
 
-Negative reason codes are `wrong_topic`, `already_known`, `duplicate`, `stale_or_superseded`, `low_signal`, `wrong_priority`, and `other`. A free-text note is optional except for `other`.
+Content that should not have appeared because of a product failure belongs in the existing error lanes such as `wrong_lane` or `duplicate`, rather than in routine preference interaction. Retired development-only preference vocabulary and its rows are deleted instead of maintained as a compatibility layer.
+
+Optional preference reason codes are `wrong_topic`, `already_known`, `duplicate`, `stale_or_superseded`, `low_signal`, `wrong_priority`, and `other`. A free-text note is optional except for `other`.
 
 ## Preference model boundary
 
@@ -50,14 +51,17 @@ Acquisition planning uses `deterministic_sparse_gap`: skip provider planning whe
 
 ## UI behavior
 
-Review Inbox opens the newest run by default. It shows selected and unselected evaluated candidates, decision state, structured assessment, source link, and preference controls. Each run card places separate Candidate Evaluation and Acquisition Planning model/effort/token usage at the top so economic inspection does not require scrolling past candidate content. Other runs remain collapsed. Unified View exposes both `More like this` and `Should not show` for every promoted item. The user can accept the recommended set by doing nothing.
+Review Inbox opens the newest run by default. It shows selected and unselected evaluated candidates, decision state, structured assessment, source link, and preference controls. Each run card places separate Candidate Evaluation and Acquisition Planning model/effort/token usage at the top so economic inspection does not require scrolling past candidate content. Other runs remain collapsed. Unified View exposes both `More like this` and `Less like this` for every promoted item. The user can accept the recommended set by doing nothing.
+
+The finite result offers two presentation tabs over the same captured evidence. `Brief` keeps AkuBrowser's normalized summary. `Source layout` reconstructs a source-inspired reading layout from the captured candidate text and provenance, without another browser fetch and without claiming to reproduce the live source DOM exactly.
 
 ## Initial acceptance tests
 
 - Every unique evaluated evidence block is persisted once per run.
 - Selected candidates bind to the exact promoted `itemId` and `evidenceKey`.
-- `more_like_this` can target any evaluated candidate and legacy `should_show` is normalized to it.
-- `should_not_show` can target only a selected candidate.
+- `more_like_this` can target any evaluated candidate.
+- `less_like_this` can target any evaluated candidate.
+- retired preference kinds are rejected by the API and removed from the development database.
 - Duplicate submissions are idempotent; opposing later signals remain auditable.
 - Model and effort shown in the UI equal effective Sidecar configuration.
 - Codex usage fields are persisted without estimation when returned by the SDK and aggregated separately by reasoning phase.
@@ -66,6 +70,6 @@ Review Inbox opens the newest run by default. It shows selected and unselected e
 
 ## Current implementation status
 
-The additive SQLite ledger, append-only preference events, provider invocation telemetry, explicit Codex configuration, Review Inbox default, newest-run expansion, and Unified View signals are implemented. Historical `should_show` events remain readable as positive-interest signals. Historical runs remain readable but are not falsely backfilled as evaluated candidates because their exact provider prompt boundary cannot be reconstructed. Preference profile v0 intentionally remains in `collecting` state; learned ranking weights and exploration do not activate until natural candidate labels exist.
+The additive SQLite ledger, append-only preference events, provider invocation telemetry, explicit Codex configuration, Review Inbox default, newest-run expansion, symmetric Unified View signals, and captured Source layout are implemented. The active preference vocabulary contains only `more_like_this` and `less_like_this`; retired development events are removed. Historical runs remain readable but are not falsely backfilled as evaluated candidates because their exact provider prompt boundary cannot be reconstructed. Preference profile v0 intentionally remains in `collecting` state; learned ranking weights and exploration do not activate until natural candidate labels exist.
 
 An inspectable engine dashboard is deferred until real labels establish which parameters need operator control. It should eventually expose active thresholds, preference tendencies, exploration budget, comeback triggers, policy version, and outcome/economic metrics without allowing UI settings to bypass hard safety constraints.
