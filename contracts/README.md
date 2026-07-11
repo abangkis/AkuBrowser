@@ -21,4 +21,5 @@ Current contract artifacts:
 - `reasoning-invocation.schema.json` — provider configuration, outcome, latency, and observed token usage.
 - `reasoning-routing-v0.json` — explicit phase-level model, effort, and planning-policy defaults.
 - `runtime-configuration-v0.md` — allowlisted dashboard settings, persistence, precedence, and apply-mode boundary.
+- `offline-preference-experiment-v0.md` — hard-gated shadow fitting, holdout evaluation, snapshot persistence, and live-influence boundary.
 - `preference-replay-v0.md` — offline calibration readiness and descriptive replay with no live ranking influence.

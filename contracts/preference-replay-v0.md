@@ -26,7 +26,7 @@ Offline fitting requires every gate:
 - 20 feedback events matched to structured assessments;
 - feedback across 10 runs.
 
-Passing these gates permits only an offline fit/evaluation experiment. Live activation requires a later decision and comparative evidence against the current selector.
+Passing these gates permits only the hard-gated Offline Preference Experiment v0 fit/evaluation. Live activation requires a later decision and comparative evidence against the current selector.
 
 ## Output
 

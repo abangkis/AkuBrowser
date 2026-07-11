@@ -42,6 +42,9 @@ The token is generated and persisted by AkuSidecar. All bridge command endpoints
 - `block.feedPosition` preserves the source platform's observed presentation order as contextual evidence; it is not a truth or relevance score.
 - `observation.pageUrl` is the canonical source page and descendant `block.links` are external or contextual references.
 - Every result item declares `sourceUrlKind` as `native_post`, `source_page`, or `external_reference`; external references must never be labeled as native posts.
+- A block may carry at most four presentation-only `media` records captured from rendered post images or video posters. Each record contains `kind`, HTTPS `url`, bounded `alt`, `width`, and `height`.
+- Media URLs are accepted only from the source CDN allowlist: `pbs.twimg.com`/`video.twimg.com` for X and `*.licdn.com` for LinkedIn. Actor avatars and small icons are excluded by source adapters and minimum rendered dimensions.
+- Media is not sent to text reasoning and does not alter evidence identity, candidate assessment, or selection. It exists only to reconstruct Source layout.
 
 ## Gate 0B.1 additive behavior
 

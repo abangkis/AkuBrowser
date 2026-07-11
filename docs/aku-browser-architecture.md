@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
-> Status: **Learning Loop foundation implemented — live candidate-label collection pending**
-> Version: **0.11**
+> Status: **Offline preference pipeline implemented — calibration gates pending**
+> Version: **0.14**
 > Last updated: **2026-07-11**
 > Working name: **AkuBrowser**
 
@@ -609,6 +609,9 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-064 | During single-user development, delete retired preference rows and remove their API/profile/replay compatibility paths instead of carrying legacy behavior | Confirmed until external compatibility is required |
 | D-065 | Progressively append Review Inbox history in batches of 10 as the user approaches the bottom, with an explicit maximum browsing window of 50; keep aggregate cohort metrics separate from the currently rendered history | Confirmed for bounded calibration UX |
 | D-066 | Default each item to configurable `Source layout`, replace page-level presentation tabs with an item-local switch, and reuse the same presentation component in Unified View and Review Inbox | Confirmed for daily-use reading UX |
+| D-067 | Implement Preference Model v1 as a deterministic, versioned, SQLite-persisted offline snapshot with stable run-level holdout evaluation; hard-block fitting until every replay gate passes and keep all live influence, exploration, and comeback behavior disabled | Confirmed for shadow calibration |
+| D-068 | Capture at most four rendered, allowlisted source images or video posters per evidence block; persist them with candidate evidence and lazy-render them only in Source layout without sending media URLs to text reasoning | Confirmed for source-faithful reading UX |
+| D-069 | Present X above LinkedIn inside every Review Inbox Unified Session group, including groups reconstructed across progressive-loading batch boundaries | Confirmed for consistent unified review UX |
 
 ## 16. Change Discipline
 
