@@ -74,6 +74,12 @@ const sidecarStateStore = readText(
 const sidecarBrowserAdapter = readText(
   path.join(sidecarRoot, "src", "browser", "browser-adapter-contract.mjs"),
 );
+assert.ok(bridgePackage.akuRuntimeRevision, "AkuBridge must declare an operational runtime revision");
+assert.match(
+  bridgeService,
+  new RegExp(escapeRegExp(bridgePackage.akuRuntimeRevision)),
+  "AkuBridge runtime revision drifted from its capability handshake",
+);
 
 for (const value of [
   "aku-browser.bridge.v1",

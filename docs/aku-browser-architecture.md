@@ -627,6 +627,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-082 | Distinguish shared user tabs from tabs opened by AkuBridge; preserve by default and permit closure only for an explicitly managed, successfully captured tab | Confirmed and implemented as a dormant policy capability |
 | D-083 | Report passive source-state events without enabling background P0 monitoring, notifications, or account mutations | Confirmed and implemented as observation-only metadata |
 | D-084 | Require synthetic DOM conformance fixtures for every source adapter version while retaining live health data as operational truth | Confirmed and implemented |
+| D-085 | Integrate AkuBridge with AkuDoctor through an in-memory sanitized capability heartbeat and aggregate per-source observation health; expose no captured content or browser credentials, and use a declared runtime revision to detect an unpacked extension awaiting reload | Confirmed and implemented |
 
 ## 16. Change Discipline
 

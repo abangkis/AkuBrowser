@@ -26,9 +26,22 @@ const health = await safeFetch("http://127.0.0.1:47821/api/health");
 add("sidecar_health", health.ok && health.body?.status === "ok", health.body ?? health.error);
 const database = await safeFetch("http://127.0.0.1:47821/api/operations/database/health");
 add("database_integrity", database.ok && database.body?.database?.status === "healthy", database.body ?? database.error);
+const bridge = await safeFetch("http://127.0.0.1:47821/api/operations/bridge/health");
+const bridgeStatus = bridge.body?.bridge?.status;
+add("bridge_runtime", bridge.ok && bridgeStatus === "healthy", bridge.body ?? bridge.error, {
+  warning: bridge.ok && ["unavailable", "degraded"].includes(bridgeStatus),
+});
+add("bridge_runtime_revision", bridge.ok &&
+  bridge.body?.bridge?.runtime?.heartbeat?.runtimeRevision === bridgePackage.akuRuntimeRevision,
+  {
+    expected: bridgePackage.akuRuntimeRevision,
+    observed: bridge.body?.bridge?.runtime?.heartbeat?.runtimeRevision ?? null,
+  }, {
+    warning: bridge.ok && bridgeStatus === "unavailable",
+  });
 
 const report = {
-  version: 1,
+  version: 2,
   status: checks.every((entry) => entry.passed) ? "healthy" : "degraded",
   checkedAt: new Date().toISOString(),
   checks,
@@ -39,10 +52,10 @@ const report = {
   mutationsPerformed: false,
 };
 console.log(JSON.stringify(report, null, 2));
-if (report.status !== "healthy") process.exitCode = 1;
+if (checks.some((entry) => !entry.passed && entry.severity === "error")) process.exitCode = 1;
 
-function add(id, passed, detail) {
-  checks.push({ id, passed: passed === true, detail });
+function add(id, passed, detail, { warning = false } = {}) {
+  checks.push({ id, passed: passed === true, severity: passed ? "none" : warning ? "warning" : "error", detail });
 }
 
 async function safeFetch(url) {

@@ -33,7 +33,9 @@ npm run dev
 Load `..\AkuBridge` as an unpacked Chrome extension and open `http://127.0.0.1:47821`.
 AkuSidecar development keeps this single URL: Vite provides frontend HMR while Node automatically restarts backend changes in the same visible terminal.
 
-`doctor` is read-only. It checks component/manifest version alignment, the visible Sidecar health endpoint, active provider capabilities, and SQLite integrity. Chrome login/tab state and unpacked-extension reload remain explicit manual checks because the local CLI does not inspect browser profile state.
+`doctor` is read-only. It checks component/manifest version alignment, the visible Sidecar health endpoint, SQLite integrity, the latest sanitized AkuBridge heartbeat, and source-adapter health aggregated from persisted observations. A runtime-revision mismatch identifies an unpacked extension that has not been reloaded. Chrome login and signed-in tab state remain explicit manual checks because the local CLI does not inspect browser profile state.
+
+The bridge diagnostics endpoint is `GET /api/operations/bridge/health`. AkuBrowser posts a bounded capability heartbeat when the extension announces readiness. The heartbeat is held in memory only; the report exposes adapter strategy, field coverage, frontier, source-event counts, lifecycle, and restoration outcomes without raw post text, authors, URLs, cookies, or tokens. `unavailable` means no current browser heartbeat and is reported as a Doctor warning rather than a process failure.
 
 Gate 0B.3 lets a ReasoningProvider either finish after the initial bounded capture or request one deterministic, same-source, frontier-anchored follow-up. JobEngine—not the provider—owns the allowed action, position, scroll budget, and round limit.
 
