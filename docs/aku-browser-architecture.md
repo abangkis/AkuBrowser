@@ -621,6 +621,12 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-076 | Provide explicit local-only SQLite health, verified non-overwriting backup, raw-observation-free analysis export, and preview-only retention tooling; expose no autonomous deletion path | Confirmed for reversible pilot-data operability |
 | D-077 | Add read-only AkuDoctor and extension package fingerprinting, enforce version equality across all three repositories and the Chrome manifest, and keep browser-profile checks explicit and manual | Confirmed for transparent developer operations |
 | D-078 | Maintain executable trust regressions for prompt delimiting, bounded/deduplicated reasoning evidence, presentation-media exclusion, diagnostic non-disclosure, SQLite path escaping, extension permissions, and provenance validation | Confirmed for defense-in-depth verification |
+| D-079 | Make every source adapter report bounded selector strategy, field completeness, and non-content DOM signatures so platform drift is diagnosable before total failure | Confirmed and implemented |
+| D-080 | Extract source-native content kind and repost/quote/reply relationships as contextual evidence for Source Layout and future temporal supersession | Confirmed and implemented as additive observation metadata |
+| D-081 | Report a bounded acquisition frontier and conservative remaining-candidate signal while keeping every follow-up decision and scroll budget under JobEngine authority | Confirmed and implemented |
+| D-082 | Distinguish shared user tabs from tabs opened by AkuBridge; preserve by default and permit closure only for an explicitly managed, successfully captured tab | Confirmed and implemented as a dormant policy capability |
+| D-083 | Report passive source-state events without enabling background P0 monitoring, notifications, or account mutations | Confirmed and implemented as observation-only metadata |
+| D-084 | Require synthetic DOM conformance fixtures for every source adapter version while retaining live health data as operational truth | Confirmed and implemented |
 
 ## 16. Change Discipline
 

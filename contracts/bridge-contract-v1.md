@@ -146,3 +146,23 @@ X and LinkedIn DOM knowledge is registered through separate source adapters behi
 Before capture, AkuBridge binds a short-lived lease containing the tab id, window id, source, and bound URL. It validates the lease immediately before and after collection. Navigation within the same approved source remains valid; a closed or replaced tab, changed window identity, or navigation outside the approved source fails closed. Structured failure payloads add stable `code`, `stage`, and safe `details` fields while retaining the human-readable `message` required by existing clients.
 
 A runtime-generation command guard prevents duplicate terminal submissions for the same command id. Durable idempotency across Manifest V3 service-worker restarts remains owned by AkuSidecar's authenticated command-claim contract.
+
+## Adapter observability, semantics, and frontier metadata
+
+Every bounded observation may add three diagnostic structures without increasing browser authority:
+
+- `adapterHealth` reports the selected discovery strategies, bounded selector counts, per-field presence counts, and a non-content DOM signature;
+- evidence blocks report `contentKind`, `relationshipType`, optional `parentPermalink`, and bounded engagement labels in addition to existing author/time/provenance fields; and
+- `frontier` reports the final scroll position, bounded anchor keys, final-viewport novelty, and a conservative `hasMoreCandidateSignal`.
+
+These fields are observations, not commands. `hasMoreCandidateSignal` does not authorize another scroll; JobEngine still owns the acquisition round and budget. Engagement counts and platform ordering remain contextual evidence rather than ranking truth.
+
+`sourceEvents` is a bounded list of passive states such as `source_new_content_available`, `source_session_expired`, `source_feed_unavailable`, or `source_layout_changed`. Reporting an event never authorizes background monitoring, notification, engagement, or account mutation.
+
+## Managed source-tab lifecycle
+
+The command may carry a bounded `tabLifecycle` policy. Existing user tabs always have `shared` ownership and are preserved. A canonical source tab opened by AkuBridge is reported as `managed`; its default disposition is still `preserve`. The optional `close_after_capture` disposition may close only a tab opened by the same initial acquisition and only after a successful capture. It cannot close a pre-existing user tab or a tab needed for a frontier-anchored follow-up.
+
+## Source-adapter conformance
+
+Each adapter version must pass synthetic DOM fixtures covering its primary discovery strategy and source semantics. The fixture suite is a drift detector, not evidence that the live platform DOM is stable; live `adapterHealth` remains authoritative for operational diagnosis.
