@@ -29,7 +29,8 @@ Each unique evaluated evidence block has one current provider decision: `selecte
 
 ## User signals
 
-- `should_show`: an excluded or deferred candidate should have appeared.
+- `more_like_this`: this candidate is interesting and should strengthen future prioritization. It is not a command to present the item immediately; the engine still owns timing, ordering, deferral, and the finite attention boundary. It may target a selected or unselected candidate.
+- `should_show`: legacy alias for `more_like_this`, retained for historical data and API compatibility.
 - `should_not_show`: a selected candidate should not have appeared.
 - Existing `useful`, `correct_lane`, `wrong_lane`, and `duplicate` signals remain valid for selected items.
 
@@ -41,7 +42,7 @@ The preference model is a versioned, rebuildable snapshot derived from append-on
 
 ## Reasoning configuration and telemetry
 
-Every provider invocation records its phase, provider, configured model and reasoning effort, prompt/contract version, duration, outcome, and observed input, cached-input, output, and reasoning-output tokens when reported. Token fields are observed usage, not a monetary-cost claim. Cost estimates require explicit versioned pricing configuration.
+Every provider invocation records its phase, provider, configured model and reasoning effort, prompt/contract version, duration, outcome, and observed input, cached-input, output, and reasoning-output tokens when reported. Token usage is reported separately for Candidate Evaluation and Acquisition Planning so quality and economics can be tuned independently. Token fields are observed usage, not a monetary-cost claim. Cost estimates require explicit versioned pricing configuration.
 
 The initial accepted route is Luna High for the narrow acquisition-planning fallback and Terra High for candidate evaluation. Evaluation is a read-heavy relevance and classification workload with bounded output, matching the Scout route. XHigh is an escalation only after Terra High repeats the same capability failure following a precise correction.
 
@@ -49,21 +50,22 @@ Acquisition planning uses `deterministic_sparse_gap`: skip provider planning whe
 
 ## UI behavior
 
-Review Inbox opens the newest run by default. It shows selected and unselected evaluated candidates, decision state, source link, and correction controls. Other runs remain collapsed. Unified View exposes a fast `Should not show` correction for every promoted item. The user can accept the recommended set by doing nothing.
+Review Inbox opens the newest run by default. It shows selected and unselected evaluated candidates, decision state, structured assessment, source link, and preference controls. Other runs remain collapsed. Unified View exposes both `More like this` and `Should not show` for every promoted item. The user can accept the recommended set by doing nothing.
 
 ## Initial acceptance tests
 
 - Every unique evaluated evidence block is persisted once per run.
 - Selected candidates bind to the exact promoted `itemId` and `evidenceKey`.
-- `should_show` can target only an evaluated unselected candidate.
+- `more_like_this` can target any evaluated candidate and legacy `should_show` is normalized to it.
 - `should_not_show` can target only a selected candidate.
 - Duplicate submissions are idempotent; opposing later signals remain auditable.
 - Model and effort shown in the UI equal effective Sidecar configuration.
-- Codex usage fields are persisted without estimation when returned by the SDK.
+- Codex usage fields are persisted without estimation when returned by the SDK and aggregated separately by reasoning phase.
+- Terra High returns a structured assessment for every supplied candidate in the same evaluation invocation.
 - Review Inbox defaults to the newest run expanded and remains finite.
 
 ## Current implementation status
 
-The additive SQLite ledger, append-only correction events, provider invocation telemetry, explicit Codex configuration, Review Inbox default, newest-run expansion, and Unified View negative signal are implemented. Historical runs remain readable but are not falsely backfilled as evaluated candidates because their exact provider prompt boundary cannot be reconstructed. Preference profile v0 intentionally remains in `collecting` state; learned ranking weights and exploration do not activate until natural candidate labels exist.
+The additive SQLite ledger, append-only preference events, provider invocation telemetry, explicit Codex configuration, Review Inbox default, newest-run expansion, and Unified View signals are implemented. Historical `should_show` events remain readable as positive-interest signals. Historical runs remain readable but are not falsely backfilled as evaluated candidates because their exact provider prompt boundary cannot be reconstructed. Preference profile v0 intentionally remains in `collecting` state; learned ranking weights and exploration do not activate until natural candidate labels exist.
 
 An inspectable engine dashboard is deferred until real labels establish which parameters need operator control. It should eventually expose active thresholds, preference tendencies, exploration budget, comeback triggers, policy version, and outcome/economic metrics without allowing UI settings to bypass hard safety constraints.

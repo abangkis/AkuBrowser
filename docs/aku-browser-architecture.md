@@ -587,7 +587,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-042 | Use deterministic priority-lane and source-interleaved merging without a second reasoning pass; defer semantic cross-source deduplication | Confirmed for experiment v0 |
 | D-043 | Preserve scrolling as a finite, known result list with an explicit end and no automatic continuation or infinite loading | Confirmed |
 | D-044 | Turn Pilot Review into a bounded Review Inbox plus separate aggregate analytics; open the newest run by default and require corrections rather than exhaustive labeling | Confirmed for Learning Loop v0 |
-| D-045 | Persist every evaluated candidate decision and append-only `should_show`/`should_not_show` corrections so preference snapshots remain rebuildable and auditable | Confirmed for Learning Loop v0 |
+| D-045 | Persist every evaluated candidate decision and append-only positive-interest/negative-presentation signals so preference snapshots remain rebuildable and auditable | Confirmed for Learning Loop v0 |
 | D-046 | Keep hard eligibility and selection policy in AkuSidecar while using Codex initially for provider-neutral feature extraction and evaluation | Confirmed for Learning Loop v0 |
 | D-047 | Make Codex model and reasoning effort explicit, configurable, and visible; record provider-reported token usage per reasoning phase | Confirmed for Learning Loop v0 |
 | D-048 | Treat `should_not_show` as a soft contextual preference signal with a future comeback path; keep permanent blocking as a separate explicit capability | Confirmed; comeback calibration deferred |
@@ -595,6 +595,9 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-050 | Add a future inspectable engine dashboard for thresholds, preference tendencies, exploration budget, comeback triggers, policy version, quality, and token economics | Confirmed as future operator surface |
 | D-051 | Route candidate evaluation to Terra High and the narrow acquisition-planning fallback to Luna High; reserve XHigh for repeated capability failure after precise correction | Confirmed for Learning Loop calibration |
 | D-052 | Gate provider acquisition planning deterministically: call it only for a sparse one-or-two-candidate sample that exhausted movement and can still perform one anchored follow-up | Confirmed to reduce planning-token waste |
+| D-053 | Treat `More like this` as a positive-interest signal, not an immediate presentation command; preserve legacy `should_show` as an alias | Confirmed for Learning Loop semantics |
+| D-054 | Have Terra High emit structured candidate features in the existing evaluation invocation, without adding a second model call | Confirmed for engine-ready observations |
+| D-055 | Report token usage separately for Candidate Evaluation and Acquisition Planning | Confirmed for quality/economic tuning |
 
 ## 16. Change Discipline
 
