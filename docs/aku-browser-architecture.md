@@ -601,6 +601,8 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-056 | Default initial acquisition to opening one inactive canonical source tab when missing; retain configurable `fail_fast`, and never replace a tab during anchored follow-up | Confirmed for daily-use resilience |
 | D-057 | Add an allowlisted dashboard configuration layer persisted in SQLite, with environment override, dashboard value, and built-in default precedence; begin with `missingSourceTabPolicy` | Confirmed for runtime operability |
 | D-058 | Expose existing provider, phase model, phase effort, planning policy, and timeout configuration as persisted startup settings; never restart or hot-swap the active reasoning provider invisibly | Confirmed for transparent operations |
+| D-059 | Treat LinkedIn page completion and feed readiness as separate states; permit bounded temporary activation with focus restoration and exactly one zero-evidence retry before failing at `source_readiness` | Confirmed for LinkedIn reliability |
+| D-060 | Time-box LinkedIn adapter stabilization; after the bounded readiness milestone still reports `feed_not_visible`, mark LinkedIn degraded, preserve X-backed partial Unified Sessions, and move selector/visibility investigation to the adapter backlog | Confirmed to resume product calibration |
 
 ## 16. Change Discipline
 

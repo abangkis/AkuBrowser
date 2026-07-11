@@ -100,3 +100,19 @@ After round one, the ReasoningProvider may return only `finish` or `request_foll
 - no URL selection, navigation, arbitrary click, Computer Use fallback, or third acquisition round.
 
 AkuBridge positions the same tab at the supplied frontier, captures before moving, and must observe at least one exact anchor key in that first follow-up snapshot. Failure to match the frontier fails browser capture. A successful observation reports `acquisitionRound`, `continuationRequested`, `continuationAnchorMatched`, and `captureStartScrollY`, then restores the tab to its pre-follow-up position. AkuSidecar validates those fields against the issued command, persists both observations, deduplicates their evidence, and exposes whether the provider requested and executed the follow-up in final coverage.
+
+## LinkedIn source-readiness behavior
+
+`tab.status=complete` proves only that the page shell loaded. Before LinkedIn capture, AkuBridge probes a bounded, content-script-owned readiness state:
+
+- `feed_ready`;
+- `loading`;
+- `login_required`;
+- `selector_mismatch`;
+- `feed_not_visible`;
+- `page_shell`; or
+- `wrong_page`.
+
+The probe reports total and visible selector counts plus loading/root state only; it does not expand evidence collection. `feed_ready` requires at least one visible feed candidate, not merely a stale or off-viewport matching node. If a background LinkedIn tab is not ready, AkuBridge may temporarily activate it, wait up to the fixed readiness deadline, and restore the previously active tab. During this reliability phase, every LinkedIn capture uses `detect_only` for pending content; X retains its separately validated reveal behavior.
+
+If the first LinkedIn capture still produces zero evidence, AkuBridge may perform exactly one readiness-and-capture retry in the same tab. It cannot open a second tab, add scroll budget, or invoke reasoning. Coverage records readiness state, wait duration, selector count, loading/root state, whether the tab was opened or temporarily activated, its initial background state, and retry count. A zero-evidence result after this bounded recovery fails at `source_readiness`, not `reasoning`.

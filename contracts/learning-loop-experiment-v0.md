@@ -50,7 +50,7 @@ Acquisition planning uses `deterministic_sparse_gap`: skip provider planning whe
 
 ## UI behavior
 
-Review Inbox opens the newest run by default. It shows selected and unselected evaluated candidates, decision state, structured assessment, source link, and preference controls. Other runs remain collapsed. Unified View exposes both `More like this` and `Should not show` for every promoted item. The user can accept the recommended set by doing nothing.
+Review Inbox opens the newest run by default. It shows selected and unselected evaluated candidates, decision state, structured assessment, source link, and preference controls. Each run card places separate Candidate Evaluation and Acquisition Planning model/effort/token usage at the top so economic inspection does not require scrolling past candidate content. Other runs remain collapsed. Unified View exposes both `More like this` and `Should not show` for every promoted item. The user can accept the recommended set by doing nothing.
 
 ## Initial acceptance tests
 
