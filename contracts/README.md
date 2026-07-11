@@ -8,6 +8,8 @@ The reasoning-result contract also carries knowledge-continuity identity. Every 
 
 Current contract artifacts:
 
+- `reasoning-provider-conformance-v0.md` — provider capability manifests and the vendor-neutral structural acceptance harness.
+
 - `reasoning-result.schema.json` — validated provider-neutral result items.
 - `acquisition-plan.schema.json` — the finite provider acquisition decision.
 - `bridge-contract-v1.md` — the constrained localhost and page-message bridge protocol.
