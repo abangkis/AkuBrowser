@@ -8,6 +8,14 @@ const workspaceRoot = path.dirname(projectRoot);
 const bridgeRoot = path.join(workspaceRoot, "AkuBridge");
 const sidecarRoot = path.join(workspaceRoot, "AkuSidecar");
 
+const browserPackage = readJson(path.join(projectRoot, "package.json"));
+const bridgePackage = readJson(path.join(bridgeRoot, "package.json"));
+const sidecarPackage = readJson(path.join(sidecarRoot, "package.json"));
+const bridgeManifest = readJson(path.join(bridgeRoot, "manifest.json"));
+assert.equal(bridgePackage.version, browserPackage.version, "AkuBridge package version drifted");
+assert.equal(sidecarPackage.version, browserPackage.version, "AkuSidecar package version drifted");
+assert.equal(bridgeManifest.version, browserPackage.version, "AkuBridge manifest version drifted");
+
 const canonicalSchema = readJson(path.join(projectRoot, "contracts", "reasoning-result.schema.json"));
 const sidecarSchema = readJson(path.join(sidecarRoot, "schemas", "reasoning-result.schema.json"));
 assert.deepEqual(sidecarSchema, canonicalSchema, "AkuSidecar reasoning schema drifted from AkuBrowser");

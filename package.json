@@ -14,6 +14,8 @@
     "check:contracts": "node scripts/check-contract-sync.mjs",
     "check:bridge": "npm --prefix ../AkuBridge run check",
     "check:sidecar": "npm --prefix ../AkuSidecar run check",
+    "doctor": "node scripts/doctor.mjs",
+    "package:bridge": "npm --prefix ../AkuBridge run package:verify",
     "smoke:http": "npm --prefix ../AkuSidecar run smoke:http",
     "smoke:codex": "npm --prefix ../AkuSidecar run smoke:codex"
   }

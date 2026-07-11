@@ -24,6 +24,7 @@ Install dependencies in each runtime repository first, then run:
 
 ```powershell
 npm run check
+npm run doctor
 npm run smoke:http
 $env:AKU_REASONING_PROVIDER='codex-sdk'
 npm run dev
@@ -31,6 +32,8 @@ npm run dev
 
 Load `..\AkuBridge` as an unpacked Chrome extension and open `http://127.0.0.1:47821`.
 AkuSidecar development keeps this single URL: Vite provides frontend HMR while Node automatically restarts backend changes in the same visible terminal.
+
+`doctor` is read-only. It checks component/manifest version alignment, the visible Sidecar health endpoint, active provider capabilities, and SQLite integrity. Chrome login/tab state and unpacked-extension reload remain explicit manual checks because the local CLI does not inspect browser profile state.
 
 Gate 0B.3 lets a ReasoningProvider either finish after the initial bounded capture or request one deterministic, same-source, frontier-anchored follow-up. JobEngine—not the provider—owns the allowed action, position, scroll budget, and round limit.
 
