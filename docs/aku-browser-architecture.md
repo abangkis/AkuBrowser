@@ -1,8 +1,8 @@
 # AkuBrowser — Architecture Reference
 
-> Status: **Offline preference pipeline implemented — calibration gates pending**
-> Version: **0.14**
-> Last updated: **2026-07-11**
+> Status: **Finite Timeline and source Overview implemented — preference calibration continues**
+> Version: **0.15**
+> Last updated: **2026-07-12**
 > Working name: **AkuBrowser**
 
 ## 1. Purpose of This Document
@@ -147,6 +147,14 @@ flowchart TD
 ```
 
 The child runs remain the execution and audit units. A partial session keeps a completed source result visible when the other source fails. Unified ordering is deterministic by priority with source interleaving; semantic cross-source deduplication remains deferred until pilot evidence can calibrate it. Single-source operation remains available as an Advanced/Pilot path rather than the default daily-use surface. The normative experiment boundary is recorded in [`Unified Session Experiment Contract v0`](../contracts/unified-session-experiment-v0.md).
+
+### Daily-use home surfaces
+
+The default home presentation is now **Timeline**: the latest completed or partial Unified Session is rendered as the existing finite, source-backed result with an explicit finish line. The session form is a collapsible `Check for updates` runner. Reloading the page reads the last presentation-safe session rather than opening Pilot Review or forcing the user to start a new run.
+
+**Overview** is a separate source control plane. It reports registered sources, activation and collection policy, BrowserAdapter health, last observation time, and runtime tab lifecycle. It does not duplicate the reading stream. Users may configure Timeline or Overview as the default landing surface while retaining direct navigation to both.
+
+The initial Source Registry contains X and LinkedIn as active, user-triggered, authenticated-browser stream sources. Registry membership is durable product configuration; whether a tab is open is transient BrowserAdapter state. Future `periodic`, `static`, and `push` behavior classes require different acquisition policies and do not imply that background scheduling is implemented. The normative boundary is recorded in [`Home Surface Contract v0`](../contracts/home-surface-v0.md).
 
 ### 6.1 Gate 0A implementation topology
 
@@ -581,7 +589,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-036 | Treat `Correctly empty` as explicit, intent-scoped negative knowledge; suppress the confirmed evidence only for the same source, mode, and normalized intent | Confirmed after repeat-run pilot |
 | D-037 | Stop after the initial bounded acquisition without provider planning when every observed evidence block was already evaluated for the same intent | Confirmed after LinkedIn repeat-run pilot |
 | D-038 | Keep Pilot Review separate from consumption modes; scope metrics to a disclosed feedback-bearing cohort and require contextual, idempotent feedback with a note for missed empty results | Confirmed |
-| D-039 | Make a unified X + LinkedIn dashboard the default daily-use surface while retaining source-specific runs and an Advanced/Pilot single-source path | Confirmed |
+| D-039 | Make a unified X + LinkedIn daily-use surface while retaining source-specific runs and an Advanced/Pilot single-source path | Refined by D-088: Timeline is the default presentation and Overview is the control plane |
 | D-040 | Model a Unified Session as a persisted parent with sequential X then LinkedIn child runs; preserve source-specific checkpoints, feedback, coverage, and partial results | Confirmed for experiment v0 |
 | D-041 | Allow at most five promoted items per source and ten per Unified Session as ceilings, not quotas; do not increase browser acquisition budgets without evidence | Confirmed for experiment v0 |
 | D-042 | Use deterministic priority-lane and source-interleaved merging without a second reasoning pass; defer semantic cross-source deduplication | Confirmed for experiment v0 |
@@ -630,6 +638,9 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-085 | Integrate AkuBridge with AkuDoctor through an in-memory sanitized capability heartbeat and aggregate per-source observation health; expose no captured content or browser credentials, and use a declared runtime revision to detect an unpacked extension awaiting reload | Confirmed and implemented |
 | D-086 | Make the pilot telemetry rail behavior live-configurable: default to page-flow without an internal scrollbar, with sticky independently scrolling telemetry as an optional setting | Confirmed and implemented |
 | D-087 | Regularize Offline Preference Model v1.1 by deduplicating source/evidence identity, shrinking sparse categories, excluding provider decision and priority from learned features, retaining priority only as an eligibility guardrail, and keeping live influence disabled | Confirmed for shadow evaluation |
+| D-088 | Make finite Timeline the default home presentation, keep Overview as a configurable source control plane, and retain both in primary navigation | Confirmed and implemented |
+| D-089 | Introduce a Source Registry that separates durable registered/active source state from transient open-tab lifecycle; register X and LinkedIn as active user-triggered stream sources | Confirmed and implemented for the pilot |
+| D-090 | Model stream, periodic, static, and push acquisition behavior separately; do not imply background polling, scheduling, or P0 delivery merely by exposing the future behavior classes | Confirmed architecture seam; only stream is implemented |
 
 ## 16. Change Discipline
 

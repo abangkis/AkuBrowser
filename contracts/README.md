@@ -8,6 +8,8 @@ The reasoning-result contract also carries knowledge-continuity identity. Every 
 
 Current contract artifacts:
 
+- `home-surface-v0.md` - finite Timeline, Overview control plane, Source Registry, and default-home configuration boundary.
+
 - `trust-regression-v0.md` — executable prompt-isolation, bounded-evidence, diagnostic-disclosure, and least-authority regression boundaries.
 - `operational-diagnostics-v0.md` — read-only AkuDoctor, component version sync, and extension package-fingerprint boundaries.
 - `local-data-operability-v0.md` — reversible SQLite health, backup, analysis-export, and retention-preview boundaries.
