@@ -1,6 +1,6 @@
 # Offline Preference Experiment Contract v0
 
-> Status: **Implemented; currently blocked by calibration readiness**
+> Status: **Implemented; shadow calibration active, live influence disabled**
 > Date: **2026-07-11**
 
 ## Purpose
@@ -20,22 +20,23 @@ Passing readiness changes the status to `ready_to_fit`; it does not fit or activ
 
 ## Dataset and split
 
-Only the latest contextual signal for each assessed run/evidence pair is fitted. The snapshot fingerprint is a deterministic SHA-256 digest of the assessed fitting dataset. Signals are split by stable run identity so candidates from one run cannot appear in both training and holdout. Twenty percent of feedback-bearing runs form the holdout.
+Only the latest contextual signal for each source/evidence identity is fitted, so repeat appearances cannot multiply one preference event. The snapshot fingerprint is a deterministic SHA-256 digest of that deduplicated assessed dataset. Signals are split by stable run identity so candidates from one run cannot appear in both training and holdout. Twenty percent of feedback-bearing runs form the holdout.
 
-## Model v1
+## Model v1.1
 
-The first model is a deterministic, class-balanced, smoothed additive model. It records tendencies for:
+The current model is a deterministic, class-balanced, regularized additive model. It records tendencies for:
 
-- source and original provider decision;
-- content type and recommended priority;
+- source and content type;
 - topic tags; and
 - intent relevance, novelty, urgency, and actionability.
 
-The model emits a shadow preference probability. That probability is not a relevance fact and is never written back into historical candidate decisions.
+Original provider decision and recommended priority are deliberately excluded from learned preference features so the preference layer does not learn the engine's own historical output. Categorical features with fewer than three supporting signals receive zero weight; one-sided categories are strongly shrunk; and every categorical contribution is capped at magnitude `0.5`.
+
+The model emits a shadow preference probability. That probability is not a relevance fact and is never written back into historical candidate decisions. Provider priority remains an external eligibility guardrail: P1/P2 require probability `>= 0.5`, P3 requires `>= 0.6`, and P4 cannot be promoted. Demotion requires probability `<= 0.25`.
 
 ## Shadow comparison
 
-After a snapshot is current for the active dataset, AkuBrowser may compare its probability against the provider's persisted `selected` or `excluded` decision. The comparison reports `would_move_up`, `would_move_down`, or `unchanged`, plus bounded feature contributions. It does not invent a numeric provider baseline score and does not alter historical decisions.
+After a snapshot is current for the active dataset, AkuBrowser may compare its probability against the provider's persisted `selected` or `excluded` decision. Candidate comparison first collapses repeat appearances by source/evidence identity, then reports `would_move_up`, `would_move_down`, or `unchanged`, plus bounded feature contributions. It does not invent a numeric provider baseline score and does not alter historical decisions.
 
 `GET /api/preferences/shadow-comparison?limit=50&offset=0` returns an explicit unavailable state while no current snapshot exists. Summary metrics always cover the complete bounded comparison window, while candidate details are paged with `total`, `offset`, `limit`, `returned`, and `hasNext`. The endpoint accepts page sizes from 1 through 100 so complete evaluation does not require one unbounded payload. Every response declares `liveInfluence: false`. A reusable synthetic dataset may exercise fitting, explanation, comparison, and pagination contracts in tests, but synthetic signals are never written to the pilot database or counted toward readiness.
 

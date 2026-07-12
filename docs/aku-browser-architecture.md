@@ -628,6 +628,8 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-083 | Report passive source-state events without enabling background P0 monitoring, notifications, or account mutations | Confirmed and implemented as observation-only metadata |
 | D-084 | Require synthetic DOM conformance fixtures for every source adapter version while retaining live health data as operational truth | Confirmed and implemented |
 | D-085 | Integrate AkuBridge with AkuDoctor through an in-memory sanitized capability heartbeat and aggregate per-source observation health; expose no captured content or browser credentials, and use a declared runtime revision to detect an unpacked extension awaiting reload | Confirmed and implemented |
+| D-086 | Make the pilot telemetry rail behavior live-configurable: default to page-flow without an internal scrollbar, with sticky independently scrolling telemetry as an optional setting | Confirmed and implemented |
+| D-087 | Regularize Offline Preference Model v1.1 by deduplicating source/evidence identity, shrinking sparse categories, excluding provider decision and priority from learned features, retaining priority only as an eligibility guardrail, and keeping live influence disabled | Confirmed for shadow evaluation |
 
 ## 16. Change Discipline
 
