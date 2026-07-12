@@ -696,6 +696,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-107 | Keep calibration as its own engine path and persistence lifecycle rather than mixing forced labels with ordinary recommendation feedback | Implemented shadow-only |
 | D-108 | Treat source selection as primary onboarding and source-feed order as the borrowed initial prior; do not ask for interest categories by default | Implemented |
 | D-109 | Run the Codex-backed AkuSidecar from a normal host process context; do not treat HTTP health alone as sufficient because a sandboxed server can capture successfully yet fail provider spawn with `EPERM` | Confirmed after first-run calibration pilot; operational runbook added |
+| D-110 | Calibration uses explicit More / Neutral / Less labels, keeps its progress header sticky, and presents source-like cards with remote URL-only avatars and media; LinkedIn permalinks may be deterministically derived from an observed activity URN, but never invented without one | Implemented; real-feed permalink validation is time-boxed to the next bounded update |
 
 ## 16. Change Discipline
 
