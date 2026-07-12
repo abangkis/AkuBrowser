@@ -1,6 +1,6 @@
 # AkuBrowser — Architecture Reference
 
-> Status: **Rolling Timeline and source Overview implemented — preference calibration continues**
+> Status: **Rolling Timeline and Settings-hosted source control implemented — onboarding design approved**
 > Version: **0.16**
 > Last updated: **2026-07-12**
 > Working name: **AkuBrowser**
@@ -141,20 +141,20 @@ flowchart TD
     U["User starts Unified Session"] --> S["Persist parent session"]
     S --> X["Run bounded X child"]
     X --> L["Run bounded LinkedIn child"]
-    L --> M["Deterministic priority merge"]
+    L --> M["Deterministic bounded merge"]
     M --> R["Finite unified scroll"]
     R --> E["Explicit end of catch-up"]
 ```
 
-The child runs remain the execution and audit units. A partial session keeps a completed source result visible when the other source fails. Unified ordering is deterministic by priority with source interleaving; semantic cross-source deduplication remains deferred until pilot evidence can calibrate it. Single-source operation remains available as an Advanced/Pilot path rather than the default daily-use surface. The normative experiment boundary is recorded in [`Unified Session Experiment Contract v0`](../contracts/unified-session-experiment-v0.md).
+The child runs remain the execution and audit units. A partial session keeps a completed source result visible when the other source fails. The onboarding transition retires P1-P4; until a new ranking-composition contract is approved, unseen evidence retains platform order within each source and sources are interleaved deterministically inside the finite attention boundary. Semantic cross-source deduplication remains deferred. Single-source operation remains available through Settings rather than the default daily-use surface.
 
 ### Daily-use home surfaces
 
 The default home presentation is now **Timeline**: a rolling buffer of the newest evaluated items across completed or partial Unified Sessions, rendered with source-backed cards and an explicit finish line. Capacity defaults to 12 and is configurable up to 50. New session items enter first; older items fill only the remaining slots. For example, ten new items retain two older items, while eight new items retain four.
 
-`Check for updates` directly starts Unified Catch Up from engine defaults and the active Source Registry. Mode, source scope, and free-form intent are no longer routine homepage controls. A future onboarding questionnaire may establish explicit baseline interests, after which daily `More like this` and `Less like this` signals tune contextual preference.
+`Check for updates` directly starts Unified Catch Up from engine defaults and the active Source Registry. Mode, source scope, and free-form intent are no longer routine homepage controls. Onboarding v0 will establish an explicit user-authored baseline through three screens; it does not import historical pilot feedback. Daily `More like this` and `Less like this` remain contextual signals collected after onboarding.
 
-**Overview** is a separate source control plane. It reports registered sources, activation and collection policy, BrowserAdapter health, last observation time, and runtime tab lifecycle. It does not duplicate the reading stream. Users may configure Timeline or Overview as the default landing surface while retaining direct navigation to both.
+Source controls and BrowserAdapter health are part of Settings rather than a separate Overview destination.
 
 The initial Source Registry contains X and LinkedIn as active, user-triggered, authenticated-browser stream sources. Registry membership is durable product configuration; whether a tab is open is transient BrowserAdapter state. Future `periodic`, `static`, and `push` behavior classes require different acquisition policies and do not imply that background scheduling is implemented. The normative boundary is recorded in [`Home Surface Contract v0`](../contracts/home-surface-v0.md).
 
@@ -668,6 +668,10 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-098 | Report the latest completed check as `N additions`, including an explicit `0 additions`, instead of repeating rolling retention and capacity as the primary status | Confirmed and implemented |
 | D-099 | Expose effective engine boundaries in Settings; allow safe next-run editing of per-source items, native scrolls, acquisition rounds, and knowledge-context events while keeping structural pilot caps visible and fixed | Confirmed and implemented |
 | D-100 | Keep active update progress sticky within Timeline scrolling and visually distinguish genuine additions from the newest completed check with a subtle background | Confirmed and implemented |
+| D-101 | Remove the hard-coded AI/technical-engineering user context and retire P1-P4 rather than redefining them before onboarding and preference composition are clear | Confirmed product direction; implementation pending schema migration |
+| D-102 | Build onboarding v0 as three screens: explicit interests, desired content forms, then sources plus confirmation; keep advanced controls in Settings | Confirmed design |
+| D-103 | Do not seed onboarding from the 37 historical pilot signals and do not ask for exploration appetite in v0 | Confirmed design |
+| D-104 | Until a new live ranking contract is approved, preserve source-platform order and deterministic source interleaving inside the finite attention boundary | Confirmed transition policy |
 
 ## 16. Change Discipline
 
