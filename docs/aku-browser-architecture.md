@@ -695,6 +695,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-106 | Add bounded calibration batches that require More/Less decisions on every sampled entry, and allow periodic or random repetition | First-run separate calibration lane implemented shadow-only |
 | D-107 | Keep calibration as its own engine path and persistence lifecycle rather than mixing forced labels with ordinary recommendation feedback | Implemented shadow-only |
 | D-108 | Treat source selection as primary onboarding and source-feed order as the borrowed initial prior; do not ask for interest categories by default | Implemented |
+| D-109 | Run the Codex-backed AkuSidecar from a normal host process context; do not treat HTTP health alone as sufficient because a sandboxed server can capture successfully yet fail provider spawn with `EPERM` | Confirmed after first-run calibration pilot; operational runbook added |
 
 ## 16. Change Discipline
 

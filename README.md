@@ -33,6 +33,8 @@ npm run dev
 Load `..\AkuBridge` as an unpacked Chrome extension and open `http://127.0.0.1:47821`.
 AkuSidecar development keeps this single URL: Vite provides frontend HMR while Node automatically restarts backend changes in the same visible terminal.
 
+When the Codex SDK provider is active, the Sidecar process must be started from a normal host process context so it can spawn Codex CLI. See the [AkuSidecar development runbook](docs/sidecar-development-runbook.md); an ordinary sandboxed command can appear healthy yet fail every reasoning phase with `spawn EPERM`.
+
 `doctor` is read-only. It checks component/manifest version alignment, the visible Sidecar health endpoint, SQLite integrity, the latest sanitized AkuBridge heartbeat, and source-adapter health aggregated from persisted observations. A runtime-revision mismatch identifies an unpacked extension that has not been reloaded. Chrome login and signed-in tab state remain explicit manual checks because the local CLI does not inspect browser profile state.
 
 The bridge diagnostics endpoint is `GET /api/operations/bridge/health`. AkuBrowser posts a bounded capability heartbeat when the extension announces readiness. The heartbeat is held in memory only; the report exposes adapter strategy, field coverage, frontier, source-event counts, lifecycle, and restoration outcomes without raw post text, authors, URLs, cookies, or tokens. `unavailable` means no current browser heartbeat and is reported as a Doctor warning rather than a process failure.
