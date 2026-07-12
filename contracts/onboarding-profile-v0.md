@@ -1,6 +1,6 @@
 # Onboarding Profile Contract v0
 
-> Status: **Designed; not implemented**
+> Status: **Implemented; calibration-only**
 > Date: **2026-07-12**
 
 ## Purpose
@@ -15,21 +15,27 @@ Onboarding creates the first explicit user-authored baseline for AkuBrowser. It 
 4. Exploration appetite is not an onboarding question in v0.
 5. P1-P4 are retired. They are not replaced by another hidden priority taxonomy.
 6. Before a new ranking contract is activated, unseen candidates remain in source-platform order within the finite attention boundary.
-7. Onboarding is short: three screens. Advanced operational controls remain in Settings.
+7. Onboarding uses four focused screens. Advanced operational controls remain in Settings.
 
-## Three-screen flow
+## Four-screen flow
 
-### Screen 1 - What do you want to keep up with?
+### Screen 1 - Choose broad interests
 
-The user writes one or more interest statements in their own words and may add or remove explicit topic chips. No topics are preselected from historical More/Less signals.
+The user selects one or more broad, curated interest categories in a visual chip grid inspired by social onboarding patterns. No interests are preselected from historical More/Less signals.
 
-Examples are UI hints only and are never saved unless selected or entered by the user.
+These categories define the starting breadth and future exploration space. They are positive signals, not permanent filters.
 
 Required outcome:
 
-- at least one non-empty interest statement or confirmed topic seed.
+- at least one selected interest.
 
-### Screen 2 - What kind of information is useful?
+### Screen 2 - Refine the selected interests
+
+The user may describe what they hope to find inside the selected categories. Guidance and an example explain the input's meaning. The refinement cannot introduce a hidden category or exclude a selected category; future ranking treats it as a more specific positive signal inside the selected breadth.
+
+During calibration, this value is persisted and inspectable but has no live ranking influence.
+
+### Screen 3 - What kind of information is useful?
 
 The user selects one or more desired content forms:
 
@@ -42,7 +48,7 @@ The user selects one or more desired content forms:
 
 These are positive baseline preferences, not hard exclusions. The user can refine them later through `More like this` and `Less like this`.
 
-### Screen 3 - Sources and confirmation
+### Screen 4 - Sources and confirmation
 
 The user chooses from installed source adapters, with at least one active source, then reviews the complete profile summary and finishes onboarding. The screen links to Settings for advanced engine budgets but does not embed those controls in onboarding.
 
@@ -53,8 +59,8 @@ The user chooses from installed source adapters, with at least one active source
   "version": 0,
   "status": "completed",
   "origin": "explicit_onboarding",
-  "interestStatements": ["..."],
-  "topicSeeds": ["..."],
+  "selectedInterests": ["ai", "software_development"],
+  "interestRefinement": "Practical Codex workflows and creative AI uses.",
   "preferredContentTypes": ["announcement", "tutorial"],
   "activeSources": ["x", "linkedin"],
   "completedAt": "ISO-8601 timestamp"
@@ -88,4 +94,3 @@ The provider cannot exclude a candidate merely because it falls outside the old 
 ## Development reset
 
 The onboarding test may start from an empty development database. Reset is an explicit operator action, preceded by a backup when the current pilot data still has analytical value. Onboarding never deletes or resets data automatically.
-

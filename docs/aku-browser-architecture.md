@@ -152,7 +152,7 @@ The child runs remain the execution and audit units. A partial session keeps a c
 
 The default home presentation is now **Timeline**: a rolling buffer of the newest evaluated items across completed or partial Unified Sessions, rendered with source-backed cards and an explicit finish line. Capacity defaults to 12 and is configurable up to 50. New session items enter first; older items fill only the remaining slots. For example, ten new items retain two older items, while eight new items retain four.
 
-`Check for updates` directly starts Unified Catch Up from engine defaults and the active Source Registry. Mode, source scope, and free-form intent are no longer routine homepage controls. Onboarding v0 will establish an explicit user-authored baseline through three screens; it does not import historical pilot feedback. Daily `More like this` and `Less like this` remain contextual signals collected after onboarding.
+`Check for updates` directly starts Unified Catch Up from engine defaults and the active Source Registry. Mode, source scope, and free-form intent are no longer routine homepage controls. Onboarding v0 establishes an explicit user-authored baseline through four focused screens; it does not import historical pilot feedback. Daily `More like this` and `Less like this` remain contextual signals collected after onboarding.
 
 Source controls and BrowserAdapter health are part of Settings rather than a separate Overview destination.
 
@@ -546,7 +546,7 @@ Gate 0 and the initial knowledge-continuity proof have passed. Unified Session v
 
 As of July 12, 2026, natural pilot data has passed every offline-fit readiness gate: 37 matched preference events across 19 feedback runs and both sources. Operational reliability is healthy over the latest 20 source runs. A current snapshot has now been fitted from that dataset. Its holdout balanced accuracy is 0.75, positive recall is 0.50, negative recall is 1.0, and agreement is about 0.57; this is still insufficient for an activation decision. The current shadow comparison scores 174 candidates, with 12 possible upward movements and no downward movements. Live preference influence, exploration, and comeback remain disabled.
 
-The hard-coded AI/technical-engineering context, provider-assigned intent relevance, and P1-P4 lanes are now removed from the transition contract. The three-screen onboarding profile supplies only explicit baseline signals. `More like this` and `Less like this` remain shadow-only until a separate ranking-composition and activation decision is approved.
+The hard-coded AI/technical-engineering context, provider-assigned intent relevance, and P1-P4 lanes are now removed from the transition contract. The four-screen onboarding profile supplies broad interest chips, a guided refinement, content-form preferences, and active sources. `More like this` and `Less like this` remain shadow-only until a separate ranking-composition and activation decision is approved.
 
 The next product-calibration sequence is:
 
@@ -673,7 +673,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-099 | Expose effective engine boundaries in Settings; allow safe next-run editing of per-source items, native scrolls, acquisition rounds, and knowledge-context events while keeping structural pilot caps visible and fixed | Confirmed and implemented |
 | D-100 | Keep active update progress sticky within Timeline scrolling and visually distinguish genuine additions from the newest completed check with a subtle background | Confirmed and implemented |
 | D-101 | Remove the hard-coded AI/technical-engineering user context and retire P1-P4 rather than redefining them before onboarding and preference composition are clear | Implemented in the neutral transition contracts and runtime |
-| D-102 | Build onboarding v0 as three screens: explicit interests, desired content forms, then sources plus confirmation; keep advanced controls in Settings | Confirmed design |
+| D-102 | Build onboarding v0 as four screens: broad interest chips, guided refinement, desired content forms, then sources plus confirmation; keep advanced controls in Settings | Implemented and refined after clean-pilot review |
 | D-103 | Do not seed onboarding from the 37 historical pilot signals and do not ask for exploration appetite in v0 | Confirmed design |
 | D-104 | Until a new live ranking contract is approved, preserve source-platform order and deterministic source interleaving inside the finite attention boundary | Confirmed transition policy |
 
