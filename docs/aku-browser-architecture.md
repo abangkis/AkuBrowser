@@ -696,7 +696,8 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-107 | Keep calibration as its own engine path and persistence lifecycle rather than mixing forced labels with ordinary recommendation feedback | Implemented shadow-only |
 | D-108 | Treat source selection as primary onboarding and source-feed order as the borrowed initial prior; do not ask for interest categories by default | Implemented |
 | D-109 | Run the Codex-backed AkuSidecar from a normal host process context; do not treat HTTP health alone as sufficient because a sandboxed server can capture successfully yet fail provider spawn with `EPERM` | Confirmed after first-run calibration pilot; operational runbook added |
-| D-110 | Calibration uses explicit More / Neutral / Less labels, keeps its progress header sticky, and presents source-like cards with remote URL-only avatars and media; LinkedIn permalinks may be deterministically derived from an observed activity URN, but never invented without one | Implemented; real-feed permalink validation is time-boxed to the next bounded update |
+| D-110 | Calibration uses explicit More / Neutral / Less labels, keeps its progress header sticky, and presents source-like cards with remote URL-only avatars and media; LinkedIn permalinks may be deterministically derived from an observed activity URN, but never invented without one | Implemented and validated against the live LinkedIn feed DOM |
+| D-111 | When LinkedIn omits a permalink and activity attributes from its feed DOM, AkuBridge may transiently open only the post control menu, read the local Embed target URN, and close the menu; it must never invoke Save, Copy, Follow, Like, Comment, Repost, or Send | Implemented as bounded permalink recovery; feed fallback remains honestly labeled when recovery is unavailable |
 
 ## 16. Change Discipline
 
