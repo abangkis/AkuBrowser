@@ -646,6 +646,12 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-091 | Make `Check for updates` directly start Unified Catch Up from engine defaults and active registered sources; remove mode, source-scope, and free-form intent controls from the routine homepage experience | Confirmed and implemented |
 | D-092 | Render Timeline as a configurable rolling buffer, default capacity 12: newest evaluated session items enter first and oldest retained items leave only when the capacity is exceeded | Confirmed and implemented |
 | D-093 | Plan a future onboarding questionnaire for explicit baseline interests, then use symmetric `More like this` and `Less like this` as routine contextual tuning signals | Confirmed product direction; questionnaire deferred |
+| D-094 | Keep the retained Timeline visible during `Check for updates`; represent the active runner only as a compact progress strip with current stage, progress, and Cancel | Confirmed and implemented |
+| D-095 | Replace elapsed-time progress with deterministic acquisition steps; show the current source action and `step/total` (12 steps for the default two-source update), not an unreliable completion-time estimate | Confirmed and implemented |
+| D-096 | Remove coverage/debug chrome from the routine Timeline while retaining diagnostics in Review Inbox and pilot surfaces | Confirmed and implemented |
+| D-097 | Merge Overview into Settings and allow a non-empty ordered subset of installed source adapters to participate in the next update; arbitrary new websites still require an adapter contract | Confirmed and implemented for X and LinkedIn |
+| D-098 | Report the latest completed check as `N additions`, including an explicit `0 additions`, instead of repeating rolling retention and capacity as the primary status | Confirmed and implemented |
+| D-099 | Expose effective engine boundaries in Settings; allow safe next-run editing of per-source items, native scrolls, acquisition rounds, and knowledge-context events while keeping structural pilot caps visible and fixed | Confirmed and implemented |
 
 ## 16. Change Discipline
 

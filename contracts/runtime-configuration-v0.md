@@ -26,9 +26,20 @@ The setting applies to the next run without restarting AkuSidecar. Follow-up acq
 
 `defaultPresentation` accepts `source` or `brief`. It applies immediately to newly rendered Unified View and Review Inbox items. The built-in default is `source`; an individual item can still be switched without changing the saved default.
 
-`homePresentation` accepts `timeline` or `overview`. It selects the landing surface after bootstrap when no run is active. The built-in default is `timeline`; both views remain available in navigation regardless of the saved default.
+`homePresentation` is retained as a compatibility setting, but Timeline is now the only daily landing surface. The former Overview source controls live inside Settings.
 
 `timelineCapacity` accepts an integer from 1 through 50. It controls the maximum number of evaluated updates retained in the rolling Timeline and defaults to 12. New items displace the oldest retained items only after the capacity is full.
+
+`activeSources` accepts an ordered non-empty subset of installed source adapters. It applies to the next run and defaults to `x,linkedin`. The pilot can include or exclude X and LinkedIn; registering an arbitrary website still requires a compatible adapter and source contract.
+
+The Engine constraints group exposes four next-run budgets:
+
+- `maxItemsPerSource`: 1 through 10, default 5;
+- `maxScrolls`: 0 through 5, default 2;
+- `maxAcquisitionRounds`: 1 or 2, default 2;
+- `maxKnowledgeContextEvents`: 1 through 100, default 20.
+
+It also displays the fixed pilot boundaries: 10 unified items, one follow-up scroll, three continuation anchors, 20 evidence blocks per snapshot, 4,000 characters per block, four media entries per block, 45-second capture timeout, and 5-second fresh-content wait.
 
 `streamWidth` accepts `compact`, `social`, `comfortable`, or `wide`. It applies live to Session and Review Inbox while leaving Settings at the full application width. The built-in `social` default is 640 px including panel padding, producing a reading column close to the primary feeds on X and LinkedIn.
 
@@ -59,4 +70,4 @@ These values do not mutate the active provider. They become effective only after
 - `GET /api/configuration/runtime`
 - `PUT /api/configuration/runtime`
 
-The update endpoint accepts only the allowlisted configuration object. Expansion to attention budgets or other engine parameters requires a new explicit contract decision.
+The update endpoint accepts only the allowlisted configuration object. Additional engine parameters require a new explicit contract decision.
