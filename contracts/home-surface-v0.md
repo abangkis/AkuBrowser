@@ -62,7 +62,7 @@ Timeline is the only daily home surface. Source operations live in Settings.
 
 `timelineCapacity` accepts an integer from 1 through 50, applies live, persists in the StateStore, and defaults to 12.
 
-Mode, source scope, and free-form session intent are not routine homepage controls. Catch Up and the active Source Registry provide temporary defaults. A future onboarding questionnaire may establish explicit baseline interests; routine `More like this` and `Less like this` feedback then tunes contextual preference without becoming an immediate display command.
+Mode, source scope, and free-form session intent are not routine homepage controls. Catch Up and the active Source Registry provide temporary defaults. Onboarding selects sources only; a separate forced-label calibration verifies actual source entries, while routine `More like this` and `Less like this` feedback tunes contextual preference without becoming an immediate display command.
 
 ## Safety and scope
 

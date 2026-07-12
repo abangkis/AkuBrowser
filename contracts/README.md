@@ -8,7 +8,8 @@ The reasoning-result contract also carries knowledge-continuity identity. Every 
 
 Current contract artifacts:
 
-- `onboarding-profile-v0.md` - explicit three-screen baseline profile, neutral platform-order transition, and development-reset boundary.
+- `onboarding-profile-v0.md` - source-only first-run setup, neutral platform-order transition, and development-reset boundary.
+- `calibration-engine-v0.md` - separate forced-label calibration lane, raw-entry sampling, and shadow-only activation boundary.
 - `home-surface-v0.md` - finite Timeline, Settings-hosted source control, Source Registry, and update-result boundary.
 
 - `trust-regression-v0.md` — executable prompt-isolation, bounded-evidence, diagnostic-disclosure, and least-authority regression boundaries.

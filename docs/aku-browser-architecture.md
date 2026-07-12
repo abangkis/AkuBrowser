@@ -152,7 +152,7 @@ The child runs remain the execution and audit units. A partial session keeps a c
 
 The default home presentation is now **Timeline**: a rolling buffer of the newest evaluated items across completed or partial Unified Sessions, rendered with source-backed cards and an explicit finish line. Capacity defaults to 12 and is configurable up to 50. New session items enter first; older items fill only the remaining slots. For example, ten new items retain two older items, while eight new items retain four.
 
-`Check for updates` directly starts Unified Catch Up from engine defaults and the active Source Registry. Mode, source scope, and free-form intent are no longer routine homepage controls. Onboarding v0 uses two short screens for at most five lightweight interest hints and active sources; it does not import historical pilot feedback. Finishing first-time onboarding automatically starts the first update. Daily `More like this` and `Less like this` remain contextual signals collected after onboarding.
+`Check for updates` directly starts Unified Catch Up from engine defaults and the active Source Registry. Mode, source scope, and free-form intent are no longer routine homepage controls. Onboarding v0 only selects active sources; it does not restate interests or import historical pilot feedback. Finishing first-time onboarding automatically starts the first update, followed by a bounded forced-label calibration session. Daily `More like this` and `Less like this` remain contextual signals collected outside that calibration lane.
 
 Source controls and BrowserAdapter health are part of Settings rather than a separate Overview destination.
 
@@ -162,13 +162,14 @@ The initial Source Registry contains X and LinkedIn as active, user-triggered, a
 
 AkuBrowser is an information-consumption layer over websites, not a replacement social network. Stream sources such as X and LinkedIn already contain a valuable behavioral prior learned from long-term user interaction. Their visible order should therefore be preserved as evidence rather than discarded in favor of a new cold-start FYP.
 
-The current interest screen is deliberately lightweight and experimental. It must not overshadow source ordering. The preferred learning sequence is:
+The retired interest screen remains recoverable from Git history, but it is not part of the default product flow. The preferred learning sequence is:
 
-1. acquire the source feed in its existing order;
-2. present a finite cross-source timeline;
-3. collect explicit `More like this` and `Less like this` decisions on actual entries;
-4. periodically run a bounded calibration batch where every sampled entry requires a decision; and
-5. only after representative evidence, compose source prior, explicit feedback, novelty, and future exploration/comeback policy.
+1. choose active source adapters;
+2. acquire each source feed in its existing order as a borrowed behavioral prior;
+3. force explicit `More like this` and `Less like this` decisions on a bounded first-run sample;
+4. collect optional contextual feedback during ordinary use;
+5. periodically run another bounded calibration batch only under an explicit trigger policy; and
+6. only after representative evidence, compose source prior, explicit feedback, novelty, and future exploration/comeback policy.
 
 For non-stream websites, source order may have little or no behavioral meaning. Their future acquisition and prioritization contracts must be defined by source behavior class rather than inheriting the social-stream onboarding model.
 
@@ -301,7 +302,7 @@ P0 is deliberately separate from P1. Important information is not automatically 
 - one local user;
 - a pinned local AkuBrowser tab;
 - X and LinkedIn;
-- explicit interests supplied through onboarding, without a hard-coded domain focus;
+- source selection supplied through onboarding, without a hard-coded domain focus;
 - read-only browser consumption;
 - user-triggered Catch Up and Manual Live;
 - Codex-driven observation and classification;
@@ -560,13 +561,13 @@ Gate 0 and the initial knowledge-continuity proof have passed. Unified Session v
 
 As of July 12, 2026, natural pilot data has passed every offline-fit readiness gate: 37 matched preference events across 19 feedback runs and both sources. Operational reliability is healthy over the latest 20 source runs. A current snapshot has now been fitted from that dataset. Its holdout balanced accuracy is 0.75, positive recall is 0.50, negative recall is 1.0, and agreement is about 0.57; this is still insufficient for an activation decision. The current shadow comparison scores 174 candidates, with 12 possible upward movements and no downward movements. Live preference influence, exploration, and comeback remain disabled.
 
-The hard-coded AI/technical-engineering context, provider-assigned intent relevance, and P1-P4 lanes are now removed from the transition contract. The four-screen onboarding profile supplies broad interest chips, a guided refinement, content-form preferences, and active sources. `More like this` and `Less like this` remain shadow-only until a separate ranking-composition and activation decision is approved.
+The hard-coded AI/technical-engineering context, provider-assigned intent relevance, and P1-P4 lanes are now removed from the transition contract. The source-only onboarding profile activates installed adapters, then the separate Calibration Engine collects forced entry-level More/Less labels. All preference influence remains shadow-only until a separate ranking-composition and activation decision is approved.
 
 The next product-calibration sequence is:
 
 1. inspect the 12 shadow upward-movement candidates and collect additional labels that improve representation of positively selected items;
-2. define the onboarding questionnaire and replace hard-coded domain context with an explicit baseline-interest contract, separate from contextual `More like this` / `Less like this` signals;
-3. define how preference score, baseline interests, provider relevance, exploration, comeback, and the P4 guardrail compose before any live activation;
+2. evaluate whether forced entry-level calibration reliably validates the borrowed source prior;
+3. define how source prior, calibration labels, contextual feedback, exploration, and comeback compose before any live activation;
 4. make a separate activation decision only after the preference model passes agreed quality thresholds;
 5. calibrate semantic event keys, stale/superseded handling, cross-source event merging, and retention/compaction; and
 6. only after behavioral proof, test Sidecar Lite as the next packaging experiment.
@@ -678,7 +679,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-090 | Model stream, periodic, static, and push acquisition behavior separately; do not imply background polling, scheduling, or P0 delivery merely by exposing the future behavior classes | Confirmed architecture seam; only stream is implemented |
 | D-091 | Make `Check for updates` directly start Unified Catch Up from engine defaults and active registered sources; remove mode, source-scope, and free-form intent controls from the routine homepage experience | Confirmed and implemented |
 | D-092 | Render Timeline as a configurable rolling buffer, default capacity 12: newest evaluated session items enter first and oldest retained items leave only when the capacity is exceeded | Confirmed and implemented |
-| D-093 | Plan a future onboarding questionnaire for explicit baseline interests, then use symmetric `More like this` and `Less like this` as routine contextual tuning signals | Confirmed product direction; questionnaire deferred |
+| D-093 | Separate initial setup from ongoing preference learning | Superseded by D-107 and D-108: source-only onboarding plus separate calibration |
 | D-094 | Keep the retained Timeline visible during `Check for updates`; represent the active runner only as a compact progress strip with current stage, progress, and Cancel | Confirmed and implemented |
 | D-095 | Replace elapsed-time progress with deterministic acquisition steps; show the current source action and `step/total` (12 steps for the default two-source update), not an unreliable completion-time estimate | Confirmed and implemented |
 | D-096 | Remove coverage/debug chrome from the routine Timeline while retaining diagnostics in Review Inbox and pilot surfaces | Confirmed and implemented |
@@ -687,11 +688,13 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-099 | Expose effective engine boundaries in Settings; allow safe next-run editing of per-source items, native scrolls, acquisition rounds, and knowledge-context events while keeping structural pilot caps visible and fixed | Confirmed and implemented |
 | D-100 | Keep active update progress sticky within Timeline scrolling and visually distinguish genuine additions from the newest completed check with a subtle background | Confirmed and implemented |
 | D-101 | Remove the hard-coded AI/technical-engineering user context and retire P1-P4 rather than redefining them before onboarding and preference composition are clear | Implemented in the neutral transition contracts and runtime |
-| D-102 | Reduce onboarding v0 to two screens: at most five lightweight interest hints, then sources plus confirmation; start the first update automatically | Implemented after clean-pilot review |
+| D-102 | Reduce onboarding v0 to source selection only and start the first update automatically | Superseded interest experiment; source-only flow implemented |
 | D-103 | Do not seed onboarding from the 37 historical pilot signals and do not ask for exploration appetite in v0 | Confirmed design |
 | D-104 | Until a new live ranking contract is approved, preserve source-platform order and deterministic source interleaving inside the finite attention boundary | Confirmed transition policy |
-| D-105 | Treat the social source's existing feed order as a borrowed behavioral prior; onboarding interests must not overshadow it | Confirmed product direction; live composition deferred |
-| D-106 | Add future bounded calibration batches that require More/Less decisions on every sampled entry, and allow periodic or random repetition | Confirmed concept; implementation deferred |
+| D-105 | Treat the social source's existing feed order as a borrowed behavioral prior; a cold-start questionnaire must not overshadow it | Confirmed product direction; live composition deferred |
+| D-106 | Add bounded calibration batches that require More/Less decisions on every sampled entry, and allow periodic or random repetition | First-run separate calibration lane implemented shadow-only |
+| D-107 | Keep calibration as its own engine path and persistence lifecycle rather than mixing forced labels with ordinary recommendation feedback | Implemented shadow-only |
+| D-108 | Treat source selection as primary onboarding and source-feed order as the borrowed initial prior; do not ask for interest categories by default | Implemented |
 
 ## 16. Change Discipline
 
