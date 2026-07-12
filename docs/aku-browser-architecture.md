@@ -699,6 +699,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-110 | Calibration uses explicit More / Neutral / Less labels, keeps its progress header sticky, and presents source-like cards with remote URL-only avatars and media; LinkedIn permalinks may be deterministically derived from an observed activity URN, but never invented without one | Implemented and validated against the live LinkedIn feed DOM |
 | D-111 | When LinkedIn omits a permalink and activity attributes from its feed DOM, AkuBridge may transiently open only the post control menu, read the local Embed target URN, and close the menu; it must never invoke Save, Copy, Follow, Like, Comment, Repost, or Send | Implemented as bounded permalink recovery; feed fallback remains honestly labeled when recovery is unavailable |
 | D-112 | Source-tab injection is revisioned rather than guarded by a permanent boolean, so a reloaded AkuBridge replaces its stale message listener in reused X or LinkedIn tabs; X GIF/video previews include the allowlisted `previewInterstitial` poster and remain URL-only | Implemented after the first neutral-calibration rerun exposed stale X capture |
+| D-113 | Runtime generation applies to the adapter registry as well as the message listener; LinkedIn v3 extracts author identity from the post control label, body text from the expandable content element, and the matching profile image URL | Implemented after a clean rerun proved stale adapters survived listener replacement |
 
 ## 16. Change Discipline
 
