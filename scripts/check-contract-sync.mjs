@@ -47,6 +47,7 @@ for (const schemaName of [
   "preference-profile.schema.json",
   "selection-decision.schema.json",
   "reasoning-invocation.schema.json",
+  "onboarding-profile.schema.json",
 ]) {
   assert.deepEqual(
     readJson(path.join(sidecarRoot, "schemas", schemaName)),

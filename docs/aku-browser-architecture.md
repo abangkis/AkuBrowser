@@ -264,7 +264,11 @@ Behavioral signals must therefore obey these constraints:
 
 The initial Gate 0 data model preserves explicit feedback, run history, and observed feed position, but no implicit behavioral preference is applied to ranking until the pilot has enough representative interactions to evaluate it.
 
-## 8. Priority Lanes
+## 8. Ranking transition
+
+The original P1-P4 catch-up lanes are retired. Until onboarding and contextual feedback produce an approved ranking-composition contract, AkuBrowser preserves platform order within each source and interleaves active sources deterministically inside the finite attention boundary. Emergency interruption remains a future, separately governed capability; ordinary importance never implies a notification.
+
+<!-- Retired pilot lane reference
 
 | Lane | Intended behavior | Example |
 |---|---|---|
@@ -274,7 +278,7 @@ The initial Gate 0 data model preserves explicit feedback, run history, and obse
 | **P3 — Discovery** | Controlled exposure outside the core focus | Fable, Grok, Meta AI, Google AI, and adjacent systems |
 | **P4 — Collapse or Ignore** | Hidden unless relevance changes | Generic technology information with no current material value |
 
-P0 is deliberately separate from P1. Important information is not automatically interruption-worthy.
+P0 is deliberately separate from P1. Important information is not automatically interruption-worthy. -->
 
 ## 9. Initial Scope Boundary
 
@@ -283,7 +287,7 @@ P0 is deliberately separate from P1. Important information is not automatically 
 - one local user;
 - a pinned local AkuBrowser tab;
 - X and LinkedIn;
-- technical engineering and the user's current AI-development interests;
+- explicit interests supplied through onboarding, without a hard-coded domain focus;
 - read-only browser consumption;
 - user-triggered Catch Up and Manual Live;
 - Codex-driven observation and classification;
@@ -542,7 +546,7 @@ Gate 0 and the initial knowledge-continuity proof have passed. Unified Session v
 
 As of July 12, 2026, natural pilot data has passed every offline-fit readiness gate: 37 matched preference events across 19 feedback runs and both sources. Operational reliability is healthy over the latest 20 source runs. A current snapshot has now been fitted from that dataset. Its holdout balanced accuracy is 0.75, positive recall is 0.50, negative recall is 1.0, and agreement is about 0.57; this is still insufficient for an activation decision. The current shadow comparison scores 174 candidates, with 12 possible upward movements and no downward movements. Live preference influence, exploration, and comeback remain disabled.
 
-The current live selector is still bounded by the provider prompt's explicit AI/technical-engineering user context. `More like this` and `Less like this` train only the shadow snapshot and cannot broaden live eligibility. The shadow features also include provider-assigned `intentRelevance`, so they indirectly inherit the original context. In addition, P4 remains ineligible for preference-driven promotion. Replacing this initial context with questionnaire-derived baseline interests plus contextual feedback requires a separate ranking-contract change; fitting alone does not accomplish it.
+The hard-coded AI/technical-engineering context, provider-assigned intent relevance, and P1-P4 lanes are now removed from the transition contract. The three-screen onboarding profile supplies only explicit baseline signals. `More like this` and `Less like this` remain shadow-only until a separate ranking-composition and activation decision is approved.
 
 The next product-calibration sequence is:
 
@@ -668,7 +672,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-098 | Report the latest completed check as `N additions`, including an explicit `0 additions`, instead of repeating rolling retention and capacity as the primary status | Confirmed and implemented |
 | D-099 | Expose effective engine boundaries in Settings; allow safe next-run editing of per-source items, native scrolls, acquisition rounds, and knowledge-context events while keeping structural pilot caps visible and fixed | Confirmed and implemented |
 | D-100 | Keep active update progress sticky within Timeline scrolling and visually distinguish genuine additions from the newest completed check with a subtle background | Confirmed and implemented |
-| D-101 | Remove the hard-coded AI/technical-engineering user context and retire P1-P4 rather than redefining them before onboarding and preference composition are clear | Confirmed product direction; implementation pending schema migration |
+| D-101 | Remove the hard-coded AI/technical-engineering user context and retire P1-P4 rather than redefining them before onboarding and preference composition are clear | Implemented in the neutral transition contracts and runtime |
 | D-102 | Build onboarding v0 as three screens: explicit interests, desired content forms, then sources plus confirmation; keep advanced controls in Settings | Confirmed design |
 | D-103 | Do not seed onboarding from the 37 historical pilot signals and do not ask for exploration appetite in v0 | Confirmed design |
 | D-104 | Until a new live ranking contract is approved, preserve source-platform order and deterministic source interleaving inside the finite attention boundary | Confirmed transition policy |

@@ -123,20 +123,18 @@ Each unified item carries the unchanged validated result item, the producing `ru
 
 ### Merge order
 
-1. Partition child items into `P1`, `P2`, `P3`, and `P4` lanes.
-2. Emit lanes in that priority order.
-3. Within a lane, round-robin the declared source order while preserving each child's provider-selected order.
-4. Do not promote, rewrite, or synthesize an item during merge.
-5. Stop at `maxItemsTotal`, although valid child ceilings should already enforce it.
+1. Preserve each child's platform order.
+2. Round-robin the declared source order.
+3. Do not promote, rewrite, or synthesize an item during merge.
+4. Stop at `maxItemsTotal`, although valid child ceilings should already enforce it.
 
 Example:
 
 ```text
-P1 X
-P1 LinkedIn
-P1 X
-P2 X
-P2 LinkedIn
+X item 1
+LinkedIn item 1
+X item 2
+LinkedIn item 2
 ```
 
 ### Duplicate policy

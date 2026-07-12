@@ -28,11 +28,11 @@ The current model is a deterministic, class-balanced, regularized additive model
 
 - source and content type;
 - topic tags; and
-- intent relevance, novelty, urgency, and actionability.
+- novelty, urgency, and actionability.
 
 Original provider decision and recommended priority are deliberately excluded from learned preference features so the preference layer does not learn the engine's own historical output. Categorical features with fewer than three supporting signals receive zero weight; one-sided categories are strongly shrunk; and every categorical contribution is capped at magnitude `0.5`.
 
-The model emits a shadow preference probability. That probability is not a relevance fact and is never written back into historical candidate decisions. Provider priority remains an external eligibility guardrail: P1/P2 require probability `>= 0.5`, P3 requires `>= 0.6`, and P4 cannot be promoted. Demotion requires probability `<= 0.25`.
+The model emits a shadow preference probability. That probability is not a relevance fact and is never written back into historical candidate decisions. During the neutral transition, a probability of at least `0.6` marks a possible upward movement and a probability at most `0.25` marks a possible downward movement. Both remain observational and have no live influence.
 
 ## Shadow comparison
 
