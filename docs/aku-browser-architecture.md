@@ -538,7 +538,20 @@ Potential future providers include a local OpenAI-compatible inference server, a
 
 ### 14.5 Current recommendation
 
-Gate 0 and the initial knowledge-continuity proof have passed. Unified Session v0 is implemented, and its live Chrome pilot has verified sequential X and LinkedIn orchestration, bounded pending-content recovery, UI restoration after reload, and finite completion. A source capture with zero visible evidence is now reported as acquisition-unavailable and excluded from empty-result trust metrics instead of being presented as a correctly empty feed. The remaining experiment is product calibration with natural sessions that contain promoted items. During that experiment:
+Gate 0 and the initial knowledge-continuity proof have passed. Unified Session v0 is implemented, and its live Chrome pilot has verified sequential X and LinkedIn orchestration, bounded pending-content recovery, UI restoration after reload, and finite completion. A source capture with zero visible evidence is now reported as acquisition-unavailable and excluded from empty-result trust metrics instead of being presented as a correctly empty feed.
+
+As of July 12, 2026, natural pilot data has passed every offline-fit readiness gate: 37 matched preference events across 19 feedback runs and both sources. Operational reliability is healthy over the latest 20 source runs. However, the newest persisted preference snapshot belongs to an older dataset, and its holdout evaluation is not sufficient for activation: balanced accuracy is about 0.58 and positive recall about 0.17. Live preference influence, exploration, and comeback therefore remain disabled.
+
+The next product-calibration sequence is:
+
+1. fit a current offline snapshot from the latest dataset and inspect the complete shadow comparison;
+2. collect additional labels that improve representation of positively selected items and verify holdout movement, not merely readiness counts;
+3. define the onboarding questionnaire as an explicit baseline-interest contract, separate from contextual `More like this` / `Less like this` signals;
+4. make a separate activation decision only after the preference model passes agreed quality thresholds, with bounded exploration and comeback policy defined first;
+5. calibrate semantic event keys, stale/superseded handling, cross-source event merging, and retention/compaction; and
+6. only after behavioral proof, test Sidecar Lite as the next packaging experiment.
+
+During calibration:
 
 1. keep orchestration logic portable and independent of Node-, Python-, or OS-only APIs where practical;
 2. keep persistence behind `StateStore` rather than allowing business rules to depend directly on SQLite queries;
@@ -652,6 +665,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-097 | Merge Overview into Settings and allow a non-empty ordered subset of installed source adapters to participate in the next update; arbitrary new websites still require an adapter contract | Confirmed and implemented for X and LinkedIn |
 | D-098 | Report the latest completed check as `N additions`, including an explicit `0 additions`, instead of repeating rolling retention and capacity as the primary status | Confirmed and implemented |
 | D-099 | Expose effective engine boundaries in Settings; allow safe next-run editing of per-source items, native scrolls, acquisition rounds, and knowledge-context events while keeping structural pilot caps visible and fixed | Confirmed and implemented |
+| D-100 | Keep active update progress sticky within Timeline scrolling and visually distinguish genuine additions from the newest completed check with a subtle background | Confirmed and implemented |
 
 ## 16. Change Discipline
 

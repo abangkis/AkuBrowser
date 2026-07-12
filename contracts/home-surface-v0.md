@@ -15,6 +15,7 @@ Timeline is the built-in default home presentation.
 - Its capacity defaults to 12 and is configurable from 1 through 50.
 - New session items enter first; older retained items fill only the remaining capacity and the oldest overflow leaves the view.
 - After each completed check, the heading reports how many genuinely new items the latest session added. A completed empty check explicitly reports `0 additions`; retained count and capacity are not repeated as the primary status.
+- During an active check, the compact progress strip stays visible while the user scrolls the retained Timeline. Newly added items from the latest check use a subtle distinct background until a later check becomes the newest session.
 - `Check for updates` directly starts a Unified Catch Up from engine defaults and the active Source Registry; no run form is required.
 - While acquisition is active, the retained Timeline remains readable. A compact progress strip above it reports the current source/stage, its deterministic step position, progress, and Cancel. The default two-source update has 12 steps; the total contracts when fewer sources are active. Elapsed-time estimates and detailed run-contract metrics are not part of the daily surface.
 - Routine Timeline cards omit coverage diagnostics and duplicate result chrome. Those details remain available in pilot/review surfaces when needed.
