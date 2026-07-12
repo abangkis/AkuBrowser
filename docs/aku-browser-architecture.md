@@ -152,11 +152,25 @@ The child runs remain the execution and audit units. A partial session keeps a c
 
 The default home presentation is now **Timeline**: a rolling buffer of the newest evaluated items across completed or partial Unified Sessions, rendered with source-backed cards and an explicit finish line. Capacity defaults to 12 and is configurable up to 50. New session items enter first; older items fill only the remaining slots. For example, ten new items retain two older items, while eight new items retain four.
 
-`Check for updates` directly starts Unified Catch Up from engine defaults and the active Source Registry. Mode, source scope, and free-form intent are no longer routine homepage controls. Onboarding v0 establishes an explicit user-authored baseline through four focused screens; it does not import historical pilot feedback. Daily `More like this` and `Less like this` remain contextual signals collected after onboarding.
+`Check for updates` directly starts Unified Catch Up from engine defaults and the active Source Registry. Mode, source scope, and free-form intent are no longer routine homepage controls. Onboarding v0 uses two short screens for at most five lightweight interest hints and active sources; it does not import historical pilot feedback. Finishing first-time onboarding automatically starts the first update. Daily `More like this` and `Less like this` remain contextual signals collected after onboarding.
 
 Source controls and BrowserAdapter health are part of Settings rather than a separate Overview destination.
 
 The initial Source Registry contains X and LinkedIn as active, user-triggered, authenticated-browser stream sources. Registry membership is durable product configuration; whether a tab is open is transient BrowserAdapter state. Future `periodic`, `static`, and `push` behavior classes require different acquisition policies and do not imply that background scheduling is implemented. The normative boundary is recorded in [`Home Surface Contract v0`](../contracts/home-surface-v0.md).
+
+### Borrowed prior and calibration
+
+AkuBrowser is an information-consumption layer over websites, not a replacement social network. Stream sources such as X and LinkedIn already contain a valuable behavioral prior learned from long-term user interaction. Their visible order should therefore be preserved as evidence rather than discarded in favor of a new cold-start FYP.
+
+The current interest screen is deliberately lightweight and experimental. It must not overshadow source ordering. The preferred learning sequence is:
+
+1. acquire the source feed in its existing order;
+2. present a finite cross-source timeline;
+3. collect explicit `More like this` and `Less like this` decisions on actual entries;
+4. periodically run a bounded calibration batch where every sampled entry requires a decision; and
+5. only after representative evidence, compose source prior, explicit feedback, novelty, and future exploration/comeback policy.
+
+For non-stream websites, source order may have little or no behavioral meaning. Their future acquisition and prioritization contracts must be defined by source behavior class rather than inheriting the social-stream onboarding model.
 
 ### 6.1 Gate 0A implementation topology
 
@@ -673,9 +687,11 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-099 | Expose effective engine boundaries in Settings; allow safe next-run editing of per-source items, native scrolls, acquisition rounds, and knowledge-context events while keeping structural pilot caps visible and fixed | Confirmed and implemented |
 | D-100 | Keep active update progress sticky within Timeline scrolling and visually distinguish genuine additions from the newest completed check with a subtle background | Confirmed and implemented |
 | D-101 | Remove the hard-coded AI/technical-engineering user context and retire P1-P4 rather than redefining them before onboarding and preference composition are clear | Implemented in the neutral transition contracts and runtime |
-| D-102 | Build onboarding v0 as four screens: broad interest chips, guided refinement, desired content forms, then sources plus confirmation; keep advanced controls in Settings | Implemented and refined after clean-pilot review |
+| D-102 | Reduce onboarding v0 to two screens: at most five lightweight interest hints, then sources plus confirmation; start the first update automatically | Implemented after clean-pilot review |
 | D-103 | Do not seed onboarding from the 37 historical pilot signals and do not ask for exploration appetite in v0 | Confirmed design |
 | D-104 | Until a new live ranking contract is approved, preserve source-platform order and deterministic source interleaving inside the finite attention boundary | Confirmed transition policy |
+| D-105 | Treat the social source's existing feed order as a borrowed behavioral prior; onboarding interests must not overshadow it | Confirmed product direction; live composition deferred |
+| D-106 | Add future bounded calibration batches that require More/Less decisions on every sampled entry, and allow periodic or random repetition | Confirmed concept; implementation deferred |
 
 ## 16. Change Discipline
 

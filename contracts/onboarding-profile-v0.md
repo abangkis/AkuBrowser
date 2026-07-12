@@ -15,42 +15,25 @@ Onboarding creates the first explicit user-authored baseline for AkuBrowser. It 
 4. Exploration appetite is not an onboarding question in v0.
 5. P1-P4 are retired. They are not replaced by another hidden priority taxonomy.
 6. Before a new ranking contract is activated, unseen candidates remain in source-platform order within the finite attention boundary.
-7. Onboarding uses four focused screens. Advanced operational controls remain in Settings.
+7. Onboarding uses two focused screens. Advanced operational controls remain in Settings.
+8. At most five interests may be selected.
+9. Completing first-time onboarding immediately starts the first bounded update.
 
-## Four-screen flow
+## Two-screen flow
 
 ### Screen 1 - Choose broad interests
 
-The user selects one or more broad, curated interest categories in a visual chip grid inspired by social onboarding patterns. No interests are preselected from historical More/Less signals.
+The user selects one to five broad, curated interest categories in a visual chip grid. No interests are preselected from historical More/Less signals.
 
-These categories define the starting breadth and future exploration space. They are positive signals, not permanent filters.
+These categories are lightweight declared hints, not the product's primary behavioral prior and not permanent filters. The source feed's existing order carries richer historical knowledge about the user.
 
 Required outcome:
 
-- at least one selected interest.
+- at least one and at most five selected interests.
 
-### Screen 2 - Refine the selected interests
+### Screen 2 - Sources and confirmation
 
-The user may describe what they hope to find inside the selected categories. Guidance and an example explain the input's meaning. The refinement cannot introduce a hidden category or exclude a selected category; future ranking treats it as a more specific positive signal inside the selected breadth.
-
-During calibration, this value is persisted and inspectable but has no live ranking influence.
-
-### Screen 3 - What kind of information is useful?
-
-The user selects one or more desired content forms:
-
-- changes and announcements;
-- practical guides and tutorials;
-- opinions and analysis;
-- research;
-- opportunities; and
-- general discovery.
-
-These are positive baseline preferences, not hard exclusions. The user can refine them later through `More like this` and `Less like this`.
-
-### Screen 4 - Sources and confirmation
-
-The user chooses from installed source adapters, with at least one active source, then reviews the complete profile summary and finishes onboarding. The screen links to Settings for advanced engine budgets but does not embed those controls in onboarding.
+The user chooses from installed source adapters, with at least one active source, then reviews the profile and finishes onboarding. The first bounded update starts automatically. The screen links to Settings for advanced engine budgets but does not embed those controls in onboarding.
 
 ## Persisted profile
 
@@ -60,8 +43,6 @@ The user chooses from installed source adapters, with at least one active source
   "status": "completed",
   "origin": "explicit_onboarding",
   "selectedInterests": ["ai", "software_development"],
-  "interestRefinement": "Practical Codex workflows and creative AI uses.",
-  "preferredContentTypes": ["announcement", "tutorial"],
   "activeSources": ["x", "linkedin"],
   "completedAt": "ISO-8601 timestamp"
 }
