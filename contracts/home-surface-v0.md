@@ -11,14 +11,15 @@ AkuBrowser separates the daily consumption surface from the operational source o
 
 Timeline is the built-in default home presentation.
 
-- It opens the latest completed or partial Unified Session after reload.
-- It renders the existing finite, source-backed result and explicit finish line.
-- The run form is a collapsible `Check for updates` runner rather than the home page itself.
+- It opens a rolling buffer of the newest evaluated items across completed or partial Unified Sessions.
+- Its capacity defaults to 12 and is configurable from 1 through 50.
+- New session items enter first; older retained items fill only the remaining capacity and the oldest overflow leaves the view.
+- `Check for updates` directly starts a Unified Catch Up from engine defaults and the active Source Registry; no run form is required.
 - It never auto-loads another session or turns persisted history into an unbounded feed.
 - Refresh reads persisted presentation data and does not start browser acquisition.
 - Timeline session payloads exclude raw browser observations.
 
-`GET /api/sessions?limit=1&offset=0` returns presentation-safe completed or partial Unified Sessions with pagination. Page size is bounded from 1 through 10. Child runs may include validated results, coverage, candidate presentation data, feedback, and reasoning telemetry, but not raw observations or bridge commands.
+`GET /api/timeline?limit=12&offset=0` returns the bounded rolling buffer with pagination. Entries carry presentation-safe session and child-run context, validated results, candidate presentation data, feedback, and reasoning telemetry, but not raw observations or bridge commands. `GET /api/sessions` remains the presentation-safe session-history seam.
 
 ## Overview
 
@@ -54,6 +55,10 @@ Their presence in Overview does not claim that adapters, schedules, or backgroun
 ## Configuration
 
 `homePresentation` accepts `timeline` or `overview`, applies live, persists in the StateStore, and defaults to `timeline`.
+
+`timelineCapacity` accepts an integer from 1 through 50, applies live, persists in the StateStore, and defaults to 12.
+
+Mode, source scope, and free-form session intent are not routine homepage controls. Catch Up and the active Source Registry provide temporary defaults. A future onboarding questionnaire may establish explicit baseline interests; routine `More like this` and `Less like this` feedback then tunes contextual preference without becoming an immediate display command.
 
 ## Safety and scope
 

@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
-> Status: **Finite Timeline and source Overview implemented — preference calibration continues**
-> Version: **0.15**
+> Status: **Rolling Timeline and source Overview implemented — preference calibration continues**
+> Version: **0.16**
 > Last updated: **2026-07-12**
 > Working name: **AkuBrowser**
 
@@ -150,7 +150,9 @@ The child runs remain the execution and audit units. A partial session keeps a c
 
 ### Daily-use home surfaces
 
-The default home presentation is now **Timeline**: the latest completed or partial Unified Session is rendered as the existing finite, source-backed result with an explicit finish line. The session form is a collapsible `Check for updates` runner. Reloading the page reads the last presentation-safe session rather than opening Pilot Review or forcing the user to start a new run.
+The default home presentation is now **Timeline**: a rolling buffer of the newest evaluated items across completed or partial Unified Sessions, rendered with source-backed cards and an explicit finish line. Capacity defaults to 12 and is configurable up to 50. New session items enter first; older items fill only the remaining slots. For example, ten new items retain two older items, while eight new items retain four.
+
+`Check for updates` directly starts Unified Catch Up from engine defaults and the active Source Registry. Mode, source scope, and free-form intent are no longer routine homepage controls. A future onboarding questionnaire may establish explicit baseline interests, after which daily `More like this` and `Less like this` signals tune contextual preference.
 
 **Overview** is a separate source control plane. It reports registered sources, activation and collection policy, BrowserAdapter health, last observation time, and runtime tab lifecycle. It does not duplicate the reading stream. Users may configure Timeline or Overview as the default landing surface while retaining direct navigation to both.
 
@@ -641,6 +643,9 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-088 | Make finite Timeline the default home presentation, keep Overview as a configurable source control plane, and retain both in primary navigation | Confirmed and implemented |
 | D-089 | Introduce a Source Registry that separates durable registered/active source state from transient open-tab lifecycle; register X and LinkedIn as active user-triggered stream sources | Confirmed and implemented for the pilot |
 | D-090 | Model stream, periodic, static, and push acquisition behavior separately; do not imply background polling, scheduling, or P0 delivery merely by exposing the future behavior classes | Confirmed architecture seam; only stream is implemented |
+| D-091 | Make `Check for updates` directly start Unified Catch Up from engine defaults and active registered sources; remove mode, source-scope, and free-form intent controls from the routine homepage experience | Confirmed and implemented |
+| D-092 | Render Timeline as a configurable rolling buffer, default capacity 12: newest evaluated session items enter first and oldest retained items leave only when the capacity is exceeded | Confirmed and implemented |
+| D-093 | Plan a future onboarding questionnaire for explicit baseline interests, then use symmetric `More like this` and `Less like this` as routine contextual tuning signals | Confirmed product direction; questionnaire deferred |
 
 ## 16. Change Discipline
 

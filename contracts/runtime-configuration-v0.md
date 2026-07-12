@@ -28,6 +28,8 @@ The setting applies to the next run without restarting AkuSidecar. Follow-up acq
 
 `homePresentation` accepts `timeline` or `overview`. It selects the landing surface after bootstrap when no run is active. The built-in default is `timeline`; both views remain available in navigation regardless of the saved default.
 
+`timelineCapacity` accepts an integer from 1 through 50. It controls the maximum number of evaluated updates retained in the rolling Timeline and defaults to 12. New items displace the oldest retained items only after the capacity is full.
+
 `streamWidth` accepts `compact`, `social`, `comfortable`, or `wide`. It applies live to Session and Review Inbox while leaving Settings at the full application width. The built-in `social` default is 640 px including panel padding, producing a reading column close to the primary feeds on X and LinkedIn.
 
 `telemetryBehavior` accepts `flow` or `sticky`. The built-in default is `flow`, which lets Pilot Telemetry extend with the page. `sticky` constrains it to a separately scrolling rail on wide layouts.
