@@ -540,14 +540,16 @@ Potential future providers include a local OpenAI-compatible inference server, a
 
 Gate 0 and the initial knowledge-continuity proof have passed. Unified Session v0 is implemented, and its live Chrome pilot has verified sequential X and LinkedIn orchestration, bounded pending-content recovery, UI restoration after reload, and finite completion. A source capture with zero visible evidence is now reported as acquisition-unavailable and excluded from empty-result trust metrics instead of being presented as a correctly empty feed.
 
-As of July 12, 2026, natural pilot data has passed every offline-fit readiness gate: 37 matched preference events across 19 feedback runs and both sources. Operational reliability is healthy over the latest 20 source runs. However, the newest persisted preference snapshot belongs to an older dataset, and its holdout evaluation is not sufficient for activation: balanced accuracy is about 0.58 and positive recall about 0.17. Live preference influence, exploration, and comeback therefore remain disabled.
+As of July 12, 2026, natural pilot data has passed every offline-fit readiness gate: 37 matched preference events across 19 feedback runs and both sources. Operational reliability is healthy over the latest 20 source runs. A current snapshot has now been fitted from that dataset. Its holdout balanced accuracy is 0.75, positive recall is 0.50, negative recall is 1.0, and agreement is about 0.57; this is still insufficient for an activation decision. The current shadow comparison scores 174 candidates, with 12 possible upward movements and no downward movements. Live preference influence, exploration, and comeback remain disabled.
+
+The current live selector is still bounded by the provider prompt's explicit AI/technical-engineering user context. `More like this` and `Less like this` train only the shadow snapshot and cannot broaden live eligibility. The shadow features also include provider-assigned `intentRelevance`, so they indirectly inherit the original context. In addition, P4 remains ineligible for preference-driven promotion. Replacing this initial context with questionnaire-derived baseline interests plus contextual feedback requires a separate ranking-contract change; fitting alone does not accomplish it.
 
 The next product-calibration sequence is:
 
-1. fit a current offline snapshot from the latest dataset and inspect the complete shadow comparison;
-2. collect additional labels that improve representation of positively selected items and verify holdout movement, not merely readiness counts;
-3. define the onboarding questionnaire as an explicit baseline-interest contract, separate from contextual `More like this` / `Less like this` signals;
-4. make a separate activation decision only after the preference model passes agreed quality thresholds, with bounded exploration and comeback policy defined first;
+1. inspect the 12 shadow upward-movement candidates and collect additional labels that improve representation of positively selected items;
+2. define the onboarding questionnaire and replace hard-coded domain context with an explicit baseline-interest contract, separate from contextual `More like this` / `Less like this` signals;
+3. define how preference score, baseline interests, provider relevance, exploration, comeback, and the P4 guardrail compose before any live activation;
+4. make a separate activation decision only after the preference model passes agreed quality thresholds;
 5. calibrate semantic event keys, stale/superseded handling, cross-source event merging, and retention/compaction; and
 6. only after behavioral proof, test Sidecar Lite as the next packaging experiment.
 
