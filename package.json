@@ -1,6 +1,6 @@
 {
   "name": "@aku-browser/integration",
-  "version": "0.5.6",
+  "version": "0.5.13",
   "private": true,
   "type": "module",
   "description": "AkuBrowser architecture, canonical contracts, and cross-repository development orchestration",
