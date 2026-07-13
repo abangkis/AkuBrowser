@@ -1,8 +1,8 @@
 # AkuBrowser — Architecture Reference
 
-> Status: **Rolling Timeline and Settings-hosted source control implemented — onboarding design approved**
-> Version: **0.16**
-> Last updated: **2026-07-12**
+> Status: **Source-faithful calibration capture and compatibility enforcement implemented**
+> Version: **0.18**
+> Last updated: **2026-07-13**
 > Working name: **AkuBrowser**
 
 ## 1. Purpose of This Document
@@ -700,6 +700,8 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-111 | When LinkedIn omits a permalink and activity attributes from its feed DOM, AkuBridge may transiently open only the post control menu, read the local Embed target URN, and close the menu; it must never invoke Save, Copy, Follow, Like, Comment, Repost, or Send | Implemented as bounded permalink recovery; feed fallback remains honestly labeled when recovery is unavailable |
 | D-112 | Source-tab injection is revisioned rather than guarded by a permanent boolean, so a reloaded AkuBridge replaces its stale message listener in reused X or LinkedIn tabs; X GIF/video previews include the allowlisted `previewInterstitial` poster and remain URL-only | Implemented after the first neutral-calibration rerun exposed stale X capture |
 | D-113 | Runtime generation applies to the adapter registry as well as the message listener; LinkedIn v3 extracts author identity from the post control label, body text from the expandable content element, and the matching profile image URL | Implemented after a clean rerun proved stale adapters survived listener replacement |
+| D-114 | Every AkuBridge runtime change must advance the synchronized manifest/package version; its heartbeat must expose a derived build identity plus source-adapter versions, and production AkuSidecar must reject new runs until the loaded extension satisfies the declared compatibility contract | Implemented to prevent stale unpacked-extension code from silently producing misleading calibration data |
+| D-115 | Merge repeated source snapshots by enriching incomplete evidence with later avatar/media fields; persist LinkedIn social context, headline, connection/time metadata, collaboration/promotion attribution, and URL-only author avatars as structured presentation data | Implemented in AkuBridge 0.5.4 / source-presentation-v6 and validated against live X and LinkedIn feed captures |
 
 ## 16. Change Discipline
 
