@@ -25,11 +25,13 @@ The token is generated and persisted by AkuSidecar. All bridge command endpoints
 - `AKU_BROWSER_BRIDGE_PING`
 - `AKU_BROWSER_BRIDGE_READY`
 - `AKU_BROWSER_DISPATCH`
+- `AKU_BROWSER_BRIDGE_RELOAD_SELF`
 - `AKU_BROWSER_BRIDGE_ERROR`
 
 ## Extension message type
 
 - `AKU_BROWSER_COLLECT_VISIBLE`
+- `AKU_BRIDGE_RELOAD_SELF`
 
 ## Additive capability handshake
 
@@ -41,6 +43,23 @@ The token is generated and persisted by AkuSidecar. All bridge command endpoints
 - fixed `captureLimits` for scrolls, snapshots, and blocks per snapshot.
 
 The handshake is diagnostic metadata. It does not grant new browser authority, contain DOM or account data, or replace server-side contract validation. Older AkuBrowser clients may ignore it. The extension also accepts the internal `AKU_BRIDGE_GET_CAPABILITIES` message from its local tab bridge.
+
+## Cooperative self-reload
+
+`reload_self` is the only operational extension mutation exposed to
+AkuSupervisor. It is created through Sidecar's bridge-authenticated
+`POST /api/operations/bridge/actions/reload-self`, delivered to the local page
+through `GET /api/operations/bridge/actions/next`, and acknowledged by the
+extension through the bridge-authenticated action `accept` endpoint. The
+service worker accepts the internal reload message only from the configured
+AkuBrowser origin and then calls `chrome.runtime.reload()`.
+
+The existing content-script context is expected to disconnect. AkuBrowser
+refreshes only its own local tab, performs a new capability handshake, and
+Sidecar completes the action only after the required build identity is
+observed. An unavailable or disabled extension times out. The contract adds no
+`chrome.management`, debugger/CDP, whole-browser restart, source-tab closure,
+or account authority.
 
 ## Gate 0A behavior
 
