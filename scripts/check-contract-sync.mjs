@@ -65,6 +65,7 @@ assert.deepEqual(
 );
 
 const bridgeService = readText(path.join(bridgeRoot, "service-worker.js"));
+const bridgeCapabilities = readText(path.join(bridgeRoot, "bridge-capabilities.js"));
 const bridgeTab = readText(path.join(bridgeRoot, "aku-browser-tab-bridge.js"));
 const bridgeContent = readText(path.join(bridgeRoot, "content-script.js"));
 const bridgeCapturePolicy = readText(path.join(bridgeRoot, "bounded-capture-policy.js"));
@@ -78,9 +79,14 @@ const sidecarStateStore = readText(
 const sidecarBrowserAdapter = readText(
   path.join(sidecarRoot, "src", "browser", "browser-adapter-contract.mjs"),
 );
+assert.match(
+  sidecarHttp,
+  new RegExp(`APP_VERSION\\s*=\\s*["']${escapeRegExp(sidecarPackage.version)}["']`),
+  "AkuSidecar HTTP version drifted from its package version",
+);
 assert.ok(bridgePackage.akuRuntimeRevision, "AkuBridge must declare an operational runtime revision");
 assert.match(
-  bridgeService,
+  bridgeService + bridgeCapabilities,
   new RegExp(escapeRegExp(bridgePackage.akuRuntimeRevision)),
   "AkuBridge runtime revision drifted from its capability handshake",
 );
@@ -91,7 +97,7 @@ for (const value of [
   "X-Aku-Bridge-Id",
   "X-Aku-Bridge-Contract",
 ]) {
-  assert.match(bridgeService, new RegExp(escapeRegExp(value)));
+  assert.match(bridgeService + bridgeCapabilities, new RegExp(escapeRegExp(value)));
   assert.match(sidecarHttp, new RegExp(escapeRegExp(value)));
 }
 

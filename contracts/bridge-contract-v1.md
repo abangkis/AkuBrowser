@@ -49,11 +49,12 @@ The handshake is diagnostic metadata. It does not grant new browser authority, c
 - `openIfMissing: true` may create one inactive canonical source tab for an initial acquisition; `openIfMissing: false` fails fast.
 - A Gate 0A run performs zero bridge-directed scrolls.
 - Browser observations are untrusted evidence and every promoted item must retain a URL present in that observation.
-- `block.permalink` is an exact native post URL or `null`; it must not fall back to the feed URL.
+- `block.permalink` is an exact native post URL or `null`; it must not fall back to the feed URL. LinkedIn may recover the exact post URN by transiently opening only that post's control menu, reading its visible Embed target, and closing the menu.
 - `block.feedPosition` preserves the source platform's observed presentation order as contextual evidence; it is not a truth or relevance score.
-- `observation.pageUrl` is the canonical source page and descendant `block.links` are external or contextual references.
+- `observation.pageUrl` is the canonical source page and descendant `block.links` are external or contextual references captured only from the post-content root.
 - Every result item declares `sourceUrlKind` as `native_post`, `source_page`, or `external_reference`; external references must never be labeled as native posts.
-- A block may carry at most four presentation-only `media` records captured from rendered post images or video posters. Each record contains `kind`, HTTPS `url`, bounded `alt`, `width`, and `height`.
+- A block may carry at most four presentation-only `media` records captured from rendered post images or video posters. Each record contains `kind`, HTTPS `url`, nullable `posterUrl`, nullable allowlisted `playbackUrl`, `playbackMode`, bounded `alt`, `width`, and `height`. Images may open the AkuBrowser viewer. Videos use inline playback only when the rendered source exposes a stable allowlisted media URL; otherwise their poster opens the exact native post and is never treated as a zoomable image.
+- A source adapter may temporarily activate the post-local `Show more` control before extraction, record the bounded expansion outcome in `presentation.contentExpansion`, and restore a reversible `Show less` state afterward. The control label itself is not evidence text.
 - Media URLs are accepted only from the source CDN allowlist: `pbs.twimg.com`/`video.twimg.com` for X and `*.licdn.com` for LinkedIn. Actor avatars and small icons are excluded by source adapters and minimum rendered dimensions.
 - Media is not sent to text reasoning and does not alter evidence identity, candidate assessment, or selection. It exists only to reconstruct Source layout.
 
