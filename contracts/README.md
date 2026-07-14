@@ -9,7 +9,7 @@ The reasoning-result contract also carries knowledge-continuity identity. Every 
 Current contract artifacts:
 
 - `onboarding-profile-v0.md` - source-only first-run setup, neutral platform-order transition, and development-reset boundary.
-- `calibration-engine-v0.md` - separate forced-label calibration lane, raw-entry sampling, and shadow-only activation boundary.
+- `calibration-engine-v0.md` - separate first-run labeling lane and its handoff to automatic local fitting.
 - `home-surface-v0.md` - finite Timeline, Settings-hosted source control, Source Registry, and update-result boundary.
 
 - `trust-regression-v0.md` — executable prompt-isolation, bounded-evidence, diagnostic-disclosure, and least-authority regression boundaries.
@@ -31,4 +31,5 @@ Current contract artifacts:
 - `reasoning-routing-v0.json` — explicit phase-level model, effort, and planning-policy defaults.
 - `runtime-configuration-v0.md` — allowlisted dashboard settings, persistence, precedence, and apply-mode boundary.
 - `offline-preference-experiment-v0.md` — hard-gated shadow fitting, holdout evaluation, snapshot persistence, and live-influence boundary.
-- `preference-replay-v0.md` — offline calibration readiness and descriptive replay with no live ranking influence.
+- `preference-replay-v0.md` — descriptive preference diagnostics and historical dataset-maturity gates.
+- `preference-runtime-v1.md` — automatic local fitting, source-order baseline, bounded selected-item reranking, fallback, and optional diagnostics.

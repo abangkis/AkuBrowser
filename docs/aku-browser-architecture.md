@@ -239,8 +239,9 @@ The retired interest screen remains recoverable from Git history, but it is not 
 2. acquire each source feed in its existing order as a borrowed behavioral prior;
 3. force explicit `More like this` and `Less like this` decisions on a bounded first-run sample;
 4. collect optional contextual feedback during ordinary use;
-5. periodically run another bounded calibration batch only under an explicit trigger policy; and
-6. only after representative evidence, compose source prior, explicit feedback, novelty, and future exploration/comeback policy.
+5. automatically fit a local snapshot once mixed directional evidence exists;
+6. apply only bounded selected-item reranking while retaining source/platform order as fallback; and
+7. require a later contract before preference can change eligibility, source shares, exploration, or comeback.
 
 For non-stream websites, source order may have little or no behavioral meaning. Their future acquisition and prioritization contracts must be defined by source behavior class rather than inheriting the social-stream onboarding model.
 
@@ -337,9 +338,9 @@ Focused monitoring of a named event such as an earthquake, unrest, a product lau
 
 Controlled discovery outside the user's primary topics, governed by an explicit discovery budget.
 
-### 7.6 Behavioral personalization — future
+### 7.6 Behavioral personalization — implemented within a bounded authority
 
-Explicit session intent remains the highest-authority signal, but it should not be the only personalization input forever. AkuBrowser may build a local, inspectable preference model from repeated user behavior such as Useful, Correct lane, Wrong lane, Duplicate, source opening, dismissal, and recurring topic choices.
+AkuBrowser builds a local, inspectable preference model from explicit More/Less calibration and contextual feedback. Explicit session intent remains higher authority. Passive actions, source opening, scrolling, and account engagement are not preference labels.
 
 The platform feed itself is also a useful upstream prior. X and LinkedIn already order content using behavior learned within their own products; AkuBrowser can benefit from the presented ordering without scraping private platform profiles or pretending that platform rank equals user value. The source algorithm answers "what this platform predicts may engage the user," while AkuBrowser must still answer "what materially advances this user's current intent and knowledge frontier."
 
@@ -347,16 +348,16 @@ Behavioral signals must therefore obey these constraints:
 
 - explicit user intent and safety policy override inferred preference;
 - inferred preferences are stored separately from explicit rules and can be inspected, corrected, reset, or disabled;
-- negative feedback and deliberate exploration budgets prevent a self-reinforcing filter bubble;
+- negative feedback and retention of the complete provider-selected set prevent the first live version from collapsing eligibility into a filter bubble;
 - platform ordering is recorded as contextual evidence, not ground truth;
 - passive behavior is not treated as consent for account-changing actions or broader data collection; and
 - personalization changes ranking, not provenance or evidence requirements.
 
-The initial Gate 0 data model preserves explicit feedback, run history, and observed feed position, but no implicit behavioral preference is applied to ranking until the pilot has enough representative interactions to evaluate it.
+Preference Runtime v1 fits deterministically on-device and may move an already-selected item by at most two positions. It records the baseline index, final index, snapshot, and probability. It cannot promote excluded candidates, hide selected candidates, or change acquisition and attention budgets. Manual replay and holdout analysis remain optional diagnostics.
 
-## 8. Ranking transition
+## 8. Ranking composition
 
-The original P1-P4 catch-up lanes are retired. Until onboarding and contextual feedback produce an approved ranking-composition contract, AkuBrowser preserves platform order within each source and interleaves active sources deterministically inside the finite attention boundary. Emergency interruption remains a future, separately governed capability; ordinary importance never implies a notification.
+The original P1-P4 catch-up lanes are retired. AkuBrowser first preserves platform order within each source and interleaves active sources deterministically. When a compatible personal snapshot is active, Preference Runtime may perform neighboring swaps among those selected items, with a maximum displacement of two positions and a minimum score difference of `0.03`. The baseline remains available whenever personalization is disabled, insufficient, stale, or invalid. Emergency interruption and preference-driven eligibility remain future, separately governed capabilities; ordinary importance never implies a notification.
 
 <!-- Retired pilot lane reference
 
@@ -645,16 +646,16 @@ unpacked-extension bootstrap, load AkuBridge changes through cooperative
 Supervisor reload/validation. Component package versions advance independently;
 the live compatibility tuple is the release boundary.
 
-As of July 12, 2026, natural pilot data has passed every offline-fit readiness gate: 37 matched preference events across 19 feedback runs and both sources. Operational reliability is healthy over the latest 20 source runs. A current snapshot has now been fitted from that dataset. Its holdout balanced accuracy is 0.75, positive recall is 0.50, negative recall is 1.0, and agreement is about 0.57; this is still insufficient for an activation decision. The current shadow comparison scores 174 candidates, with 12 possible upward movements and no downward movements. Live preference influence, exploration, and comeback remain disabled.
+As of July 14, 2026, Preference Runtime v1 replaces manual shadow fitting as the product path. Source/platform order is the cold-start baseline. First-run calibration and routine More/Less feedback feed one local append-only ledger; AkuSidecar fits deterministic personal snapshots automatically without a reasoning invocation. The active snapshot may reorder only provider-selected items, requires a neighboring score difference, and limits every item to two positions of displacement. It cannot promote excluded candidates, hide selected candidates, or change source and attention budgets. Disabling personalization restores the baseline on the next run.
 
-The hard-coded AI/technical-engineering context, provider-assigned intent relevance, and P1-P4 lanes are now removed from the transition contract. The source-only onboarding profile activates installed adapters, then the separate Calibration Engine collects forced entry-level More/Less labels. All preference influence remains shadow-only until a separate ranking-composition and activation decision is approved.
+The hard-coded AI/technical-engineering context, provider-assigned intent relevance, and P1-P4 lanes remain removed. Replay gates, holdout metrics, feature explanations, and eligibility-boundary comparison are retained under Advanced preference diagnostics. Manual refitting is optional and idempotent rather than an onboarding or daily-use step.
 
 The next product-calibration sequence is:
 
-1. inspect the 12 shadow upward-movement candidates and collect additional labels that improve representation of positively selected items;
-2. evaluate whether forced entry-level calibration reliably validates the borrowed source prior;
-3. define how source prior, calibration labels, contextual feedback, exploration, and comeback compose before any live activation;
-4. make a separate activation decision only after the preference model passes agreed quality thresholds;
+1. observe bounded live displacement, fallback use, and user corrections without changing eligibility;
+2. collect explicit labels on currently excluded candidates to reduce selection bias;
+3. evaluate whether source balance and the maximum two-position movement remain understandable and useful;
+4. define exploration, comeback, and rollback before any eligibility-changing preference authority;
 5. calibrate semantic event keys, stale/superseded handling, cross-source event merging, and retention/compaction; and
 6. only after behavioral proof, test Sidecar Lite as the next packaging experiment.
 
@@ -669,7 +670,11 @@ During calibration:
 
 After behavioral proof and retention evidence, test Sidecar Lite as a packaging experiment. That sequence reduces consumer-installation complexity without allowing packaging concerns to distort the first product experiment.
 
-## 15. Decision Log
+## 15. Active Decision Log
+
+This table contains decisions that still govern the current product. Superseded
+pilot sequencing and retired compatibility vocabulary are removed instead of
+remaining mixed with active rules.
 
 | ID | Decision | Status |
 |---|---|---|
@@ -685,71 +690,57 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-010 | Reserve direct P0 notifications for emergency or opportunity-loss cases | Confirmed, future runtime capability |
 | D-011 | Treat old-but-superseded information through a future knowledge-frontier/history model | Deferred, compatibility noted |
 | D-012 | Do not build a large browser | Confirmed |
-| D-013 | Do not begin implementation until explicitly authorized | Confirmed |
 | D-014 | Treat the sidecar as a logical responsibility boundary, not permanently a separate executable | Confirmed |
-| D-015 | Accept the three-component setup for the personal research phase | Confirmed |
 | D-016 | Preserve a roadmap toward one consumer installation while keeping internal component boundaries | Confirmed |
 | D-017 | Choose between consumer-first cloud reasoning and local-first native packaging after pilot evidence | Deferred |
 | D-018 | Keep ReasoningProvider vendor-neutral and replaceable by a future open-source/local runtime | Confirmed |
 | D-019 | Keep AkuBridge and AkuSidecar as separate projects within one workspace | Confirmed |
-| D-020 | Use sidecar-directed, one-shot visible capture for Gate 0A; test Codex-directed browser control separately in Gate 0B | Confirmed for pilot sequencing |
 | D-021 | Require a canonical source feed for Catch Up; allow the active source page for Manual Live | Confirmed after first Chrome pilot |
 | D-022 | Use an Option C polyrepo workspace with AkuBrowser, AkuBridge, and AkuSidecar as sibling repositories | Confirmed |
 | D-023 | Use AkuBrowser as the primary product brand; do not use Signal as the product brand | Confirmed |
 | D-024 | Implement bounded scrolling natively in AkuBridge source adapters; any Computer Use fallback must be explicit | Native path implemented; fallback remains unimplemented pending separate approval |
 | D-025 | Keep browser acquisition independent of ReasoningProvider so a future open-source provider does not require proprietary Computer Use | Confirmed |
 | D-026 | Preserve provenance lanes explicitly as native post, canonical source page, or external reference; never label one lane as another | Confirmed after LinkedIn Gate 0A pilot |
-| D-027 | Evolve ranking from explicit intent toward an inspectable behavioral preference model while treating each platform's feed order only as an upstream prior | Confirmed as future direction; implementation deferred until pilot evidence exists |
-| D-028 | Split Gate 0B into native bounded acquisition, same-tab reveal, then provider-directed acquisition only after deterministic movement and restoration behavior pass live testing | Confirmed |
+| D-027 | Evolve ranking from explicit intent toward an inspectable local preference model while retaining each platform's feed order as the cold-start baseline | Implemented within the bounded authority of D-130 |
 | D-029 | Detect platform fresh-content banners in Gate 0B.1, but defer activation to an explicit auditable BrowserAdapter action that does not silently rewrite the user's feed view | Confirmed after LinkedIn live test |
 | D-030 | For the Gate 0B.2 personal pilot, activate allowlisted fresh-content controls in the same source tab and restore only the post-reveal baseline; reconsider a dedicated managed tab for consumer use | Confirmed |
 | D-031 | Use one-port AkuSidecar development: Vite middleware handles frontend HMR and Node watch restarts backend changes in the same visible process | Confirmed |
-| D-032 | Reserve Gate 0B.2 for same-tab fresh-content reveal and move provider-directed acquisition to Gate 0B.3 | Confirmed |
 | D-033 | Limit Gate 0B.3 provider authority to `finish` or one same-source, one-scroll, frontier-anchored follow-up; keep all browser parameters under deterministic JobEngine policy | Confirmed |
-| D-034 | Mark Gate 0 technical feasibility passed; treat naturally triggered follow-up and fresh-content re-observation as opportunistic evidence rather than blockers | Confirmed |
 | D-035 | Advance checkpoints only after completed runs; suppress previously delivered exact evidence by default; preserve semantic updates as append-only event versions | Confirmed |
 | D-036 | Treat `Correctly empty` as explicit, intent-scoped negative knowledge; suppress the confirmed evidence only for the same source, mode, and normalized intent | Confirmed after repeat-run pilot |
 | D-037 | Stop after the initial bounded acquisition without provider planning when every observed evidence block was already evaluated for the same intent | Confirmed after LinkedIn repeat-run pilot |
 | D-038 | Keep Pilot Review separate from consumption modes; scope metrics to a disclosed feedback-bearing cohort and require contextual, idempotent feedback with a note for missed empty results | Confirmed |
-| D-039 | Make a unified X + LinkedIn daily-use surface while retaining source-specific runs and an Advanced/Pilot single-source path | Refined by D-088: Timeline is the default presentation and Overview is the control plane |
 | D-040 | Model a Unified Session as a persisted parent with sequential X then LinkedIn child runs; preserve source-specific checkpoints, feedback, coverage, and partial results | Confirmed for experiment v0 |
 | D-041 | Allow at most five promoted items per source and ten per Unified Session as ceilings, not quotas; do not increase browser acquisition budgets without evidence | Confirmed for experiment v0 |
-| D-042 | Use deterministic priority-lane and source-interleaved merging without a second reasoning pass; defer semantic cross-source deduplication | Confirmed for experiment v0 |
+| D-042 | Use deterministic source-interleaved merging without a second reasoning pass; defer semantic cross-source deduplication | Confirmed; presentation composition refined by D-130 |
 | D-043 | Preserve scrolling as a finite, known result list with an explicit end and no automatic continuation or infinite loading | Confirmed |
 | D-044 | Turn Pilot Review into a bounded Review Inbox plus separate aggregate analytics; open the newest run by default and require corrections rather than exhaustive labeling | Confirmed for Learning Loop v0 |
 | D-045 | Persist every evaluated candidate decision and append-only contextual-interest signals so preference snapshots remain rebuildable and auditable | Confirmed for Learning Loop v0; signal vocabulary amended by D-062 |
 | D-046 | Keep hard eligibility and selection policy in AkuSidecar while using Codex initially for provider-neutral feature extraction and evaluation | Confirmed for Learning Loop v0 |
 | D-047 | Make Codex model and reasoning effort explicit, configurable, and visible; record provider-reported token usage per reasoning phase | Confirmed for Learning Loop v0 |
-| D-048 | Treat `should_not_show` as a soft contextual preference signal with a future comeback path; keep permanent blocking as a separate explicit capability | Superseded by D-062 and removed from development data by D-064 |
-| D-049 | Preserve a bounded exploration lane for content outside learned habits so preference tuning does not create a closed filter bubble | Confirmed; activation deferred until label calibration |
+| D-049 | Preserve content outside learned habits when preference authority expands | Provider-selected eligibility remains fully retained in v1; a separate exploration lane is deferred until eligibility may change |
 | D-050 | Add a future inspectable engine dashboard for thresholds, preference tendencies, exploration budget, comeback triggers, policy version, quality, and token economics | Confirmed as future operator surface |
 | D-051 | Route candidate evaluation to Terra High and the narrow acquisition-planning fallback to Luna High; reserve XHigh for repeated capability failure after precise correction | Confirmed for Learning Loop calibration |
 | D-052 | Gate provider acquisition planning deterministically: call it only for a sparse one-or-two-candidate sample that exhausted movement and can still perform one anchored follow-up | Confirmed to reduce planning-token waste |
-| D-053 | Treat `More like this` as a positive-interest signal, not an immediate presentation command; preserve legacy `should_show` as an alias | Signal semantics retained; compatibility alias removed by D-064 |
 | D-054 | Have Terra High emit structured candidate features in the existing evaluation invocation, without adding a second model call | Confirmed for engine-ready observations |
 | D-055 | Report token usage separately for Candidate Evaluation and Acquisition Planning | Confirmed for quality/economic tuning |
 | D-056 | Default initial acquisition to opening one inactive canonical source tab when missing; retain configurable `fail_fast`, and never replace a tab during anchored follow-up | Confirmed for daily-use resilience |
 | D-057 | Add an allowlisted dashboard configuration layer persisted in SQLite, with legacy/recovery environment override, dashboard value, and built-in default precedence; begin with `missingSourceTabPolicy` | Implemented; Settings is the normal configuration surface |
 | D-058 | Expose existing provider, phase model, phase effort, planning policy, and timeout configuration as persisted startup settings; never restart or hot-swap the active reasoning provider invisibly | Confirmed for transparent operations |
 | D-059 | Treat LinkedIn page completion and feed readiness as separate states; permit bounded temporary activation with focus restoration and exactly one zero-evidence retry before failing at `source_readiness` | Confirmed for LinkedIn reliability |
-| D-060 | Time-box LinkedIn adapter stabilization; after the bounded readiness milestone still reports `feed_not_visible`, mark LinkedIn degraded, preserve X-backed partial Unified Sessions, and move selector/visibility investigation to the adapter backlog | Confirmed to resume product calibration |
-| D-061 | Introduce Preference Engine v0 first as deterministic offline replay with explicit sample gates and `liveInfluence: false`; require a later evidence-backed decision before learned weights affect presentation | Confirmed for product calibration |
 | D-062 | Use symmetric `More like this` and `Less like this` as routine contextual-interest signals; route incorrect presentation to bug/error feedback | Confirmed for Learning Loop v0 |
 | D-063 | Offer `Brief` and captured `Source layout` as alternate presentations of the same bounded evidence; do not re-fetch or claim an exact live-DOM reproduction | Confirmed; presentation control refined by D-066 |
 | D-064 | During single-user development, delete retired preference rows and remove their API/profile/replay compatibility paths instead of carrying legacy behavior | Confirmed until external compatibility is required |
 | D-065 | Progressively append Review Inbox history in batches of 10 as the user approaches the bottom, with an explicit maximum browsing window of 50; keep aggregate cohort metrics separate from the currently rendered history | Confirmed for bounded calibration UX |
 | D-066 | Default each item to configurable `Source layout`, replace page-level presentation tabs with an item-local switch, and reuse the same presentation component in Unified View and Review Inbox | Confirmed for daily-use reading UX |
-| D-067 | Implement Preference Model v1 as a deterministic, versioned, SQLite-persisted offline snapshot with stable run-level holdout evaluation; hard-block fitting until every replay gate passes and keep all live influence, exploration, and comeback behavior disabled | Confirmed for shadow calibration |
 | D-068 | Capture at most four rendered, allowlisted source images or video posters per evidence block; persist them with candidate evidence and lazy-render them only in Source layout without sending media URLs to text reasoning | Confirmed for source-faithful reading UX |
 | D-069 | Present X above LinkedIn inside every Review Inbox Unified Session group, including groups reconstructed across progressive-loading batch boundaries | Confirmed for consistent unified review UX |
 | D-070 | Constrain Session and Review Inbox to a configurable reading width, defaulting to a 640 px social-feed column while keeping Settings at full application width | Confirmed for lower-effort daily reading |
 | D-071 | Keep the Unified Session review stream centered and move aggregate metrics, preference readiness, and token economics into an independent right telemetry rail that collapses below the stream on narrow screens | Confirmed for separation of reading and calibration surfaces |
 | D-072 | Retry source-tab discovery exactly once after an explicit stale-tab error in acquisition round one, preserve the configured missing-tab policy, report recovery in coverage, and never rebind a frontier-anchored follow-up | Confirmed for bounded Chrome race recovery |
 | D-073 | Report deterministic rolling health over the latest 20 terminal source runs separately from historical pilot totals, with stable failure categories and diagnostic-only healthy/degraded/unstable labels | Confirmed for current reliability visibility |
-| D-074 | Prepare a shadow comparison that contrasts persisted provider selection state with preference probability and bounded feature contributions, using synthetic fixtures for tests while keeping every result observational and live influence disabled | Confirmed for pre-fit inspection infrastructure |
 | D-075 | Require every ReasoningProvider to pass a vendor-neutral conformance harness and publish a capability manifest; structural conformance remains separate from pilot-quality equivalence | Confirmed for replaceable reasoning runtimes |
 | D-076 | Provide explicit local-only SQLite health, verified non-overwriting backup, raw-observation-free analysis export, and preview-only retention tooling; expose no autonomous deletion path | Confirmed for reversible pilot-data operability |
-| D-077 | Add read-only AkuDoctor and extension package fingerprinting, initially using lockstep repository versions, and keep browser-profile checks explicit and manual | Version-equality portion superseded by D-128; diagnostics remain implemented |
 | D-078 | Maintain executable trust regressions for prompt delimiting, bounded/deduplicated reasoning evidence, presentation-media exclusion, diagnostic non-disclosure, SQLite path escaping, extension permissions, and provenance validation | Confirmed for defense-in-depth verification |
 | D-079 | Make every source adapter report bounded selector strategy, field completeness, and non-content DOM signatures so platform drift is diagnosable before total failure | Confirmed and implemented |
 | D-080 | Extract source-native content kind and repost/quote/reply relationships as contextual evidence for Source Layout and future temporal supersession | Confirmed and implemented as additive observation metadata |
@@ -759,13 +750,11 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-084 | Require synthetic DOM conformance fixtures for every source adapter version while retaining live health data as operational truth | Confirmed and implemented |
 | D-085 | Integrate AkuBridge with AkuDoctor through an in-memory sanitized capability heartbeat and aggregate per-source observation health; expose no captured content or browser credentials, and use a declared runtime revision to detect an unpacked extension awaiting reload | Confirmed and implemented |
 | D-086 | Make the pilot telemetry rail behavior live-configurable: default to page-flow without an internal scrollbar, with sticky independently scrolling telemetry as an optional setting | Confirmed and implemented |
-| D-087 | Regularize Offline Preference Model v1.1 by deduplicating source/evidence identity, shrinking sparse categories, excluding provider decision and priority from learned features, retaining priority only as an eligibility guardrail, and keeping live influence disabled | Confirmed for shadow evaluation |
 | D-088 | Make finite Timeline the default home presentation, keep Overview as a configurable source control plane, and retain both in primary navigation | Confirmed and implemented |
 | D-089 | Introduce a Source Registry that separates durable registered/active source state from transient open-tab lifecycle; register X and LinkedIn as active user-triggered stream sources | Confirmed and implemented for the pilot |
 | D-090 | Model stream, periodic, static, and push acquisition behavior separately; do not imply background polling, scheduling, or P0 delivery merely by exposing the future behavior classes | Confirmed architecture seam; only stream is implemented |
 | D-091 | Make `Check for updates` directly start Unified Catch Up from engine defaults and active registered sources; remove mode, source-scope, and free-form intent controls from the routine homepage experience | Confirmed and implemented |
 | D-092 | Render Timeline as a configurable rolling buffer, default capacity 12: newest evaluated session items enter first and oldest retained items leave only when the capacity is exceeded | Confirmed and implemented |
-| D-093 | Separate initial setup from ongoing preference learning | Superseded by D-107 and D-108: source-only onboarding plus separate calibration |
 | D-094 | Keep the retained Timeline visible during `Check for updates`; represent the active runner only as a compact progress strip with current stage, progress, and Cancel | Confirmed and implemented |
 | D-095 | Replace elapsed-time progress with deterministic acquisition steps; show the current source action and `step/total` (12 steps for the default two-source update), not an unreliable completion-time estimate | Confirmed and implemented |
 | D-096 | Remove coverage/debug chrome from the routine Timeline while retaining diagnostics in Review Inbox and pilot surfaces | Confirmed and implemented |
@@ -774,12 +763,9 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-099 | Expose effective engine boundaries in Settings; allow safe next-run editing of per-source items, native scrolls, acquisition rounds, and knowledge-context events while keeping structural pilot caps visible and fixed | Confirmed and implemented |
 | D-100 | Keep active update progress sticky within Timeline scrolling and visually distinguish genuine additions from the newest completed check with a subtle background | Confirmed and implemented |
 | D-101 | Remove the hard-coded AI/technical-engineering user context and retire P1-P4 rather than redefining them before onboarding and preference composition are clear | Implemented in the neutral transition contracts and runtime |
-| D-102 | Reduce onboarding v0 to source selection only and start the first update automatically | Superseded interest experiment; source-only flow implemented |
-| D-103 | Do not seed onboarding from the 37 historical pilot signals and do not ask for exploration appetite in v0 | Confirmed design |
-| D-104 | Until a new live ranking contract is approved, preserve source-platform order and deterministic source interleaving inside the finite attention boundary | Confirmed transition policy |
-| D-105 | Treat the social source's existing feed order as a borrowed behavioral prior; a cold-start questionnaire must not overshadow it | Confirmed product direction; live composition deferred |
-| D-106 | Add bounded calibration batches that require More/Less decisions on every sampled entry, and allow periodic or random repetition | First-run separate calibration lane implemented shadow-only |
-| D-107 | Keep calibration as its own engine path and persistence lifecycle rather than mixing forced labels with ordinary recommendation feedback | Implemented shadow-only |
+| D-105 | Treat the social source's existing feed order as the cold-start baseline; a personal local model may only compose over it within explicit bounds | Confirmed and implemented |
+| D-106 | Add bounded calibration batches that require More/Neutral/Less decisions on every sampled entry, and allow periodic or random repetition | First-run calibration implemented |
+| D-107 | Keep calibration as its own interaction path while writing directional labels into the same append-only preference ledger as routine feedback | Implemented |
 | D-108 | Treat source selection as primary onboarding and source-feed order as the borrowed initial prior; do not ask for interest categories by default | Implemented |
 | D-109 | Run the Codex-backed AkuSidecar from a normal host process context; do not treat HTTP health alone as sufficient because a sandboxed server can capture successfully yet fail provider spawn with `EPERM` | Confirmed after first-run calibration pilot; operational runbook added |
 | D-110 | Calibration uses explicit More / Neutral / Less labels, keeps its progress header sticky, and presents source-like cards with remote URL-only avatars and media; LinkedIn permalinks may be deterministically derived from an observed activity URN, but never invented without one | Implemented and validated against the live LinkedIn feed DOM |
@@ -802,6 +788,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-127 | Estimate LinkedIn relative timestamps only when the source exposes a valid relative value, preserve its original text plus explicit estimate precision/source metadata, and leave promoted entries without time as `null`. Keep long-backgrounded capture waits service-worker-backed and expose content-free timeout progress | Implemented in AkuBridge 0.5.29 / source-fidelity-v31 with linkedin-dom-v8 and live background capture validation |
 | D-128 | Version AkuBrowser, AkuSidecar, and AkuBridge independently. Cross-repository release gates validate Bridge package/manifest identity, minimum extension version, exact runtime revision, adapter versions, and required actions instead of lockstep package equality | Implemented in integration checks and AkuDoctor |
 | D-129 | Keep source-specific DOM parsing in revisioned adapters, then evaluate canonical candidates with trusted `social-post-v1` field expectations. Sidecar pre-authorizes at most one same-candidate local retry, validates report consistency, admits complete/degraded evidence, removes invalid candidates, and never exposes final retryable or rejected evidence to reasoning. X still attempts bounded visual hydration, but semantic feed readiness proceeds to the evaluator when visual hydration remains incomplete | Implemented in AkuBridge 0.5.33 / source-fidelity-v35 (`x-dom-v13`, `linkedin-dom-v10`) and AkuSidecar 0.5.18 |
+| D-130 | Make local preference fitting automatic and enable bounded live reranking only among provider-selected items. Keep source/platform order as fallback, cap displacement at two positions, expose disable/fallback controls, and move manual fit plus replay/holdout comparison into Advanced diagnostics | Implemented as Preference Runtime v1 |
 
 ## 16. Change Discipline
 

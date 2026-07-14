@@ -1,13 +1,13 @@
 # Offline Preference Experiment Contract v0
 
-> Status: **Implemented; shadow calibration active, live influence disabled**
+> Status: **Retained as optional diagnostics; superseded for product activation by Preference Runtime v1**
 > Date: **2026-07-11**
 
 ## Purpose
 
-Offline Preference Experiment v0 fits and evaluates an inspectable preference snapshot from assessed `more_like_this` and `less_like_this` signals. It is a shadow experiment only. It cannot change live eligibility, ranking, attention budgets, exploration, comeback behavior, or Unified View presentation.
+Offline Preference Experiment v0 remains an inspectable diagnostic replay over assessed `more_like_this` and `less_like_this` signals. It is no longer the product activation path. Automatic fitting and bounded live composition are governed by `preference-runtime-v1.md`.
 
-## Hard gate
+## Diagnostic gate
 
 Fitting is permitted only when every Preference Replay v0 readiness gate passes. Before that point:
 
@@ -16,7 +16,7 @@ Fitting is permitted only when every Preference Replay v0 readiness gate passes.
 - no preference-model snapshot is persisted; and
 - `liveInfluence` remains `false`.
 
-Passing readiness changes the status to `ready_to_fit`; it does not fit or activate anything automatically.
+Passing readiness changes the diagnostic status to `ready_to_fit`. Preference Runtime does not wait for these historical thresholds; it has a smaller mixed-polarity minimum and fits automatically.
 
 ## Dataset and split
 
@@ -32,7 +32,7 @@ The current model is a deterministic, class-balanced, regularized additive model
 
 Original provider decision and recommended priority are deliberately excluded from learned preference features so the preference layer does not learn the engine's own historical output. Categorical features with fewer than three supporting signals receive zero weight; one-sided categories are strongly shrunk; and every categorical contribution is capped at magnitude `0.5`.
 
-The model emits a shadow preference probability. That probability is not a relevance fact and is never written back into historical candidate decisions. During the neutral transition, a probability of at least `0.6` marks a possible upward movement and a probability at most `0.25` marks a possible downward movement. Both remain observational and have no live influence.
+The model emits a preference probability. That probability is not a relevance fact and is never written back into historical candidate decisions. The diagnostic comparison still uses `0.6` and `0.25` to inspect hypothetical eligibility-boundary movements. Preference Runtime v1 instead applies bounded neighboring swaps only among already-selected items.
 
 ## Shadow comparison
 
@@ -51,11 +51,11 @@ Each snapshot records:
 - selected/excluded candidates that the shadow model would prefer; and
 - source coverage.
 
-`sufficientForActivationDecision` is always `false` in v0. A later explicit decision must define quality thresholds and comparative evidence before live influence is possible.
+`sufficientForActivationDecision` remains `false` because this legacy field describes eligibility-changing activation. Bounded selected-item reranking no longer depends on it.
 
 ## Exploration and comeback
 
-The snapshot carries non-active proposals for a bounded exploration lane and future comeback behavior. Both remain `active: false`. Their presence makes the future policy seam inspectable; it does not authorize either mechanism.
+Eligibility exploration and comeback remain deferred. Preference Runtime v1 retains the complete provider-selected set, so bounded presentation reranking does not require a separate exploration quota.
 
 ## Persistence and idempotency
 
@@ -67,4 +67,4 @@ Fitted snapshots are stored in AkuSidecar SQLite by unique dataset fingerprint. 
 - `POST /api/preferences/experiment/fit`
 - `GET /api/preferences/shadow-comparison`
 
-The Review Inbox exposes status, gate progress, snapshot evaluation, and a Fit button that is enabled only for `ready_to_fit`.
+Review Inbox keeps this material under collapsed Advanced preference diagnostics. Manual refitting is explicit and optional; routine fitting is automatic.

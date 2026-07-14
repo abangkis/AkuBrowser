@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Onboarding connects the sources AkuBrowser may inspect. It does not ask the user to restate interests already encoded by a social source's long-lived behavioral model, activate learned ranking, infer interests from historical feedback, or define interruption policy.
+Onboarding connects the sources AkuBrowser may inspect. It does not ask the user to restate interests already encoded by a social source's long-lived behavioral model, import another user's preferences, or define interruption policy. Its first-run calibration supplies local labels for bounded personalization.
 
 ## Product rules
 
@@ -39,7 +39,7 @@ The user chooses from installed source adapters, with at least one active source
 
 The profile is provider-neutral and stored behind `StateStore`. It must not contain Codex prompt fragments, model identifiers, browser credentials, or inferred historical preferences.
 
-## Neutral transition before learned ranking
+## Source-order baseline before personal evidence
 
 Removing P1-P4 leaves presentation ordering under deterministic policy:
 
@@ -49,7 +49,7 @@ Removing P1-P4 leaves presentation ordering under deterministic policy:
 4. stop at the configured per-source and unified attention limits; and
 5. use the ReasoningProvider only for structured description, topic/content metadata, knowledge delta, and source-backed summarization.
 
-The provider cannot exclude a candidate merely because it falls outside the old AI/technical-engineering context. Source selection and calibration labels may be recorded, but neither changes live ordering until a separate ranking-composition contract is approved.
+The provider cannot exclude a candidate merely because it falls outside the old AI/technical-engineering context. Source selection establishes the baseline. Calibration labels may affect subsequent sessions only through the bounded selected-item reranking defined by Preference Runtime v1.
 
 ## Deferred
 

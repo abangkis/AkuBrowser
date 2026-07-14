@@ -1,10 +1,10 @@
 # Calibration Engine v0
 
-> Status: **Implemented as a separate shadow-only lane**
+> Status: **Implemented as the first-run label source for Preference Runtime v1**
 
 ## Purpose
 
-Calibration verifies a source's existing recommendations against explicit user decisions. It is not a recommendation session, does not replace the timeline, and cannot change live ordering in v0.
+Calibration verifies a source's existing recommendations against explicit user decisions. It is not a recommendation session and does not replace the timeline. Directional labels feed the local preference ledger used by subsequent automatic fits.
 
 ## Lifecycle
 
@@ -13,20 +13,20 @@ flowchart LR
   O["Source-only onboarding"] --> U["First bounded unified update"]
   U --> S["Raw candidate sampler"]
   S --> C["Explicit More/Neutral/Less calibration"]
-  C --> P["Versioned calibration snapshot"]
-  P --> X["Shadow-only analysis"]
-  X -. "separate future approval" .-> R["Live ranking composition"]
+  C --> P["Append-only local labels"]
+  P --> F["Automatic local fit"]
+  F --> R["Bounded selected-item reranking"]
 ```
 
 1. The first completed or partial Unified Session supplies validated raw candidates.
 2. The sampler preserves source platform order, caps each source at five entries, and interleaves sources round-robin up to ten entries.
 3. Every sampled entry must receive `more_like_this`, `neutral`, `less_like_this`, or a separate capture-issue report. `neutral` means the entry should neither raise nor lower preference weight; it is not an unresolved sample.
 4. Decisions may be revised with Previous before completion.
-5. Completing all entries writes an immutable, versioned snapshot with `liveInfluence: false` and `activationState: shadow_only`.
+5. Completing all entries writes an immutable calibration summary. More/Less decisions also enter the preference ledger; Neutral and capture issues do not.
 
 ## Separation rules
 
-- Calibration labels are explicit experimental observations; ordinary timeline More/Less signals remain optional contextual feedback. Neutral lets a user advance without manufacturing directional preference.
+- Calibration labels and ordinary timeline More/Less events share one directional preference ledger. Neutral lets a user advance without manufacturing directional preference.
 - Presentation media and avatars remain remote HTTPS references. AkuBrowser does not persist image or video binaries.
 - Capture problems (`capture_incomplete`, `wrong_source`, `duplicate`, `formatting`) are quality reports, never preference labels.
 - Calibration samples come from candidate evaluation before promotion, so the experiment inspects the borrowed source prior rather than only the current engine's selected output.
@@ -36,6 +36,6 @@ flowchart LR
 
 v0 enables only `first_run`. Manual, periodic, and random triggers remain contract-compatible future options but are disabled until the first-run experiment is evaluated.
 
-## Activation boundary
+## Influence boundary
 
-Snapshots are available for offline replay and diagnostics only. Any use in live ranking requires a separate ranking-composition contract, measurable acceptance criteria, rollback behavior, and an explicit product decision.
+Calibration itself never changes eligibility. Its labels may affect later sessions only through Preference Runtime v1, whose maximum two-position rerank retains every provider-selected item.

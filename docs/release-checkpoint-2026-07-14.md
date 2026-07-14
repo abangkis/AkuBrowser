@@ -95,6 +95,10 @@ Required bridge compatibility at this checkpoint:
 
 ## Preference-model boundary
 
+> Historical checkpoint note: this shadow-only boundary was superseded later
+> on July 14 by Preference Runtime v1. The figures below describe release state
+> at checkpoint time, not current product behavior.
+
 Live preference influence remains disabled. At checkpoint time the offline
 experiment was `blocked` and had passed two of five readiness gates:
 
@@ -120,4 +124,3 @@ This checkpoint does not:
 - add browser write authority, posting, messaging, liking, or following;
 - reset or delete the pilot database; or
 - claim production-grade consumer distribution.
-

@@ -1,6 +1,6 @@
 # Preference Replay Contract v0
 
-> Status: **Offline calibration implemented; live influence disabled**
+> Status: **Implemented as read-only diagnostics for Preference Runtime v1**
 > Date: **2026-07-11**
 
 ## Purpose
@@ -16,9 +16,9 @@ Preference Replay evaluates whether append-only user signals and structured cand
 
 A signal without a matching candidate remains auditable but cannot contribute assessed feature tendencies. Retired development-only signal kinds are deleted rather than interpreted by replay.
 
-## Readiness gates
+## Historical diagnostic gates
 
-Offline fitting requires every gate:
+The original experiment considered the diagnostic dataset mature after every gate:
 
 - 30 feedback events;
 - 15 `more_like_this` signals;
@@ -26,7 +26,7 @@ Offline fitting requires every gate:
 - 20 feedback events matched to structured assessments;
 - feedback across 10 runs.
 
-Passing these gates permits only the hard-gated Offline Preference Experiment v0 fit/evaluation. Live activation requires a later decision and comparative evidence against the current selector.
+These gates no longer block routine local fitting or bounded live reranking. They remain useful for judging dataset coverage and eligibility-boundary experiments.
 
 ## Output
 
