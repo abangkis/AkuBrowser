@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
 > Status: **Source-faithful capture, Settings-first operation, and supervised lifecycle implemented**
-> Version: **0.23**
+> Version: **0.24**
 > Last updated: **2026-07-15**
 > Working name: **AkuBrowser**
 
@@ -342,6 +342,49 @@ Source adapters declare platform-owned fresh-content knowledge such as LinkedIn'
 
 Gate 0B.3 gives the ReasoningProvider one narrow acquisition decision after the first validated observation: `finish` or `request_follow_up`. The provider cannot choose a source, URL, browser action, scroll count, position, timeout, or mutation policy. If a follow-up is requested, JobEngine may issue exactly one additional one-scroll command, locked to the same source and anchored to the final viewport of round one. AkuBridge must find at least one supplied frontier anchor before moving, cannot reveal pending content again, and restores the source tab to its pre-follow-up position. Both observations are persisted and merged for final reasoning. A missing or shifted anchor fails explicitly rather than turning the follow-up into an unbounded search.
 
+### 6.2.1 Proposed capture-visibility modes
+
+The current source-fidelity path may briefly make X or LinkedIn the active tab
+inside the user's working Chrome window. This is sometimes necessary to wake a
+stale feed, reveal pending content, or hydrate rendered media. The prior tab is
+restored and the Chrome window is not intentionally focused, but replacing the
+visible tab even momentarily is still intrusive and must not be described as a
+fully non-disruptive user experience.
+
+The preferred next design has two user-facing policies:
+
+1. **Quiet capture** — the default authority ceiling. AkuBridge must not make a
+   source tab active in the user's working window. It may use background-safe
+   DOM capture or a dedicated non-focused managed capture window. If freshness
+   or quality cannot be proven inside that boundary, the run reports an
+   explicit degraded or `visible_recovery_required` outcome; it does not switch
+   the user's tab silently.
+2. **Adaptive fidelity** — an opt-in authority ceiling. The generic capture
+   runtime tries the quiet path first. Only when adapter-declared freshness or
+   generic quality evaluation proves that visual hydration/recovery is needed
+   may it use today's bounded activate/capture/restore behavior.
+
+The user setting owns the maximum visual authority. The engine may choose a
+less intrusive strategy inside that ceiling, but it may never promote Quiet
+capture into visible activation by itself. Source adapters remain limited to
+platform knowledge: wake signals, pending-content controls, hydration
+requirements, and quality evidence. A generic visibility orchestrator owns the
+state transition, retry budget, focus restoration, and terminal outcome.
+
+When Quiet capture ends with `visible_recovery_required`, AkuBrowser may offer
+an explicit one-run **Retry with full fidelity** action. That consent applies
+only to the persisted run being retried and does not silently change the user's
+default capture policy.
+
+A dedicated managed capture window is the strongest near-term alternative
+because it can reuse the signed-in Chrome profile and AkuBridge while keeping
+the user's working window stable. It still requires live validation of Chrome
+render throttling, window focus guarantees, taskbar behavior, geometry,
+lifecycle ownership, and authentication prompts. Offscreen documents,
+headless/container browsers, and direct social APIs are not equivalent
+fallbacks: they either cannot host the authenticated third-party page with the
+same rendering semantics or replace the source-fidelity contract entirely.
+
 ### 6.3 Gate 0 closure status
 
 Gate 0 is technically passed. The personal Chrome pilot has completed the full path on X and LinkedIn through AkuBridge, bounded native movement, restoration, Codex SDK structured reasoning, SQLite persistence, and the AkuBrowser result tab. Live runs on both sources have now exercised provider-directed, frontier-anchored follow-up. X also exercised post-fix `Show posts` activation with a changed-feed readiness proof and restoration to the post-reveal baseline. Repeat runs on both sources demonstrated intent-scoped negative knowledge suppression; a fully known LinkedIn initial sample completed in one round without provider planning.
@@ -352,7 +395,7 @@ Gate 0 is technically passed. The personal Chrome pilot has completed the full p
 | Signed-in X and LinkedIn consumption | Canonical feeds captured from the development Chrome profile | Passed |
 | Structured observations and results | Provider-neutral schemas validated in unit, HTTP, SDK smoke, and live runs | Passed |
 | Source identity and timestamps | Provenance lanes, evidence keys, observed time, and source URLs persist in SQLite | Passed |
-| Non-disruptive bounded operation | Native background-tab scrolling, fixed budgets, and restoration coverage verified | Passed for personal pilot |
+| Focus-safe bounded operation | Native bounded scrolling, fixed budgets, and restoration coverage verified; same-window tab activation remains visually intrusive | Passed technically; Quiet capture remains proposed |
 | Finite completion and truthful coverage | Runs stop with explicit result, failure, cancellation, or bounded follow-up state | Passed |
 
 ### 6.4 Pilot Review evaluation surface
@@ -854,6 +897,7 @@ remaining mixed with active rules.
 | D-136 | Maintain a read-only local replay benchmark with polarity, source-sliced, selection, latency, token, model, and effort metrics; never spend model tokens merely to open diagnostics | Implemented as Engine Replay Benchmark v1 |
 | D-137 | Treat a Less click as complete reduced-weight feedback, keep the selected control visibly highlighted, and offer reason codes only as an optional non-blocking refinement. Lay out source navigation and feedback as balanced primary actions with the optional reason panel on its own row | Implemented in AkuSidecar 0.6.1 |
 | D-138 | Do not run AkuSidecar's Codex-backed development service under an in-process Node file watcher. Keep Vite HMR for UI assets, restart backend changes explicitly through AkuSupervisor, and recover transient status-poll interruptions against the same persisted session. Recovery controls must never create a replacement run implicitly | Implemented in AkuSidecar 0.6.3 after a first post-onboarding check was interrupted during reasoning |
+| D-139 | Introduce Quiet capture and Adaptive fidelity as user-visible capture authority ceilings. The engine may choose a less intrusive strategy within the selected ceiling but may not escalate Quiet capture into visible same-window activation. Keep platform knowledge in adapters and put focus/recovery orchestration in a generic runtime | Proposed; dedicated managed-window feasibility must be validated before implementation |
 
 ## 16. Change Discipline
 
