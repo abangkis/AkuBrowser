@@ -76,4 +76,4 @@ Gate 0B.3 lets a ReasoningProvider either finish after the initial bounded captu
 
 Gate 0 technical feasibility is passed. The active pilot now advances a checkpoint per source and mode, suppresses previously delivered exact evidence, and stores material updates as append-only knowledge-event versions.
 
-See [the architecture reference](docs/aku-browser-architecture.md), [Unified Session Experiment Contract v0](contracts/unified-session-experiment-v0.md), and [bridge contract v1](contracts/bridge-contract-v1.md).
+See [the architecture reference](docs/aku-browser-architecture.md), [Unified Session Experiment Contract v0](contracts/unified-session-experiment-v0.md), [bridge contract v1](contracts/bridge-contract-v1.md), and the [2026-07-14 release checkpoint](docs/release-checkpoint-2026-07-14.md).
