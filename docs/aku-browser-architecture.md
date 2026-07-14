@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
 > Status: **Source-faithful capture, Settings-first operation, and supervised lifecycle implemented**
-> Version: **0.19**
+> Version: **0.20**
 > Last updated: **2026-07-14**
 > Working name: **AkuBrowser**
 
@@ -116,7 +116,7 @@ flowchart LR
     S <-->|"bounded BrowserAdapter contract"| E["AkuBridge"]
     E --> X["X tab"]
     E --> L["LinkedIn tab"]
-    E --> O["Validated observations"]
+    E --> O["Captured observations and diagnostics"]
     O --> S
     S --> T
     V["AkuSupervisor"] -. "development lifecycle" .-> S
@@ -133,6 +133,48 @@ Keeping these capabilities behind `BrowserAdapter` means the
 implementation. Codex and a future open-source provider receive the same
 validated observation contract and the same narrow acquisition-decision
 schema; JobEngine remains browser authority.
+
+### 5.1 Current AkuBridge source-adapter pipeline
+
+AkuBridge currently loads separate X and LinkedIn parser adapters behind a
+revisioned registry. The separation is real but not yet a complete plugin
+boundary: the shared content runtime still builds canonical evidence blocks,
+normalizes source values, collects snapshots, and computes diagnostics.
+
+```mermaid
+flowchart LR
+    X["X rendered DOM"] --> XA["X adapter"]
+    L["LinkedIn rendered DOM"] --> LA["LinkedIn adapter"]
+    XA --> AR["Revisioned adapter registry"]
+    LA --> AR
+    AR --> CR["Shared content runtime<br/>block assembly and normalization"]
+    CR --> CP["Bounded capture policy"]
+    CP --> AH["adapterHealth + fieldCoverage"]
+    AH --> BC["Bridge observation contract"]
+    BC --> SV["Sidecar structural validation"]
+    SV --> JE["JobEngine admission to reasoning"]
+```
+
+| Boundary | Current owner |
+|---|---|
+| Source selectors, candidate discovery, source-native extraction | X or LinkedIn adapter |
+| Canonical block assembly, media discovery, URL/date normalization | Shared AkuBridge content runtime |
+| Capture limits, media allowlists, platform identity normalization | Shared bounded-capture policy |
+| Tab readiness, leases, command guard, bounded recovery | AkuBridge service worker |
+| Structural sanitization, persistence, movement-contract validation | AkuSidecar |
+| Final evidence evaluation and selection | ReasoningProvider under JobEngine validation |
+
+`adapterHealth.fieldCoverage` is currently diagnostic. A non-empty candidate
+set is considered adapter-healthy even when an individual optional or
+conditional field is empty. Known cases such as X visual hydration and
+LinkedIn zero-evidence recovery have explicit handling, but there is not yet a
+generic required/conditional/optional field evaluator or admission verdict.
+
+The proposed generic capture-quality layer, retry authority, and preparation
+for a third social source are recorded in
+[`Source Adapter and Capture Quality Design`](source-adapter-quality-design.md).
+That note is a brainstorming proposal and is not an implemented or confirmed
+architecture decision.
 
 ## 6. End-to-End Runtime Flow
 

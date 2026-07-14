@@ -206,6 +206,14 @@ Every bounded observation may add three diagnostic structures without increasing
 
 These fields are observations, not commands. `hasMoreCandidateSignal` does not authorize another scroll; JobEngine still owns the acquisition round and budget. Engagement counts and platform ordering remain contextual evidence rather than ranking truth.
 
+In the current implementation, `adapterHealth.fieldCoverage` is diagnostic
+only and `adapterHealth.state` is healthy when the bounded capture contains at
+least one unique candidate. Missing or empty candidate fields do not yet
+produce a generic retry, degraded-admission, or reject verdict. Source-specific
+readiness/recovery rules and AkuSidecar structural validation still apply. A
+future generic quality evaluator is design work and must be added to this
+contract explicitly before it can affect capture or reasoning admission.
+
 `sourceEvents` is a bounded list of passive states such as `source_new_content_available`, `source_session_expired`, `source_feed_unavailable`, or `source_layout_changed`. Reporting an event never authorizes background monitoring, notification, engagement, or account mutation.
 
 ## Managed source-tab lifecycle
