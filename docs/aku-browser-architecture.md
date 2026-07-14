@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
 > Status: **Source-faithful capture, Settings-first operation, and supervised lifecycle implemented**
-> Version: **0.22**
+> Version: **0.23**
 > Last updated: **2026-07-15**
 > Working name: **AkuBrowser**
 
@@ -101,9 +101,19 @@ During local development, AkuSidecar remains one service on
 `127.0.0.1:47821`, normally owned by the visible AkuSupervisor process. Vite is
 mounted as frontend middleware on the existing Sidecar HTTP server rather than
 exposed through a second proxy port. Vite owns HMR for UI assets; Node's
-built-in watcher restarts the server child for backend-module changes while
-AkuSupervisor retains ownership of the complete process tree. Production-style
-`npm start` keeps the static file path and does not require Vite at runtime.
+built-in watcher is intentionally not used because a persisted reasoning run
+must not be interrupted by filesystem activity from Codex SDK execution.
+Backend-module changes use an explicit AkuSupervisor restart, which retains
+ownership of the complete process tree and allows persisted run recovery.
+Production-style `npm start` keeps the static file path and does not require
+Vite at runtime.
+
+The pinned UI treats a short local transport interruption as recoverable rather
+than as proof that the run failed. Status polling uses a finite reconnect
+schedule and resumes the same persisted session after AkuSidecar returns. If
+that budget is exhausted, the failure action is explicitly `Reconnect to
+session`; terminal source or reasoning failures instead offer `Return to
+timeline`. Neither action creates a replacement session implicitly.
 
 ## 5. Logical Architecture
 
@@ -843,6 +853,7 @@ remaining mixed with active rules.
 | D-135 | Keep an active champion live while evaluating a challenger, scale displacement authority by holdout quality, and make reset suspension inviolable except by explicit manual refit | Implemented as Preference Runtime v2 |
 | D-136 | Maintain a read-only local replay benchmark with polarity, source-sliced, selection, latency, token, model, and effort metrics; never spend model tokens merely to open diagnostics | Implemented as Engine Replay Benchmark v1 |
 | D-137 | Treat a Less click as complete reduced-weight feedback, keep the selected control visibly highlighted, and offer reason codes only as an optional non-blocking refinement. Lay out source navigation and feedback as balanced primary actions with the optional reason panel on its own row | Implemented in AkuSidecar 0.6.1 |
+| D-138 | Do not run AkuSidecar's Codex-backed development service under an in-process Node file watcher. Keep Vite HMR for UI assets, restart backend changes explicitly through AkuSupervisor, and recover transient status-poll interruptions against the same persisted session. Recovery controls must never create a replacement run implicitly | Implemented in AkuSidecar 0.6.3 after a first post-onboarding check was interrupted during reasoning |
 
 ## 16. Change Discipline
 

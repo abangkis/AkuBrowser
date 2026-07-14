@@ -1,6 +1,6 @@
 # AkuSidecar Development Runbook
 
-> Last verified: **2026-07-14**
+> Last verified: **2026-07-15**
 
 ## Required startup boundary
 
@@ -24,7 +24,7 @@ HTTP health alone is not proof that the reasoning provider can execute.
 ## Preferred startup
 
 AkuSupervisor is the preferred lifecycle owner. It starts AkuSidecar in the
-normal user host context, records the complete npm/watch/server process tree,
+normal user host context, records the complete npm/server process tree,
 monitors `/api/health`, and provides bounded restart and logs without taking
 over the user's browser.
 
@@ -48,6 +48,13 @@ The checked-in Supervisor profile runs `npm run dev` from AkuSidecar with an
 empty environment map. Configure provider, models, efforts, policy, timeout,
 and source behavior through AkuBrowser Settings. Do not set
 `AKU_REASONING_PROVIDER` for normal startup.
+
+`npm run dev` mounts Vite middleware and HMR but deliberately does not run
+Node's file watcher. Codex SDK evaluation occurs inside a persisted active run;
+filesystem activity from that child process must not restart AkuSidecar during
+reasoning. Frontend changes hot-reload. Backend changes require an explicit
+AkuSupervisor restart, which preserves the database and lets the engine resume
+the persisted run.
 
 Direct `npm run dev` remains a component-isolation fallback when AkuSupervisor
 is intentionally unavailable. It must still run in a visible, normal host
@@ -98,8 +105,8 @@ guarantees that now exist.
 
 ## Recovery from `spawn EPERM`
 
-1. Restart the registered `akusidecar` service through AkuSupervisor. Do not
-   stop only `src/server.mjs`; the Node watcher may immediately recreate it.
+1. Restart the registered `akusidecar` service through AkuSupervisor so the
+   complete npm/server process tree is replaced and audited.
 2. Keep the database unless a clean onboarding experiment was explicitly requested. Failed runs are useful diagnostics.
 3. Confirm Supervisor reports the complete owned PID tree and healthy transport.
 4. Verify port, health, provider, and one real reasoning invocation.
