@@ -108,6 +108,9 @@ The `collect_visible` command may carry a bounded native-capture plan:
 - `scrollSettleMs`: maximum wait for the rendered feed to settle after movement;
 - `captureTimeoutMs`: total acquisition deadline, currently `45000`;
 - `maxBlocksPerSnapshot` and `maxBlockCharacters`: evidence-size budgets;
+- `qualityReportRequired: true` for the current Sidecar runtime;
+- `qualityRetryBudget`, currently clamped to `0..1`;
+- `qualityRetrySettleMs`, currently `300` by default and capped at `1000`;
 - `restoreScroll: true`; and
 - `browserAdapter: "aku-bridge"`.
 - `openIfMissing`, controlled by the Sidecar's `open_missing_tab` or `fail_fast` policy.
@@ -184,7 +187,7 @@ If the first LinkedIn capture still produces zero evidence, AkuBridge may perfor
 
 Chrome may close or replace a tab after AkuBridge discovers it but before capture begins. During acquisition round one only, an explicit stale-tab error permits exactly one new discovery attempt. The configured missing-tab policy remains authoritative: `open_missing_tab` may create the canonical feed if rediscovery finds none, while `fail_fast` may only use another already-open eligible tab. The observation reports `sourceTabRecoveryCount` as `0` or `1`.
 
-Each observation also reports the selected `adapterVersion` and a bounded `adapterCapabilities` list. Every capability entry identifies its `source`, adapter `version`, and read-only `actions`; consumers must preserve this additive diagnostic metadata without treating it as new authority.
+Each observation also reports the selected `adapterVersion` and a bounded `adapterCapabilities` list. Every capability entry identifies its `source`, adapter `version`, trusted `qualityProfile`, and read-only `actions`; consumers must preserve this additive diagnostic metadata without treating it as new authority.
 
 Acquisition round two never uses this recovery. A provider-directed follow-up is bound to the prior observation frontier, so losing its tab must fail explicitly rather than silently rebinding to a different page state.
 
@@ -206,13 +209,35 @@ Every bounded observation may add three diagnostic structures without increasing
 
 These fields are observations, not commands. `hasMoreCandidateSignal` does not authorize another scroll; JobEngine still owns the acquisition round and budget. Engagement counts and platform ordering remain contextual evidence rather than ranking truth.
 
-In the current implementation, `adapterHealth.fieldCoverage` is diagnostic
-only and `adapterHealth.state` is healthy when the bounded capture contains at
-least one unique candidate. Missing or empty candidate fields do not yet
-produce a generic retry, degraded-admission, or reject verdict. Source-specific
-readiness/recovery rules and AkuSidecar structural validation still apply. A
-future generic quality evaluator is design work and must be added to this
-contract explicitly before it can affect capture or reasoning admission.
+`adapterHealth.fieldCoverage` remains diagnostic, but capture admission is now
+enforced by the generic `social-post-v1` quality profile. Text and author are
+required; platform id, native permalink, or stable text identity is required
+as a one-of identity; media and primary avatar are conditional when their
+source roots are detected; timestamp is optional and can be explicitly
+not-exposed.
+
+Every evaluated candidate produces a report containing `profile`, categorical
+`verdict`, diagnostic `score`, retry `attempt`, and bounded `issues`. An issue
+contains `field`, stable `code`, `observedState`, `severity`, `recoverable`, and
+`attempt`. Verdicts are `complete`, `usable_degraded`, `retryable`, or
+`invalid`. The numeric score is never the sole admission authority.
+
+Each block carries its final `captureQuality`; each snapshot carries all
+candidate `qualityReports`, including a report for an invalid or short-text
+candidate that is not transported as a block; and coverage carries a summary
+with profile, verdict totals, issue totals, retry budget, and retry attempts.
+When a conditional value is detected but not hydrated, AkuBridge may consume
+the one pre-authorized retry by settling and re-extracting only that same
+candidate in the same tab and viewport. The retry cannot add scrolling,
+navigation, reveal actions, tab recovery, or command time. A final observation
+must not contain `retryable`.
+
+AkuSidecar validates structure and report consistency before persistence. It
+admits `complete` and `usable_degraded` blocks, removes `invalid` blocks, and
+fails closed if every candidate is invalid or any report contradicts the
+observation. Coverage adds `qualityAdmission` with admitted, degraded,
+rejected, retry, and issue totals. Acquisition planning and final reasoning
+receive only admitted evidence.
 
 `sourceEvents` is a bounded list of passive states such as `source_new_content_available`, `source_session_expired`, `source_feed_unavailable`, or `source_layout_changed`. Reporting an event never authorizes background monitoring, notification, engagement, or account mutation.
 

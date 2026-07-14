@@ -105,6 +105,7 @@ const bridgeCapabilitiesSource = readText(path.join(bridgeRoot, "bridge-capabili
 const bridgeTab = readText(path.join(bridgeRoot, "aku-browser-tab-bridge.js"));
 const bridgeContent = readText(path.join(bridgeRoot, "content-script.js"));
 const bridgeCapturePolicy = readText(path.join(bridgeRoot, "bounded-capture-policy.js"));
+const bridgeQualityPolicy = readText(path.join(bridgeRoot, "capture-quality-policy.js"));
 const sidecarHttp = readText(path.join(sidecarRoot, "src", "http", "app.mjs"));
 const sidecarUi = readText(path.join(sidecarRoot, "public", "app.js"));
 const sidecarContracts = readText(path.join(sidecarRoot, "src", "core", "contracts.mjs"));
@@ -114,6 +115,9 @@ const sidecarStateStore = readText(
 );
 const sidecarBrowserAdapter = readText(
   path.join(sidecarRoot, "src", "browser", "browser-adapter-contract.mjs"),
+);
+const sidecarQualityAdmission = readText(
+  path.join(sidecarRoot, "src", "browser", "observation-quality-policy.mjs"),
 );
 assert.match(
   sidecarHttp,
@@ -178,6 +182,21 @@ assert.match(bridgeCapturePolicy, /maxScrolls: 2/);
 assert.match(bridgeCapturePolicy, /sameTabMutationAllowed/);
 assert.match(bridgeCapturePolicy, /acquisitionRound/);
 assert.match(bridgeCapturePolicy, /continuation/);
+assert.match(bridgeQualityPolicy, /social-post-v1/);
+assert.match(bridgeQualityPolicy, /pending_hydration/);
+assert.match(sidecarContracts, /pending_hydration/);
+for (const value of [
+  "complete",
+  "usable_degraded",
+  "retryable",
+  "invalid",
+]) {
+  assert.match(bridgeQualityPolicy, new RegExp(escapeRegExp(value)));
+  assert.match(sidecarQualityAdmission, new RegExp(escapeRegExp(value)));
+}
+assert.match(bridgeCapturePolicy, /maxQualityRetryBudget: 1/);
+assert.match(sidecarBrowserAdapter, /qualityReportRequired/);
+assert.match(sidecarJobEngine, /admitObservationQuality/);
 assert.match(sidecarBrowserAdapter, /NATIVE_BROWSER_ADAPTER = "aku-bridge"/);
 assert.match(
   sidecarBrowserAdapter,

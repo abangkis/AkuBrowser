@@ -74,6 +74,12 @@ The bridge diagnostics endpoint is `GET /api/operations/bridge/health`. AkuBrows
 
 Gate 0B.3 lets a ReasoningProvider either finish after the initial bounded capture or request one deterministic, same-source, frontier-anchored follow-up. JobEngine—not the provider—owns the allowed action, position, scroll budget, and round limit.
 
+Source-specific X and LinkedIn parsers feed a shared `social-post-v1`
+capture-quality evaluator. AkuSidecar pre-authorizes at most one DOM-local
+same-candidate retry, validates categorical reports and reason codes, removes
+invalid candidates, and sends only complete or explicitly degraded evidence to
+reasoning. See [the source-adapter quality architecture](docs/source-adapter-quality-design.md).
+
 Gate 0 technical feasibility is passed. The active pilot now advances a checkpoint per source and mode, suppresses previously delivered exact evidence, and stores material updates as append-only knowledge-event versions.
 
 See [the architecture reference](docs/aku-browser-architecture.md), [Unified Session Experiment Contract v0](contracts/unified-session-experiment-v0.md), [bridge contract v1](contracts/bridge-contract-v1.md), and the [2026-07-14 release checkpoint](docs/release-checkpoint-2026-07-14.md).

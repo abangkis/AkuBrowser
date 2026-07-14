@@ -134,12 +134,13 @@ implementation. Codex and a future open-source provider receive the same
 validated observation contract and the same narrow acquisition-decision
 schema; JobEngine remains browser authority.
 
-### 5.1 Current AkuBridge source-adapter pipeline
+### 5.1 Source-adapter and capture-quality pipeline
 
-AkuBridge currently loads separate X and LinkedIn parser adapters behind a
-revisioned registry. The separation is real but not yet a complete plugin
-boundary: the shared content runtime still builds canonical evidence blocks,
-normalizes source values, collects snapshots, and computes diagnostics.
+AkuBridge loads separate X and LinkedIn parser adapters behind a revisioned
+registry. The shared content runtime builds canonical evidence blocks and a
+trusted generic quality evaluator checks every adapter output before Sidecar
+admission. The separation is a source-parser boundary, not dynamic third-party
+plugin installation.
 
 ```mermaid
 flowchart LR
@@ -148,11 +149,13 @@ flowchart LR
     XA --> AR["Revisioned adapter registry"]
     LA --> AR
     AR --> CR["Shared content runtime<br/>block assembly and normalization"]
-    CR --> CP["Bounded capture policy"]
-    CP --> AH["adapterHealth + fieldCoverage"]
-    AH --> BC["Bridge observation contract"]
-    BC --> SV["Sidecar structural validation"]
-    SV --> JE["JobEngine admission to reasoning"]
+    CR --> QE["Generic quality evaluator<br/>social-post-v1"]
+    QE --> RP{"Bounded local retry?"}
+    RP -->|"same candidate, max one"| AR
+    RP -->|"final quality report"| BC["Bridge observation contract"]
+    BC --> SV["Sidecar structure + report validation"]
+    SV --> AP["Quality admission policy"]
+    AP --> JE["JobEngine admitted evidence only"]
 ```
 
 | Boundary | Current owner |
@@ -160,21 +163,23 @@ flowchart LR
 | Source selectors, candidate discovery, source-native extraction | X or LinkedIn adapter |
 | Canonical block assembly, media discovery, URL/date normalization | Shared AkuBridge content runtime |
 | Capture limits, media allowlists, platform identity normalization | Shared bounded-capture policy |
+| Required/conditional field expectations, issues, verdicts | Shared trusted quality policy |
 | Tab readiness, leases, command guard, bounded recovery | AkuBridge service worker |
-| Structural sanitization, persistence, movement-contract validation | AkuSidecar |
+| Structural sanitization, movement validation, report consistency, candidate admission | AkuSidecar |
 | Final evidence evaluation and selection | ReasoningProvider under JobEngine validation |
 
-`adapterHealth.fieldCoverage` is currently diagnostic. A non-empty candidate
-set is considered adapter-healthy even when an individual optional or
-conditional field is empty. Known cases such as X visual hydration and
-LinkedIn zero-evidence recovery have explicit handling, but there is not yet a
-generic required/conditional/optional field evaluator or admission verdict.
+Every adapter declares a trusted profile id and source detection selectors.
+AkuBridge emits candidate, snapshot, and coverage-level quality reports with
+`complete`, `usable_degraded`, `retryable`, or `invalid` verdicts. AkuSidecar
+pre-authorizes at most one same-candidate retry, rejects inconsistent reports,
+removes invalid candidates, and fails the source when no usable evidence
+remains. A final `retryable` report cannot reach persistence or reasoning.
 
-The proposed generic capture-quality layer, retry authority, and preparation
-for a third social source are recorded in
+The normative design, field profile, recovery budget, admission matrix, and
+third-source requirements are recorded in
 [`Source Adapter and Capture Quality Design`](source-adapter-quality-design.md).
-That note is a brainstorming proposal and is not an implemented or confirmed
-architecture decision.
+The current runtime baseline is AkuBridge 0.5.33 / source-fidelity-v35 with
+`x-dom-v13` and `linkedin-dom-v10`, plus AkuSidecar 0.5.18.
 
 ## 6. End-to-End Runtime Flow
 
@@ -796,6 +801,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-126 | Use visible AkuSupervisor ownership as the preferred AkuSidecar development lifecycle. Persist provider/model/effort/policy/timeout choices in AkuBrowser Settings; do not recommend environment variables or detached hidden Sidecar launch for normal installation and daily use | Implemented and MCP/CLI live-validated |
 | D-127 | Estimate LinkedIn relative timestamps only when the source exposes a valid relative value, preserve its original text plus explicit estimate precision/source metadata, and leave promoted entries without time as `null`. Keep long-backgrounded capture waits service-worker-backed and expose content-free timeout progress | Implemented in AkuBridge 0.5.29 / source-fidelity-v31 with linkedin-dom-v8 and live background capture validation |
 | D-128 | Version AkuBrowser, AkuSidecar, and AkuBridge independently. Cross-repository release gates validate Bridge package/manifest identity, minimum extension version, exact runtime revision, adapter versions, and required actions instead of lockstep package equality | Implemented in integration checks and AkuDoctor |
+| D-129 | Keep source-specific DOM parsing in revisioned adapters, then evaluate canonical candidates with trusted `social-post-v1` field expectations. Sidecar pre-authorizes at most one same-candidate local retry, validates report consistency, admits complete/degraded evidence, removes invalid candidates, and never exposes final retryable or rejected evidence to reasoning. X still attempts bounded visual hydration, but semantic feed readiness proceeds to the evaluator when visual hydration remains incomplete | Implemented in AkuBridge 0.5.33 / source-fidelity-v35 (`x-dom-v13`, `linkedin-dom-v10`) and AkuSidecar 0.5.18 |
 
 ## 16. Change Discipline
 

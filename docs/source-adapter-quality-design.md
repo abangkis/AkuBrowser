@@ -1,268 +1,238 @@
-# Source Adapter and Capture Quality Design
+# Source Adapter and Capture Quality Architecture
 
-> Status: **Brainstorming proposal — documented, not implemented or accepted**
+> Status: **Implemented and enforced**
 > Date: **2026-07-14**
-> Scope: **AkuBridge source parsers, generic capture-quality evaluation, and AkuSidecar admission**
+> Runtime baseline: **AkuBridge 0.5.33 / source-fidelity-v35; AkuSidecar 0.5.18**
+> Scope: **AkuBridge source parsers, generic capture-quality evaluation, bounded recovery, and AkuSidecar admission**
 
-## 1. Why this note exists
+## 1. Purpose
 
-AkuBridge already separates X and LinkedIn DOM knowledge into source adapters,
-but the architecture does not yet contain a generic decision layer that asks
-whether an adapter output is complete enough to use. Recent X failures showed
-why candidate discovery alone is insufficient: text may be present while a
-detected image or video container has not exposed a usable media value.
+AkuBridge keeps source DOM knowledge in separate X and LinkedIn adapters. A
+shared quality layer now verifies that their canonical output is usable before
+it can become reasoning evidence. This prevents a text-bearing post from being
+treated as complete when the rendered DOM also exposes an author, avatar,
+image, or video root whose normalized value is empty.
 
-This note records the current implementation accurately and proposes a seam
-for additional social sources. It deliberately does not authorize code changes
-or settle the remaining policy choices.
+The quality layer is deliberately outside the source parser. Adapters report
+source-specific extraction and detection facts; trusted shared policy owns the
+field expectations and verdict; AkuSidecar owns final admission.
 
-## 2. Current implementation
-
-```mermaid
-flowchart LR
-    DOM["Rendered DOM"] --> A["Source adapter<br/>X or LinkedIn"]
-    A --> CR["Shared content runtime<br/>canonical block assembly"]
-    CR --> BP["Bounded capture policy<br/>normalization and limits"]
-    BP --> AH["adapterHealth<br/>field presence diagnostics"]
-    AH --> T["Bridge transport"]
-    T --> SV["Sidecar structural validation"]
-    SV --> J["JobEngine"]
-    J --> R["ReasoningProvider"]
-```
-
-### 2.1 Source-adapter responsibility
-
-The revisioned AkuBridge registry currently loads `x-adapter.js` and
-`linkedin-adapter.js`. Each adapter owns source-specific DOM knowledge:
-
-- page and login-state matching;
-- feed-root and candidate discovery;
-- author, avatar, body, presentation, and relationship extraction;
-- source-specific media selectors and exclusions; and
-- pending-content labels.
-
-The registry checks the presence of the common `matchesPage`,
-`discoverCandidates`, `findAuthor`, and `extractSemantics` hooks. Synthetic DOM
-fixtures exercise representative happy paths for each adapter version.
-
-### 2.2 Shared AkuBridge responsibility
-
-`content-script.js` is more than a dispatcher. It currently owns canonical
-block assembly, media discovery, URL and timestamp normalization, bounded
-snapshot capture, movement/restoration, and `fieldCoverage` calculation.
-`bounded-capture-policy.js` applies common size, count, identity, and CDN
-allowlist rules. The service worker owns tab selection, visual readiness,
-leases, command guards, and bounded source recovery.
-
-### 2.3 Current validation and its gap
-
-Validation is distributed across several layers:
-
-| Layer | What it proves today | What it does not prove |
-|---|---|---|
-| Adapter registry | Required parser hooks exist | Extracted values are complete or coherent |
-| Synthetic conformance | Known fixtures produce expected values | Current live DOM still matches the fixture |
-| Shared capture policy | Values are bounded and media URLs are allowlisted | A detected source field produced a value |
-| `adapterHealth` | Candidate counts, selector strategy, field-presence counts, DOM signature | Whether the observation should retry, continue degraded, or fail |
-| Sidecar contract validation | Source/page/snapshot structure is safe; invalid optional values are normalized or dropped | Source fidelity is sufficient for reasoning |
-| Native capture outcome | Movement, restoration, frontier, and mutation claims match the command | Candidate-level semantic completeness |
-
-Today, `adapterHealth.state` is `healthy` when the capture found at least one
-unique candidate. An empty author, permalink, avatar, or media value can still
-reach AkuSidecar. Empty text blocks are filtered, while many other invalid or
-missing values become `null`, an empty collection, or a default. Known failure
-modes have source-specific recovery, but there is no generic admission verdict.
-
-Therefore the answer to “is validation still inside the adapter?” is nuanced:
-
-- source extraction and some source-specific detection remain in the adapter;
-- normalization and field-presence measurement are already shared;
-- structural validation exists again in AkuSidecar; but
-- the generic quality evaluator and deterministic admission decision do not yet
-  exist.
-
-## 3. Proposed target architecture
+## 2. Implemented pipeline
 
 ```mermaid
 flowchart LR
-    DOM["Rendered DOM"] --> P["Source parser adapter"]
+    DOM["Rendered source DOM"] --> P["Source parser adapter<br/>X or LinkedIn"]
     P --> C["Canonical candidate builder"]
-    C --> Q["Generic capture-quality evaluator"]
-    FC["Versioned field profile"] --> Q
-    Q --> RP["Bounded recovery policy"]
-    RP -->|"retryable and budget remains"| P
-    RP -->|"final observation + quality report"| T["Bridge transport"]
-    T --> SA["Sidecar observation-admission policy"]
-    SA -->|"admit"| RE["ReasoningProvider"]
-    SA -->|"admit degraded"| RE
-    SA -->|"reject"| F["Explicit source failure"]
+    C --> Q["Generic quality evaluator<br/>social-post-v1"]
+    F["Adapter detection facts"] --> Q
+    Q --> R{"Retryable and<br/>budget remains?"}
+    R -->|"yes: same candidate"| P
+    R -->|"no: final report"| T["Bridge observation transport"]
+    T --> V["Sidecar structural and<br/>report-consistency validation"]
+    V --> A{"Admission policy"}
+    A -->|"complete"| J["JobEngine / ReasoningProvider"]
+    A -->|"usable degraded"| J
+    A -->|"invalid candidate"| X["Remove candidate"]
+    X -->|"no usable evidence"| E["Explicit source failure"]
 ```
 
-The parser should describe what the source exposed. It should not make the
-final policy decision. A generic evaluator should compare the canonical output
-and source-detection facts with a versioned field profile. AkuSidecar remains
-the authority that decides whether evidence is admitted to reasoning.
+### Ownership
 
-## 4. Quality facts instead of empty-value guessing
-
-The evaluator needs more information than the final value. Every evaluated
-field should be able to distinguish these states:
-
-| Observed state | Meaning | Default quality effect |
-|---|---|---|
-| `present` | A normalized usable value exists | Positive |
-| `detected_empty` | The source container/attribute was detected but yielded no usable value | Negative; often retryable |
-| `missing` | Neither a value nor source evidence was found | Depends on field profile |
-| `invalid` | A value existed but failed normalization or allowlist rules | Negative; sometimes retryable |
-| `not_exposed` | The platform explicitly does not expose the value in this context | No automatic penalty when allowed |
-| `not_applicable` | The field does not apply to this content kind | No penalty |
-| `pending_hydration` | The source element exists but is not rendered sufficiently yet | Negative and retryable |
-
-This distinction solves the recurring media case. If no media container is
-present, `media` is `not_applicable`. If a `tweetPhoto` or video root is present
-but the normalized media list is empty, it is `detected_empty` or
-`pending_hydration`, which can trigger bounded recovery.
-
-## 5. Versioned field profiles
-
-The evaluator should be generic, but expectations cannot be identical for
-every source and content kind. It should consume a declarative profile rather
-than embed X/LinkedIn conditions in its decision code.
-
-A candidate profile could classify fields as:
-
-- **required** — unusable evidence when absent;
-- **one-of required** — at least one identity path must exist;
-- **conditional** — required only when detection facts or content kind make it
-  applicable; and
-- **optional** — preserved when present but never sufficient alone to reject a
-  candidate.
-
-An initial social-post baseline for discussion—not a final contract—is:
-
-| Field | Candidate expectation |
+| Boundary | Owner |
 |---|---|
-| `text` | Required for the current text-reasoning path |
-| `source` and source page URL | Required at observation level |
-| `platformId`, native permalink, or stable content identity | One-of required |
-| `author` | Normally required; exceptions must be explicit in the profile |
-| `media` | Conditional when a source media root was detected |
-| `avatarUrl` | Conditional when a primary-author avatar root was detected |
-| `publishedAt` | Optional when the platform does not expose it; invalid timestamps are signaled |
-| engagement, links, presentation metadata | Optional unless a content-kind profile says otherwise |
+| Page matching, selectors, candidate discovery, source-native extraction | X or LinkedIn adapter |
+| Canonical block assembly and URL/date/media normalization | Shared AkuBridge content runtime |
+| Trusted field profile, issue codes, categorical verdict, numeric diagnostic score | `capture-quality-policy.js` |
+| Retry count, settling ceiling, scroll/deadline limits | Sidecar command plus Bridge bounded-capture policy |
+| Report schema, consistency checks, candidate admission, fail-closed behavior | AkuSidecar |
+| Final semantic evaluation of admitted evidence only | ReasoningProvider under JobEngine |
 
-Security rules such as accepted protocols and media CDN allowlists should stay
-in trusted shared policy. A source adapter must not be able to weaken them by
-declaring a broader profile.
+The adapter registry requires every adapter to declare a parser version,
+`qualityProfile`, and `qualitySelectors`. Current versions are `x-dom-v13` and
+`linkedin-dom-v10`, both using `social-post-v1`.
 
-## 6. Quality report and verdict
+## 3. Trusted field profile
 
-The bridge should preserve reason codes rather than exposing only one opaque
-score. A possible additive report is:
+`social-post-v1` is compiled into AkuBridge trusted policy; an adapter selects
+the profile but cannot weaken it or broaden security allowlists.
+
+| Field | Enforced expectation |
+|---|---|
+| `text` | Required |
+| `author` | Required |
+| `platformId`, native `permalink`, or stable text identity | At least one required |
+| `media` | Conditional when a source media root is detected |
+| `avatarUrl` | Conditional when a primary-author avatar root is detected |
+| `publishedAt` | Optional; checked when a timestamp signal exists, except explicitly not-exposed promoted content |
+| engagement, links, relationship, presentation metadata | Optional under this profile |
+
+Protocol, URL-normalization, media-CDN, size, and count rules remain in trusted
+shared capture policy. Quality evaluation does not expand browser authority.
+
+## 4. Field states and issues
+
+Reports preserve an explicit state and reason instead of treating every empty
+value alike:
+
+| State | Meaning |
+|---|---|
+| `present` | A normalized usable value exists |
+| `detected_empty` | A source signal exists but extraction yielded no usable value |
+| `missing` | A required value and its source evidence are absent |
+| `invalid` | A detected value fails trusted normalization or allowlist policy |
+| `not_exposed` | The platform explicitly does not expose the field in this context |
+| `not_applicable` | The field does not apply to this content kind |
+| `pending_hydration` | The source element exists but has not exposed a usable rendered value |
+
+The current evaluator emits candidate reports of this shape:
 
 ```json
 {
-  "verdict": "usable_degraded",
-  "score": 0.82,
   "profile": "social-post-v1",
+  "verdict": "usable_degraded",
+  "score": 0.8,
+  "attempt": 1,
   "issues": [
     {
       "field": "media",
-      "code": "detected_empty",
+      "code": "pending_hydration",
+      "observedState": "pending_hydration",
       "severity": "high",
       "recoverable": true,
-      "attempt": 0
+      "attempt": 1
     }
   ]
 }
 ```
 
-Candidate verdicts should be categorical:
+The score is diagnostic only. Categorical verdicts and explicit issue codes
+are authoritative:
 
-- `complete` — all applicable required/conditional expectations pass;
-- `usable_degraded` — safe and useful, with non-critical limitations;
-- `retryable` — a bounded same-source recovery may improve fidelity; and
-- `invalid` — required evidence or provenance is unusable.
+- `complete`: all applicable expectations pass;
+- `usable_degraded`: safe evidence remains but a non-critical limitation is
+  present after recovery;
+- `retryable`: a recoverable issue remains and the pre-authorized local retry
+  budget is not exhausted; and
+- `invalid`: required evidence or identity is unusable.
 
-A numeric score can help telemetry and threshold experiments, but it must not
-replace explicit issues or become the sole source of a reject decision.
+## 5. Bounded recovery
 
-## 7. Recovery and admission authority
+AkuSidecar sends `qualityReportRequired: true`, `qualityRetryBudget: 1`, and a
+default `qualityRetrySettleMs: 300`. AkuBridge clamps the retry budget to one
+and settle time to at most 1000 ms.
 
-Recommended authority split for discussion:
+The retry:
 
-1. AkuSidecar supplies a deterministic `qualityRetryBudget` in the capture
-   command. The adapter cannot increase it.
-2. AkuBridge evaluates every captured candidate generically.
-3. A DOM-local transient issue may consume one pre-authorized retry in the same
-   tab and viewport. It cannot add scrolls, reveal content, change source, or
-   extend the command deadline.
-4. AkuBridge returns the final observation, every quality issue, and recovery
-   attempts.
-5. AkuSidecar revalidates the report and makes the authoritative admission
-   decision: continue, continue degraded with limitations, or fail the source.
-6. The ReasoningProvider receives only admitted evidence. It must not be asked
-   to infer whether a parser silently failed.
+- re-extracts only the same candidate in the same tab and viewport;
+- performs no extra scroll, navigation, reveal action, or tab replacement;
+- cannot extend the capture deadline;
+- returns a final degraded or invalid report if the issue remains; and
+- never transports a final `retryable` candidate.
 
-Suggested deterministic policy matrix:
+X still receives its bounded active-tab visual-hydration wait. If the semantic
+feed is ready but one visual root remains unhydrated at that deadline, readiness
+continues into capture and lets this candidate policy decide retry/degrade. A
+visual timeout therefore cannot bypass the evaluator by failing the complete
+source before candidate reports exist.
 
-| Final condition | Bridge action | Sidecar admission |
-|---|---|---|
-| Required field invalid | Do not retry unless explicitly recoverable | Reject candidate/source according to bounded policy |
-| Conditional field detected but empty and retry budget remains | Retry same candidate/snapshot | Wait for final report |
-| Same issue after retry | Return degraded/invalid with reason | Decide degraded handoff or explicit source failure |
-| Optional field missing or explicitly not exposed | No retry | Admit; retain limitation only when user-relevant |
-| Quality report inconsistent with captured values | Fail closed | Reject bridge result |
+This places transient DOM recovery close to the DOM while keeping authority in
+the Sidecar-issued command.
 
-This keeps retry execution close to the DOM while preserving JobEngine policy
-authority. An alternative is a second explicit Sidecar command for every retry;
-it is more auditable but adds transport/state complexity and should be compared
-before implementation.
+## 6. Sidecar validation and admission
 
-## 8. Preparing for additional social sources
+AkuSidecar first validates the observation structure and native movement
+contract, then validates quality reports before persistence or reasoning. It
+fails closed when:
 
-A future source package should be a trusted, versioned extension component,
-not a dynamically installed third-party script. Its declarative manifest could
-identify:
+- a required report or summary is absent;
+- report counts, profiles, verdict totals, or retry totals disagree;
+- a `complete` report contains issues;
+- an `invalid` report has no critical issue;
+- a `retryable` report has no recoverable issue or crosses the final boundary;
+- a reported missing author is omitted; or
+- a media/avatar issue contradicts a present admitted value.
 
-- source id and parser version;
-- supported page kinds and canonical feed URL;
-- parser hooks and recovery capabilities;
-- field-profile id and supported content kinds;
-- synthetic conformance fixtures; and
-- bounded diagnostic capabilities.
+Invalid candidates are removed. Complete and usable-degraded candidates are
+admitted, with `coverage.qualityAdmission` recording admitted, degraded, and
+rejected counts plus issue totals. If no usable candidate remains, the source
+fails explicitly. JobEngine sends only the admitted observation to acquisition
+planning and final reasoning. Multi-round coverage aggregates quality and
+admission totals across every capture round.
 
-Adding a source is not yet plug-and-play. AkuSidecar still hard-codes X and
-LinkedIn in source enums, unified ordering, evidence-key validation,
-configuration, diagnostics, and UI ordering. Those product seams must later be
-driven by one trusted source catalog before the term “plugin architecture” is
-fully accurate.
+## 7. Operational diagnostics
 
-## 9. Safe implementation sequence after design approval
+Each block carries `captureQuality`; every snapshot carries
+`qualityReports`; coverage carries `captureQuality`; and admitted observations
+add `qualityAdmission`. `adapterHealth` is healthy only when candidates exist
+and the aggregate capture-quality verdict is complete. Diagnostics retain
+field coverage and DOM signatures without exposing captured post content in
+the health endpoint.
 
-1. Add quality reports in shadow/report-only mode; do not change capture or
-   admission decisions.
-2. Compare generic reports with live X/LinkedIn failures and build regression
-   fixtures for `detected_empty`, `not_exposed`, and conditional media.
-3. Make Sidecar validate report consistency and surface diagnostics.
-4. Enable bounded retry only for agreed transient reason codes.
-5. Enable degraded/reject admission rules only after shadow evidence proves
-   thresholds and field profiles do not discard valid platform cases.
-6. Generalize the trusted source catalog before adding a third source.
+Bridge capability `report_capture_quality` is required by AkuSidecar. The
+Sidecar rejects an older Bridge runtime, parser version, or capability set
+before starting a new capture.
 
-## 10. Open decisions
+## 8. Adding another social source
 
-- Which identity combination is the minimum safe candidate contract?
-- Is author universally required, or required only for selected page/content
-  kinds?
-- Should a final media hydration failure reject only that candidate, degrade the
-  source run, or fail the complete source?
-- Should the field profile live in AkuBridge, the canonical AkuBrowser
-  contract, or be compiled into both Bridge and Sidecar?
-- Is one local Bridge retry sufficient, or should Sidecar issue every recovery
-  command explicitly?
-- Which quality facts should be user-visible versus diagnostic-only?
-- Should a numeric score exist at all, or are categorical verdicts plus reason
-  codes sufficient?
+The parser seam is reusable, but adding a source is intentionally a trusted
+product change rather than dynamic third-party plugin installation. A new
+source must provide:
 
-Until these are decided, the proposal remains documentation only.
+1. a registered parser adapter with a unique source and parser version;
+2. page matching, candidate discovery, extraction hooks, quality selectors,
+   and a trusted profile id;
+3. synthetic DOM conformance fixtures including complete, detected-empty,
+   pending-hydration, not-exposed, and invalid cases;
+4. canonical URL, identity, media-CDN, and tab-lifecycle policy; and
+5. registration in Sidecar source configuration, ordering, diagnostics, and UI.
+
+X/LinkedIn enums and product ordering are still explicit. Before a third
+source, those seams should be consolidated behind one trusted source catalog;
+this quality architecture supplies the generic parser-output boundary but does
+not pretend arbitrary sources are already plug-and-play.
+
+## 9. Verification requirements
+
+Any change to an adapter, field profile, or admission rule must pass:
+
+- evaluator unit tests for every verdict and issue state;
+- adapter registry and synthetic DOM conformance tests;
+- Sidecar contract and admission-policy tests;
+- a JobEngine integration test proving invalid evidence never reaches
+  reasoning;
+- cross-repository compatibility checks; and
+- live signed-in X and LinkedIn capture validation after cooperative Bridge
+  reload, including one real reasoning invocation.
+
+The runtime baseline implementing this decision advertises
+`aku-bridge-0.5.33-source-fidelity-v35`, `x-dom-v13`, `linkedin-dom-v10`, and
+`report_capture_quality`.
+
+## 10. Live acceptance evidence
+
+After cooperative reload request `quality-architecture-20260714-2121`,
+AkuSupervisor observed the exact v35 build. Signed-in unified session
+`6342098f-55a2-429b-a5a2-6e1cb7806479` then completed X and LinkedIn and
+restored both source positions. Its evidence had already been evaluated in the
+immediately preceding acceptance run, so knowledge continuity correctly
+suppressed duplicate reasoning and produced zero additions.
+
+- X used `x-dom-v13`, admitted eight blocks as `usable_degraded`, and reported
+  eight avatar plus three media `pending_hydration` issues after one retry per
+  affected candidate.
+- LinkedIn used `linkedin-dom-v10`, admitted five blocks as `complete`,
+  preserved five media records, and reported no issue or retry. Its scoped
+  actor-avatar selector no longer mistakes a profile image mentioned in the
+  body for the primary-author avatar root.
+- Neither source transported a final `retryable` report or admitted an
+  `invalid` block.
+- A separate final-build Manual Live session,
+  `493079e1-d79c-4c0e-822d-14fbc9864d3c`, forced a fresh LinkedIn evaluation.
+  It completed with five blocks, five media records, `complete` admission, one
+  real `candidate_evaluation` invocation, three result items, and restored
+  scrolling.
+
+This acceptance is intentionally evidence of truthful degraded handling, not a
+claim that every source image hydrated. The quality contract makes that
+remaining weakness explicit so a future fallback decision can use stable
+reason codes instead of rediscovering silent media loss.
