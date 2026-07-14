@@ -64,6 +64,11 @@ extension through the bridge-authenticated action `accept` endpoint. The
 service worker accepts the internal reload message only from the configured
 AkuBrowser origin and then calls `chrome.runtime.reload()`.
 
+The local page starts the action long poll only after a compatible AkuBridge
+capability handshake. A local AkuBrowser URL opened in a browser without the
+extension, or with an incompatible extension, remains a passive UI and cannot
+claim a cooperative action intended for the eligible Chrome relay tab.
+
 The existing content-script context is expected to disconnect. AkuBrowser
 refreshes only its own local tab, performs a new capability handshake, and
 Sidecar completes the action only after the required build identity is
