@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
 > Status: **Source-faithful capture, Settings-first operation, and supervised lifecycle implemented**
-> Version: **0.24**
+> Version: **0.25**
 > Last updated: **2026-07-15**
 > Working name: **AkuBrowser**
 
@@ -190,10 +190,10 @@ remains. A final `retryable` report cannot reach persistence or reasoning.
 The normative design, field profile, recovery budget, admission matrix, and
 third-source requirements are recorded in
 [`Source Adapter and Capture Quality Design`](source-adapter-quality-design.md).
-The current runtime baseline is AkuBridge 0.5.37 / source-fidelity-v39 with
+The current runtime baseline is AkuBridge 0.5.38 / source-fidelity-v40 with
 `x-dom-v15`, `linkedin-dom-v13`, `x-freshness-v1`,
 `linkedin-freshness-v2`, `x-media-recovery-v1`, and
-`linkedin-media-recovery-v1`, plus AkuSidecar 0.5.21. The freshness seam is
+`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.4. The freshness seam is
 normatively defined in
 [`Source Freshness Recovery v1`](../contracts/source-freshness-recovery-v1.md),
 and bounded media fallback is defined in
@@ -338,27 +338,26 @@ Gate 0B is split into three evidence gates so browser movement and feed mutation
 
 Gate 0B.1 does not silently become an infinite feed reader: the initial experiment permits at most two native scrolls, three snapshots, one promoted result, and 45 seconds of browser acquisition. The current runtime fails explicitly when the native adapter cannot complete. Any future Computer Use fallback requires policy approval and must appear in coverage.
 
-Source adapters declare platform-owned fresh-content knowledge such as LinkedIn's `New posts` banner or X's `Show posts` control, but they do not implement orchestration. The generic recovery engine owns bounded activation, polling, one-reveal authorization, proof, and terminal outcomes. If activated, the platform may replace or reorder the rendered feed; AkuBridge therefore waits for a changed, non-empty visible-feed fingerprint, establishes that revealed feed as a new capture baseline, restores scrolling only to that post-reveal baseline, and records that the pre-run feed view was intentionally changed. Signal removal alone is not readiness evidence. Failure stops at `source_freshness` and is never retried as a stale detect-only capture. A dedicated managed tab remains a possible later isolation strategy rather than a v1 requirement.
+Source adapters declare platform-owned fresh-content knowledge such as LinkedIn's `New posts` banner or X's `Show posts` control, but they do not implement orchestration. The generic recovery engine owns bounded activation, polling, one-reveal authorization, proof, and terminal outcomes. If activated, the platform may replace or reorder the rendered feed; AkuBridge therefore waits for a changed, non-empty visible-feed fingerprint, establishes that revealed feed as a new capture baseline, restores scrolling only to that post-reveal baseline, and records that the pre-run feed view was intentionally changed. Signal removal alone is not readiness evidence. Failure stops at `source_freshness` and is never retried as a stale detect-only capture. Catch Up now performs this lifecycle inside a dedicated managed capture window by default; adapter semantics are unchanged.
 
 Gate 0B.3 gives the ReasoningProvider one narrow acquisition decision after the first validated observation: `finish` or `request_follow_up`. The provider cannot choose a source, URL, browser action, scroll count, position, timeout, or mutation policy. If a follow-up is requested, JobEngine may issue exactly one additional one-scroll command, locked to the same source and anchored to the final viewport of round one. AkuBridge must find at least one supplied frontier anchor before moving, cannot reveal pending content again, and restores the source tab to its pre-follow-up position. Both observations are persisted and merged for final reasoning. A missing or shifted anchor fails explicitly rather than turning the follow-up into an unbounded search.
 
-### 6.2.1 Proposed capture-visibility modes
+### 6.2.1 Capture-visibility authority modes
 
-The current source-fidelity path may briefly make X or LinkedIn the active tab
-inside the user's working Chrome window. This is sometimes necessary to wake a
-stale feed, reveal pending content, or hydrate rendered media. The prior tab is
-restored and the Chrome window is not intentionally focused, but replacing the
-visible tab even momentarily is still intrusive and must not be described as a
-fully non-disruptive user experience.
+AkuSidecar carries a saved `captureVisibilityPolicy` in every native capture
+command. AkuBridge applies that ceiling before source readiness or parsing.
+Catch Up no longer needs to make X or LinkedIn active inside the user's working
+Chrome window under the default policy.
 
-The preferred next design has two user-facing policies:
+The implemented design has two user-facing policies:
 
-1. **Quiet capture** — the default authority ceiling. AkuBridge must not make a
-   source tab active in the user's working window. It may use background-safe
-   DOM capture or a dedicated non-focused managed capture window. If freshness
-   or quality cannot be proven inside that boundary, the run reports an
-   explicit degraded or `visible_recovery_required` outcome; it does not switch
-   the user's tab silently.
+1. **Quiet capture** — the default authority ceiling. AkuBridge creates or
+   reuses one dedicated Chrome window with `focused: false`, keeps canonical X
+   and LinkedIn feed tabs there, and may activate them only within that managed
+   surface. The binding survives MV3 worker restarts through local extension
+   storage and is revalidated before reuse. If working-focus preservation,
+   freshness, or quality cannot be proven, the run stops with
+   `visible_recovery_required`; it does not switch the user's tab silently.
 2. **Adaptive fidelity** — an opt-in authority ceiling. The generic capture
    runtime tries the quiet path first. Only when adapter-declared freshness or
    generic quality evaluation proves that visual hydration/recovery is needed
@@ -376,14 +375,23 @@ an explicit one-run **Retry with full fidelity** action. That consent applies
 only to the persisted run being retried and does not silently change the user's
 default capture policy.
 
-A dedicated managed capture window is the strongest near-term alternative
-because it can reuse the signed-in Chrome profile and AkuBridge while keeping
-the user's working window stable. It still requires live validation of Chrome
-render throttling, window focus guarantees, taskbar behavior, geometry,
-lifecycle ownership, and authentication prompts. Offscreen documents,
+A dedicated managed capture window is used because it reuses the signed-in
+Chrome profile and AkuBridge while keeping the user's working window stable.
+Coverage records the selected policy, actual visibility mode, whether the
+working tab remained preserved, and whether focus restoration was necessary.
+The managed window is normal rather than minimized so visual hydration remains
+source-faithful; closing it is safe because Bridge recreates and rebinds it on a
+later authorized run. Offscreen documents,
 headless/container browsers, and direct social APIs are not equivalent
 fallbacks: they either cannot host the authenticated third-party page with the
 same rendering semantics or replace the source-fidelity contract entirely.
+
+Live validation on 2026-07-15 completed one sequential X + LinkedIn Catch Up
+session with four additions. Both child runs reported `quiet`,
+`managed_window`, `workingTabPreserved: true`, and
+`workingFocusRestored: false`. X admitted usable degraded evidence because its
+rendered avatars remained pending; LinkedIn quality was complete. The
+visibility boundary itself passed on both sources without same-window fallback.
 
 ### 6.3 Gate 0 closure status
 
@@ -395,7 +403,7 @@ Gate 0 is technically passed. The personal Chrome pilot has completed the full p
 | Signed-in X and LinkedIn consumption | Canonical feeds captured from the development Chrome profile | Passed |
 | Structured observations and results | Provider-neutral schemas validated in unit, HTTP, SDK smoke, and live runs | Passed |
 | Source identity and timestamps | Provenance lanes, evidence keys, observed time, and source URLs persist in SQLite | Passed |
-| Focus-safe bounded operation | Native bounded scrolling, fixed budgets, and restoration coverage verified; same-window tab activation remains visually intrusive | Passed technically; Quiet capture remains proposed |
+| Focus-safe bounded operation | Quiet Catch Up uses a dedicated non-focused managed window; Adaptive records any same-window recovery separately | Implemented; live source validation required for each release baseline |
 | Finite completion and truthful coverage | Runs stop with explicit result, failure, cancellation, or bounded follow-up state | Passed |
 
 ### 6.4 Pilot Review evaluation surface
@@ -803,7 +811,7 @@ remaining mixed with active rules.
 | D-026 | Preserve provenance lanes explicitly as native post, canonical source page, or external reference; never label one lane as another | Confirmed after LinkedIn Gate 0A pilot |
 | D-027 | Evolve ranking from explicit intent toward an inspectable local preference model while retaining each platform's feed order as the cold-start baseline | Implemented within the bounded authority of D-130 |
 | D-029 | Detect platform fresh-content banners in Gate 0B.1, but defer activation to an explicit auditable BrowserAdapter action that does not silently rewrite the user's feed view | Confirmed after LinkedIn live test |
-| D-030 | For the Gate 0B.2 personal pilot, activate allowlisted fresh-content controls in the same source tab and restore only the post-reveal baseline; reconsider a dedicated managed tab for consumer use | Confirmed |
+| D-030 | For the Gate 0B.2 personal pilot, activate allowlisted fresh-content controls in the same source tab and restore only the post-reveal baseline; reconsider a dedicated managed tab for consumer use | Superseded by D-139; retained as pilot-history context |
 | D-031 | Use one-port AkuSidecar development: Vite middleware handles frontend HMR and Node watch restarts backend changes in the same visible process | Confirmed |
 | D-033 | Limit Gate 0B.3 provider authority to `finish` or one same-source, one-scroll, frontier-anchored follow-up; keep all browser parameters under deterministic JobEngine policy | Confirmed |
 | D-035 | Advance checkpoints only after completed runs; suppress previously delivered exact evidence by default; preserve semantic updates as append-only event versions | Confirmed |
@@ -897,7 +905,7 @@ remaining mixed with active rules.
 | D-136 | Maintain a read-only local replay benchmark with polarity, source-sliced, selection, latency, token, model, and effort metrics; never spend model tokens merely to open diagnostics | Implemented as Engine Replay Benchmark v1 |
 | D-137 | Treat a Less click as complete reduced-weight feedback, keep the selected control visibly highlighted, and offer reason codes only as an optional non-blocking refinement. Lay out source navigation and feedback as balanced primary actions with the optional reason panel on its own row | Implemented in AkuSidecar 0.6.1 |
 | D-138 | Do not run AkuSidecar's Codex-backed development service under an in-process Node file watcher. Keep Vite HMR for UI assets, restart backend changes explicitly through AkuSupervisor, and recover transient status-poll interruptions against the same persisted session. Recovery controls must never create a replacement run implicitly | Implemented in AkuSidecar 0.6.3 after a first post-onboarding check was interrupted during reasoning |
-| D-139 | Introduce Quiet capture and Adaptive fidelity as user-visible capture authority ceilings. The engine may choose a less intrusive strategy within the selected ceiling but may not escalate Quiet capture into visible same-window activation. Keep platform knowledge in adapters and put focus/recovery orchestration in a generic runtime | Proposed; dedicated managed-window feasibility must be validated before implementation |
+| D-139 | Introduce Quiet capture and Adaptive fidelity as user-visible capture authority ceilings. The engine may choose a less intrusive strategy within the selected ceiling but may not escalate Quiet capture into visible same-window activation. Keep platform knowledge in adapters and put focus/recovery orchestration in a generic runtime | Implemented and live-validated on X + LinkedIn in AkuBridge 0.5.38 / source-fidelity-v40 and AkuSidecar 0.6.4; Quiet is the default, Adaptive is opt-in, and coverage distinguishes managed-window success from same-window recovery |
 
 ## 16. Change Discipline
 

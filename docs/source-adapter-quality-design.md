@@ -2,7 +2,7 @@
 
 > Status: **Implemented and enforced**
 > Date: **2026-07-14**
-> Runtime baseline: **AkuBridge 0.5.37 / source-fidelity-v39; AkuSidecar 0.5.21**
+> Runtime baseline: **AkuBridge 0.5.38 / source-fidelity-v40; AkuSidecar 0.6.4**
 > Scope: **AkuBridge source parsers, generic capture-quality evaluation, bounded recovery, and AkuSidecar admission**
 
 ## 1. Purpose
@@ -225,7 +225,7 @@ Any change to an adapter, field profile, or admission rule must pass:
 - live signed-in X and LinkedIn capture validation after cooperative Bridge
   reload, including one real reasoning invocation.
 
-The current runtime advertises `aku-bridge-0.5.37-source-fidelity-v39`,
+The current runtime advertises `aku-bridge-0.5.38-source-fidelity-v40`,
 `x-dom-v15`, `linkedin-dom-v13`, `report_capture_quality`,
 `recover_missing_media`, `probe_freshness`, and `recover_source_freshness`.
 
