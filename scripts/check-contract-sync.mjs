@@ -106,6 +106,7 @@ const bridgeTab = readText(path.join(bridgeRoot, "aku-browser-tab-bridge.js"));
 const bridgeContent = readText(path.join(bridgeRoot, "content-script.js"));
 const bridgeFreshnessRecovery = readText(path.join(bridgeRoot, "source-freshness-recovery.js"));
 const bridgeFreshnessRuntime = readText(path.join(bridgeRoot, "source-freshness-runtime.js"));
+const bridgeMediaRecovery = readText(path.join(bridgeRoot, "media-recovery-runtime.js"));
 const bridgeCapturePolicy = readText(path.join(bridgeRoot, "bounded-capture-policy.js"));
 const bridgeQualityPolicy = readText(path.join(bridgeRoot, "capture-quality-policy.js"));
 const sidecarHttp = readText(path.join(sidecarRoot, "src", "http", "app.mjs"));
@@ -177,6 +178,7 @@ for (const value of [
   "continuationAnchorMatched",
   "captureStartScrollY",
   "sourceFreshness",
+  "mediaRecovery",
 ]) {
   assert.match(bridgeContent, new RegExp(escapeRegExp(value)));
   assert.match(sidecarContracts, new RegExp(escapeRegExp(value)));
@@ -198,6 +200,24 @@ assert.match(
   readText(path.join(projectRoot, "contracts", "source-freshness-recovery-v1.md")),
   /generic source-freshness state machine|Generic ownership/i,
 );
+for (const value of [
+  "media-recovery-v1",
+  "primary_complete",
+  "primary_hydration",
+  "alternate_dom",
+  "unavailable",
+]) {
+  assert.match(
+    bridgeMediaRecovery + bridgeContent + sidecarContracts + sidecarQualityAdmission,
+    new RegExp(escapeRegExp(value)),
+  );
+}
+assert.match(
+  readText(path.join(projectRoot, "contracts", "media-recovery-v1.md")),
+  /Generic ownership/i,
+);
+assert.match(sidecarStateStore, /media_recovery_json/);
+assert.match(sidecarUi, /source-layout-media-unavailable/);
 assert.match(bridgeCapturePolicy, /maxScrolls: 2/);
 assert.match(bridgeCapturePolicy, /sameTabMutationAllowed/);
 assert.match(bridgeCapturePolicy, /acquisitionRound/);

@@ -2,7 +2,7 @@
 
 > Status: **Implemented and enforced**
 > Date: **2026-07-14**
-> Runtime baseline: **AkuBridge 0.5.36 / source-fidelity-v38; AkuSidecar 0.5.20**
+> Runtime baseline: **AkuBridge 0.5.37 / source-fidelity-v39; AkuSidecar 0.5.21**
 > Scope: **AkuBridge source parsers, generic capture-quality evaluation, bounded recovery, and AkuSidecar admission**
 
 ## 1. Purpose
@@ -26,7 +26,9 @@ flowchart LR
     C --> Q["Generic quality evaluator<br/>social-post-v1"]
     F["Adapter detection facts"] --> Q
     Q --> R{"Retryable and<br/>budget remains?"}
-    R -->|"yes: same candidate"| P
+    R -->|"media"| M["Generic media recovery<br/>primary re-read -> adapter fallback"]
+    M --> P
+    R -->|"other field"| P
     R -->|"no: final report"| T["Bridge observation transport"]
     T --> V["Sidecar structural and<br/>report-consistency validation"]
     V --> A{"Admission policy"}
@@ -43,16 +45,19 @@ flowchart LR
 | Page matching, selectors, candidate discovery, source-native extraction | X or LinkedIn adapter |
 | Canonical block assembly and URL/date/media normalization | Shared AkuBridge content runtime |
 | Trusted field profile, issue codes, categorical verdict, numeric diagnostic score | `capture-quality-policy.js` |
+| Media retry lifecycle, generic DOM helpers, outcomes, and aggregation | `media-recovery-runtime.js` |
+| Source-owned alternate media-root selection and classification | X or LinkedIn adapter |
 | Retry count, settling ceiling, scroll/deadline limits | Sidecar command plus Bridge bounded-capture policy |
 | Report schema, consistency checks, candidate admission, fail-closed behavior | AkuSidecar |
 | Final semantic evaluation of admitted evidence only | ReasoningProvider under JobEngine |
 
 The adapter registry requires every adapter to declare a parser version,
-`qualityProfile`, and `qualitySelectors`. Current versions are `x-dom-v14` and
-`linkedin-dom-v12`, both using `social-post-v1`. Each adapter additionally
-declares a separate freshness strategy; that contract is documented in
-`../contracts/source-freshness-recovery-v1.md` and does not change the quality
-evaluator's ownership.
+`qualityProfile`, `qualitySelectors`, freshness strategy, and media-recovery
+strategy. Current versions are `x-dom-v15` and `linkedin-dom-v13`, both using
+`social-post-v1`. Freshness is documented in
+`../contracts/source-freshness-recovery-v1.md`; media fallback is documented in
+`../contracts/media-recovery-v1.md`. Neither changes the quality evaluator's
+ownership.
 
 ## 3. Trusted field profile
 
@@ -124,13 +129,23 @@ AkuSidecar sends `qualityReportRequired: true`, `qualityRetryBudget: 1`, and a
 default `qualityRetrySettleMs: 300`. AkuBridge clamps the retry budget to one
 and settle time to at most 1000 ms.
 
-The retry:
+For non-media fields, the retry settles and reruns the same primary parser. For
+media, `media-recovery-v1` first reruns the primary extraction after settling,
+then invokes one adapter-specific alternate DOM extraction. The generic runtime
+normalizes every returned URL through the existing source-CDN allowlist.
+
+Every retry:
 
 - re-extracts only the same candidate in the same tab and viewport;
 - performs no extra scroll, navigation, reveal action, or tab replacement;
 - cannot extend the capture deadline;
 - returns a final degraded or invalid report if the issue remains; and
 - never transports a final `retryable` candidate.
+
+Media outcomes are recorded per block and in coverage as `not_applicable`,
+`primary_complete`, `recovered`, or `unavailable`. Exhausted media remains
+usable-degraded only when the rest of the candidate is trustworthy; Source
+layout states the limitation and links to the native post.
 
 X still receives its bounded active-tab visual-hydration wait. If the semantic
 feed is ready but one visual root remains unhydrated at that deadline, readiness
@@ -154,6 +169,8 @@ fails closed when:
 - a `retryable` report has no recoverable issue or crosses the final boundary;
 - a reported missing author is omitted; or
 - a media/avatar issue contradicts a present admitted value.
+- media recovery outcome counts disagree with blocks or `fallbackUsed`;
+- recovered media is empty; or unavailable media is non-empty.
 
 Invalid candidates are removed. Complete and usable-degraded candidates are
 admitted, with `coverage.qualityAdmission` recording admitted, degraded, and
@@ -164,14 +181,15 @@ admission totals across every capture round.
 
 ## 7. Operational diagnostics
 
-Each block carries `captureQuality`; every snapshot carries
-`qualityReports`; coverage carries `captureQuality`; and admitted observations
-add `qualityAdmission`. `adapterHealth` is healthy only when candidates exist
+Each block carries `captureQuality` and `mediaRecovery`; every snapshot carries
+`qualityReports`; coverage carries `captureQuality` and aggregate
+`mediaRecovery`; and admitted observations add `qualityAdmission`.
+`adapterHealth` is healthy only when candidates exist
 and the aggregate capture-quality verdict is complete. Diagnostics retain
 field coverage and DOM signatures without exposing captured post content in
 the health endpoint.
 
-Bridge capability `report_capture_quality` is required by AkuSidecar. The
+Bridge capabilities `report_capture_quality` and `recover_missing_media` are required by AkuSidecar. The
 Sidecar rejects an older Bridge runtime, parser version, or capability set
 before starting a new capture.
 
@@ -185,7 +203,7 @@ source must provide:
 2. page matching, candidate discovery, extraction hooks, quality selectors,
    and a trusted profile id;
 3. synthetic DOM conformance fixtures including complete, detected-empty,
-   pending-hydration, not-exposed, and invalid cases;
+   pending-hydration, recovered-media, exhausted-media, not-exposed, and invalid cases;
 4. canonical URL, identity, media-CDN, and tab-lifecycle policy; and
 5. registration in Sidecar source configuration, ordering, diagnostics, and UI.
 
@@ -207,9 +225,9 @@ Any change to an adapter, field profile, or admission rule must pass:
 - live signed-in X and LinkedIn capture validation after cooperative Bridge
   reload, including one real reasoning invocation.
 
-The current runtime advertises `aku-bridge-0.5.36-source-fidelity-v38`,
-`x-dom-v14`, `linkedin-dom-v12`, `report_capture_quality`,
-`probe_freshness`, and `recover_source_freshness`.
+The current runtime advertises `aku-bridge-0.5.37-source-fidelity-v39`,
+`x-dom-v15`, `linkedin-dom-v13`, `report_capture_quality`,
+`recover_missing_media`, `probe_freshness`, and `recover_source_freshness`.
 
 ## 10. Live acceptance evidence
 

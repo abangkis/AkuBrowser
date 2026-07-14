@@ -2,7 +2,7 @@
 
 > Status: **Implemented**
 > Date: **2026-07-14**
-> Runtime baseline: **AkuBridge 0.5.36 / source-fidelity-v38; AkuSidecar 0.5.20**
+> Runtime baseline: **AkuBridge 0.5.37 / source-fidelity-v39; AkuSidecar 0.5.21**
 
 ## Purpose
 

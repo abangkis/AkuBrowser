@@ -180,11 +180,14 @@ remains. A final `retryable` report cannot reach persistence or reasoning.
 The normative design, field profile, recovery budget, admission matrix, and
 third-source requirements are recorded in
 [`Source Adapter and Capture Quality Design`](source-adapter-quality-design.md).
-The current runtime baseline is AkuBridge 0.5.36 / source-fidelity-v38 with
-`x-dom-v14`, `linkedin-dom-v12`, `x-freshness-v1`, and
-`linkedin-freshness-v2`, plus AkuSidecar 0.5.20. The freshness seam is
+The current runtime baseline is AkuBridge 0.5.37 / source-fidelity-v39 with
+`x-dom-v15`, `linkedin-dom-v13`, `x-freshness-v1`,
+`linkedin-freshness-v2`, `x-media-recovery-v1`, and
+`linkedin-media-recovery-v1`, plus AkuSidecar 0.5.21. The freshness seam is
 normatively defined in
-[`Source Freshness Recovery v1`](../contracts/source-freshness-recovery-v1.md).
+[`Source Freshness Recovery v1`](../contracts/source-freshness-recovery-v1.md),
+and bounded media fallback is defined in
+[`Media Recovery v1`](../contracts/media-recovery-v1.md).
 
 ## 6. End-to-End Runtime Flow
 
@@ -795,6 +798,7 @@ remaining mixed with active rules.
 | D-129 | Keep source-specific DOM parsing in revisioned adapters, then evaluate canonical candidates with trusted `social-post-v1` field expectations. Sidecar pre-authorizes at most one same-candidate local retry, validates report consistency, admits complete/degraded evidence, removes invalid candidates, and never exposes final retryable or rejected evidence to reasoning. X still attempts bounded visual hydration, but semantic feed readiness proceeds to the evaluator when visual hydration remains incomplete | Implemented in AkuBridge 0.5.33 / source-fidelity-v35 (`x-dom-v13`, `linkedin-dom-v10`) and AkuSidecar 0.5.18 |
 | D-130 | Make local preference fitting automatic and enable bounded live reranking only among provider-selected items. Keep source/platform order as fallback, cap displacement at two positions, expose disable/fallback controls, and move manual fit plus replay/holdout comparison into Advanced diagnostics | Implemented as Preference Runtime v1 |
 | D-131 | Separate stale-tab freshness recovery from source parsing. A generic `wake -> observe -> reveal/prove -> capture` engine owns state, bounded polling, focus-safe restoration, outcomes, and failure taxonomy; each revisioned adapter supplies only wake semantics and its pending-control allowlist. Apply the same contract to X and LinkedIn, preserve round-two frontiers, and never retry `freshness_unavailable` as detect-only capture | Implemented in AkuBridge 0.5.36 / source-fidelity-v38 (`x-dom-v14`, `linkedin-dom-v12`) and AkuSidecar 0.5.20 |
+| D-132 | When a rendered media root is empty, use one generic bounded recovery lifecycle: settle and rerun primary extraction, then call one versioned adapter-specific alternate DOM extractor. Normalize through existing CDN allowlists, transport explicit per-block/coverage outcomes, and admit exhausted media only as truthfully labeled degraded evidence. Do not navigate, download, screenshot, OCR, or invoke Computer Use implicitly | Implemented in AkuBridge 0.5.37 / source-fidelity-v39 (`x-dom-v15`, `linkedin-dom-v13`) and AkuSidecar 0.5.21 |
 
 ## 16. Change Discipline
 

@@ -205,13 +205,13 @@ is presented as a correctly empty catchup.
 
 Chrome may close or replace a tab after AkuBridge discovers it but before capture begins. During acquisition round one only, an explicit stale-tab error permits exactly one new discovery attempt. The configured missing-tab policy remains authoritative: `open_missing_tab` may create the canonical feed if rediscovery finds none, while `fail_fast` may only use another already-open eligible tab. The observation reports `sourceTabRecoveryCount` as `0` or `1`.
 
-Each observation also reports the selected `adapterVersion` and a bounded `adapterCapabilities` list. Every capability entry identifies its `source`, adapter `version`, trusted `qualityProfile`, and read-only `actions`; consumers must preserve this additive diagnostic metadata without treating it as new authority.
+Each observation also reports the selected `adapterVersion` and a bounded `adapterCapabilities` list. Every capability entry identifies its `source`, adapter `version`, trusted `qualityProfile`, `freshnessVersion`, `mediaRecoveryVersion`, and read-only `actions`; consumers must preserve this additive diagnostic metadata without treating it as new authority.
 
 Acquisition round two never uses this recovery. A provider-directed follow-up is bound to the prior observation frontier, so losing its tab must fail explicitly rather than silently rebinding to a different page state.
 
 ## Source adapter and tab-lease behavior
 
-X and LinkedIn DOM knowledge is registered through separate source adapters behind the same content-runtime contract. The shared runtime owns bounded movement, restoration, normalization, and extension messaging. An adapter owns source-page matching, feed candidate discovery, author discovery, source-specific media exclusions, and a versioned freshness strategy containing its wake semantics and pending-control allowlist. The generic freshness runtime owns detection mechanics, activation orchestration, reveal proof, and outcomes. Runtime and adapter registries are revisioned: reinjecting the complete bundle replaces the stale generation and its message listener instead of preserving a permanent first-injection singleton.
+X and LinkedIn DOM knowledge is registered through separate source adapters behind the same content-runtime contract. The shared runtime owns bounded movement, restoration, normalization, and extension messaging. An adapter owns source-page matching, feed candidate discovery, author discovery, source-specific media exclusions, a versioned freshness strategy, and a versioned alternate-media extraction strategy. The generic freshness runtime owns detection mechanics, activation orchestration, reveal proof, and outcomes. The generic media-recovery runtime owns bounded settling, primary re-read, allowlist normalization, outcomes, and aggregation. Runtime and adapter registries are revisioned: reinjecting the complete bundle replaces the stale generation and its message listener instead of preserving a permanent first-injection singleton.
 
 Before capture, AkuBridge binds a short-lived lease containing the tab id, window id, source, and bound URL. It validates the lease immediately before and after collection. Navigation within the same approved source remains valid; a closed or replaced tab, changed window identity, or navigation outside the approved source fails closed. Structured failure payloads add stable `code`, `stage`, and safe `details` fields while retaining the human-readable `message` required by existing clients.
 
@@ -245,10 +245,22 @@ candidate `qualityReports`, including a report for an invalid or short-text
 candidate that is not transported as a block; and coverage carries a summary
 with profile, verdict totals, issue totals, retry budget, and retry attempts.
 When a conditional value is detected but not hydrated, AkuBridge may consume
-the one pre-authorized retry by settling and re-extracting only that same
-candidate in the same tab and viewport. The retry cannot add scrolling,
-navigation, reveal actions, tab recovery, or command time. A final observation
-must not contain `retryable`.
+the one pre-authorized retry. For media, the generic recovery runtime first
+settles and reruns primary extraction, then invokes one adapter-owned alternate
+DOM extraction if necessary. Both paths remain inside the same candidate, tab,
+viewport, and command deadline. The retry cannot add scrolling, navigation,
+reveal actions, tab recovery, or command time. A final observation must not
+contain `retryable`.
+
+Every transported block carries `mediaRecovery` with policy/strategy versions,
+outcome, attempt count, recovery method, recovered count, and an optional
+limitation. Outcomes are `not_applicable`, `primary_complete`, `recovered`, and
+`unavailable`. Coverage aggregates these outcomes in `mediaRecovery` and sets
+`fallbackUsed` exactly when at least one candidate was recovered. AkuSidecar
+rejects contradictory block/summary/fallback states. An unavailable media root
+may remain as explicitly degraded textual evidence and Source layout must show
+the limitation plus the native-post link rather than an empty media shell. The
+normative lifecycle is [Media Recovery v1](media-recovery-v1.md).
 
 AkuSidecar validates structure and report consistency before persistence. It
 admits `complete` and `usable_degraded` blocks, removes `invalid` blocks, and
