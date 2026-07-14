@@ -1,8 +1,8 @@
 # AkuBrowser — Architecture Reference
 
 > Status: **Source-faithful capture, Settings-first operation, and supervised lifecycle implemented**
-> Version: **0.20**
-> Last updated: **2026-07-14**
+> Version: **0.21**
+> Last updated: **2026-07-15**
 > Working name: **AkuBrowser**
 
 ## 1. Purpose of This Document
@@ -245,15 +245,54 @@ The retired interest screen remains recoverable from Git history, but it is not 
 
 1. choose active source adapters;
 2. acquire each source feed in its existing order as a borrowed behavioral prior;
-3. force explicit `More like this` and `Less like this` decisions on a bounded first-run sample;
+3. collect explicit `More like this`, `Neutral`, and `Less like this` decisions on a bounded first-run sample;
 4. collect optional contextual feedback during ordinary use;
 5. automatically fit a local snapshot once mixed directional evidence exists;
-6. apply only bounded selected-item reranking while retaining source/platform order as fallback; and
-7. require a later contract before preference can change eligibility, source shares, exploration, or comeback.
+6. let the generic Selection Engine own materiality admission and the finite display budget;
+7. apply only bounded selected-item reranking while retaining source/platform order as fallback; and
+8. keep preference unable to change eligibility, source shares, or acquisition budgets.
 
 For non-stream websites, source order may have little or no behavioral meaning. Their future acquisition and prioritization contracts must be defined by source behavior class rather than inheriting the social-stream onboarding model.
 
-### 6.1 Gate 0A implementation topology
+### 6.1 Current engine composition
+
+Source-specific knowledge ends at the adapter. Generic quality admission checks
+the canonical candidate contract. The ReasoningProvider describes every bounded
+candidate using canonical facets and independent evidence scores. Selection
+Engine v1 then owns generic materiality admission and the finite per-source
+budget. Preference Runtime v2 can only reorder selected entries.
+
+```mermaid
+flowchart LR
+  X["X adapter"] --> Q["Generic quality admission"]
+  L["LinkedIn adapter"] --> Q
+  N["Future adapter"] --> Q
+  Q --> R["ReasoningProvider descriptors"]
+  R --> S["Selection Engine v1"]
+  S --> C["Cross-source composition"]
+  C --> P["Preference Runtime v2"]
+  P --> T["Finite Timeline"]
+  F["More / Neutral / reason-aware Less"] --> P
+  B["Replay benchmark"] -. read-only .-> S
+  B -. read-only .-> P
+```
+
+Source is never a learned preference feature. Source diversity is enforced as a
+composition constraint. Stable canonical topic facets prevent raw topic-tag
+vocabulary from growing into unsupported one-off weights. The active preference
+champion remains live while a newer snapshot is evaluated as a challenger.
+
+Manual fit is an advanced diagnostic, not onboarding or production ceremony.
+Reset is durable suspension: even a forced before-session fit must respect it.
+The replay benchmark performs no model calls and exposes selection, polarity,
+source-sliced bias, latency, token, model, and effort metrics.
+
+Normative details live in
+[`Selection Engine v1`](../contracts/selection-engine-v1.md),
+[`Preference Runtime v2`](../contracts/preference-runtime-v2.md), and
+[`Engine Replay Benchmark v1`](../contracts/engine-replay-benchmark-v1.md).
+
+### 6.2 Gate 0A implementation topology
 
 The first technical vertical slice deliberately uses a simpler topology than the full target architecture:
 
@@ -796,9 +835,13 @@ remaining mixed with active rules.
 | D-127 | Estimate LinkedIn relative timestamps only when the source exposes a valid relative value, preserve its original text plus explicit estimate precision/source metadata, and leave promoted entries without time as `null`. Keep long-backgrounded capture waits service-worker-backed and expose content-free timeout progress | Implemented in AkuBridge 0.5.29 / source-fidelity-v31 with linkedin-dom-v8 and live background capture validation |
 | D-128 | Version AkuBrowser, AkuSidecar, and AkuBridge independently. Cross-repository release gates validate Bridge package/manifest identity, minimum extension version, exact runtime revision, adapter versions, and required actions instead of lockstep package equality | Implemented in integration checks and AkuDoctor |
 | D-129 | Keep source-specific DOM parsing in revisioned adapters, then evaluate canonical candidates with trusted `social-post-v1` field expectations. Sidecar pre-authorizes at most one same-candidate local retry, validates report consistency, admits complete/degraded evidence, removes invalid candidates, and never exposes final retryable or rejected evidence to reasoning. X still attempts bounded visual hydration, but semantic feed readiness proceeds to the evaluator when visual hydration remains incomplete | Implemented in AkuBridge 0.5.33 / source-fidelity-v35 (`x-dom-v13`, `linkedin-dom-v10`) and AkuSidecar 0.5.18 |
-| D-130 | Make local preference fitting automatic and enable bounded live reranking only among provider-selected items. Keep source/platform order as fallback, cap displacement at two positions, expose disable/fallback controls, and move manual fit plus replay/holdout comparison into Advanced diagnostics | Implemented as Preference Runtime v1 |
+| D-130 | Make local preference fitting automatic, keep source/platform order as fallback, and move manual fitting into Advanced diagnostics | Confirmed; authority and activation details superseded by D-133 through D-136 |
 | D-131 | Separate stale-tab freshness recovery from source parsing. A generic `wake -> observe -> reveal/prove -> capture` engine owns state, bounded polling, focus-safe restoration, outcomes, and failure taxonomy; each revisioned adapter supplies only wake semantics and its pending-control allowlist. Apply the same contract to X and LinkedIn, preserve round-two frontiers, and never retry `freshness_unavailable` as detect-only capture | Implemented in AkuBridge 0.5.36 / source-fidelity-v38 (`x-dom-v14`, `linkedin-dom-v12`) and AkuSidecar 0.5.20 |
 | D-132 | When a rendered media root is empty, use one generic bounded recovery lifecycle: settle and rerun primary extraction, then call one versioned adapter-specific alternate DOM extractor. Normalize through existing CDN allowlists, transport explicit per-block/coverage outcomes, and admit exhausted media only as truthfully labeled degraded evidence. Do not navigate, download, screenshot, OCR, or invoke Computer Use implicitly | Implemented in AkuBridge 0.5.37 / source-fidelity-v39 (`x-dom-v15`, `linkedin-dom-v13`) and AkuSidecar 0.5.21 |
+| D-133 | Make Selection Engine the generic owner of materiality admission and display budget after source-specific parsing and quality admission; require the ReasoningProvider to describe every bounded candidate | Implemented as Selection Engine v1 |
+| D-134 | Remove source identity and unbounded raw tags from learned preference features; use canonical facets, reason-aware feedback, Neutral regularization, and hard source-diversity composition | Implemented as Preference Runtime v2 |
+| D-135 | Keep an active champion live while evaluating a challenger, scale displacement authority by holdout quality, and make reset suspension inviolable except by explicit manual refit | Implemented as Preference Runtime v2 |
+| D-136 | Maintain a read-only local replay benchmark with polarity, source-sliced, selection, latency, token, model, and effort metrics; never spend model tokens merely to open diagnostics | Implemented as Engine Replay Benchmark v1 |
 
 ## 16. Change Discipline
 

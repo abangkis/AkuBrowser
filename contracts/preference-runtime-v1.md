@@ -1,6 +1,9 @@
 # Preference Runtime Contract v1
 
-> Status: **Implemented for bounded local personalization**
+> Status: **Superseded by Preference Runtime v2; retained for historical audit**
+
+See [`preference-runtime-v2.md`](preference-runtime-v2.md) for the current
+source-neutral runtime.
 
 ## Product behavior
 

@@ -1,5 +1,13 @@
 # AkuBrowser Contracts
 
+Current engine contracts:
+
+- `preference-runtime-v2.md` — source-neutral features, reason-aware feedback, champion/challenger activation, and confidence-scaled reranking.
+- `selection-engine-v1.md` — generic materiality admission and finite-budget ownership.
+- `engine-replay-benchmark-v1.md` — read-only replay metrics and model/effort comparison hooks.
+
+`preference-runtime-v1.md` is retained only as a superseded historical contract.
+
 This directory is the canonical, implementation-neutral contract source for the AkuBrowser workspace.
 
 Runtime projects may vendor a contract snapshot so they remain independently buildable. `npm run check:contracts` verifies that vendored snapshots and protocol identifiers have not drifted.
@@ -34,4 +42,4 @@ Current contract artifacts:
 - `runtime-configuration-v0.md` — allowlisted dashboard settings, persistence, precedence, and apply-mode boundary.
 - `offline-preference-experiment-v0.md` — hard-gated shadow fitting, holdout evaluation, snapshot persistence, and live-influence boundary.
 - `preference-replay-v0.md` — descriptive preference diagnostics and historical dataset-maturity gates.
-- `preference-runtime-v1.md` — automatic local fitting, source-order baseline, bounded selected-item reranking, fallback, and optional diagnostics.
+- `preference-runtime-v1.md` — superseded historical automatic-fitting contract; retained for decision lineage only.

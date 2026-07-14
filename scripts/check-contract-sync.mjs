@@ -113,6 +113,10 @@ const sidecarHttp = readText(path.join(sidecarRoot, "src", "http", "app.mjs"));
 const sidecarUi = readText(path.join(sidecarRoot, "public", "app.js"));
 const sidecarContracts = readText(path.join(sidecarRoot, "src", "core", "contracts.mjs"));
 const sidecarJobEngine = readText(path.join(sidecarRoot, "src", "core", "job-engine.mjs"));
+const sidecarSelectionEngine = readText(path.join(sidecarRoot, "src", "core", "selection-engine.mjs"));
+const sidecarPreferenceRuntime = readText(path.join(sidecarRoot, "src", "core", "preference-runtime.mjs"));
+const sidecarPreferenceFeatures = readText(path.join(sidecarRoot, "src", "core", "preference-features.mjs"));
+const sidecarEngineBenchmark = readText(path.join(sidecarRoot, "src", "core", "engine-replay-benchmark.mjs"));
 const sidecarStateStore = readText(
   path.join(sidecarRoot, "src", "store", "sqlite-state-store.mjs"),
 );
@@ -243,6 +247,17 @@ assert.match(
   /pendingContentPolicy: revealPendingContent \? "reveal_if_present" : "detect_only"/,
 );
 assert.match(sidecarBrowserAdapter, /buildObservationContinuation/);
+assert.match(sidecarSelectionEngine, /selection-engine-v1/);
+assert.match(sidecarPreferenceRuntime, /preference-runtime-v2/);
+assert.doesNotMatch(sidecarPreferenceFeatures, /candidate\.source|assessment\.source/);
+assert.match(sidecarEngineBenchmark, /benchmarkPerformsModelCalls: false/);
+for (const contractName of [
+  "selection-engine-v1.md",
+  "preference-runtime-v2.md",
+  "engine-replay-benchmark-v1.md",
+]) {
+  assert.ok(fs.existsSync(path.join(projectRoot, "contracts", contractName)), `${contractName} is required`);
+}
 for (const value of [
   "evidenceKey",
   "eventKey",

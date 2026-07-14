@@ -46,7 +46,7 @@ The setting applies to the next run without restarting AkuSidecar. Follow-up acq
 
 The Engine constraints group exposes four next-run budgets:
 
-- `maxItemsPerSource`: 1 through 10, default 5;
+- `maxItemsPerSource`: 1 through 5, default 5;
 - `maxScrolls`: 0 through 5, default 2;
 - `maxAcquisitionRounds`: 1 or 2, default 2;
 - `maxKnowledgeContextEvents`: 1 through 100, default 20.

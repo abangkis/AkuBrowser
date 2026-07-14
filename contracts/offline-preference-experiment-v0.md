@@ -5,7 +5,7 @@
 
 ## Purpose
 
-Offline Preference Experiment v0 remains an inspectable diagnostic replay over assessed `more_like_this` and `less_like_this` signals. It is no longer the product activation path. Automatic fitting and bounded live composition are governed by `preference-runtime-v1.md`.
+Offline Preference Experiment v0 remains an inspectable diagnostic replay over assessed `more_like_this`, `neutral`, and reason-aware `less_like_this` signals. It is no longer the product activation path. Automatic fitting and bounded live composition are governed by `preference-runtime-v2.md`.
 
 ## Diagnostic gate
 

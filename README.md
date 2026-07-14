@@ -82,4 +82,4 @@ reasoning. See [the source-adapter quality architecture](docs/source-adapter-qua
 
 Gate 0 technical feasibility is passed. The active pilot now advances a checkpoint per source and mode, suppresses previously delivered exact evidence, and stores material updates as append-only knowledge-event versions.
 
-See [the architecture reference](docs/aku-browser-architecture.md), [Unified Session Experiment Contract v0](contracts/unified-session-experiment-v0.md), [bridge contract v1](contracts/bridge-contract-v1.md), and the [2026-07-14 release checkpoint](docs/release-checkpoint-2026-07-14.md).
+See [the architecture reference](docs/aku-browser-architecture.md), [Selection Engine v1](contracts/selection-engine-v1.md), [Preference Runtime v2](contracts/preference-runtime-v2.md), [Engine Replay Benchmark v1](contracts/engine-replay-benchmark-v1.md), and [bridge contract v1](contracts/bridge-contract-v1.md).
