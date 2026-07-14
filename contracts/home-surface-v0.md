@@ -1,7 +1,7 @@
 # Home Surface Contract v0
 
 > Status: **Implemented for the X + LinkedIn pilot**
-> Date: **2026-07-12**
+> Date: **2026-07-14**
 
 ## Purpose
 
@@ -22,6 +22,11 @@ Timeline is the built-in default home presentation.
 - It never auto-loads another session or turns persisted history into an unbounded feed.
 - Refresh reads persisted presentation data and does not start browser acquisition.
 - Timeline session payloads exclude raw browser observations.
+- After the document scroll passes 480 px, a floating `Back to top` control
+  appears beside the active content column when space permits and falls back to
+  the viewport edge on narrow layouts. It works from Timeline, Review, and
+  Settings, respects reduced-motion preference, returns to document top, and
+  restores keyboard focus to the application heading.
 
 `GET /api/timeline?limit=12&offset=0` returns the bounded rolling buffer with pagination. Entries carry presentation-safe session and child-run context, validated results, candidate presentation data, feedback, and reasoning telemetry, but not raw observations or bridge commands. `GET /api/sessions` remains the presentation-safe session-history seam.
 

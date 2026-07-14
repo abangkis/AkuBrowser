@@ -31,13 +31,23 @@ The token is generated and persisted by AkuSidecar. All bridge command endpoints
 ## Extension message type
 
 - `AKU_BROWSER_COLLECT_VISIBLE`
+- `AKU_BROWSER_PROBE_SOURCE_READY`
+- `AKU_BROWSER_CAPTURE_DIAGNOSTICS`
+- `AKU_BROWSER_CAPTURE_DELAY`
 - `AKU_BRIDGE_RELOAD_SELF`
+
+The readiness, diagnostics, and delay messages are extension-internal. Capture
+diagnostics expose only bounded stage/revision/count metadata. Capture delay is
+accepted only from an approved X or LinkedIn content-script sender and is
+clamped to two seconds; it keeps settling reliable when Chrome throttles timers
+in a long-backgrounded source tab.
 
 ## Additive capability handshake
 
 `AKU_BROWSER_BRIDGE_READY` may include a `capabilities` object. Its current fields are:
 
-- `bridgeId`, `extensionVersion`, `contractVersion`, and `manifestVersion`;
+- `bridgeId`, `extensionVersion`, `runtimeRevision`, derived `buildId`,
+  `adapterVersions`, `contractVersion`, and `manifestVersion`;
 - supported `sources` and `actions`;
 - `authority: "read_only_bounded"`; and
 - fixed `captureLimits` for scrolls, snapshots, and blocks per snapshot.
@@ -71,6 +81,13 @@ or account authority.
 - `block.permalink` is an exact native post URL or `null`; it must not fall back to the feed URL. LinkedIn may recover the exact post URN by transiently opening only that post's control menu, reading its visible Embed target, and closing the menu.
 - `block.feedPosition` preserves the source platform's observed presentation order as contextual evidence; it is not a truth or relevance score.
 - `observation.pageUrl` is the canonical source page and descendant `block.links` are external or contextual references captured only from the post-content root.
+- LinkedIn preserves the source's relative `presentation.timestampText`. When
+  no native `datetime` exists, a valid relative value such as `14h` produces a
+  deterministic UTC-bucket estimate in `publishedAt` plus
+  `timestampSource: relative_text_estimate`, `timestampEstimated: true`, and a
+  bounded precision. A promoted post that exposes no time remains
+  `publishedAt: null` with `not_exposed_promoted`; AkuBridge never fabricates a
+  timestamp.
 - Every result item declares `sourceUrlKind` as `native_post`, `source_page`, or `external_reference`; external references must never be labeled as native posts.
 - A block may carry at most four presentation-only `media` records captured from rendered post images or video posters. Each record contains `kind`, HTTPS `url`, nullable `posterUrl`, nullable allowlisted `playbackUrl`, `playbackMode`, bounded `alt`, `width`, and `height`. Images may open the AkuBrowser viewer. Videos use inline playback only when the rendered source exposes a stable allowlisted media URL; otherwise their poster opens the exact native post and is never treated as a zoomable image.
 - A source adapter may activate the post-local `Show more` control before extraction and records the bounded outcome in `presentation.contentExpansion`. LinkedIn restores a reversible `Show less` state afterward. X uses its stable `tweet-text-show-more-link` inline expansion; X currently exposes no matching collapse control, so the expanded read-only view remains in the source tab while scroll position is still restored. The control label itself is not evidence text.
@@ -90,7 +107,7 @@ The `collect_visible` command may carry a bounded native-capture plan:
 - `browserAdapter: "aku-bridge"`.
 - `openIfMissing`, controlled by the Sidecar's `open_missing_tab` or `fail_fast` policy.
 
-AkuBridge captures before moving, performs only native DOM scrolling, stops when the budget/deadline/no-movement condition is reached, and attempts to restore the original position in a `finally` path. Browser focus, clicking, engagement, and account mutation remain outside the contract.
+AkuBridge captures before moving, performs only native DOM scrolling, stops when the budget/deadline/no-movement condition is reached, and attempts to restore the original position in a `finally` path. The global advertised block ceiling is 20; LinkedIn currently applies a stricter runtime ceiling of eight blocks per snapshot. Browser focus, clicking, engagement, and account mutation remain outside the contract.
 
 Coverage adds these auditable fields:
 
@@ -149,6 +166,13 @@ AkuBridge positions the same tab at the supplied frontier, captures before movin
 
 The probe reports total and visible selector counts plus loading/root state only; it does not expand evidence collection. `feed_ready` requires at least one visible feed candidate, not merely a stale or off-viewport matching node. If a background LinkedIn tab is not ready, AkuBridge may temporarily activate it, wait up to the fixed readiness deadline, and restore the previously active tab. During this reliability phase, every LinkedIn capture uses `detect_only` for pending content; X retains its separately validated reveal behavior.
 
+Scroll settling and other bounded capture waits use a service-worker response
+rather than relying only on a page timer, because Chrome may heavily throttle a
+source tab that has remained in the background. The outer capture deadline can
+request the content script's last safe progress stage so a timeout identifies
+whether capture was probing, recovering permalinks, extracting a block,
+scrolling, settling, or restoring. This diagnostic adds no post content.
+
 If the first LinkedIn capture still produces zero evidence, AkuBridge may perform exactly one readiness-and-capture retry in the same tab. It cannot open a second tab, add scroll budget, or invoke reasoning. Coverage records readiness state, wait duration, selector count, loading/root state, whether the tab was opened or temporarily activated, its initial background state, and retry count. A zero-evidence result after this bounded recovery fails at `source_readiness`, not `reasoning`.
 
 ## Stale source-tab recovery
@@ -161,7 +185,7 @@ Acquisition round two never uses this recovery. A provider-directed follow-up is
 
 ## Source adapter and tab-lease behavior
 
-X and LinkedIn DOM knowledge is registered through separate source adapters behind the same content-runtime contract. The shared runtime owns bounded movement, restoration, normalization, and extension messaging. An adapter owns source-page matching, feed candidate discovery, author discovery, source-specific media exclusions, and pending-content labels.
+X and LinkedIn DOM knowledge is registered through separate source adapters behind the same content-runtime contract. The shared runtime owns bounded movement, restoration, normalization, and extension messaging. An adapter owns source-page matching, feed candidate discovery, author discovery, source-specific media exclusions, and pending-content labels. Runtime and adapter registries are revisioned: reinjecting the complete bundle replaces the stale generation and its message listener instead of preserving a permanent first-injection singleton.
 
 Before capture, AkuBridge binds a short-lived lease containing the tab id, window id, source, and bound URL. It validates the lease immediately before and after collection. Navigation within the same approved source remains valid; a closed or replaced tab, changed window identity, or navigation outside the approved source fails closed. Structured failure payloads add stable `code`, `stage`, and safe `details` fields while retaining the human-readable `message` required by existing clients.
 

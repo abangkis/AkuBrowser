@@ -2,6 +2,11 @@ import assert from "node:assert/strict";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  BRIDGE_RUNTIME_REVISION,
+  createBridgeCapabilities,
+} from "../../AkuBridge/bridge-capabilities.js";
+import { BRIDGE_REQUIREMENTS } from "../../AkuSidecar/src/operations/bridge-compatibility.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workspaceRoot = path.dirname(projectRoot);
@@ -12,9 +17,40 @@ const browserPackage = readJson(path.join(projectRoot, "package.json"));
 const bridgePackage = readJson(path.join(bridgeRoot, "package.json"));
 const sidecarPackage = readJson(path.join(sidecarRoot, "package.json"));
 const bridgeManifest = readJson(path.join(bridgeRoot, "manifest.json"));
-assert.equal(bridgePackage.version, browserPackage.version, "AkuBridge package version drifted");
-assert.equal(sidecarPackage.version, browserPackage.version, "AkuSidecar package version drifted");
-assert.equal(bridgeManifest.version, browserPackage.version, "AkuBridge manifest version drifted");
+const versionPattern = /^\d+\.\d+\.\d+$/;
+for (const [component, version] of Object.entries({
+  AkuBrowser: browserPackage.version,
+  AkuBridge: bridgePackage.version,
+  AkuSidecar: sidecarPackage.version,
+})) {
+  assert.match(version, versionPattern, `${component} must declare a semantic version`);
+}
+assert.equal(
+  bridgeManifest.version,
+  bridgePackage.version,
+  "AkuBridge manifest drifted from its package version",
+);
+const declaredBridgeCapabilities = createBridgeCapabilities(bridgeManifest);
+assert.ok(
+  compareVersions(bridgePackage.version, BRIDGE_REQUIREMENTS.minimumExtensionVersion) >= 0,
+  "AkuBridge is older than AkuSidecar's declared compatibility minimum",
+);
+assert.equal(
+  BRIDGE_RUNTIME_REVISION,
+  BRIDGE_REQUIREMENTS.runtimeRevision,
+  "AkuBridge runtime revision drifted from AkuSidecar requirements",
+);
+assert.deepEqual(
+  declaredBridgeCapabilities.adapterVersions,
+  BRIDGE_REQUIREMENTS.adapterVersions,
+  "AkuBridge adapter versions drifted from AkuSidecar requirements",
+);
+for (const action of BRIDGE_REQUIREMENTS.requiredActions) {
+  assert.ok(
+    declaredBridgeCapabilities.actions.includes(action),
+    `AkuBridge must advertise Sidecar-required action ${action}`,
+  );
+}
 
 const canonicalSchema = readJson(path.join(projectRoot, "contracts", "reasoning-result.schema.json"));
 const sidecarSchema = readJson(path.join(sidecarRoot, "schemas", "reasoning-result.schema.json"));
@@ -65,7 +101,7 @@ assert.deepEqual(
 );
 
 const bridgeService = readText(path.join(bridgeRoot, "service-worker.js"));
-const bridgeCapabilities = readText(path.join(bridgeRoot, "bridge-capabilities.js"));
+const bridgeCapabilitiesSource = readText(path.join(bridgeRoot, "bridge-capabilities.js"));
 const bridgeTab = readText(path.join(bridgeRoot, "aku-browser-tab-bridge.js"));
 const bridgeContent = readText(path.join(bridgeRoot, "content-script.js"));
 const bridgeCapturePolicy = readText(path.join(bridgeRoot, "bounded-capture-policy.js"));
@@ -86,7 +122,7 @@ assert.match(
 );
 assert.ok(bridgePackage.akuRuntimeRevision, "AkuBridge must declare an operational runtime revision");
 assert.match(
-  bridgeService + bridgeCapabilities,
+  bridgeService + bridgeCapabilitiesSource,
   new RegExp(escapeRegExp(bridgePackage.akuRuntimeRevision)),
   "AkuBridge runtime revision drifted from its capability handshake",
 );
@@ -97,7 +133,7 @@ for (const value of [
   "X-Aku-Bridge-Id",
   "X-Aku-Bridge-Contract",
 ]) {
-  assert.match(bridgeService + bridgeCapabilities, new RegExp(escapeRegExp(value)));
+  assert.match(bridgeService + bridgeCapabilitiesSource, new RegExp(escapeRegExp(value)));
   assert.match(sidecarHttp, new RegExp(escapeRegExp(value)));
 }
 
@@ -180,4 +216,13 @@ function readText(file) {
 
 function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+function compareVersions(left, right) {
+  const a = String(left).split(".").map(Number);
+  const b = String(right).split(".").map(Number);
+  for (let index = 0; index < 3; index += 1) {
+    if (a[index] !== b[index]) return a[index] > b[index] ? 1 : -1;
+  }
+  return 0;
 }

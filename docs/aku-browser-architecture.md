@@ -1,8 +1,8 @@
 # AkuBrowser — Architecture Reference
 
-> Status: **Source-faithful calibration capture and compatibility enforcement implemented**
-> Version: **0.18**
-> Last updated: **2026-07-13**
+> Status: **Source-faithful capture, Settings-first operation, and supervised lifecycle implemented**
+> Version: **0.19**
+> Last updated: **2026-07-14**
 > Working name: **AkuBrowser**
 
 ## 1. Purpose of This Document
@@ -44,8 +44,8 @@ The primary unit is therefore not a website or individual post. It is a meaningf
 4. **Read-only operation**  
    The initial system must not like, reply, repost, follow, unfollow, send messages, edit profiles, or perform other account mutations.
 
-5. **Codex as reasoning engine and bridge**  
-   Codex navigates or observes the source tabs through an available browser-control provider and converts observations into structured information.
+5. **Codex as a replaceable reasoning engine**
+   Codex evaluates validated observations and may return one bounded acquisition decision. AkuSidecar policy—not the model—issues capture commands to AkuBridge and owns every browser parameter.
 
 6. **The sidecar owns operational state**  
    The local sidecar owns jobs, checkpoints, SQLite transactions, validation, policy execution, and communication between the AkuBrowser tab, Codex, and AkuBridge.
@@ -70,9 +70,10 @@ The word `plugin` is ambiguous and should not be used by itself for the Chrome c
 |---|---|---|
 | **AkuBrowser tab** | Pinned local web page | User controls, selected mode, progress, finite results, source links, and coverage statement |
 | **AkuSidecar** | Logical role; initially a local process outside Chrome | Job orchestration, state storage, checkpoints, deterministic policy, validation, and coordination |
-| **Codex** | Reasoning session | Understand visible information, navigate through browser tools, identify claims/events, classify relevance, and produce structured output |
+| **Codex** | Reasoning session | Understand validated source observations, identify claims/events, classify relevance, return structured output, and optionally request one policy-bounded follow-up |
 | **AkuBridge** | Inside Chrome | Browser access such as locating/opening tabs, selecting a tab, observing the presented page, scrolling, and executing approved read-only actions |
-| **Browser-Control Provider** | Integration boundary | The capability Codex calls to operate Chrome; it may use an existing integration or the custom bridge fallback |
+| **AkuSupervisor** | Visible local development process | Own registered development process trees, health, restart, bounded logs, lifecycle audit, and cooperative AkuBridge reload |
+| **BrowserAdapter** | AkuSidecar integration boundary | Provider-neutral capture contract called by JobEngine; AkuBridge is the current native implementation |
 | **SQLite** | Local storage managed by sidecar | Seen-state, checkpoints, observations, results, policies, run metadata, and future knowledge history |
 | **MCP** | Protocol/integration layer | One possible way to expose sidecar or browser capabilities to Codex; it is not a replacement for the sidecar or extension |
 
@@ -81,20 +82,28 @@ In shorthand:
 - the AkuBridge is the **eyes and hands in Chrome**;
 - Codex is the **reasoning engine**;
 - the AkuSidecar is the **coordinator and state owner**;
+- AkuSupervisor is the **development lifecycle owner**;
 - MCP can be the **communication protocol**; and
 - the AkuBrowser tab is the **user-facing control and result surface**.
 
 ### Repository ownership
 
-The implementation uses a neutral parent workspace containing three independent sibling repositories:
+The implementation uses a neutral parent workspace containing four independent sibling repositories:
 
 - `AkuBrowser` is the primary product/integration repository. It owns architecture, canonical contracts, contract-drift checks, and aggregate development commands;
 - `AkuBridge` owns the Chrome extension, source-tab observation, and transport into the local bridge contract; and
-- `AkuSidecar` owns the pinned AkuBrowser tab, job engine, SQLite state, reasoning providers, validation, and runtime result contract.
+- `AkuSidecar` owns the pinned AkuBrowser tab, job engine, SQLite state, reasoning providers, validation, and runtime result contract; and
+- `AkuSupervisor` owns generic local-development process lifecycle, health, logs, audit, MCP inspection, and cooperative AkuBridge reload. It does not own product settings.
 
 The parent workspace is not a repository and does not own dependencies. Each project has its own Git history, package manifest, lockfile, tests, and README. AkuBridge and AkuSidecar must not import each other's implementation source. They communicate only through the versioned HTTP/message contract so either side can later be replaced, released, or bundled independently.
 
-During local development, AkuSidecar remains one process on `127.0.0.1:47821`. Vite is mounted as frontend middleware on the existing Sidecar HTTP server rather than exposed through a second proxy port. Vite owns HMR for UI assets; Node's built-in watcher restarts the same visible process for backend-module changes. Production-style `npm start` keeps the static file path and does not require Vite at runtime.
+During local development, AkuSidecar remains one service on
+`127.0.0.1:47821`, normally owned by the visible AkuSupervisor process. Vite is
+mounted as frontend middleware on the existing Sidecar HTTP server rather than
+exposed through a second proxy port. Vite owns HMR for UI assets; Node's
+built-in watcher restarts the server child for backend-module changes while
+AkuSupervisor retains ownership of the complete process tree. Production-style
+`npm start` keeps the static file path and does not require Vite at runtime.
 
 ## 5. Logical Architecture
 
@@ -104,31 +113,46 @@ flowchart LR
     T --> S["AkuSidecar"]
     S <--> DB["SQLite"]
     S <--> C["Codex reasoning session"]
-    C <-->|"MCP or tool interface"| B["Browser-Control Provider"]
-    B --> E["AkuBridge"]
+    S <-->|"bounded BrowserAdapter contract"| E["AkuBridge"]
     E --> X["X tab"]
     E --> L["LinkedIn tab"]
-    C --> O["Structured observations"]
+    E --> O["Validated observations"]
     O --> S
     S --> T
+    V["AkuSupervisor"] -. "development lifecycle" .-> S
 ```
 
-The browser-control provider is intentionally an abstraction. AkuBridge is the primary initial `BrowserAdapter`: it owns source-specific DOM discovery, bounded capture, bounded scrolling, scroll restoration, and auditable coverage. Computer Use is an explicit fallback only when the native source adapter cannot complete an approved read-only action. The fallback must be reported in run coverage rather than silently becoming the default path.
+The browser boundary is intentionally abstract. AkuBridge is the current
+`BrowserAdapter`: it owns source-specific DOM discovery, bounded capture,
+bounded scrolling, scroll restoration, and auditable coverage. Computer Use is
+not an active or implicit fallback. Any future fallback requires a separate
+policy decision and must be reported in run coverage.
 
-Keeping these capabilities behind `BrowserAdapter` means the `ReasoningProvider` does not need to supply a proprietary Computer Use implementation. Codex and a future open-source provider can call the same bounded browser tools and receive the same observation contract.
+Keeping these capabilities behind `BrowserAdapter` means the
+`ReasoningProvider` does not need to supply a proprietary Computer Use
+implementation. Codex and a future open-source provider receive the same
+validated observation contract and the same narrow acquisition-decision
+schema; JobEngine remains browser authority.
 
 ## 6. End-to-End Runtime Flow
 
 1. The user opens the pinned AkuBrowser tab.
 2. The user selects an information-consumption mode, such as Catch Up or Manual Live.
 3. The AkuBrowser tab sends a bounded job request to the AkuSidecar.
-4. The sidecar creates a run, loads policy and prior checkpoints from SQLite, and starts or resumes a Codex reasoning session.
-5. Codex receives built-in instructions for the selected mode. The user does not need to manually prompt it.
-6. The reasoning loop calls the browser-control provider to open or locate X and LinkedIn, inspect the information presented, and scroll within the agreed bounds. AkuBridge performs those source operations natively when possible; Computer Use is only an explicit fallback.
-7. Browser content is returned as untrusted observations. It is evidence, not instruction.
-8. Codex turns those observations into a structured set of claims, events, deltas, sources, timestamps, confidence, and relevance signals.
-9. The sidecar validates the structure and applies deterministic rules that should not depend solely on model judgment.
-10. The sidecar writes the run, observations, checkpoints, and results to SQLite as a transaction.
+4. The sidecar creates a run and loads policy and prior checkpoints from SQLite.
+5. JobEngine issues a deterministic bounded capture command to AkuBridge.
+6. AkuBridge locates or opens an eligible source tab according to policy,
+   captures the rendered source, performs only the allowed movement, restores
+   position, and returns auditable coverage.
+7. The sidecar validates and persists browser content as untrusted evidence,
+   not instruction.
+8. When the sparse acquisition gate permits it, Codex may return only `finish`
+   or `request_follow_up`; JobEngine owns the follow-up source, anchor, action,
+   movement, and deadline.
+9. Codex evaluates the final validated candidate set into structured claims,
+   events, deltas, sources, timestamps, confidence, and assessments.
+10. The sidecar validates the provider output, applies deterministic rules, and
+    writes checkpoints and results to SQLite.
 11. The AkuBrowser tab refreshes from the sidecar and displays a finite, source-backed result.
 12. The user can open a source when deeper context is needed without being required to consume the raw feed.
 
@@ -193,7 +217,11 @@ For Gate 0A, the sidecar defines the bounded capture command and the AkuBridge o
 
 This isolates transport, authenticated browser-state access, provider invocation, structured output, provenance, persistence, and result rendering from the separate risk of agent-directed browser control.
 
-Gate 0B, only after Gate 0A passes, introduces the target `ReasoningProvider -> BrowserAdapter` tool loop for bounded navigation and scrolling. Scrolling is implemented by AkuBridge source adapters first, with Computer Use reserved for observable failure recovery. The full logical architecture in Section 5 remains the target rather than a claim about the first slice.
+Gate 0B, only after Gate 0A passes, introduces provider-directed acquisition
+without provider-owned browser control. The ReasoningProvider returns a narrow
+decision; JobEngine invokes the `BrowserAdapter` with deterministic parameters.
+Scrolling is implemented by AkuBridge source adapters. Computer Use is not an
+implemented fallback and requires a separate future policy approval.
 
 ### 6.2 Gate 0B implementation sequence
 
@@ -201,9 +229,9 @@ Gate 0B is split into three evidence gates so browser movement and feed mutation
 
 1. **Gate 0B.1 — native bounded acquisition.** AkuSidecar issues a deterministic capture plan and AkuBridge performs `capture -> scroll -> capture -> restore` inside the source adapter. The plan has fixed budgets for scroll count, scroll distance, elapsed time, snapshots, and blocks. Coverage reports requested versus performed scrolls, stop reason, adapter identity, fallback use, and whether the original position was restored.
 2. **Gate 0B.2 — same-tab fresh-content reveal.** AkuBridge may activate one allowlisted platform control such as `New posts` or `Show posts`, then must prove that a changed, non-empty visible feed is ready before bounded capture begins. Feed mutation and the post-reveal restoration baseline remain explicit in coverage.
-3. **Gate 0B.3 — provider-directed acquisition.** After native movement and same-tab reveal are proven reliable on X and LinkedIn, the same operations are exposed as provider-neutral `BrowserAdapter` tools. A `ReasoningProvider` may decide whether another bounded observation is warranted, but deterministic policy in the JobEngine remains the authority for budgets and allowed actions.
+3. **Gate 0B.3 — provider-directed acquisition.** After native movement and same-tab reveal are proven reliable on X and LinkedIn, a `ReasoningProvider` may decide whether another bounded observation is warranted. JobEngine—not the provider—calls the provider-neutral `BrowserAdapter` and remains the authority for budgets and allowed actions.
 
-Gate 0B.1 does not silently become an infinite feed reader: the initial experiment permits at most two native scrolls, three snapshots, one promoted result, and 45 seconds of browser acquisition. A failed native adapter may later request an explicit Computer Use fallback, but that fallback must require policy approval and appear in coverage.
+Gate 0B.1 does not silently become an infinite feed reader: the initial experiment permits at most two native scrolls, three snapshots, one promoted result, and 45 seconds of browser acquisition. The current runtime fails explicitly when the native adapter cannot complete. Any future Computer Use fallback requires policy approval and must appear in coverage.
 
 Source adapters also detect platform-owned fresh-content signals such as LinkedIn's `New posts` banner or X's `Show posts` control. Gate 0B.1 records the signal in coverage but does not activate it. Gate 0B.2 adds one explicit allowlisted `reveal_pending_content` action in the same source tab used by the personal Chrome-development pilot. If activated, the platform may replace or reorder the rendered feed; AkuBridge therefore waits for a changed, non-empty visible-feed fingerprint, establishes that revealed feed as a new capture baseline, restores scrolling only to that post-reveal baseline, and records that the pre-run feed view was intentionally changed. Signal removal alone is not readiness evidence because a platform may temporarily render a loading state. A dedicated managed tab remains a possible consumer-product isolation strategy rather than a requirement for this pilot.
 
@@ -215,7 +243,7 @@ Gate 0 is technically passed. The personal Chrome pilot has completed the full p
 
 | Gate 0 question | Evidence | Status |
 |---|---|---|
-| Browser access from the selected reasoning surface | Minimal authenticated AkuBridge contract used from the local Codex SDK flow | Passed through accepted fallback |
+| Browser access under deterministic Sidecar policy | Native authenticated AkuBridge `BrowserAdapter` contract | Passed |
 | Signed-in X and LinkedIn consumption | Canonical feeds captured from the development Chrome profile | Passed |
 | Structured observations and results | Provider-neutral schemas validated in unit, HTTP, SDK smoke, and live runs | Passed |
 | Source identity and timestamps | Provenance lanes, evidence keys, observed time, and source URLs persist in SQLite | Passed |
@@ -373,9 +401,11 @@ Implementation, when authorized, should begin with the smallest end-to-end proof
 ```text
 AkuBrowser tab
   -> AkuSidecar
-  -> Codex
+  -> AkuBridge
   -> one signed-in Chrome source tab
   -> one structured observation
+  -> AkuSidecar validation
+  -> Codex
   -> SQLite
   -> AkuBrowser tab result
 ```
@@ -390,7 +420,9 @@ The gate should answer these questions before the full classification system is 
 6. Does browser operation steal focus or otherwise disrupt the user's simultaneous work?
 7. Can the run report bounded coverage and stop cleanly?
 
-The accepted fallback for question 1 is the minimal custom AkuBridge. This is a resolved product decision, not a blocker.
+Gate 0 selected the minimal authenticated AkuBridge as the native
+`BrowserAdapter`; direct Codex-to-browser control is not the current runtime
+path. This is a resolved product decision, not a blocker.
 
 ## 13. Technical Decisions After Gate 0
 
@@ -559,6 +591,13 @@ Potential future providers include a local OpenAI-compatible inference server, a
 
 Gate 0 and the initial knowledge-continuity proof have passed. Unified Session v0 is implemented, and its live Chrome pilot has verified sequential X and LinkedIn orchestration, bounded pending-content recovery, UI restoration after reload, and finite completion. A source capture with zero visible evidence is now reported as acquisition-unavailable and excluded from empty-result trust metrics instead of being presented as a correctly empty feed.
 
+Operate the current development stack through the visible AkuSupervisor and
+configure AkuSidecar through AkuBrowser Settings. Environment overrides are
+compatibility/recovery tools, not install instructions. After the one-time
+unpacked-extension bootstrap, load AkuBridge changes through cooperative
+Supervisor reload/validation. Component package versions advance independently;
+the live compatibility tuple is the release boundary.
+
 As of July 12, 2026, natural pilot data has passed every offline-fit readiness gate: 37 matched preference events across 19 feedback runs and both sources. Operational reliability is healthy over the latest 20 source runs. A current snapshot has now been fitted from that dataset. Its holdout balanced accuracy is 0.75, positive recall is 0.50, negative recall is 1.0, and agreement is about 0.57; this is still insufficient for an activation decision. The current shadow comparison scores 174 candidates, with 12 possible upward movements and no downward movements. Live preference influence, exploration, and comeback remain disabled.
 
 The hard-coded AI/technical-engineering context, provider-assigned intent relevance, and P1-P4 lanes are now removed from the transition contract. The source-only onboarding profile activates installed adapters, then the separate Calibration Engine collects forced entry-level More/Less labels. All preference influence remains shadow-only until a separate ranking-composition and activation decision is approved.
@@ -610,7 +649,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-021 | Require a canonical source feed for Catch Up; allow the active source page for Manual Live | Confirmed after first Chrome pilot |
 | D-022 | Use an Option C polyrepo workspace with AkuBrowser, AkuBridge, and AkuSidecar as sibling repositories | Confirmed |
 | D-023 | Use AkuBrowser as the primary product brand; do not use Signal as the product brand | Confirmed |
-| D-024 | Implement bounded scrolling natively in AkuBridge source adapters and use Computer Use only as an explicit fallback | Confirmed after Gate 0A pilot |
+| D-024 | Implement bounded scrolling natively in AkuBridge source adapters; any Computer Use fallback must be explicit | Native path implemented; fallback remains unimplemented pending separate approval |
 | D-025 | Keep browser acquisition independent of ReasoningProvider so a future open-source provider does not require proprietary Computer Use | Confirmed |
 | D-026 | Preserve provenance lanes explicitly as native post, canonical source page, or external reference; never label one lane as another | Confirmed after LinkedIn Gate 0A pilot |
 | D-027 | Evolve ranking from explicit intent toward an inspectable behavioral preference model while treating each platform's feed order only as an upstream prior | Confirmed as future direction; implementation deferred until pilot evidence exists |
@@ -643,7 +682,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-054 | Have Terra High emit structured candidate features in the existing evaluation invocation, without adding a second model call | Confirmed for engine-ready observations |
 | D-055 | Report token usage separately for Candidate Evaluation and Acquisition Planning | Confirmed for quality/economic tuning |
 | D-056 | Default initial acquisition to opening one inactive canonical source tab when missing; retain configurable `fail_fast`, and never replace a tab during anchored follow-up | Confirmed for daily-use resilience |
-| D-057 | Add an allowlisted dashboard configuration layer persisted in SQLite, with environment override, dashboard value, and built-in default precedence; begin with `missingSourceTabPolicy` | Confirmed for runtime operability |
+| D-057 | Add an allowlisted dashboard configuration layer persisted in SQLite, with legacy/recovery environment override, dashboard value, and built-in default precedence; begin with `missingSourceTabPolicy` | Implemented; Settings is the normal configuration surface |
 | D-058 | Expose existing provider, phase model, phase effort, planning policy, and timeout configuration as persisted startup settings; never restart or hot-swap the active reasoning provider invisibly | Confirmed for transparent operations |
 | D-059 | Treat LinkedIn page completion and feed readiness as separate states; permit bounded temporary activation with focus restoration and exactly one zero-evidence retry before failing at `source_readiness` | Confirmed for LinkedIn reliability |
 | D-060 | Time-box LinkedIn adapter stabilization; after the bounded readiness milestone still reports `feed_not_visible`, mark LinkedIn degraded, preserve X-backed partial Unified Sessions, and move selector/visibility investigation to the adapter backlog | Confirmed to resume product calibration |
@@ -663,7 +702,7 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-074 | Prepare a shadow comparison that contrasts persisted provider selection state with preference probability and bounded feature contributions, using synthetic fixtures for tests while keeping every result observational and live influence disabled | Confirmed for pre-fit inspection infrastructure |
 | D-075 | Require every ReasoningProvider to pass a vendor-neutral conformance harness and publish a capability manifest; structural conformance remains separate from pilot-quality equivalence | Confirmed for replaceable reasoning runtimes |
 | D-076 | Provide explicit local-only SQLite health, verified non-overwriting backup, raw-observation-free analysis export, and preview-only retention tooling; expose no autonomous deletion path | Confirmed for reversible pilot-data operability |
-| D-077 | Add read-only AkuDoctor and extension package fingerprinting, enforce version equality across all three repositories and the Chrome manifest, and keep browser-profile checks explicit and manual | Confirmed for transparent developer operations |
+| D-077 | Add read-only AkuDoctor and extension package fingerprinting, initially using lockstep repository versions, and keep browser-profile checks explicit and manual | Version-equality portion superseded by D-128; diagnostics remain implemented |
 | D-078 | Maintain executable trust regressions for prompt delimiting, bounded/deduplicated reasoning evidence, presentation-media exclusion, diagnostic non-disclosure, SQLite path escaping, extension permissions, and provenance validation | Confirmed for defense-in-depth verification |
 | D-079 | Make every source adapter report bounded selector strategy, field completeness, and non-content DOM signatures so platform drift is diagnosable before total failure | Confirmed and implemented |
 | D-080 | Extract source-native content kind and repost/quote/reply relationships as contextual evidence for Source Layout and future temporal supersession | Confirmed and implemented as additive observation metadata |
@@ -712,6 +751,9 @@ After behavioral proof and retention evidence, test Sidecar Lite as a packaging 
 | D-123 | X source fidelity requires visual hydration, not only a text-ready feed. When a canonical X tab is in the background, AkuBridge temporarily activates it without focusing the Chrome window, waits until the visible primary-avatar and media containers expose allowlisted rendered URLs, captures the bounded viewport, and restores the previously active tab. Avatar fallback remains scoped to the primary avatar root so repost attribution images cannot replace the post author | Implemented in synchronized AkuBrowser 0.5.12 / AkuBridge source-fidelity-v14 after live comparison proved the same posts exposed complete HTTPS avatar and media URLs only after the X tab became active |
 | D-124 | X readiness treats semantic video containers, including `previewInterstitial` and rendered `aria-label` video roots, as hydration requirements before capture. Media inside a quoted post is persisted under `quotedPost.media`, excluded from the parent post media, and does not reclassify the parent as a video | Implemented in synchronized AkuBrowser 0.5.13 / AkuBridge source-fidelity-v15 after live v14 capture recovered every primary avatar and ordinary image but still raced two video posters and flattened quote-media semantics |
 | D-125 | X link-preview cards are captured as bounded presentation images only when X exposes an allowlisted `pbs.twimg.com/card_img/` image or rendered CSS background. Link-card hydration participates in readiness, while decorative images and external page assets remain excluded | Implemented in synchronized AkuBrowser 0.5.14 / AkuBridge source-fidelity-v16 after live onboarding evidence showed the OpenAI Build Week preview was omitted because it was neither `tweetPhoto` nor video media |
+| D-126 | Use visible AkuSupervisor ownership as the preferred AkuSidecar development lifecycle. Persist provider/model/effort/policy/timeout choices in AkuBrowser Settings; do not recommend environment variables or detached hidden Sidecar launch for normal installation and daily use | Implemented and MCP/CLI live-validated |
+| D-127 | Estimate LinkedIn relative timestamps only when the source exposes a valid relative value, preserve its original text plus explicit estimate precision/source metadata, and leave promoted entries without time as `null`. Keep long-backgrounded capture waits service-worker-backed and expose content-free timeout progress | Implemented in AkuBridge 0.5.29 / source-fidelity-v31 with linkedin-dom-v8 and live background capture validation |
+| D-128 | Version AkuBrowser, AkuSidecar, and AkuBridge independently. Cross-repository release gates validate Bridge package/manifest identity, minimum extension version, exact runtime revision, adapter versions, and required actions instead of lockstep package equality | Implemented in integration checks and AkuDoctor |
 
 ## 16. Change Discipline
 

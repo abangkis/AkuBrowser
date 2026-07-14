@@ -1,19 +1,31 @@
 # Runtime Configuration Contract v0
 
-> Status: **Initial live and startup settings implemented**
-> Date: **2026-07-11**
+> Status: **Live and startup Settings implemented; environment setup deprecated**
+> Date: **2026-07-14**
 
 ## Purpose
 
 AkuBrowser exposes allowlisted operational settings through its local dashboard without turning arbitrary environment or process configuration into a web-editable surface.
 
-## Precedence
+## Normal configuration path
+
+AkuBrowser Settings is the recommended configuration surface. A fresh checkout
+uses the committed `codex-sdk`, Luna High, Terra High, and
+`deterministic_sparse_gap` defaults without requiring environment setup.
+Settings persist in AkuSidecar SQLite and survive supervised restarts.
+
+## Resolution precedence
 
 1. Valid environment override.
 2. Persisted dashboard value in AkuSidecar SQLite settings.
 3. Built-in default.
 
-The dashboard must show the effective value, persisted value, source, and apply mode. When an environment override is active, dashboard editing is disabled.
+This order describes current compatibility behavior, not the recommended
+installation workflow. Environment overrides are reserved for packaging or a
+short-lived recovery diagnostic. The dashboard must show the effective value,
+persisted value, source, and apply mode. When an environment override is active,
+dashboard editing is disabled; remove the override after recovery so Settings
+becomes authoritative again.
 
 ## Initial setting
 
@@ -55,12 +67,16 @@ The dashboard also persists the existing reasoning startup configuration:
 - `planningPolicy`: `deterministic_sparse_gap` or `always`;
 - `timeoutMs`: `1000..600000`.
 
-These values do not mutate the active provider. They become effective only after the user restarts the visible AkuSidecar process. Until then the API and dashboard expose both the persisted and effective values with `restartRequired: true`.
+These values do not mutate the active provider. They become effective only
+after the user restarts the visible AkuSidecar service through AkuSupervisor.
+Until then the API and dashboard expose both the persisted and effective values
+with `restartRequired: true`.
 
 ## Persistence and safety
 
 - Dashboard values are persisted in SQLite and survive Sidecar restarts.
 - Only named settings with explicit enums may be updated.
+- Environment variables are not recommended as install or daily-run settings.
 - Port, database path, executable path, arbitrary environment variables, and secrets are not dashboard-editable.
 - Runtime configuration cannot broaden AkuBridge host permissions or browser-action authority.
 - Invalid values fail closed with a contract error.

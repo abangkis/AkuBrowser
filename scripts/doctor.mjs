@@ -10,16 +10,17 @@ const bridgeManifest = readJson(path.join(workspaceRoot, "AkuBridge", "manifest.
 const sidecarPackage = readJson(path.join(workspaceRoot, "AkuSidecar", "package.json"));
 const checks = [];
 
-add("component_versions", new Set([
+add("component_identities", [
   browserPackage.version,
   bridgePackage.version,
-  bridgeManifest.version,
   sidecarPackage.version,
-]).size === 1, {
+].every((version) => /^\d+\.\d+\.\d+$/.test(version)) &&
+  bridgePackage.version === bridgeManifest.version, {
   AkuBrowser: browserPackage.version,
   AkuBridge: bridgePackage.version,
   AkuBridgeManifest: bridgeManifest.version,
   AkuSidecar: sidecarPackage.version,
+  versionPolicy: "independent_component_versions",
 });
 
 const health = await safeFetch("http://127.0.0.1:47821/api/health");
@@ -39,6 +40,12 @@ add("bridge_runtime_revision", bridge.ok &&
   }, {
     warning: bridge.ok && bridgeStatus === "unavailable",
   });
+add(
+  "bridge_compatibility",
+  bridge.ok && bridge.body?.bridge?.compatibility?.compatible === true,
+  bridge.body?.bridge?.compatibility ?? bridge.error,
+  { warning: bridge.ok && bridgeStatus === "unavailable" },
+);
 
 const report = {
   version: 2,
@@ -46,7 +53,7 @@ const report = {
   checkedAt: new Date().toISOString(),
   checks,
   manualChecks: [
-    "Reload unpacked AkuBridge after extension source changes.",
+    "After the one-time unpacked-extension bootstrap, use AkuSupervisor bridge validate/reload after AkuBridge source changes.",
     "Confirm signed-in canonical X and LinkedIn feed tabs when fail-fast behavior is desired.",
   ],
   mutationsPerformed: false,

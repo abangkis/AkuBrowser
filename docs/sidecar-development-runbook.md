@@ -1,6 +1,6 @@
 # AkuSidecar Development Runbook
 
-> Last verified: **2026-07-12**
+> Last verified: **2026-07-14**
 
 ## Required startup boundary
 
@@ -23,36 +23,57 @@ HTTP health alone is not proof that the reasoning provider can execute.
 
 ## Preferred startup
 
-For an operator-visible terminal:
+AkuSupervisor is the preferred lifecycle owner. It starts AkuSidecar in the
+normal user host context, records the complete npm/watch/server process tree,
+monitors `/api/health`, and provides bounded restart and logs without taking
+over the user's browser.
+
+For active AkuSupervisor development, start the visible watcher and request the
+registered Sidecar service:
+
+```powershell
+cd C:\WorkspaceCodex\AkuWorkspace\AkuSupervisor
+.\scripts\dev.ps1 akusidecar
+```
+
+For the stable Supervisor, start `target\aku-supervisor.exe` visibly and use a
+second terminal for lifecycle requests:
+
+```powershell
+.\target\aku-supervisor.exe start akusidecar `
+  --reason "start AkuBrowser development runtime"
+```
+
+The checked-in Supervisor profile runs `npm run dev` from AkuSidecar with an
+empty environment map. Configure provider, models, efforts, policy, timeout,
+and source behavior through AkuBrowser Settings. Do not set
+`AKU_REASONING_PROVIDER` for normal startup.
+
+Direct `npm run dev` remains a component-isolation fallback when AkuSupervisor
+is intentionally unavailable. It must still run in a visible, normal host
+terminal:
 
 ```powershell
 cd C:\WorkspaceCodex\AkuWorkspace\AkuSidecar
 npm run dev
 ```
 
-When Codex is explicitly responsible for maintaining the server, start `npm run dev` outside its filesystem/process sandbox as a detached host process. Report the launcher PID, listener PID, port, and every stop or restart to the user.
-
-Example detached launch:
-
-```powershell
-$process = Start-Process `
-  -FilePath 'C:\nvm4w\nodejs\npm.cmd' `
-  -ArgumentList 'run', 'dev' `
-  -WorkingDirectory 'C:\WorkspaceCodex\AkuWorkspace\AkuSidecar' `
-  -WindowStyle Hidden `
-  -PassThru
-$process.Id
-```
-
-This hidden form is allowed only when the user has delegated server lifecycle management and has been told that it is running in the background. Otherwise use the visible terminal form.
+Do not replace AkuSupervisor with a hidden detached `Start-Process` launch. It
+loses the visible ownership, health, audit, restart, and full-tree cleanup
+guarantees that now exist.
 
 ## Verification checklist
 
-1. Verify the listener:
+1. Verify Supervisor ownership and health from a second terminal:
 
    ```powershell
-   netstat -ano | Select-String ':47821.*LISTENING'
+   cd C:\WorkspaceCodex\AkuWorkspace\AkuSupervisor
+   .\target\dev\aku-supervisor.exe status --json
    ```
+
+   Use `target\aku-supervisor.exe` instead when running the promoted stable
+   binary. MCP may inspect the same service read-only through
+   `supervisor_get_service`.
 
 2. Verify HTTP health and the intended provider:
 
@@ -70,16 +91,25 @@ This hidden form is allowed only when the user has delegated server lifecycle ma
 
 4. Run or observe one bounded update. Do not declare startup successful until the newest `reasoning_invocations` row advances beyond immediate `spawn EPERM` failure. A healthy provider invocation takes materially longer than a 3-10 ms spawn failure and ultimately records token usage or a provider-level error.
 
-5. If the server was restarted while a Chrome tab was open, confirm the tab reports both `AkuSidecar ready` and `AkuBridge ready` before starting a run.
+5. If the server was restarted while a Chrome tab was open, confirm the tab
+   reports both `AkuSidecar ready` and `AkuBridge ready` before starting a run.
+   When AkuBridge source changed, use `aku-supervisor bridge validate` rather
+   than Chrome control after the one-time extension bootstrap.
 
 ## Recovery from `spawn EPERM`
 
-1. Stop the entire AkuSidecar process tree, not only `src/server.mjs`; otherwise the Node watcher may immediately recreate the restricted child.
+1. Restart the registered `akusidecar` service through AkuSupervisor. Do not
+   stop only `src/server.mjs`; the Node watcher may immediately recreate it.
 2. Keep the database unless a clean onboarding experiment was explicitly requested. Failed runs are useful diagnostics.
-3. Start the server again from a normal host process context using one of the preferred startup forms.
+3. Confirm Supervisor reports the complete owned PID tree and healthy transport.
 4. Verify port, health, provider, and one real reasoning invocation.
 5. Retry `Check for updates`. Do not reload or reinstall AkuBridge for this error: capture already succeeded, and the failure is in the Sidecar-to-Codex process boundary.
 
 ## Proven incident
 
-During the first source-only onboarding and forced-calibration pilot, two Unified Sessions captured X and LinkedIn successfully but both sources failed in candidate evaluation with `spawn EPERM`. The server had been launched through a sandboxed long-running command. Replacing it with a detached normal host process fixed the issue: X and LinkedIn completed, and Calibration Engine created a nine-entry batch.
+During the first source-only onboarding and forced-calibration pilot, two
+Unified Sessions captured X and LinkedIn successfully but both sources failed
+in candidate evaluation with `spawn EPERM`. The server had been launched
+through a sandboxed long-running command. A normal-host launch fixed the
+incident. AkuSupervisor now provides that host-context lifecycle boundary and
+is the preferred durable solution.
