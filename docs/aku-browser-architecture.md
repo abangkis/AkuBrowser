@@ -161,6 +161,8 @@ flowchart LR
 | Boundary | Current owner |
 |---|---|
 | Source selectors, candidate discovery, source-native extraction | X or LinkedIn adapter |
+| Wake semantics, pending-control allowlist, freshness capability version | X or LinkedIn adapter |
+| Wake/reveal/proof state machine and freshness audit | Shared AkuBridge freshness recovery |
 | Canonical block assembly, media discovery, URL/date normalization | Shared AkuBridge content runtime |
 | Capture limits, media allowlists, platform identity normalization | Shared bounded-capture policy |
 | Required/conditional field expectations, issues, verdicts | Shared trusted quality policy |
@@ -178,8 +180,11 @@ remains. A final `retryable` report cannot reach persistence or reasoning.
 The normative design, field profile, recovery budget, admission matrix, and
 third-source requirements are recorded in
 [`Source Adapter and Capture Quality Design`](source-adapter-quality-design.md).
-The current runtime baseline is AkuBridge 0.5.33 / source-fidelity-v35 with
-`x-dom-v13` and `linkedin-dom-v10`, plus AkuSidecar 0.5.18.
+The current runtime baseline is AkuBridge 0.5.36 / source-fidelity-v38 with
+`x-dom-v14`, `linkedin-dom-v12`, `x-freshness-v1`, and
+`linkedin-freshness-v2`, plus AkuSidecar 0.5.20. The freshness seam is
+normatively defined in
+[`Source Freshness Recovery v1`](../contracts/source-freshness-recovery-v1.md).
 
 ## 6. End-to-End Runtime Flow
 
@@ -276,12 +281,12 @@ implemented fallback and requires a separate future policy approval.
 Gate 0B is split into three evidence gates so browser movement and feed mutation are proven independently from model judgment:
 
 1. **Gate 0B.1 — native bounded acquisition.** AkuSidecar issues a deterministic capture plan and AkuBridge performs `capture -> scroll -> capture -> restore` inside the source adapter. The plan has fixed budgets for scroll count, scroll distance, elapsed time, snapshots, and blocks. Coverage reports requested versus performed scrolls, stop reason, adapter identity, fallback use, and whether the original position was restored.
-2. **Gate 0B.2 — same-tab fresh-content reveal.** AkuBridge may activate one allowlisted platform control such as `New posts` or `Show posts`, then must prove that a changed, non-empty visible feed is ready before bounded capture begins. Feed mutation and the post-reveal restoration baseline remain explicit in coverage.
+2. **Gate 0B.2 — stale-tab wake and same-tab fresh-content reveal.** A generic AkuBridge state machine activates a background tab, observes the adapter-declared wake window, and handles either an automatically changed feed or one allowlisted platform control such as `New posts` or `Show posts`. A reveal must prove that a changed, non-empty visible feed is ready before bounded capture begins. Feed mutation and the post-reveal restoration baseline remain explicit in coverage.
 3. **Gate 0B.3 — provider-directed acquisition.** After native movement and same-tab reveal are proven reliable on X and LinkedIn, a `ReasoningProvider` may decide whether another bounded observation is warranted. JobEngine—not the provider—calls the provider-neutral `BrowserAdapter` and remains the authority for budgets and allowed actions.
 
 Gate 0B.1 does not silently become an infinite feed reader: the initial experiment permits at most two native scrolls, three snapshots, one promoted result, and 45 seconds of browser acquisition. The current runtime fails explicitly when the native adapter cannot complete. Any future Computer Use fallback requires policy approval and must appear in coverage.
 
-Source adapters also detect platform-owned fresh-content signals such as LinkedIn's `New posts` banner or X's `Show posts` control. Gate 0B.1 records the signal in coverage but does not activate it. Gate 0B.2 adds one explicit allowlisted `reveal_pending_content` action in the same source tab used by the personal Chrome-development pilot. If activated, the platform may replace or reorder the rendered feed; AkuBridge therefore waits for a changed, non-empty visible-feed fingerprint, establishes that revealed feed as a new capture baseline, restores scrolling only to that post-reveal baseline, and records that the pre-run feed view was intentionally changed. Signal removal alone is not readiness evidence because a platform may temporarily render a loading state. A dedicated managed tab remains a possible consumer-product isolation strategy rather than a requirement for this pilot.
+Source adapters declare platform-owned fresh-content knowledge such as LinkedIn's `New posts` banner or X's `Show posts` control, but they do not implement orchestration. The generic recovery engine owns bounded activation, polling, one-reveal authorization, proof, and terminal outcomes. If activated, the platform may replace or reorder the rendered feed; AkuBridge therefore waits for a changed, non-empty visible-feed fingerprint, establishes that revealed feed as a new capture baseline, restores scrolling only to that post-reveal baseline, and records that the pre-run feed view was intentionally changed. Signal removal alone is not readiness evidence. Failure stops at `source_freshness` and is never retried as a stale detect-only capture. A dedicated managed tab remains a possible later isolation strategy rather than a v1 requirement.
 
 Gate 0B.3 gives the ReasoningProvider one narrow acquisition decision after the first validated observation: `finish` or `request_follow_up`. The provider cannot choose a source, URL, browser action, scroll count, position, timeout, or mutation policy. If a follow-up is requested, JobEngine may issue exactly one additional one-scroll command, locked to the same source and anchored to the final viewport of round one. AkuBridge must find at least one supplied frontier anchor before moving, cannot reveal pending content again, and restores the source tab to its pre-follow-up position. Both observations are persisted and merged for final reasoning. A missing or shifted anchor fails explicitly rather than turning the follow-up into an unbounded search.
 
@@ -789,6 +794,7 @@ remaining mixed with active rules.
 | D-128 | Version AkuBrowser, AkuSidecar, and AkuBridge independently. Cross-repository release gates validate Bridge package/manifest identity, minimum extension version, exact runtime revision, adapter versions, and required actions instead of lockstep package equality | Implemented in integration checks and AkuDoctor |
 | D-129 | Keep source-specific DOM parsing in revisioned adapters, then evaluate canonical candidates with trusted `social-post-v1` field expectations. Sidecar pre-authorizes at most one same-candidate local retry, validates report consistency, admits complete/degraded evidence, removes invalid candidates, and never exposes final retryable or rejected evidence to reasoning. X still attempts bounded visual hydration, but semantic feed readiness proceeds to the evaluator when visual hydration remains incomplete | Implemented in AkuBridge 0.5.33 / source-fidelity-v35 (`x-dom-v13`, `linkedin-dom-v10`) and AkuSidecar 0.5.18 |
 | D-130 | Make local preference fitting automatic and enable bounded live reranking only among provider-selected items. Keep source/platform order as fallback, cap displacement at two positions, expose disable/fallback controls, and move manual fit plus replay/holdout comparison into Advanced diagnostics | Implemented as Preference Runtime v1 |
+| D-131 | Separate stale-tab freshness recovery from source parsing. A generic `wake -> observe -> reveal/prove -> capture` engine owns state, bounded polling, focus-safe restoration, outcomes, and failure taxonomy; each revisioned adapter supplies only wake semantics and its pending-control allowlist. Apply the same contract to X and LinkedIn, preserve round-two frontiers, and never retry `freshness_unavailable` as detect-only capture | Implemented in AkuBridge 0.5.36 / source-fidelity-v38 (`x-dom-v14`, `linkedin-dom-v12`) and AkuSidecar 0.5.20 |
 
 ## 16. Change Discipline
 

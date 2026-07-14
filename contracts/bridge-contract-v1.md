@@ -131,7 +131,22 @@ Coverage adds these auditable fields:
 
 These fields are additive to `aku-browser.bridge.v1`. An observation that omits them remains a valid Gate 0A fixture, while a Gate 0B run must surface them through the final coverage object. Computer Use is not an implicit execution path; any future fallback must be separately approved and reported with `fallbackUsed: true`.
 
-Gate 0B.1 recognizes a visible platform signal such as `New posts` or `Show posts` and reports `pendingNewContentAction: not_activated`. It must not click that control. `not_detected` is reported when no signal is present. Future activation requires a separate BrowserAdapter command because it changes the rendered stream and has different restoration semantics from scrolling.
+Gate 0B.1 recognizes a visible platform signal such as `New posts` or `Show posts`. In an initial acquisition, the source-freshness policy may authorize Gate 0B.2 to resolve it before capture. A follow-up remains detect-only because its prior frontier must not be replaced.
+
+## Source freshness recovery
+
+Readiness and freshness are separate contracts. Readiness proves that a usable
+rendered feed exists. Freshness recovery uses the generic
+`source-freshness-recovery-v1` engine to wake a background tab, observe the
+adapter-declared server-sync window, and resolve an automatically changed feed
+or one pending-content control before capture.
+
+Every Gate 0B observation reports `coverage.sourceFreshness`, including the
+generic policy version, adapter freshness version, terminal outcome,
+verification class, wake/activation state, bounded probe count and wait, and
+pending-content mutation state. Raw feed fingerprints are never transported.
+The complete normative state and adapter interface is in
+`source-freshness-recovery-v1.md`.
 
 ## Gate 0B.2 same-tab reveal behavior
 
@@ -142,7 +157,7 @@ The capture command may explicitly add:
 - `pendingContentTimeoutMs`, currently capped at `5000`; and
 - `pendingContentSettleMs`, currently capped at `2000`.
 
-When and only when that policy is present, AkuBridge may invoke one visible allowlisted control whose normalized label matches LinkedIn `New post(s)`/`Show new post(s)` or X `New post(s)`/`Show [N] post(s)`. It performs at most one activation attempt. It does not click arbitrary page controls and it still cannot like, reply, follow, message, or post.
+When and only when that policy is present, the generic freshness runtime may invoke one visible allowlisted control whose normalized label matches the pattern supplied by the registered source adapter. Current adapters allow LinkedIn `New post(s)`/`Show new post(s)` and X `New post(s)`/`Show [N] post(s)`. It performs at most one activation attempt. It does not click arbitrary page controls and it still cannot like, reply, follow, message, or post.
 
 Hiding or removing the platform signal is not sufficient proof because LinkedIn can temporarily empty the feed while loading. If activation does not produce a non-empty visible-feed fingerprint different from the pre-action fingerprint within the deadline, browser capture fails rather than classifying stale or loading-state content. After a successful reveal, AkuBridge sets the latest feed to the top, records `pendingNewContentAction: activated`, `pendingContentActivationEvidence: feed_fingerprint_changed`, `feedMutation: true`, `sameTabMutation: true`, and `restorationScope: post_reveal_start`, then runs the normal bounded scroll plan. `preActionScrollY` retains the former position; `originalScrollY` and `finalScrollY` describe the post-reveal capture baseline. If no signal is detected, the action remains `not_detected` and restoration scope remains `pre_run_position`.
 
@@ -172,7 +187,7 @@ AkuBridge positions the same tab at the supplied frontier, captures before movin
 - `page_shell`; or
 - `wrong_page`.
 
-The probe reports total and visible selector counts plus loading/root state only; it does not expand evidence collection. `feed_ready` requires at least one visible feed candidate, not merely a stale or off-viewport matching node. If a background LinkedIn tab is not ready, AkuBridge may temporarily activate it, wait up to the fixed readiness deadline, and restore the previously active tab. During this reliability phase, every LinkedIn capture uses `detect_only` for pending content; X retains its separately validated reveal behavior.
+The probe reports total and visible selector counts plus loading/root state only; it does not expand evidence collection. `feed_ready` requires at least one visible feed candidate, not merely a stale or off-viewport matching node. If a background LinkedIn tab is not ready, AkuBridge may temporarily activate it and wait up to the fixed readiness deadline. After readiness, the generic freshness stage applies the same wake/reveal/proof contract used for X. Both source adapters support reveal during initial acquisition.
 
 Scroll settling and other bounded capture waits use a service-worker response
 rather than relying only on a page timer, because Chrome may heavily throttle a
@@ -181,7 +196,10 @@ request the content script's last safe progress stage so a timeout identifies
 whether capture was probing, recovering permalinks, extracting a block,
 scrolling, settling, or restoring. This diagnostic adds no post content.
 
-If the first LinkedIn capture still produces zero evidence, AkuBridge may perform exactly one readiness-and-capture retry in the same tab. It cannot open a second tab, add scroll budget, or invoke reasoning. Coverage records readiness state, wait duration, selector count, loading/root state, whether the tab was opened or temporarily activated, its initial background state, and retry count. A zero-evidence result after this bounded recovery fails at `source_readiness`, not `reasoning`.
+There is no LinkedIn-specific detect-only retry. A freshness failure stops before
+capture at `source_freshness`; a rendered feed that still yields zero usable
+evidence fails later at `source_readiness` or quality admission. Neither case
+is presented as a correctly empty catchup.
 
 ## Stale source-tab recovery
 
@@ -193,7 +211,7 @@ Acquisition round two never uses this recovery. A provider-directed follow-up is
 
 ## Source adapter and tab-lease behavior
 
-X and LinkedIn DOM knowledge is registered through separate source adapters behind the same content-runtime contract. The shared runtime owns bounded movement, restoration, normalization, and extension messaging. An adapter owns source-page matching, feed candidate discovery, author discovery, source-specific media exclusions, and pending-content labels. Runtime and adapter registries are revisioned: reinjecting the complete bundle replaces the stale generation and its message listener instead of preserving a permanent first-injection singleton.
+X and LinkedIn DOM knowledge is registered through separate source adapters behind the same content-runtime contract. The shared runtime owns bounded movement, restoration, normalization, and extension messaging. An adapter owns source-page matching, feed candidate discovery, author discovery, source-specific media exclusions, and a versioned freshness strategy containing its wake semantics and pending-control allowlist. The generic freshness runtime owns detection mechanics, activation orchestration, reveal proof, and outcomes. Runtime and adapter registries are revisioned: reinjecting the complete bundle replaces the stale generation and its message listener instead of preserving a permanent first-injection singleton.
 
 Before capture, AkuBridge binds a short-lived lease containing the tab id, window id, source, and bound URL. It validates the lease immediately before and after collection. Navigation within the same approved source remains valid; a closed or replaced tab, changed window identity, or navigation outside the approved source fails closed. Structured failure payloads add stable `code`, `stage`, and safe `details` fields while retaining the human-readable `message` required by existing clients.
 

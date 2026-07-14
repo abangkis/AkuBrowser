@@ -2,7 +2,7 @@
 
 > Status: **Implemented and enforced**
 > Date: **2026-07-14**
-> Runtime baseline: **AkuBridge 0.5.33 / source-fidelity-v35; AkuSidecar 0.5.18**
+> Runtime baseline: **AkuBridge 0.5.36 / source-fidelity-v38; AkuSidecar 0.5.20**
 > Scope: **AkuBridge source parsers, generic capture-quality evaluation, bounded recovery, and AkuSidecar admission**
 
 ## 1. Purpose
@@ -48,8 +48,11 @@ flowchart LR
 | Final semantic evaluation of admitted evidence only | ReasoningProvider under JobEngine |
 
 The adapter registry requires every adapter to declare a parser version,
-`qualityProfile`, and `qualitySelectors`. Current versions are `x-dom-v13` and
-`linkedin-dom-v10`, both using `social-post-v1`.
+`qualityProfile`, and `qualitySelectors`. Current versions are `x-dom-v14` and
+`linkedin-dom-v12`, both using `social-post-v1`. Each adapter additionally
+declares a separate freshness strategy; that contract is documented in
+`../contracts/source-freshness-recovery-v1.md` and does not change the quality
+evaluator's ownership.
 
 ## 3. Trusted field profile
 
@@ -204,12 +207,13 @@ Any change to an adapter, field profile, or admission rule must pass:
 - live signed-in X and LinkedIn capture validation after cooperative Bridge
   reload, including one real reasoning invocation.
 
-The runtime baseline implementing this decision advertises
-`aku-bridge-0.5.33-source-fidelity-v35`, `x-dom-v13`, `linkedin-dom-v10`, and
-`report_capture_quality`.
+The current runtime advertises `aku-bridge-0.5.36-source-fidelity-v38`,
+`x-dom-v14`, `linkedin-dom-v12`, `report_capture_quality`,
+`probe_freshness`, and `recover_source_freshness`.
 
 ## 10. Live acceptance evidence
 
+The following is historical v35 acceptance evidence for the quality layer.
 After cooperative reload request `quality-architecture-20260714-2121`,
 AkuSupervisor observed the exact v35 build. Signed-in unified session
 `6342098f-55a2-429b-a5a2-6e1cb7806479` then completed X and LinkedIn and
