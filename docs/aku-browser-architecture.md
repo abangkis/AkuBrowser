@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
 > Status: **Source-faithful capture, Settings-first operation, and supervised lifecycle implemented**
-> Version: **0.21**
+> Version: **0.22**
 > Last updated: **2026-07-15**
 > Working name: **AkuBrowser**
 
@@ -842,6 +842,7 @@ remaining mixed with active rules.
 | D-134 | Remove source identity and unbounded raw tags from learned preference features; use canonical facets, reason-aware feedback, Neutral regularization, and hard source-diversity composition | Implemented as Preference Runtime v2 |
 | D-135 | Keep an active champion live while evaluating a challenger, scale displacement authority by holdout quality, and make reset suspension inviolable except by explicit manual refit | Implemented as Preference Runtime v2 |
 | D-136 | Maintain a read-only local replay benchmark with polarity, source-sliced, selection, latency, token, model, and effort metrics; never spend model tokens merely to open diagnostics | Implemented as Engine Replay Benchmark v1 |
+| D-137 | Treat a Less click as complete reduced-weight feedback, keep the selected control visibly highlighted, and offer reason codes only as an optional non-blocking refinement. Lay out source navigation and feedback as balanced primary actions with the optional reason panel on its own row | Implemented in AkuSidecar 0.6.1 |
 
 ## 16. Change Discipline
 

@@ -15,10 +15,11 @@ are canonicalized before fitting.
 ## Feedback semantics
 
 Every event records `origin` (`calibration` or `routine`) and a context id.
-Neutral is a real tie/regularization signal. Wrong-topic and wrong-priority Less
-events train preference. Ambiguous legacy Less events receive reduced weight.
-Reasons owned by continuity, deduplication, recency, or materiality do not train
-topic preference.
+Neutral is a real tie/regularization signal. A Less click is persisted
+immediately and its explanation is optional. Unreasoned Less receives reduced
+weight; an optional wrong-topic or wrong-priority reason refines it into full
+preference evidence. Reasons owned by continuity, deduplication, recency, or
+materiality do not train topic preference.
 
 ## Champion and challenger
 
@@ -47,4 +48,3 @@ available. Preference never hides, promotes, acquires, or changes budgets.
 - `GET /api/preferences/benchmark`
 - replay, experiment, and shadow-comparison diagnostics remain under
   `/api/preferences/*`.
-

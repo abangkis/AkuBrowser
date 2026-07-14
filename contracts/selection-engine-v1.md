@@ -51,5 +51,6 @@ code, and score; Preference Runtime cannot change eligibility.
 `duplicate`, `stale_or_superseded`, and `low_signal` are routed out of
 preference fitting and reported respectively to the continuity, deduplication,
 recency, and materiality diagnostic lanes. Those diagnostic routes do not yet
-change selection automatically. Legacy Less events without a reason retain
-half weight as ambiguous preference evidence.
+change selection automatically. A Less click is complete feedback by itself and
+retains half weight as ambiguous preference evidence. Supplying an optional
+reason refines the latest effective signal into the corresponding lane.
