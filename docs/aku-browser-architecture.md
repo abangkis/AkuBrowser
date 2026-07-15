@@ -201,7 +201,7 @@ third-source requirements are recorded in
 The current runtime baseline is AkuBridge 0.6.0 / source-fidelity-v47 with
 `x-dom-v16`, `linkedin-dom-v13`, `x-freshness-v1`,
 `linkedin-freshness-v2`, `x-media-recovery-v1`, and
-`linkedin-media-recovery-v1`, plus Go AkuSidecar 1.0.0-dev.3. Bridge v47 still
+`linkedin-media-recovery-v1`, plus Go AkuSidecar 1.0.0-dev.4. Bridge v47 still
 emits its detailed capture-quality evidence, while the fresh Go v1 boundary
 enforces only structural source/snapshot/evidence-key/coverage admission. The
 old Node report-consistency implementation is not a compatibility fallback.
@@ -988,6 +988,7 @@ remaining mixed with active rules.
 | D-151 | Replace AkuSidecar in place with a Go 1.21 runtime and treat `pre-refactor-2026-07-15` as the complete Node rollback boundary. Delete npm/Vite/SDK code, historical migrations, aliases, and backward compatibility. Use a managed Codex App Server by default and retain native `codex exec` only for transport conformance. Keep AkuSupervisor lifecycle ownership and exact cooperative AkuBridge reload validation | Initial Go cutover implemented; its mistaken calibration omission and original schema boundary are superseded by D-152 |
 | D-152 | Correct the Go cutover by restoring first-run calibration as an active product flow, not a legacy diagnostic. Schema v2 adds three calibration tables; onboarding starts one bounded acquisition, then forces pre-selection More/Neutral/Less decisions before Timeline access or another update. Calibration and routine feedback share the effective local preference signal boundary | Implemented in AkuSidecar 1.0.0-dev.2 after reset/onboarding validation exposed the missing port |
 | D-153 | Make first-run calibration a Sidecar-owned terminal invariant rather than a frontend callback. A completed or partial first update creates the forced calibration before another update can start; bootstrap repairs a persisted `pending` state from the latest eligible session. HTTP coverage must observe calibration without manually calling its creation endpoint | Implemented in AkuSidecar 1.0.0-dev.3 after a real Chrome run exposed the false-positive dev.2 test |
+| D-154 | Restore pre-reasoning snapshot reconciliation from the Node boundary. When bounded captures contain the same long-form source+author+text but only a later capture exposes a stable native ID or permalink, enrich every occurrence with the stable identity and collapse them to one evidence key. Preserve short generic entries as distinct to avoid unsafe fuzzy dedupe | Implemented in AkuSidecar 1.0.0-dev.4 after fresh onboarding exposed duplicate LinkedIn entries |
 
 ## 16. Change Discipline
 

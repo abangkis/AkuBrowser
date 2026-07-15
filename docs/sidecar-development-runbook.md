@@ -1,7 +1,7 @@
 # AkuSidecar Go Development Runbook
 
 > Last verified: **2026-07-15**
-> Active baseline: **AkuSidecar 1.0.0-dev.3, AkuBridge 0.6.0 / source-fidelity-v47, bridge v2**
+> Active baseline: **AkuSidecar 1.0.0-dev.4, AkuBridge 0.6.0 / source-fidelity-v47, bridge v2**
 
 ## Runtime boundary
 
@@ -74,7 +74,7 @@ cd C:\WorkspaceCodex\AkuWorkspace\AkuSidecar
    Invoke-RestMethod http://127.0.0.1:47821/api/health
    ```
 
-   Required values are `status=ok`, `version=1.0.0-dev.3`, `runtime=go`,
+   Required values are `status=ok`, `version=1.0.0-dev.4`, `runtime=go`,
    `provider=codex-app-server`, and
    `bridgeContractVersion=aku-browser.bridge.v2`.
 
