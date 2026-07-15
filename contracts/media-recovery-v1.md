@@ -1,8 +1,8 @@
 # Media Recovery v1
 
 > Status: **Implemented**
-> Date: **2026-07-14**
-> Runtime baseline: **AkuBridge 0.5.37 / source-fidelity-v39; AkuSidecar 0.5.21**
+> Date: **2026-07-15**
+> Runtime baseline: **AkuBridge 0.5.40 / source-fidelity-v42; AkuSidecar 0.6.6**
 
 ## Purpose
 
@@ -70,8 +70,10 @@ quality admission, persistence, or UI truthfulness.
 
 Current strategies are `x-media-recovery-v1` and
 `linkedin-media-recovery-v1`. X recognizes photo grids, video/interstitial
-roots, and link-card media. LinkedIn recognizes feed image, video, and document
-presentation roots.
+roots, status-photo permalink anchors, and link-card media. A status-photo
+anchor remains media-expectation evidence while its image is hydrating, so it
+cannot take the `not_applicable` branch. LinkedIn recognizes feed image, video,
+and document presentation roots.
 
 ## Outcomes and transport
 

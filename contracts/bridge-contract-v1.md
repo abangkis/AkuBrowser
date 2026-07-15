@@ -267,6 +267,11 @@ may remain as explicitly degraded textual evidence and Source layout must show
 the limitation plus the native-post link rather than an empty media shell. The
 normative lifecycle is [Media Recovery v1](media-recovery-v1.md).
 
+Source adapters may declare semantic media evidence that exists before a CDN
+asset hydrates. For X, an in-candidate status-photo permalink is such evidence.
+Once detected, the candidate may not report `not_applicable`; it must report
+`primary_complete`, `recovered`, or `unavailable` after the bounded lifecycle.
+
 AkuSidecar validates structure and report consistency before persistence. It
 admits `complete` and `usable_degraded` blocks, removes `invalid` blocks, and
 fails closed if every candidate is invalid or any report contradicts the

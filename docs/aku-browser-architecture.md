@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
 > Status: **Source-faithful capture, Settings-first operation, and supervised lifecycle implemented**
-> Version: **0.26**
+> Version: **0.27**
 > Last updated: **2026-07-15**
 > Working name: **AkuBrowser**
 
@@ -190,10 +190,10 @@ remains. A final `retryable` report cannot reach persistence or reasoning.
 The normative design, field profile, recovery budget, admission matrix, and
 third-source requirements are recorded in
 [`Source Adapter and Capture Quality Design`](source-adapter-quality-design.md).
-The current runtime baseline is AkuBridge 0.5.39 / source-fidelity-v41 with
-`x-dom-v15`, `linkedin-dom-v13`, `x-freshness-v1`,
+The current runtime baseline is AkuBridge 0.5.40 / source-fidelity-v42 with
+`x-dom-v16`, `linkedin-dom-v13`, `x-freshness-v1`,
 `linkedin-freshness-v2`, `x-media-recovery-v1`, and
-`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.5. The freshness seam is
+`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.6. The freshness seam is
 normatively defined in
 [`Source Freshness Recovery v1`](../contracts/source-freshness-recovery-v1.md),
 and bounded media fallback is defined in
@@ -919,6 +919,7 @@ remaining mixed with active rules.
 | D-139 | Introduce Quiet capture and Adaptive fidelity as user-visible capture authority ceilings. The engine may choose a less intrusive strategy within the selected ceiling but may not escalate Quiet capture into visible same-window activation. Keep platform knowledge in adapters and put focus/recovery orchestration in a generic runtime | Implemented and live-validated on X + LinkedIn in AkuBridge 0.5.38 / source-fidelity-v40 and AkuSidecar 0.6.4; Quiet is the default, Adaptive is opt-in, and coverage distinguishes managed-window success from same-window recovery |
 
 | D-140 | Give every Bridge-created capture surface a run/session lease and release it only at the terminal lifecycle boundary. Close the whole managed window only while every remaining tab is still provably Bridge-owned; preserve pre-existing, added, moved, or navigated user tabs and windows. Replay terminal release after UI reload for idempotent recovery | Implemented in AkuBridge 0.5.39 / source-fidelity-v41 and AkuSidecar 0.6.5; unit coverage proves full owned-window cleanup, user-tab preservation, and stale-lease rejection |
+| D-141 | Treat an X status-photo permalink as source-specific evidence that media is expected, even while its nested CDN image is not yet hydrated. Feed that signal into the shared visual-hydration and media-recovery lifecycle so the final outcome is `primary_complete`, `recovered`, or `unavailable`, never a false `not_applicable`. Keep the semantic selector in the X adapter and all retry, allowlist, admission, and truthful-degradation policy generic | Implemented in AkuBridge 0.5.40 / source-fidelity-v42 (`x-dom-v16`) and AkuSidecar 0.6.6 after tracing a text-only World and Science result whose source photo was silently classified as absent |
 
 ## 16. Change Discipline
 

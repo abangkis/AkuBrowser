@@ -1,8 +1,8 @@
 # Source Adapter and Capture Quality Architecture
 
 > Status: **Implemented and enforced**
-> Date: **2026-07-14**
-> Runtime baseline: **AkuBridge 0.5.39 / source-fidelity-v41; AkuSidecar 0.6.5**
+> Date: **2026-07-15**
+> Runtime baseline: **AkuBridge 0.5.40 / source-fidelity-v42; AkuSidecar 0.6.6**
 > Scope: **AkuBridge source parsers, generic capture-quality evaluation, bounded recovery, and AkuSidecar admission**
 
 ## 1. Purpose
@@ -53,7 +53,7 @@ flowchart LR
 
 The adapter registry requires every adapter to declare a parser version,
 `qualityProfile`, `qualitySelectors`, freshness strategy, and media-recovery
-strategy. Current versions are `x-dom-v15` and `linkedin-dom-v13`, both using
+strategy. Current versions are `x-dom-v16` and `linkedin-dom-v13`, both using
 `social-post-v1`. Freshness is documented in
 `../contracts/source-freshness-recovery-v1.md`; media fallback is documented in
 `../contracts/media-recovery-v1.md`. Neither changes the quality evaluator's
@@ -147,6 +147,13 @@ Media outcomes are recorded per block and in coverage as `not_applicable`,
 usable-degraded only when the rest of the candidate is trustworthy; Source
 layout states the limitation and links to the native post.
 
+For X, a status-photo permalink (`/status/.../photo/...`) is a semantic media
+root even before its nested `pbs.twimg.com` image becomes usable. The X adapter
+owns that source-specific signal. The shared readiness and recovery layers use
+the adapter-declared media selector, so this shape cannot be mislabeled as
+`not_applicable`: it must complete normally, recover within the single bounded
+attempt, or end as explicit `unavailable` degraded evidence.
+
 X still receives its bounded active-tab visual-hydration wait. If the semantic
 feed is ready but one visual root remains unhydrated at that deadline, readiness
 continues into capture and lets this candidate policy decide retry/degrade. A
@@ -225,8 +232,8 @@ Any change to an adapter, field profile, or admission rule must pass:
 - live signed-in X and LinkedIn capture validation after cooperative Bridge
   reload, including one real reasoning invocation.
 
-The current runtime advertises `aku-bridge-0.5.39-source-fidelity-v41`,
-`x-dom-v15`, `linkedin-dom-v13`, `report_capture_quality`,
+The current runtime advertises `aku-bridge-0.5.40-source-fidelity-v42`,
+`x-dom-v16`, `linkedin-dom-v13`, `report_capture_quality`,
 `recover_missing_media`, `probe_freshness`, and `recover_source_freshness`.
 
 ## 10. Live acceptance evidence
