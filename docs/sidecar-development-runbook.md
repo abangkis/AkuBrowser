@@ -30,14 +30,18 @@ The binary and runtime directory are ignored by Git.
 ## Preferred startup
 
 AkuSupervisor remains the visible lifecycle owner. Its checked-in profile
-starts `runtime\dev\aku-watch.exe`. The watcher builds the Sidecar, serves it
-on `127.0.0.1:47821`, and defers a source-triggered restart until
-`/api/sessions/active` reports no active session.
+starts `runtime\dev\aku-sidecar.exe` directly with the strict configuration and
+`--dev`. No component-level watcher or hidden replacement process remains.
 
 ```powershell
-cd C:\WorkspaceCodex\AkuWorkspace\AkuSupervisor
-.\scripts\dev.ps1 akusidecar
+cd C:\WorkspaceCodex\AkuWorkspace\AkuSidecar
+.\scripts\restart-dev.ps1
 ```
+
+The explicit command builds `aku-sidecar.next.exe` first. It refuses to
+interrupt an active session, asks AkuSupervisor to stop the registered service,
+promotes the candidate to `aku-sidecar.exe`, and asks AkuSupervisor to start it
+again. `npm run dev` from AkuBrowser invokes the same workflow.
 
 The exact operational rule is:
 
@@ -52,7 +56,8 @@ Direct component startup is reserved for isolated diagnostics:
 
 ```powershell
 cd C:\WorkspaceCodex\AkuWorkspace\AkuSidecar
-.\runtime\dev\aku-watch.exe
+.\scripts\build-dev.ps1
+.\runtime\dev\aku-sidecar.exe --config .\config\sidecar.json --dev
 ```
 
 ## Verification

@@ -85,8 +85,12 @@ for (const schema of ["acquisition-plan.schema.json", "reasoning-result.schema.j
 }
 
 const supervised = supervisorProfile.services.akusidecar;
-assert.equal(supervised.command, "C:\\WorkspaceCodex\\AkuWorkspace\\AkuSidecar\\runtime\\dev\\aku-watch.exe");
-assert.deepEqual(supervised.args, []);
+assert.equal(supervised.command, "C:\\WorkspaceCodex\\AkuWorkspace\\AkuSidecar\\runtime\\dev\\aku-sidecar.exe");
+assert.deepEqual(supervised.args, [
+  "--config",
+  "C:\\WorkspaceCodex\\AkuWorkspace\\AkuSidecar\\config\\sidecar.json",
+  "--dev",
+]);
 assert.deepEqual(supervised.health.expect, {
   status: "ok",
   version: "1.0.0-dev.1",
