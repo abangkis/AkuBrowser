@@ -26,6 +26,9 @@ The token is generated and persisted by AkuSidecar. All bridge command endpoints
 - `AKU_BROWSER_BRIDGE_READY`
 - `AKU_BROWSER_DISPATCH`
 - `AKU_BROWSER_BRIDGE_RELOAD_SELF`
+- `AKU_BROWSER_RELEASE_CAPTURE_SURFACE`
+- `AKU_BROWSER_CAPTURE_SURFACE_RELEASED`
+- `AKU_BROWSER_CAPTURE_SURFACE_RELEASE_FAILED`
 - `AKU_BROWSER_BRIDGE_ERROR`
 
 ## Extension message type
@@ -35,6 +38,7 @@ The token is generated and persisted by AkuSidecar. All bridge command endpoints
 - `AKU_BROWSER_CAPTURE_DIAGNOSTICS`
 - `AKU_BROWSER_CAPTURE_DELAY`
 - `AKU_BRIDGE_RELOAD_SELF`
+- `AKU_BRIDGE_RELEASE_CAPTURE_SURFACE`
 
 The readiness, diagnostics, and delay messages are extension-internal. Capture
 diagnostics expose only bounded stage/revision/count metadata. Capture delay is
@@ -114,6 +118,7 @@ The `collect_visible` command may carry a bounded native-capture plan:
 - `restoreScroll: true`; and
 - `browserAdapter: "aku-bridge"`.
 - `openIfMissing`, controlled by the Sidecar's `open_missing_tab` or `fail_fast` policy.
+- `captureLeaseId`, set to the standalone run ID or shared unified-session ID.
 
 AkuBridge captures before moving, performs only native DOM scrolling, stops when the budget/deadline/no-movement condition is reached, and attempts to restore the original position in a `finally` path. The global advertised block ceiling is 20; LinkedIn currently applies a stricter runtime ceiling of eight blocks per snapshot. Browser focus, clicking, engagement, and account mutation remain outside the contract.
 
@@ -274,6 +279,17 @@ receive only admitted evidence.
 ## Managed source-tab lifecycle
 
 The command may carry a bounded `tabLifecycle` policy. Existing user tabs always have `shared` ownership and are preserved. A canonical source tab opened by AkuBridge is reported as `managed`; its default disposition is still `preserve`. The optional `close_after_capture` disposition may close only a tab opened by the same initial acquisition and only after a successful capture. It cannot close a pre-existing user tab or a tab needed for a frontier-anchored follow-up.
+
+Quiet capture additionally binds its dedicated window and canonical feed tabs
+to `captureLeaseId`. Both source children and any follow-up in one unified
+session share that lease. AkuBrowser requests release only after the standalone
+run or unified session becomes terminal and repeats the latest terminal release
+after reload. AkuBridge closes the complete managed window only when every
+remaining tab still has a recorded owned ID and canonical source URL. If any
+unrecorded tab exists, or an owned tab was moved or navigated, the window is
+preserved and only still-provable Bridge-owned tabs are closed. A mismatched
+lease is rejected so delayed cleanup cannot close a newer session's surface.
+Pre-existing working tabs/windows never enter the managed ownership record.
 
 ## Source-adapter conformance
 

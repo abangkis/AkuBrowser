@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
 > Status: **Source-faithful capture, Settings-first operation, and supervised lifecycle implemented**
-> Version: **0.25**
+> Version: **0.26**
 > Last updated: **2026-07-15**
 > Working name: **AkuBrowser**
 
@@ -190,10 +190,10 @@ remains. A final `retryable` report cannot reach persistence or reasoning.
 The normative design, field profile, recovery budget, admission matrix, and
 third-source requirements are recorded in
 [`Source Adapter and Capture Quality Design`](source-adapter-quality-design.md).
-The current runtime baseline is AkuBridge 0.5.38 / source-fidelity-v40 with
+The current runtime baseline is AkuBridge 0.5.39 / source-fidelity-v41 with
 `x-dom-v15`, `linkedin-dom-v13`, `x-freshness-v1`,
 `linkedin-freshness-v2`, `x-media-recovery-v1`, and
-`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.4. The freshness seam is
+`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.5. The freshness seam is
 normatively defined in
 [`Source Freshness Recovery v1`](../contracts/source-freshness-recovery-v1.md),
 and bounded media fallback is defined in
@@ -362,6 +362,17 @@ The implemented design has two user-facing policies:
    runtime tries the quiet path first. Only when adapter-declared freshness or
    generic quality evaluation proves that visual hydration/recovery is needed
    may it use today's bounded activate/capture/restore behavior.
+
+The managed surface has an explicit ownership lease, separate from source
+parsing. Standalone captures lease it to the run; sequential X and LinkedIn
+children lease it to their unified session. The AkuBrowser UI requests release
+only when that lease is terminal and repeats the latest terminal release after
+reload, making cleanup idempotent. AkuBridge may close the complete window only
+when all remaining tabs still match the recorded Bridge-created canonical tab
+IDs and URLs. Any unrecorded, moved, or navigated tab is treated as user-owned:
+Bridge preserves that tab and its window and closes only still-provable owned
+tabs. Existing working tabs and windows are never adopted into this cleanup
+lease.
 
 The user setting owns the maximum visual authority. The engine may choose a
 less intrusive strategy inside that ceiling, but it may never promote Quiet
@@ -906,6 +917,8 @@ remaining mixed with active rules.
 | D-137 | Treat a Less click as complete reduced-weight feedback, keep the selected control visibly highlighted, and offer reason codes only as an optional non-blocking refinement. Lay out source navigation and feedback as balanced primary actions with the optional reason panel on its own row | Implemented in AkuSidecar 0.6.1 |
 | D-138 | Do not run AkuSidecar's Codex-backed development service under an in-process Node file watcher. Keep Vite HMR for UI assets, restart backend changes explicitly through AkuSupervisor, and recover transient status-poll interruptions against the same persisted session. Recovery controls must never create a replacement run implicitly | Implemented in AkuSidecar 0.6.3 after a first post-onboarding check was interrupted during reasoning |
 | D-139 | Introduce Quiet capture and Adaptive fidelity as user-visible capture authority ceilings. The engine may choose a less intrusive strategy within the selected ceiling but may not escalate Quiet capture into visible same-window activation. Keep platform knowledge in adapters and put focus/recovery orchestration in a generic runtime | Implemented and live-validated on X + LinkedIn in AkuBridge 0.5.38 / source-fidelity-v40 and AkuSidecar 0.6.4; Quiet is the default, Adaptive is opt-in, and coverage distinguishes managed-window success from same-window recovery |
+
+| D-140 | Give every Bridge-created capture surface a run/session lease and release it only at the terminal lifecycle boundary. Close the whole managed window only while every remaining tab is still provably Bridge-owned; preserve pre-existing, added, moved, or navigated user tabs and windows. Replay terminal release after UI reload for idempotent recovery | Implemented in AkuBridge 0.5.39 / source-fidelity-v41 and AkuSidecar 0.6.5; unit coverage proves full owned-window cleanup, user-tab preservation, and stale-lease rejection |
 
 ## 16. Change Discipline
 
