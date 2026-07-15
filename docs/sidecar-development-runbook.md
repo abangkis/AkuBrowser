@@ -98,10 +98,14 @@ guarantees that now exist.
 
 4. Run or observe one bounded update. Do not declare startup successful until the newest `reasoning_invocations` row advances beyond immediate `spawn EPERM` failure. A healthy provider invocation takes materially longer than a 3-10 ms spawn failure and ultimately records token usage or a provider-level error.
 
-5. If the server was restarted while a Chrome tab was open, confirm the tab
-   reports both `AkuSidecar ready` and `AkuBridge ready` before starting a run.
-   When AkuBridge source changed, use `aku-supervisor bridge validate` rather
-   than Chrome control after the one-time extension bootstrap.
+5. If the server was restarted while a Chrome tab was open, confirm `/api/health`
+   returns a new `instanceEpoch` and the existing tab automatically returns to
+   both `AkuSidecar ready` and `AkuBridge ready`. Ordinary API polling carries
+   the epoch header, so a completed onboarding tab should re-handshake without
+   a manual reload. Check for updates performs one additional bounded handshake
+   before creating work. When AkuBridge source changed, use
+   `aku-supervisor bridge validate` rather than Chrome control after the
+   one-time extension bootstrap.
 
 ## Recovery from `spawn EPERM`
 

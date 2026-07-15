@@ -115,6 +115,14 @@ that budget is exhausted, the failure action is explicitly `Reconnect to
 session`; terminal source or reasoning failures instead offer `Return to
 timeline`. Neither action creates a replacement session implicitly.
 
+Process health and capture readiness remain layered. Each Sidecar process owns
+one ephemeral `instanceEpoch`; the pinned tab uses an epoch change to discard
+its previous Bridge-ready UI state and perform a fresh capability handshake.
+Before every new run, the tab disables update controls and spends one bounded
+three-second readiness window. Sidecar continues to fail closed when the
+current process has no compatible heartbeat. AkuSupervisor therefore remains a
+generic lifecycle owner rather than acquiring a hidden dependency on Chrome.
+
 ## 5. Logical Architecture
 
 ```mermaid
@@ -190,10 +198,10 @@ remains. A final `retryable` report cannot reach persistence or reasoning.
 The normative design, field profile, recovery budget, admission matrix, and
 third-source requirements are recorded in
 [`Source Adapter and Capture Quality Design`](source-adapter-quality-design.md).
-The current runtime baseline is AkuBridge 0.5.40 / source-fidelity-v42 with
+The current runtime baseline is AkuBridge 0.5.41 / source-fidelity-v43 with
 `x-dom-v16`, `linkedin-dom-v13`, `x-freshness-v1`,
 `linkedin-freshness-v2`, `x-media-recovery-v1`, and
-`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.7. The freshness seam is
+`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.9. The freshness seam is
 normatively defined in
 [`Source Freshness Recovery v1`](../contracts/source-freshness-recovery-v1.md),
 and bounded media fallback is defined in
@@ -929,6 +937,8 @@ remaining mixed with active rules.
 | D-140 | Give every Bridge-created capture surface a run/session lease and release it only at the terminal lifecycle boundary. Close the whole managed window only while every remaining tab is still provably Bridge-owned; preserve pre-existing, added, moved, or navigated user tabs and windows. Replay terminal release after UI reload for idempotent recovery | Implemented in AkuBridge 0.5.39 / source-fidelity-v41 and AkuSidecar 0.6.5; unit coverage proves full owned-window cleanup, user-tab preservation, and stale-lease rejection |
 | D-141 | Treat an X status-photo permalink as source-specific evidence that media is expected, even while its nested CDN image is not yet hydrated. Feed that signal into the shared visual-hydration and media-recovery lifecycle so the final outcome is `primary_complete`, `recovered`, or `unavailable`, never a false `not_applicable`. Keep the semantic selector in the X adapter and all retry, allowlist, admission, and truthful-degradation policy generic | Implemented in AkuBridge 0.5.40 / source-fidelity-v42 (`x-dom-v16`) and AkuSidecar 0.6.6 after tracing a text-only World and Science result whose source photo was silently classified as absent |
 | D-142 | Expose `Reset learning` and `Full reset and onboard again` in Settings. Require an operation-specific typed phrase after the initiating click, reject both while work is active, keep learning reset scoped to learning state, and make full reset verified-backup-first while preserving the live Bridge identity and routing directly to onboarding | Implemented in AkuSidecar 0.6.7 with HTTP, SQLite, and frontend contract coverage |
+| D-143 | Separate presentation warnings from evidence and identity failures in generic capture quality. Unhydrated avatars remain observable without retry or degradation; detected missing media retains evidence-level recovery. Give every quality report a provisional candidate key, record bounded media-recovery stages, and skip provider acquisition planning when sparse admitted evidence is already complete | Implemented in AkuBridge 0.5.41 / source-fidelity-v43 and AkuSidecar 0.6.8 |
+| D-144 | Preserve foreground AkuSupervisor Ctrl+C/quit cleanup. Add an ephemeral Sidecar `instanceEpoch`, fresh pre-run Bridge handshake, bounded reconnecting state, and separate `bridge_reconnecting` versus `bridge_incompatible` admission categories so development handoff recovers without reusing stale readiness | Implemented in AkuSidecar 0.6.9; no Supervisor ownership expansion |
 
 ## 16. Change Discipline
 

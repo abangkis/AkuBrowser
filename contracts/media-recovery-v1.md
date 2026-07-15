@@ -2,7 +2,7 @@
 
 > Status: **Implemented**
 > Date: **2026-07-15**
-> Runtime baseline: **AkuBridge 0.5.40 / source-fidelity-v42; AkuSidecar 0.6.7**
+> Runtime baseline: **AkuBridge 0.5.41 / source-fidelity-v43; AkuSidecar 0.6.9**
 
 ## Purpose
 
@@ -91,6 +91,12 @@ positive `recoveredCount`, and one attempt. `unavailable` carries a bounded
 limitation string and must correspond to a media quality issue. An observation
 also reports aggregate `coverage.mediaRecovery`; `fallbackUsed` is true exactly
 when at least one block used a recovery path successfully.
+
+Every block also records a bounded stage trace covering primary extraction,
+root detection, primary hydration, adapter alternate-DOM extraction, recovery
+budget availability, and deadline exhaustion. Coverage publishes the matching
+`stageCounts`. These are structural diagnostics only and contain no captured
+post text or URL.
 
 AkuSidecar rejects contradictory states such as `recovered` with empty media,
 `unavailable` with a media value, aggregate count mismatch, or `fallbackUsed`

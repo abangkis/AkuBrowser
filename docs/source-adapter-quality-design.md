@@ -2,7 +2,7 @@
 
 > Status: **Implemented and enforced**
 > Date: **2026-07-15**
-> Runtime baseline: **AkuBridge 0.5.40 / source-fidelity-v42; AkuSidecar 0.6.7**
+> Runtime baseline: **AkuBridge 0.5.41 / source-fidelity-v43; AkuSidecar 0.6.9**
 > Scope: **AkuBridge source parsers, generic capture-quality evaluation, bounded recovery, and AkuSidecar admission**
 
 ## 1. Purpose
@@ -70,7 +70,7 @@ the profile but cannot weaken it or broaden security allowlists.
 | `author` | Required |
 | `platformId`, native `permalink`, or stable text identity | At least one required |
 | `media` | Conditional when a source media root is detected |
-| `avatarUrl` | Conditional when a primary-author avatar root is detected |
+| `avatarUrl` | Conditional presentation field; missing hydration is recorded but does not degrade evidence or consume retry budget |
 | `publishedAt` | Optional; checked when a timestamp signal exists, except explicitly not-exposed promoted content |
 | engagement, links, relationship, presentation metadata | Optional under this profile |
 
@@ -97,6 +97,7 @@ The current evaluator emits candidate reports of this shape:
 ```json
 {
   "profile": "social-post-v1",
+  "candidateKey": "x:status:123",
   "verdict": "usable_degraded",
   "score": 0.8,
   "attempt": 1,
@@ -107,6 +108,7 @@ The current evaluator emits candidate reports of this shape:
       "observedState": "pending_hydration",
       "severity": "high",
       "recoverable": true,
+      "impact": "evidence",
       "attempt": 1
     }
   ]
@@ -122,6 +124,18 @@ are authoritative:
 - `retryable`: a recoverable issue remains and the pre-authorized local retry
   budget is not exhausted; and
 - `invalid`: required evidence or identity is unusable.
+
+Every issue also declares `impact`: `identity`, `evidence`, or
+`presentation`. Presentation-only warnings, currently an unhydrated author
+avatar, may coexist with a `complete` verdict. They remain inspectable through
+issue counts and `qualityAdmission.presentationWarningCount`, but do not
+trigger retry or source-wide degradation. Missing detected media remains an
+evidence-impact issue and therefore retains the retry/degrade lifecycle.
+
+`candidateKey` is always populated by AkuBridge. It prefers platform identity
+or a native permalink, then a stable text fingerprint, and finally a bounded
+snapshot/container key. Invalid shells that never become admitted blocks are
+therefore still traceable in snapshot quality diagnostics.
 
 ## 5. Bounded recovery
 
@@ -146,6 +160,9 @@ Media outcomes are recorded per block and in coverage as `not_applicable`,
 `primary_complete`, `recovered`, or `unavailable`. Exhausted media remains
 usable-degraded only when the rest of the candidate is trustworthy; Source
 layout states the limitation and links to the native post.
+Each media audit carries a finite `trace`, and coverage aggregates
+`stageCounts`, distinguishing primary absence, detected roots, hydration,
+adapter alternate-DOM extraction, unavailable budget, and deadline exhaustion.
 
 For X, a status-photo permalink (`/status/.../photo/...`) is a semantic media
 root even before its nested `pbs.twimg.com` image becomes usable. The X adapter
@@ -171,7 +188,7 @@ fails closed when:
 
 - a required report or summary is absent;
 - report counts, profiles, verdict totals, or retry totals disagree;
-- a `complete` report contains issues;
+- a `complete` report contains any identity/evidence-impact issue;
 - an `invalid` report has no critical issue;
 - a `retryable` report has no recoverable issue or crosses the final boundary;
 - a reported missing author is omitted; or
@@ -195,6 +212,12 @@ Each block carries `captureQuality` and `mediaRecovery`; every snapshot carries
 and the aggregate capture-quality verdict is complete. Diagnostics retain
 field coverage and DOM signatures without exposing captured post content in
 the health endpoint.
+
+The deterministic acquisition planner receives only admitted blocks. A sparse
+sample whose admitted candidates are complete does not spend provider tokens
+merely because rejected shells or presentation warnings exist. A substantive
+evidence limitation, such as unavailable detected media, may still justify the
+single policy-bounded follow-up.
 
 Bridge capabilities `report_capture_quality` and `recover_missing_media` are required by AkuSidecar. The
 Sidecar rejects an older Bridge runtime, parser version, or capability set
@@ -232,7 +255,7 @@ Any change to an adapter, field profile, or admission rule must pass:
 - live signed-in X and LinkedIn capture validation after cooperative Bridge
   reload, including one real reasoning invocation.
 
-The current runtime advertises `aku-bridge-0.5.40-source-fidelity-v42`,
+The current runtime advertises `aku-bridge-0.5.41-source-fidelity-v43`,
 `x-dom-v16`, `linkedin-dom-v13`, `report_capture_quality`,
 `recover_missing_media`, `probe_freshness`, and `recover_source_freshness`.
 

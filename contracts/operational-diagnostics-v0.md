@@ -27,3 +27,10 @@ AkuBridge package/manifest identity, a Bridge version at or above Sidecar's
 minimum, the exact declared runtime revision and adapter versions, and every
 required capability action. AkuBrowser, AkuSidecar, and AkuBridge package
 versions are intentionally independent.
+
+AkuSidecar diagnostics also expose the current non-secret `instanceEpoch` and
+the epoch associated with the accepted heartbeat. `unavailable` after a
+Sidecar restart is a readiness state, not evidence that the extension needs an
+update. A present heartbeat that fails the compatibility tuple is reported
+separately as incompatible. Persisted or last-known heartbeat data may be shown
+for historical diagnosis but must never authorize a new run.

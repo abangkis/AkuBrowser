@@ -58,6 +58,35 @@ in a long-backgrounded source tab.
 
 The handshake is diagnostic metadata. It does not grant new browser authority, contain DOM or account data, or replace server-side contract validation. Older AkuBrowser clients may ignore it. The extension also accepts the internal `AKU_BRIDGE_GET_CAPABILITIES` message from its local tab bridge.
 
+## Sidecar instance epoch and readiness recovery
+
+AkuSidecar creates one opaque, non-persisted `instanceEpoch` per process
+lifetime and returns it from health, bootstrap, heartbeat acknowledgement,
+Bridge diagnostics, and the `X-Aku-Sidecar-Instance-Epoch` response header on
+every API response. This lets an existing tab detect process replacement on
+its ordinary session polling path rather than waiting for a periodic Bridge
+ping. The epoch is not an authentication secret and does not
+replace the persisted Bridge token. Its only authority is freshness: a Bridge
+heartbeat recorded by one Sidecar process cannot authorize capture after that
+process has been replaced.
+
+The AkuBrowser tab must request a new capability handshake before every new
+run. When the Sidecar epoch changes, or after a bounded Sidecar reconnect, it
+must first set Bridge readiness to false, disable new-run controls, and publish
+the resulting heartbeat to the current Sidecar. The normal readiness window is
+three seconds. Expiry leaves the run uncreated and does not reuse prior UI
+state.
+
+Admission failures distinguish these cases:
+
+- `bridge_reconnecting`: no heartbeat exists in the current epoch; retryable
+  only inside the bounded UI readiness flow; and
+- `bridge_incompatible`: a heartbeat exists but its version, runtime revision,
+  adapter versions, build identity, or actions fail the declared requirements.
+
+Sidecar HTTP health deliberately does not require Bridge readiness. Lifecycle
+health and capture-integration readiness are separate contracts.
+
 ## Cooperative self-reload
 
 `reload_self` is the only operational extension mutation exposed to
@@ -241,8 +270,10 @@ not-exposed.
 
 Every evaluated candidate produces a report containing `profile`, categorical
 `verdict`, diagnostic `score`, retry `attempt`, and bounded `issues`. An issue
-contains `field`, stable `code`, `observedState`, `severity`, `recoverable`, and
-`attempt`. Verdicts are `complete`, `usable_degraded`, `retryable`, or
+contains `field`, stable `code`, `observedState`, `severity`, `recoverable`,
+`impact`, and `attempt`. Impact is `identity`, `evidence`, or `presentation`.
+Presentation-only avatar hydration warnings remain visible but neither consume
+retry budget nor degrade an otherwise complete candidate. Verdicts are `complete`, `usable_degraded`, `retryable`, or
 `invalid`. The numeric score is never the sole admission authority.
 
 Each block carries its final `captureQuality`; each snapshot carries all
@@ -257,9 +288,14 @@ viewport, and command deadline. The retry cannot add scrolling, navigation,
 reveal actions, tab recovery, or command time. A final observation must not
 contain `retryable`.
 
+Every report has a bounded `candidateKey`: platform identity or native
+permalink when available, otherwise a stable text fingerprint, and finally a
+snapshot-local DOM key. Rejected candidates therefore remain diagnosable even
+when they cannot produce an admitted evidence key.
+
 Every transported block carries `mediaRecovery` with policy/strategy versions,
-outcome, attempt count, recovery method, recovered count, and an optional
-limitation. Outcomes are `not_applicable`, `primary_complete`, `recovered`, and
+outcome, attempt count, recovery method, recovered count, a finite extraction
+`trace`, and an optional limitation. Outcomes are `not_applicable`, `primary_complete`, `recovered`, and
 `unavailable`. Coverage aggregates these outcomes in `mediaRecovery` and sets
 `fallbackUsed` exactly when at least one candidate was recovered. AkuSidecar
 rejects contradictory block/summary/fallback states. An unavailable media root
@@ -278,6 +314,10 @@ fails closed if every candidate is invalid or any report contradicts the
 observation. Coverage adds `qualityAdmission` with admitted, degraded,
 rejected, retry, and issue totals. Acquisition planning and final reasoning
 receive only admitted evidence.
+
+Under deterministic sparse-gap planning, a sparse set of complete admitted
+blocks terminates without provider planning. Presentation warnings and rejected
+shells alone cannot justify a follow-up; an evidence-impact gap may.
 
 `sourceEvents` is a bounded list of passive states such as `source_new_content_available`, `source_session_expired`, `source_feed_unavailable`, or `source_layout_changed`. Reporting an event never authorizes background monitoring, notification, engagement, or account mutation.
 

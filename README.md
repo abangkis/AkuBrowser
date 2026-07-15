@@ -43,8 +43,10 @@ cd ..\AkuSupervisor
 
 Open `http://127.0.0.1:47821`. Configure provider, models, efforts, timeout,
 sources, and capture budgets in AkuBrowser Settings; do not set
-`AKU_REASONING_PROVIDER` for normal startup. Vite provides frontend HMR while
-Node automatically restarts backend changes inside the supervised process tree.
+`AKU_REASONING_PROVIDER` for normal startup. Vite provides frontend HMR.
+Backend modules are intentionally not file-watched; restart AkuSidecar
+explicitly through AkuSupervisor after a backend change so persisted work is
+not interrupted by incidental filesystem activity.
 `npm run dev` remains an integration convenience that delegates directly to
 AkuSidecar, but it is not the preferred full-workspace lifecycle path.
 
@@ -70,7 +72,16 @@ AkuSupervisor:
 Use the promoted stable binary path instead of `target\dev` outside active
 Supervisor development.
 
-The bridge diagnostics endpoint is `GET /api/operations/bridge/health`. AkuBrowser posts a bounded capability heartbeat when the extension announces readiness. The heartbeat is held in memory only; the report exposes adapter strategy, field coverage, frontier, source-event counts, lifecycle, and restoration outcomes without raw post text, authors, URLs, cookies, or tokens. `unavailable` means no current browser heartbeat and is reported as a Doctor warning rather than a process failure.
+The bridge diagnostics endpoint is `GET /api/operations/bridge/health`.
+AkuBrowser posts a bounded capability heartbeat when the extension announces
+readiness. The heartbeat is held in memory only and is associated with the
+current Sidecar `instanceEpoch`. After a restart, the existing AkuBrowser tab
+discards its prior Bridge-ready state and performs a fresh bounded handshake;
+new runs never reuse readiness from the replaced process. The report exposes
+adapter strategy, field coverage, frontier, source-event counts, lifecycle,
+and restoration outcomes without raw post text, authors, URLs, cookies, or
+tokens. `unavailable` means no current-process browser heartbeat and is a
+Doctor warning rather than a process failure.
 
 Gate 0B.3 lets a ReasoningProvider either finish after the initial bounded capture or request one deterministic, same-source, frontier-anchored follow-up. JobEngine—not the provider—owns the allowed action, position, scroll budget, and round limit.
 
