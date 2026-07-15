@@ -2,7 +2,7 @@
 
 > Status: **AkuBridge v47 implemented; Go-side admission reset to the fresh v1 structural boundary**
 > Date: **2026-07-15**
-> Runtime baseline: **AkuBridge 0.6.0 / source-fidelity-v47; AkuSidecar 1.0.0-dev.1**
+> Runtime baseline: **AkuBridge 0.6.0 / source-fidelity-v47; AkuSidecar 1.0.0-dev.2**
 > Scope: **AkuBridge source parsers, generic capture-quality evaluation, bounded recovery, and AkuSidecar admission**
 
 The detailed Node-side report-consistency and migration behavior described

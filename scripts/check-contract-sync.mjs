@@ -34,7 +34,7 @@ const bridgeCapabilities = text(path.join(bridgeRoot, "bridge-capabilities.js"))
 const bridgeRelay = text(path.join(bridgeRoot, "aku-browser-tab-bridge.js"));
 const activeContract = text(path.join(browserRoot, "contracts", "bridge-contract-v2.md"));
 
-for (const value of ["1.0.0-dev.1", "aku-browser.bridge.v2"]) assert.match(domain, literal(value));
+for (const value of ["1.0.0-dev.2", "aku-browser.bridge.v2"]) assert.match(domain, literal(value));
 for (const value of ["0.6.0", "source-fidelity-v47"]) assert.match(engine, literal(value));
 assert.match(reload, literal("aku-bridge-0.6.0-source-fidelity-v47"));
 
@@ -64,6 +64,23 @@ for (const value of [
 ]) assert.match(http, literal(value));
 
 for (const value of [
+  "/api/calibration/active",
+  "/api/calibration/sessions",
+  "StartCalibration",
+  "DecideCalibration",
+]) assert.match(http + engine, literal(value));
+
+for (const value of [
+  "startPendingFirstCalibration",
+  "showCalibration",
+  "decideCalibration",
+  "calibration-panel",
+  "more_like_this",
+  "neutral",
+  "less_like_this",
+]) assert.match(ui + text(path.join(sidecarRoot, "internal", "httpapi", "web", "index.html")), literal(value));
+
+for (const value of [
   "AKU_BROWSER_BRIDGE_PING",
   "AKU_BROWSER_BRIDGE_READY",
   "AKU_BROWSER_DISPATCH",
@@ -76,7 +93,13 @@ for (const value of ["aku-browser.bridge.v2", "source-fidelity-v47"]) {
   assert.match(activeContract, literal(value));
 }
 
-for (const schema of ["acquisition-plan.schema.json", "reasoning-result.schema.json"]) {
+for (const schema of [
+  "acquisition-plan.schema.json",
+  "reasoning-result.schema.json",
+  "calibration-session.schema.json",
+  "calibration-label.schema.json",
+  "calibration-profile-snapshot.schema.json",
+]) {
   assert.equal(
     digest(path.join(browserRoot, "contracts", schema)),
     digest(path.join(sidecarRoot, "schemas", schema)),
@@ -93,7 +116,7 @@ assert.deepEqual(supervised.args, [
 ]);
 assert.deepEqual(supervised.health.expect, {
   status: "ok",
-  version: "1.0.0-dev.1",
+  version: "1.0.0-dev.2",
   runtime: "go",
   bridgeContractVersion: "aku-browser.bridge.v2",
   provider: "codex-app-server",
@@ -105,7 +128,7 @@ console.log(JSON.stringify({
   AkuBrowser: browserPackage.version,
   AkuBridge: bridgePackage.version,
   AkuBridgeRuntime: bridgePackage.akuRuntimeRevision,
-  AkuSidecar: "1.0.0-dev.1",
+  AkuSidecar: "1.0.0-dev.2",
   bridgeContract: "aku-browser.bridge.v2",
   provider: sidecarConfig.reasoning.provider,
 }, null, 2));

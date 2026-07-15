@@ -14,7 +14,7 @@ const checks = [];
 add("component_identities",
   /^\d+\.\d+\.\d+$/.test(browserPackage.version) &&
   bridgePackage.version === bridgeManifest.version &&
-  sidecarVersion === "1.0.0-dev.1", {
+  sidecarVersion === "1.0.0-dev.2", {
     AkuBrowser: browserPackage.version,
     AkuBridge: bridgePackage.version,
     AkuBridgeManifest: bridgeManifest.version,

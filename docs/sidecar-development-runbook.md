@@ -1,13 +1,13 @@
 # AkuSidecar Go Development Runbook
 
 > Last verified: **2026-07-15**
-> Active baseline: **AkuSidecar 1.0.0-dev.1, AkuBridge 0.6.0 / source-fidelity-v47, bridge v2**
+> Active baseline: **AkuSidecar 1.0.0-dev.2, AkuBridge 0.6.0 / source-fidelity-v47, bridge v2**
 
 ## Runtime boundary
 
 AkuSidecar is now an in-place Go rewrite. The Node/npm/Vite runtime and its
 SQLite migrations ended at `pre-refactor-2026-07-15`; they are not fallback
-paths. The current process embeds the UI, owns one fresh twelve-table SQLite
+paths. The current process embeds the UI, owns one fresh fifteen-table SQLite
 schema, and uses a strict JSON configuration without legacy environment aliases.
 
 The default reasoning transport is `codex-app-server`: Go owns one official
@@ -74,7 +74,7 @@ cd C:\WorkspaceCodex\AkuWorkspace\AkuSidecar
    Invoke-RestMethod http://127.0.0.1:47821/api/health
    ```
 
-   Required values are `status=ok`, `version=1.0.0-dev.1`, `runtime=go`,
+   Required values are `status=ok`, `version=1.0.0-dev.2`, `runtime=go`,
    `provider=codex-app-server`, and
    `bridgeContractVersion=aku-browser.bridge.v2`.
 
@@ -85,7 +85,12 @@ cd C:\WorkspaceCodex\AkuWorkspace\AkuSidecar
 4. Run one X + LinkedIn session. Success requires two persisted child runs,
    structured reasoning output, finite Timeline items, and token telemetry.
 
-5. After AkuBridge source changes, use cooperative reload and validate the
+5. On a fresh database, completing source onboarding must start that session
+   automatically. A completed or partial session must then open the forced
+   calibration lane; the Timeline is available only after every sample has a
+   More, Neutral, Less, or capture-issue decision.
+
+6. After AkuBridge source changes, use cooperative reload and validate the
    exact expected build. Do not use the v1 protocol as a transition path.
 
 ## Failure boundaries
