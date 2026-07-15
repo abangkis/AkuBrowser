@@ -336,6 +336,13 @@ preserved and only still-provable Bridge-owned tabs are closed. A mismatched
 lease is rejected so delayed cleanup cannot close a newer session's surface.
 Pre-existing working tabs/windows never enter the managed ownership record.
 
+`workingTabPreserved` is an ownership assertion: the capture ran exclusively
+against a Bridge-owned managed tab and did not navigate or close pre-existing
+user work. It MUST NOT be inferred from equality with the focus snapshot taken
+at capture start. `workingFocusRestored` is a separate diagnostic. Bridge may
+restore focus only when its managed window became focused; a later user-selected
+tab or non-managed window is authoritative and MUST NOT be rolled back.
+
 ## Source-adapter conformance
 
 Each adapter version must pass synthetic DOM fixtures covering its primary discovery strategy and source semantics. The fixture suite is a drift detector, not evidence that the live platform DOM is stable; live `adapterHealth` remains authoritative for operational diagnosis.

@@ -198,10 +198,10 @@ remains. A final `retryable` report cannot reach persistence or reasoning.
 The normative design, field profile, recovery budget, admission matrix, and
 third-source requirements are recorded in
 [`Source Adapter and Capture Quality Design`](source-adapter-quality-design.md).
-The current runtime baseline is AkuBridge 0.5.41 / source-fidelity-v43 with
+The current runtime baseline is AkuBridge 0.5.42 / source-fidelity-v44 with
 `x-dom-v16`, `linkedin-dom-v13`, `x-freshness-v1`,
 `linkedin-freshness-v2`, `x-media-recovery-v1`, and
-`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.9. The freshness seam is
+`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.10. The freshness seam is
 normatively defined in
 [`Source Freshness Recovery v1`](../contracts/source-freshness-recovery-v1.md),
 and bounded media fallback is defined in
@@ -406,6 +406,12 @@ A dedicated managed capture window is used because it reuses the signed-in
 Chrome profile and AkuBridge while keeping the user's working window stable.
 Coverage records the selected policy, actual visibility mode, whether the
 working tab remained preserved, and whether focus restoration was necessary.
+Tab preservation is derived from capture-surface ownership: a managed capture
+never navigates or closes the user's working tab. It is intentionally separate
+from focus continuity. If Chrome briefly focuses the managed surface, Bridge
+may restore focus and report `workingFocusRestored: true`; if the user moves to
+another tab or window, that newer user choice is authoritative and is not
+rolled back.
 The managed window is normal rather than minimized so visual hydration remains
 source-faithful; closing it is safe because Bridge recreates and rebinds it on a
 later authorized run. Offscreen documents,
@@ -939,6 +945,7 @@ remaining mixed with active rules.
 | D-142 | Expose `Reset learning` and `Full reset and onboard again` in Settings. Require an operation-specific typed phrase after the initiating click, reject both while work is active, keep learning reset scoped to learning state, and make full reset verified-backup-first while preserving the live Bridge identity and routing directly to onboarding | Implemented in AkuSidecar 0.6.7 with HTTP, SQLite, and frontend contract coverage |
 | D-143 | Separate presentation warnings from evidence and identity failures in generic capture quality. Unhydrated avatars remain observable without retry or degradation; detected missing media retains evidence-level recovery. Give every quality report a provisional candidate key, record bounded media-recovery stages, and skip provider acquisition planning when sparse admitted evidence is already complete | Implemented in AkuBridge 0.5.41 / source-fidelity-v43 and AkuSidecar 0.6.8 |
 | D-144 | Preserve foreground AkuSupervisor Ctrl+C/quit cleanup. Add an ephemeral Sidecar `instanceEpoch`, fresh pre-run Bridge handshake, bounded reconnecting state, and separate `bridge_reconnecting` versus `bridge_incompatible` admission categories so development handoff recovers without reusing stale readiness | Implemented in AkuSidecar 0.6.9; no Supervisor ownership expansion |
+| D-145 | Define quiet working-tab preservation from Bridge ownership rather than equality with an initial focus snapshot. Keep focus restoration as a separate diagnostic, restore only when the managed surface itself took focus, and never undo a user's later tab or window choice | Implemented in AkuBridge 0.5.42 / source-fidelity-v44 and AkuSidecar 0.6.10 after a completed X and LinkedIn capture was rejected as a false visibility failure |
 
 ## 16. Change Discipline
 
