@@ -1,6 +1,6 @@
 # Preference Replay Contract v0
 
-> Status: **Implemented as read-only diagnostics for Preference Runtime v1**
+> Status: **Implemented as read-only diagnostics for Preference Runtime v2 and eligibility-shadow readiness**
 > Date: **2026-07-11**
 
 ## Purpose

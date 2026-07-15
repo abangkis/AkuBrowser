@@ -2,11 +2,14 @@
 
 Current engine contracts:
 
+- `preference-eligibility-controller-v2.md` - source-neutral bounded live promotion, configurable guarded suppression, canonical effective signals, hard protections, and authoritative audit decisions.
+- `paired-model-replay-v1.md` - explicit same-evidence model comparison, cost sensitivity, and no-live-mutation boundary.
+
 - `preference-runtime-v2.md` — source-neutral features, reason-aware feedback, champion/challenger activation, and confidence-scaled reranking.
 - `selection-engine-v1.md` — generic materiality admission and finite-budget ownership.
 - `engine-replay-benchmark-v1.md` — read-only replay metrics and model/effort comparison hooks.
 
-`preference-runtime-v1.md` is retained only as a superseded historical contract.
+`preference-runtime-v1.md` and `preference-eligibility-controller-v1.md` are retained only as superseded historical contracts.
 
 This directory is the canonical, implementation-neutral contract source for the AkuBrowser workspace.
 
@@ -37,6 +40,7 @@ Current contract artifacts:
 - `preference-feedback.schema.json` — append-only corrections from Review Inbox and Unified View.
 - `preference-profile.schema.json` — a rebuildable, provider-neutral learning snapshot.
 - `selection-decision.schema.json` — the deterministic selection audit record.
+- `preference-eligibility-decision.schema.json` - the live eligibility decision and hard-protection audit record.
 - `reasoning-invocation.schema.json` — provider configuration, outcome, latency, and observed token usage.
 - `reasoning-routing-v0.json` — explicit phase-level model, effort, and planning-policy defaults.
 - `runtime-configuration-v0.md` — allowlisted dashboard settings, persistence, precedence, and apply-mode boundary.

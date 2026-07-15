@@ -34,7 +34,7 @@ reliable fallback so uncertain assessments do not silently create an empty run.
 Eligible candidates preserve platform order. Mandatory signals consume the
 finite budget first; remaining slots use the earliest eligible candidates, and
 the final displayed subset still follows platform order. The per-source display
-budget is one to five items. Selection persists its policy, decision, reason
+budget is one to fifteen items under the built-in profiles. Selection persists its policy, decision, reason
 code, and score; Preference Runtime cannot change eligibility.
 
 ## Reason codes
@@ -47,10 +47,10 @@ code, and score; Preference Runtime cannot change eligibility.
 
 ## Feedback routing
 
-`wrong_topic` and `wrong_priority` are preference evidence. `already_known`,
-`duplicate`, `stale_or_superseded`, and `low_signal` are routed out of
-preference fitting and reported respectively to the continuity, deduplication,
-recency, and materiality diagnostic lanes. Those diagnostic routes do not yet
-change selection automatically. A Less click is complete feedback by itself and
-retains half weight as ambiguous preference evidence. Supplying an optional
-reason refines the latest effective signal into the corresponding lane.
+`not_interested` is full-weight preference evidence. `already_known`,
+`stale_or_superseded`, and `duplicate` are routed out of preference fitting and
+reported respectively to the continuity, recency, and deduplication diagnostic
+lanes. Those diagnostic routes do not yet change selection automatically. A
+Less click is complete feedback by itself and retains half weight as ambiguous
+preference evidence. Supplying an optional reason refines the latest effective
+signal into the corresponding lane.

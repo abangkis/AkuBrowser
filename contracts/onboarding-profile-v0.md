@@ -49,7 +49,7 @@ Removing P1-P4 leaves presentation ordering under deterministic policy:
 4. stop at the configured per-source and unified attention limits; and
 5. use the ReasoningProvider only for structured description, topic/content metadata, knowledge delta, and source-backed summarization.
 
-The provider cannot exclude a candidate merely because it falls outside the old AI/technical-engineering context. Source selection establishes the baseline. Calibration labels may affect subsequent sessions only through the bounded selected-item reranking defined by Preference Runtime v1.
+The provider cannot exclude a candidate merely because it falls outside the old AI/technical-engineering context. Source selection establishes the baseline. Calibration labels may affect subsequent sessions through Preference Runtime v2's bounded reranking and Preference Eligibility Controller v2's configured authority. Onboarding itself never bypasses the eligibility evidence gates.
 
 ## Deferred
 

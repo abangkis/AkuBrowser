@@ -7,6 +7,7 @@ import {
   createBridgeCapabilities,
 } from "../../AkuBridge/bridge-capabilities.js";
 import { BRIDGE_REQUIREMENTS } from "../../AkuSidecar/src/operations/bridge-compatibility.mjs";
+import { BOUNDED_LOAD_PROFILES } from "../../AkuSidecar/src/core/bounded-load-profile.mjs";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const workspaceRoot = path.dirname(projectRoot);
@@ -77,11 +78,26 @@ assert.deepEqual(
   canonicalUnifiedSessionSchema,
   "AkuSidecar unified-session schema drifted from AkuBrowser",
 );
+for (const profile of Object.values(BOUNDED_LOAD_PROFILES)) {
+  assert.ok(
+    profile.maxScrolls <= declaredBridgeCapabilities.captureLimits.maxScrolls,
+    `${profile.id} exceeds AkuBridge's declared scroll ceiling`,
+  );
+  assert.ok(
+    profile.maxItemsPerSource <= canonicalUnifiedSessionSchema.properties.maxItemsPerSource.maximum,
+    `${profile.id} exceeds the unified per-source schema ceiling`,
+  );
+  assert.ok(
+    profile.maxItemsTotal <= canonicalUnifiedSessionSchema.properties.maxItemsTotal.maximum,
+    `${profile.id} exceeds the unified total schema ceiling`,
+  );
+}
 for (const schemaName of [
   "candidate-evaluation.schema.json",
   "preference-feedback.schema.json",
   "preference-profile.schema.json",
   "selection-decision.schema.json",
+  "preference-eligibility-decision.schema.json",
   "reasoning-invocation.schema.json",
   "onboarding-profile.schema.json",
   "calibration-session.schema.json",
@@ -115,6 +131,9 @@ const sidecarContracts = readText(path.join(sidecarRoot, "src", "core", "contrac
 const sidecarJobEngine = readText(path.join(sidecarRoot, "src", "core", "job-engine.mjs"));
 const sidecarSelectionEngine = readText(path.join(sidecarRoot, "src", "core", "selection-engine.mjs"));
 const sidecarPreferenceRuntime = readText(path.join(sidecarRoot, "src", "core", "preference-runtime.mjs"));
+const sidecarPreferenceEligibility = readText(
+  path.join(sidecarRoot, "src", "core", "preference-eligibility-controller.mjs"),
+);
 const sidecarPreferenceFeatures = readText(path.join(sidecarRoot, "src", "core", "preference-features.mjs"));
 const sidecarEngineBenchmark = readText(path.join(sidecarRoot, "src", "core", "engine-replay-benchmark.mjs"));
 const sidecarStateStore = readText(
@@ -222,7 +241,7 @@ assert.match(
 );
 assert.match(sidecarStateStore, /media_recovery_json/);
 assert.match(sidecarUi, /source-layout-media-unavailable/);
-assert.match(bridgeCapturePolicy, /maxScrolls: 2/);
+assert.match(bridgeCapturePolicy, /maxScrolls: 6/);
 assert.match(bridgeCapturePolicy, /sameTabMutationAllowed/);
 assert.match(bridgeCapturePolicy, /acquisitionRound/);
 assert.match(bridgeCapturePolicy, /continuation/);
@@ -249,11 +268,16 @@ assert.match(
 assert.match(sidecarBrowserAdapter, /buildObservationContinuation/);
 assert.match(sidecarSelectionEngine, /selection-engine-v1/);
 assert.match(sidecarPreferenceRuntime, /preference-runtime-v2/);
+assert.match(sidecarPreferenceEligibility, /preference-eligibility-v2/);
+assert.match(sidecarPreferenceEligibility, /mode: "promote_unused_budget"/);
+assert.match(sidecarPreferenceEligibility, /live_promotion_unused_budget/);
+assert.match(sidecarPreferenceEligibility, /live_suppression_guarded/);
 assert.doesNotMatch(sidecarPreferenceFeatures, /candidate\.source|assessment\.source/);
 assert.match(sidecarEngineBenchmark, /benchmarkPerformsModelCalls: false/);
 for (const contractName of [
   "selection-engine-v1.md",
   "preference-runtime-v2.md",
+  "preference-eligibility-controller-v2.md",
   "engine-replay-benchmark-v1.md",
 ]) {
   assert.ok(fs.existsSync(path.join(projectRoot, "contracts", contractName)), `${contractName} is required`);
@@ -274,6 +298,7 @@ for (const table of [
   "evidence_dispositions",
   "candidate_evaluations",
   "preference_feedback_events",
+  "preference_eligibility_decisions",
   "reasoning_invocations",
 ]) {
   assert.match(sidecarStateStore, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}`));

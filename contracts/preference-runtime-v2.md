@@ -17,9 +17,10 @@ are canonicalized before fitting.
 Every event records `origin` (`calibration` or `routine`) and a context id.
 Neutral is a real tie/regularization signal. A Less click is persisted
 immediately and its explanation is optional. Unreasoned Less receives reduced
-weight; an optional wrong-topic or wrong-priority reason refines it into full
-preference evidence. Reasons owned by continuity, deduplication, recency, or
-materiality do not train topic preference.
+weight; optional `not_interested` refines it into full preference evidence.
+`already_known`, `stale_or_superseded`, and `duplicate` are diagnostic routes
+and do not train topic preference. Readiness and fitting select the same latest
+effective source/evidence signal before applying these weights.
 
 ## Champion and challenger
 
@@ -34,11 +35,16 @@ runtime.
 
 ## Live authority
 
-Preference reorders only selected items. Authority is confidence-scaled: zero
+Preference Runtime itself reorders only selected items. Authority is confidence-scaled: zero
 positions for weak evaluation, one position from balanced accuracy `0.50`, and
 two positions from `0.65`. A swap requires a score delta of `0.03`. Composition
 avoids three consecutive items from one source when a bounded alternative is
-available. Preference never hides, promotes, acquires, or changes budgets.
+available. Preference Runtime never acquires or changes budgets.
+
+Preference Eligibility Controller v2 is a separate downstream live authority.
+Its default mode may use the same champion to add one qualified candidate only
+into unused capacity. Guarded filtering remains separately configurable and
+gate-protected. It cannot reinterpret this runtime's ranking authority.
 
 ## APIs
 
@@ -46,5 +52,6 @@ available. Preference never hides, promotes, acquires, or changes budgets.
 - `POST /api/preferences/runtime/refit`
 - `POST /api/preferences/runtime/reset`
 - `GET /api/preferences/benchmark`
+- `GET /api/preferences/eligibility`
 - replay, experiment, and shadow-comparison diagnostics remain under
   `/api/preferences/*`.

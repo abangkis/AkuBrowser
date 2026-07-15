@@ -8,16 +8,16 @@
 
 The Unified Session is the default daily-use Catch Up and Manual Live experience. One user action evaluates X and LinkedIn and produces one finite, source-backed brief. Existing source-specific runs remain the execution, persistence, checkpoint, feedback, and troubleshooting units.
 
-This contract defines the experiment boundary before implementation. It does not change the browser-acquisition budget, introduce background monitoring, or claim semantic cross-source deduplication.
+This contract defines the bounded experiment boundary. The coordinated load profile may change acquisition and presentation budgets together; it does not introduce background monitoring or claim semantic cross-source deduplication.
 
 ## 2. Product invariants
 
 1. The default daily-use surface is unified across X and LinkedIn.
 2. A Unified Session is a parent over source-specific child runs; a child run never changes its `source` contract.
 3. Child runs execute sequentially in the declared source order for the initial experiment.
-4. Each child may promote at most five items. Five is a ceiling, not a quota.
-5. The unified brief contains at most ten items and may contain zero.
-6. Browser-acquisition limits remain unchanged until evidence shows that acquisition, rather than classification or source quality, is the bottleneck.
+4. Each child uses the active profile ceiling: five, ten, or fifteen items. It is a ceiling, not a quota.
+5. The unified brief uses the active profile ceiling: ten, twenty, or thirty items, and may contain zero.
+6. Browser-acquisition and presentation budgets change only through the coordinated bounded-load profile or an explicitly labeled Custom override.
 7. The unified list is finite, scrollable, and ends with an explicit finish line. It must not auto-load another session.
 8. Single-source execution remains available as an Advanced/Pilot capability.
 9. Source provenance, child-run identity, per-source coverage, and partial failures remain inspectable.
@@ -45,7 +45,7 @@ The conceptual request is:
   "mode": "catch_up",
   "intent": "Show material AI and technical-engineering changes that affect my work.",
   "sources": ["x", "linkedin"],
-  "maxItemsPerSource": 5
+  "maxItemsPerSource": 10
 }
 ```
 
@@ -55,8 +55,8 @@ The conceptual request is:
 - `intent` follows the existing bounded run-intent rules.
 - Experiment v0 requires exactly `x` and `linkedin`, once each.
 - Source order is execution order; v0 uses `x`, then `linkedin`.
-- `maxItemsPerSource` is an integer from one through five; daily-use v0 defaults to five.
-- `maxItemsTotal` is derived as `sources.length * maxItemsPerSource` and is capped at ten.
+- `maxItemsPerSource` is an integer from one through fifteen; the expanded-load experiment defaults to ten.
+- `maxItemsTotal` is derived from the active profile and source count, with a structural maximum of thirty.
 - Browser scrolls, capture timeout, acquisition rounds, and continuation budgets come from existing deterministic policy and are not supplied by the page.
 
 ## 5. Persisted session shape
@@ -69,8 +69,8 @@ The implementation may evolve its physical SQLite schema, but it must preserve t
   "mode": "catch_up",
   "intent": "...",
   "sources": ["x", "linkedin"],
-  "maxItemsPerSource": 5,
-  "maxItemsTotal": 10,
+  "maxItemsPerSource": 10,
+  "maxItemsTotal": 20,
   "status": "running",
   "activeSource": "x",
   "createdAt": "...",
@@ -223,7 +223,7 @@ Collect at least five natural daily-use Unified Sessions, with at least three se
 
 The experiment should answer:
 
-1. Is a maximum of five items per source useful without becoming noisy?
+1. Does the expanded maximum of ten items per source improve preference diversity without becoming noisy?
 2. Does the finite scroll feel sufficient while still producing a finish line?
 3. Does one source dominate the brief?
 4. Are cross-source duplicates material enough to justify semantic merging?
@@ -231,7 +231,7 @@ The experiment should answer:
 
 ### Acquisition escalation gate
 
-Do not increase scrolling merely because a session returns fewer than ten items. Consider changing acquisition only when reviewed sessions show valuable information was repeatedly outside the bounded sample and classification or suppression is not the cause.
+Do not increase scrolling merely because a session returns fewer than twenty items. Consider changing acquisition only when reviewed sessions show valuable information was repeatedly outside the bounded sample and classification or suppression is not the cause.
 
 ## 12. Explicit non-goals for v0
 

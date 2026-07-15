@@ -136,20 +136,22 @@ or account authority.
 
 The `collect_visible` command may carry a bounded native-capture plan:
 
-- `scrolls`: requested scroll count, currently `0..2`;
+- `scrolls`: requested scroll count, currently `0..6`; the active bounded-load
+  profile normally requests 2, 4, or 6;
 - `scrollFraction`: viewport fraction per movement, currently `0.75`;
 - `scrollSettleMs`: maximum wait for the rendered feed to settle after movement;
 - `captureTimeoutMs`: total acquisition deadline, currently `45000`;
 - `maxBlocksPerSnapshot` and `maxBlockCharacters`: evidence-size budgets;
 - `qualityReportRequired: true` for the current Sidecar runtime;
 - `qualityRetryBudget`, currently clamped to `0..1`;
-- `qualityRetrySettleMs`, currently `300` by default and capped at `1000`;
+- `qualityRetrySettleMs`, derived from the active bounded-load profile (300 or
+  1,000 ms in the built-in profiles) and capped at `1000`;
 - `restoreScroll: true`; and
 - `browserAdapter: "aku-bridge"`.
 - `openIfMissing`, controlled by the Sidecar's `open_missing_tab` or `fail_fast` policy.
 - `captureLeaseId`, set to the standalone run ID or shared unified-session ID.
 
-AkuBridge captures before moving, performs only native DOM scrolling, stops when the budget/deadline/no-movement condition is reached, and attempts to restore the original position in a `finally` path. The global advertised block ceiling is 20; LinkedIn currently applies a stricter runtime ceiling of eight blocks per snapshot. Browser focus, clicking, engagement, and account mutation remain outside the contract.
+AkuBridge captures before moving, performs only native DOM scrolling, stops when the budget/deadline/no-movement condition is reached, and attempts to restore the original position in a `finally` path. The global advertised block ceiling is 20; LinkedIn currently applies a stricter runtime ceiling of eight blocks per snapshot. The six-scroll/seven-snapshot Bridge ceiling is a structural safety boundary, while normal tuning is performed through one Sidecar bounded-load profile. Browser focus, clicking, engagement, and account mutation remain outside the contract.
 
 Coverage adds these auditable fields:
 

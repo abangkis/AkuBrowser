@@ -1,6 +1,6 @@
 # Calibration Engine v0
 
-> Status: **Implemented as the first-run label source for Preference Runtime v1**
+> Status: **Implemented as the first-run label source for Preference Runtime v2**
 
 ## Purpose
 
@@ -38,4 +38,7 @@ v0 enables only `first_run`. Manual, periodic, and random triggers remain contra
 
 ## Influence boundary
 
-Calibration itself never changes eligibility. Its labels may affect later sessions only through Preference Runtime v1, whose maximum two-position rerank retains every provider-selected item.
+Calibration itself never changes the current session. Its labels may affect
+later sessions through Preference Runtime v2's maximum two-position rerank and
+Preference Eligibility Controller v2's configured authority. Default
+eligibility may add one qualified item only into unused capacity.

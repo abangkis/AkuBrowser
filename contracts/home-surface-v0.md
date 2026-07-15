@@ -12,7 +12,7 @@ AkuBrowser separates the daily consumption surface from the operational source o
 Timeline is the built-in default home presentation.
 
 - It opens a rolling buffer of the newest evaluated items across completed or partial Unified Sessions.
-- Its capacity defaults to 12 and is configurable from 1 through 50.
+- Its capacity defaults to 24 during the expanded-load experiment and is configurable from 1 through 50.
 - New session items enter first; older retained items fill only the remaining capacity and the oldest overflow leaves the view.
 - After each completed check, the heading reports how many genuinely new items the latest session added. A completed empty check explicitly reports `0 additions`; retained count and capacity are not repeated as the primary status.
 - During an active check, the compact progress strip stays visible while the user scrolls the retained Timeline. Newly added items from the latest check use a subtle distinct background until a later check becomes the newest session.
@@ -65,7 +65,7 @@ Their presence in the architecture does not claim that adapters, schedules, or b
 
 Timeline is the only daily home surface. Source operations live in Settings.
 
-`timelineCapacity` accepts an integer from 1 through 50, applies live, persists in the StateStore, and defaults to 12.
+`timelineCapacity` accepts an integer from 1 through 50, applies live, persists in the StateStore, and defaults to 24 during the expanded-load experiment.
 
 Mode, source scope, and free-form session intent are not routine homepage controls. Catch Up and the active Source Registry provide temporary defaults. Onboarding selects sources only; a separate forced-label calibration verifies actual source entries, while routine `More like this` and `Less like this` feedback tunes contextual preference without becoming an immediate display command.
 

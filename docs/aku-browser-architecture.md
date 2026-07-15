@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
 > Status: **Source-faithful capture, Settings-first operation, and supervised lifecycle implemented**
-> Version: **0.28**
+> Version: **0.30**
 > Last updated: **2026-07-15**
 > Working name: **AkuBrowser**
 
@@ -198,10 +198,10 @@ remains. A final `retryable` report cannot reach persistence or reasoning.
 The normative design, field profile, recovery budget, admission matrix, and
 third-source requirements are recorded in
 [`Source Adapter and Capture Quality Design`](source-adapter-quality-design.md).
-The current runtime baseline is AkuBridge 0.5.42 / source-fidelity-v44 with
+The current runtime baseline is AkuBridge 0.5.44 / source-fidelity-v46 with
 `x-dom-v16`, `linkedin-dom-v13`, `x-freshness-v1`,
 `linkedin-freshness-v2`, `x-media-recovery-v1`, and
-`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.10. The freshness seam is
+`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.16. The freshness seam is
 normatively defined in
 [`Source Freshness Recovery v1`](../contracts/source-freshness-recovery-v1.md),
 and bounded media fallback is defined in
@@ -231,7 +231,7 @@ and bounded media fallback is defined in
 
 ### Daily-use Unified Session target
 
-The Gate 0 UI used one source and one promoted item to isolate technical risks. The accepted daily-use target is now a `UnifiedSession`: one parent request creates sequential X and LinkedIn child runs, preserves their source-specific checkpoints and evidence, then renders one finite result list containing at most five items per source and ten total. Five is a ceiling rather than a quota, and the browser-acquisition budget does not increase merely because the presentation budget increases.
+The Gate 0 UI used one source and one promoted item to isolate technical risks. The expanded-load target is now a `UnifiedSession`: one parent request creates sequential X and LinkedIn child runs, preserves their source-specific checkpoints and evidence, then renders one finite result list containing at most ten items per source and twenty total. Ten is a ceiling rather than a quota. For this explicit load experiment, initial native movement is also doubled from two to four scrolls per source; acquisition remains bounded by the existing round, timeout, restoration, focus-safety, and cleanup contracts.
 
 ```mermaid
 flowchart TD
@@ -247,7 +247,7 @@ The child runs remain the execution and audit units. A partial session keeps a c
 
 ### Daily-use home surfaces
 
-The default home presentation is now **Timeline**: a rolling buffer of the newest evaluated items across completed or partial Unified Sessions, rendered with source-backed cards and an explicit finish line. Capacity defaults to 12 and is configurable up to 50. New session items enter first; older items fill only the remaining slots. For example, ten new items retain two older items, while eight new items retain four.
+The default home presentation is now **Timeline**: a rolling buffer of the newest evaluated items across completed or partial Unified Sessions, rendered with source-backed cards and an explicit finish line. During the expanded-load experiment capacity defaults to 24 and remains configurable up to 50. New session items enter first; older items fill only the remaining slots.
 
 `Check for updates` directly starts Unified Catch Up from engine defaults and the active Source Registry. Mode, source scope, and free-form intent are no longer routine homepage controls. Onboarding v0 only selects active sources; it does not restate interests or import historical pilot feedback. Finishing first-time onboarding automatically starts the first update, followed by a bounded forced-label calibration session. Daily `More like this` and `Less like this` remain contextual signals collected outside that calibration lane.
 
@@ -275,8 +275,9 @@ The retired interest screen remains recoverable from Git history, but it is not 
 4. collect optional contextual feedback during ordinary use;
 5. automatically fit a local snapshot once mixed directional evidence exists;
 6. let the generic Selection Engine own materiality admission and the finite display budget;
-7. apply only bounded selected-item reranking while retaining source/platform order as fallback; and
-8. keep preference unable to change eligibility, source shares, or acquisition budgets.
+7. apply source-neutral eligibility through an explicit authority mode and retain every baseline/final decision in an inspectable ledger;
+8. default to bounded selected-item reranking plus at most one qualified promotion into otherwise-unused per-source capacity; and
+9. keep replacement and suppression disabled by default, with suppression available only through the separately gated experimental mode.
 
 For non-stream websites, source order may have little or no behavioral meaning. Their future acquisition and prioritization contracts must be defined by source behavior class rather than inheriting the social-stream onboarding model.
 
@@ -286,7 +287,8 @@ Source-specific knowledge ends at the adapter. Generic quality admission checks
 the canonical candidate contract. The ReasoningProvider describes every bounded
 candidate using canonical facets and independent evidence scores. Selection
 Engine v1 then owns generic materiality admission and the finite per-source
-budget. Preference Runtime v2 can only reorder selected entries.
+budget. Preference Eligibility Controller v2 applies the configured authority
+to that baseline. Preference Runtime v2 then reorders only selected entries.
 
 ```mermaid
 flowchart LR
@@ -295,28 +297,48 @@ flowchart LR
   N["Future adapter"] --> Q
   Q --> R["ReasoningProvider descriptors"]
   R --> S["Selection Engine v1"]
-  S --> C["Cross-source composition"]
+  S --> E2["Preference Eligibility Controller v2 authority"]
+  E2 --> C["Cross-source composition"]
   C --> P["Preference Runtime v2"]
   P --> T["Finite Timeline"]
   F["More / Neutral / reason-aware Less"] --> P
+  F --> E2
   B["Replay benchmark"] -. read-only .-> S
   B -. read-only .-> P
+  E["Stored identical observations"] --> M["Explicit paired model replay"]
+  M --> V["Quality and relative cost sensitivity"]
+  M -. no live mutation .-> S
 ```
 
 Source is never a learned preference feature. Source diversity is enforced as a
 composition constraint. Stable canonical topic facets prevent raw topic-tag
 vocabulary from growing into unsupported one-off weights. The active preference
 champion remains live while a newer snapshot is evaluated as a challenger.
+Eligibility decisions use that same local source-neutral snapshot and persist a
+content-free baseline/final record. The default authority may fill one unused
+source slot without displacing an admitted item; guarded suppression is a
+separate experimental mode with independent evidence gates.
 
 Manual fit is an advanced diagnostic, not onboarding or production ceremony.
 Reset is durable suspension: even a forced before-session fit must respect it.
 The replay benchmark performs no model calls and exposes selection, polarity,
 source-sliced bias, latency, token, model, and effort metrics.
 
+Paired Model Replay is the explicit model-calling complement to that historical
+benchmark. It runs Terra High, Luna High, and Luna XHigh against the exact same
+stored observations, validates each output through the production contracts,
+and emits an advisory candidate-evaluation recommendation. It does not test
+acquisition planning and cannot mutate Timeline, preference state, or runtime
+routing. Its cost view uses configurable Luna-to-Terra blended-rate scenarios
+and a break-even ratio; it does not invent currency prices. Review only reads
+the latest summary.
+
 Normative details live in
 [`Selection Engine v1`](../contracts/selection-engine-v1.md),
-[`Preference Runtime v2`](../contracts/preference-runtime-v2.md), and
-[`Engine Replay Benchmark v1`](../contracts/engine-replay-benchmark-v1.md).
+[`Preference Runtime v2`](../contracts/preference-runtime-v2.md),
+[`Preference Eligibility Controller v2`](../contracts/preference-eligibility-controller-v2.md),
+[`Engine Replay Benchmark v1`](../contracts/engine-replay-benchmark-v1.md), and
+[`Paired Model Replay v1`](../contracts/paired-model-replay-v1.md).
 
 ### 6.2 Gate 0A implementation topology
 
@@ -352,7 +374,7 @@ Gate 0B is split into three evidence gates so browser movement and feed mutation
 2. **Gate 0B.2 — stale-tab wake and same-tab fresh-content reveal.** A generic AkuBridge state machine activates a background tab, observes the adapter-declared wake window, and handles either an automatically changed feed or one allowlisted platform control such as `New posts` or `Show posts`. A reveal must prove that a changed, non-empty visible feed is ready before bounded capture begins. Feed mutation and the post-reveal restoration baseline remain explicit in coverage.
 3. **Gate 0B.3 — provider-directed acquisition.** After native movement and same-tab reveal are proven reliable on X and LinkedIn, a `ReasoningProvider` may decide whether another bounded observation is warranted. JobEngine—not the provider—calls the provider-neutral `BrowserAdapter` and remains the authority for budgets and allowed actions.
 
-Gate 0B.1 does not silently become an infinite feed reader: the initial experiment permits at most two native scrolls, three snapshots, one promoted result, and 45 seconds of browser acquisition. The current runtime fails explicitly when the native adapter cannot complete. Any future Computer Use fallback requires policy approval and must appear in coverage.
+Gate 0B.1 does not silently become an infinite feed reader: the expanded-load experiment permits at most four native scrolls, five snapshots, ten selected results per source, and 45 seconds of browser acquisition. The current runtime fails explicitly when the native adapter cannot complete. Any future Computer Use fallback requires policy approval and must appear in coverage.
 
 Source adapters declare platform-owned fresh-content knowledge such as LinkedIn's `New posts` banner or X's `Show posts` control, but they do not implement orchestration. The generic recovery engine owns bounded activation, polling, one-reveal authorization, proof, and terminal outcomes. If activated, the platform may replace or reorder the rendered feed; AkuBridge therefore waits for a changed, non-empty visible-feed fingerprint, establishes that revealed feed as a new capture baseline, restores scrolling only to that post-reveal baseline, and records that the pre-run feed view was intentionally changed. Signal removal alone is not readiness evidence. Failure stops at `source_freshness` and is never retried as a stale detect-only capture. Catch Up now performs this lifecycle inside a dedicated managed capture window by default; adapter semantics are unchanged.
 
@@ -489,16 +511,16 @@ Behavioral signals must therefore obey these constraints:
 
 - explicit user intent and safety policy override inferred preference;
 - inferred preferences are stored separately from explicit rules and can be inspected, corrected, reset, or disabled;
-- negative feedback and retention of the complete provider-selected set prevent the first live version from collapsing eligibility into a filter bubble;
+- negative feedback, mandatory-signal protection, and retention of the complete provider-selected set prevent the current live version from collapsing eligibility into a filter bubble;
 - platform ordering is recorded as contextual evidence, not ground truth;
 - passive behavior is not treated as consent for account-changing actions or broader data collection; and
 - personalization changes ranking, not provenance or evidence requirements.
 
-Preference Runtime v1 fits deterministically on-device and may move an already-selected item by at most two positions. It records the baseline index, final index, snapshot, and probability. It cannot promote excluded candidates, hide selected candidates, or change acquisition and attention budgets. Manual replay and holdout analysis remain optional diagnostics.
+Preference Runtime v2 fits deterministically on-device and may move an already-selected item by at most two positions. It records the baseline index, final index, snapshot, and probability. Preference Eligibility Controller v2 additionally evaluates excluded and selected candidates while preserving mandatory signals and the last reliable selected item. The default mode can add one qualified candidate only into unused per-source capacity; it cannot replace or hide an item. Guarded suppression requires explicit configuration plus independent negative-support and holdout gates. Manual replay and holdout analysis remain optional diagnostics.
 
 ## 8. Ranking composition
 
-The original P1-P4 catch-up lanes are retired. AkuBrowser first preserves platform order within each source and interleaves active sources deterministically. When a compatible personal snapshot is active, Preference Runtime may perform neighboring swaps among those selected items, with a maximum displacement of two positions and a minimum score difference of `0.03`. The baseline remains available whenever personalization is disabled, insufficient, stale, or invalid. Emergency interruption and preference-driven eligibility remain future, separately governed capabilities; ordinary importance never implies a notification.
+The original P1-P4 catch-up lanes are retired. AkuBrowser first preserves platform order within each source and interleaves active sources deterministically. When a compatible personal snapshot is active, Preference Runtime may perform neighboring swaps among those selected items, with a maximum displacement of two positions and a minimum score difference of `0.03`. The baseline remains available whenever personalization is disabled, insufficient, stale, or invalid. Preference-driven eligibility now has explicit `rank_only`, `promote_unused_budget`, and experimental `guarded_live` modes. The default changes no selected decision except to fill one unused source slot with a qualified candidate; replacement and suppression remain off. Ordinary importance never implies a notification.
 
 <!-- Retired pilot lane reference
 
@@ -787,16 +809,16 @@ unpacked-extension bootstrap, load AkuBridge changes through cooperative
 Supervisor reload/validation. Component package versions advance independently;
 the live compatibility tuple is the release boundary.
 
-As of July 14, 2026, Preference Runtime v1 replaces manual shadow fitting as the product path. Source/platform order is the cold-start baseline. First-run calibration and routine More/Less feedback feed one local append-only ledger; AkuSidecar fits deterministic personal snapshots automatically without a reasoning invocation. The active snapshot may reorder only provider-selected items, requires a neighboring score difference, and limits every item to two positions of displacement. It cannot promote excluded candidates, hide selected candidates, or change source and attention budgets. Disabling personalization restores the baseline on the next run.
+As of July 15, 2026, Preference Runtime v2 and Preference Eligibility Controller v2 form separate authority layers. Source/platform order is the cold-start baseline. First-run calibration and routine More/Less feedback feed one local append-only ledger; AkuSidecar fits deterministic personal snapshots automatically without a reasoning invocation. Later refinements for the same candidate supersede earlier ambiguous feedback before weights are calculated. The active snapshot may reorder provider-selected items by at most two positions. In the default eligibility mode it may also add at most one qualified excluded candidate per source only when configured capacity was unused. It cannot displace or hide an item. Disabling personalization restores the baseline on the next run.
 
-The hard-coded AI/technical-engineering context, provider-assigned intent relevance, and P1-P4 lanes remain removed. Replay gates, holdout metrics, feature explanations, and eligibility-boundary comparison are retained under Advanced preference diagnostics. Manual refitting is optional and idempotent rather than an onboarding or daily-use step.
+The hard-coded AI/technical-engineering context, provider-assigned intent relevance, and P1-P4 lanes remain removed. Replay gates, holdout metrics, feature explanations, and authoritative eligibility decisions are retained under Advanced preference diagnostics. Manual refitting is optional and idempotent rather than an onboarding or daily-use step.
 
 The next product-calibration sequence is:
 
-1. observe bounded live displacement, fallback use, and user corrections without changing eligibility;
-2. collect explicit labels on currently excluded candidates to reduce selection bias;
-3. evaluate whether source balance and the maximum two-position movement remain understandable and useful;
-4. define exploration, comeback, and rollback before any eligibility-changing preference authority;
+1. operate and inspect live unused-capacity promotion while retaining its baseline comparison and rollback;
+2. increase independent negative support and validate holdout negative recall before enabling guarded suppression;
+3. evaluate bounded replacement only through a future explicit authority contract;
+4. define an inspectable filtered-items drawer, exploration, comeback, and rollback before any live suppression or swap authority;
 5. calibrate semantic event keys, stale/superseded handling, cross-source event merging, and retention/compaction; and
 6. only after behavioral proof, test Sidecar Lite as the next packaging experiment.
 
@@ -852,7 +874,7 @@ remaining mixed with active rules.
 | D-037 | Stop after the initial bounded acquisition without provider planning when every observed evidence block was already evaluated for the same intent | Confirmed after LinkedIn repeat-run pilot |
 | D-038 | Keep Pilot Review separate from consumption modes; scope metrics to a disclosed feedback-bearing cohort and require contextual, idempotent feedback with a note for missed empty results | Confirmed |
 | D-040 | Model a Unified Session as a persisted parent with sequential X then LinkedIn child runs; preserve source-specific checkpoints, feedback, coverage, and partial results | Confirmed for experiment v0 |
-| D-041 | Allow at most five promoted items per source and ten per Unified Session as ceilings, not quotas; do not increase browser acquisition budgets without evidence | Confirmed for experiment v0 |
+| D-041 | Allow at most five promoted items per source and ten per Unified Session as ceilings, not quotas; do not increase browser acquisition budgets without evidence | Superseded by D-148 for the expanded-load experiment |
 | D-042 | Use deterministic source-interleaved merging without a second reasoning pass; defer semantic cross-source deduplication | Confirmed; presentation composition refined by D-130 |
 | D-043 | Preserve scrolling as a finite, known result list with an explicit end and no automatic continuation or infinite loading | Confirmed |
 | D-044 | Turn Pilot Review into a bounded Review Inbox plus separate aggregate analytics; open the newest run by default and require corrections rather than exhaustive labeling | Confirmed for Learning Loop v0 |
@@ -895,7 +917,7 @@ remaining mixed with active rules.
 | D-089 | Introduce a Source Registry that separates durable registered/active source state from transient open-tab lifecycle; register X and LinkedIn as active user-triggered stream sources | Confirmed and implemented for the pilot |
 | D-090 | Model stream, periodic, static, and push acquisition behavior separately; do not imply background polling, scheduling, or P0 delivery merely by exposing the future behavior classes | Confirmed architecture seam; only stream is implemented |
 | D-091 | Make `Check for updates` directly start Unified Catch Up from engine defaults and active registered sources; remove mode, source-scope, and free-form intent controls from the routine homepage experience | Confirmed and implemented |
-| D-092 | Render Timeline as a configurable rolling buffer, default capacity 12: newest evaluated session items enter first and oldest retained items leave only when the capacity is exceeded | Confirmed and implemented |
+| D-092 | Render Timeline as a configurable rolling buffer, default capacity 12: newest evaluated session items enter first and oldest retained items leave only when the capacity is exceeded | Superseded by D-148 for the expanded-load experiment; rolling-buffer behavior remains unchanged |
 | D-094 | Keep the retained Timeline visible during `Check for updates`; represent the active runner only as a compact progress strip with current stage, progress, and Cancel | Confirmed and implemented |
 | D-095 | Replace elapsed-time progress with deterministic acquisition steps; show the current source action and `step/total` (12 steps for the default two-source update), not an unreliable completion-time estimate | Confirmed and implemented |
 | D-096 | Remove coverage/debug chrome from the routine Timeline while retaining diagnostics in Review Inbox and pilot surfaces | Confirmed and implemented |
@@ -946,6 +968,12 @@ remaining mixed with active rules.
 | D-143 | Separate presentation warnings from evidence and identity failures in generic capture quality. Unhydrated avatars remain observable without retry or degradation; detected missing media retains evidence-level recovery. Give every quality report a provisional candidate key, record bounded media-recovery stages, and skip provider acquisition planning when sparse admitted evidence is already complete | Implemented in AkuBridge 0.5.41 / source-fidelity-v43 and AkuSidecar 0.6.8 |
 | D-144 | Preserve foreground AkuSupervisor Ctrl+C/quit cleanup. Add an ephemeral Sidecar `instanceEpoch`, fresh pre-run Bridge handshake, bounded reconnecting state, and separate `bridge_reconnecting` versus `bridge_incompatible` admission categories so development handoff recovers without reusing stale readiness | Implemented in AkuSidecar 0.6.9; no Supervisor ownership expansion |
 | D-145 | Define quiet working-tab preservation from Bridge ownership rather than equality with an initial focus snapshot. Keep focus restoration as a separate diagnostic, restore only when the managed surface itself took focus, and never undo a user's later tab or window choice | Implemented in AkuBridge 0.5.42 / source-fidelity-v44 and AkuSidecar 0.6.10 after a completed X and LinkedIn capture was rejected as a false visibility failure |
+
+| D-146 | Compare Terra High, Luna High, and Luna XHigh only through an explicit same-observation paired replay. Apply production output and selection contracts, retain summary-only quality/token/latency evidence, calculate configurable relative-cost and break-even scenarios without claiming currency prices, and keep every recommendation advisory with no Timeline, preference, planning, or runtime-routing mutation | Implemented as Paired Model Replay v1 in AkuSidecar 0.6.11 |
+| D-147 | Add a source-neutral Preference Eligibility Controller after Selection Engine. Version 1 may persist and expose bounded would-promote and would-suppress proposals, but every final decision must preserve the Selection Engine baseline. Protect mandatory signals and the last reliable selected item, require conservative generic/evidence floors, gate future promotion and suppression separately, and keep live mutation disabled until a later explicit authority contract | Implemented as Preference Eligibility Controller v1 in AkuSidecar 0.6.12 |
+| D-148 | Coordinate bounded load through one persisted profile: Standard 1x, Expanded 2x, Stress 3x, or Custom. Expanded uses four initial native scrolls, ten selected items per source, twenty per Unified Session, Timeline twenty-four, and a one-second media settle; Stress is pre-authorized up to six scrolls, fifteen per source, thirty total, and Timeline thirty-six. Keep the two-round, one-follow-up, one-retry, timeout, restoration, focus-safety, and cleanup ceilings unchanged. Treat Preference Eligibility shadow-only as a temporary migration stage: graduate unused-capacity promotion, bounded promotion, and guarded suppression separately against live traffic, then retire the parallel shadow decision path while retaining audit, baseline comparison, protections, and rollback | Implemented as configurable bounded-load profiles in AkuSidecar 0.6.14 and AkuBridge 0.5.44 / source-fidelity-v46 |
+| D-149 | Retire the parallel eligibility shadow path. Canonicalize feedback by keeping the latest event per source/evidence identity before weighting it; expose `rank_only`, default `promote_unused_budget`, and experimental `guarded_live` authority modes. Default authority may add at most one qualified candidate per source only into unused configured capacity, never replace or hide an admitted item. Suppression requires explicit guarded mode, independent negative support, holdout quality, mandatory-signal protection, and a reliable-item floor. Keep baseline/final decisions and rollback auditable | Implemented as Preference Eligibility Controller v2 in AkuSidecar 0.6.15 |
+| D-150 | Name the full-weight optional Less reason `Not interested` rather than `Wrong topic`. The signal expresses the user's preference directly and must not infer a taxonomy error. Accept `not_interested` for new writes while retaining historical `wrong_topic` rows as equivalent full-weight evidence during replay | Implemented in AkuSidecar 0.6.16 |
 
 ## 16. Change Discipline
 

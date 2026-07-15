@@ -2,6 +2,15 @@
 
 AkuBrowser is the primary product and integration project for a bounded, source-backed way to consume internet information without creating another infinite feed.
 
+AkuBrowser evaluates only a bounded portion of each active source. Today it
+filters that sample through generic materiality and evidence policy, then uses
+local preference learning to reorder already-selected items. It does not claim
+to inspect all source posts or surface only what the user wants. Preference
+Eligibility Controller v2 now has explicit authority modes. The default may
+fill one otherwise-unused per-source slot with a qualified candidate but cannot
+replace or hide a selected item. Suppression is available only through a
+separately gated experimental mode.
+
 The parent directory is a neutral workspace containing four independent sibling repositories:
 
 ```text
@@ -93,4 +102,4 @@ reasoning. See [the source-adapter quality architecture](docs/source-adapter-qua
 
 Gate 0 technical feasibility is passed. The active pilot now advances a checkpoint per source and mode, suppresses previously delivered exact evidence, and stores material updates as append-only knowledge-event versions.
 
-See [the architecture reference](docs/aku-browser-architecture.md), [Selection Engine v1](contracts/selection-engine-v1.md), [Preference Runtime v2](contracts/preference-runtime-v2.md), [Engine Replay Benchmark v1](contracts/engine-replay-benchmark-v1.md), and [bridge contract v1](contracts/bridge-contract-v1.md).
+See [the architecture reference](docs/aku-browser-architecture.md), [Selection Engine v1](contracts/selection-engine-v1.md), [Preference Runtime v2](contracts/preference-runtime-v2.md), [Preference Eligibility Controller v2](contracts/preference-eligibility-controller-v2.md), [Engine Replay Benchmark v1](contracts/engine-replay-benchmark-v1.md), and [bridge contract v1](contracts/bridge-contract-v1.md).

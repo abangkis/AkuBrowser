@@ -1,6 +1,6 @@
 # Offline Preference Experiment Contract v0
 
-> Status: **Retained as optional diagnostics; superseded for product activation by Preference Runtime v1**
+> Status: **Retained as optional diagnostics; superseded for product activation by Preference Runtime v2**
 > Date: **2026-07-11**
 
 ## Purpose
@@ -32,7 +32,7 @@ The current model is a deterministic, class-balanced, regularized additive model
 
 Original provider decision and recommended priority are deliberately excluded from learned preference features so the preference layer does not learn the engine's own historical output. Categorical features with fewer than three supporting signals receive zero weight; one-sided categories are strongly shrunk; and every categorical contribution is capped at magnitude `0.5`.
 
-The model emits a preference probability. That probability is not a relevance fact and is never written back into historical candidate decisions. The diagnostic comparison still uses `0.6` and `0.25` to inspect hypothetical eligibility-boundary movements. Preference Runtime v1 instead applies bounded neighboring swaps only among already-selected items.
+The model emits a preference probability. That probability is not a relevance fact and is never written back into historical candidate decisions. This legacy diagnostic comparison retains `0.6` and `0.25` for lineage only. Preference Runtime v2 applies bounded neighboring swaps among already-selected items. Preference Eligibility Controller v2 uses a separate conservative live policy and authoritative ledger; it does not consume this legacy comparison as a parallel execution branch.
 
 ## Shadow comparison
 
@@ -55,7 +55,10 @@ Each snapshot records:
 
 ## Exploration and comeback
 
-Eligibility exploration and comeback remain deferred. Preference Runtime v1 retains the complete provider-selected set, so bounded presentation reranking does not require a separate exploration quota.
+Eligibility exploration and comeback remain deferred. Default v2 eligibility
+may only fill unused capacity and therefore does not require a separate
+exploration quota. Guarded suppression cannot activate until its negative
+evidence gates pass.
 
 ## Persistence and idempotency
 

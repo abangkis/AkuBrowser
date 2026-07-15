@@ -37,7 +37,11 @@ Each unique evaluated evidence block has one current provider decision: `selecte
 
 Content that should not have appeared because of a product failure belongs in the existing error lanes such as `wrong_lane` or `duplicate`, rather than in routine preference interaction. Retired development-only preference vocabulary and its rows are deleted instead of maintained as a compatibility layer.
 
-Optional preference reason codes are `wrong_topic`, `already_known`, `duplicate`, `stale_or_superseded`, `low_signal`, `wrong_priority`, and `other`. A free-text note is optional except for `other`.
+The optional Less reason menu is intentionally small and ordered as `not_interested`,
+`already_known`, `stale_or_superseded` (displayed as **Old info**), and
+`duplicate`. Clicking Less is already complete feedback; the optional reason
+only routes the signal more precisely and therefore needs no separate Skip
+control.
 
 ## Preference model boundary
 
@@ -82,6 +86,6 @@ Every promoted or reviewed item can switch independently between two presentatio
 
 ## Current implementation status
 
-The additive SQLite ledger, append-only preference events, provider invocation telemetry, explicit Codex configuration, bounded paged Review Inbox, newest-run expansion, symmetric Unified View signals, captured Source layout, and Preference Runtime v1 are implemented. The active preference vocabulary contains only `more_like_this` and `less_like_this`; retired development events are removed. Historical runs remain readable but are not falsely backfilled as evaluated candidates because their exact provider prompt boundary cannot be reconstructed. Automatic local fitting may apply bounded selected-item reranking without waiting for the older replay gates. Eligibility-changing promotion, suppression, exploration, and comeback remain deferred.
+The additive SQLite ledger, append-only preference events, provider invocation telemetry, explicit Codex configuration, bounded paged Review Inbox, newest-run expansion, symmetric Unified View signals, captured Source layout, Preference Runtime v2, and Preference Eligibility Controller v2 are implemented. The active preference vocabulary contains only `more_like_this` and `less_like_this`; the optional Less reasons are Not interested, Already knew, Old info, and Duplicate. Historical runs remain readable but are not falsely backfilled as evaluated candidates because their exact provider prompt boundary cannot be reconstructed. Automatic local fitting may apply bounded selected-item reranking without waiting for the older replay gates. The default eligibility mode may add one qualified item into unused capacity; suppression remains disabled unless the separately gated guarded-live mode is selected.
 
 An inspectable engine dashboard is deferred until real labels establish which parameters need operator control. It should eventually expose active thresholds, preference tendencies, exploration budget, comeback triggers, policy version, and outcome/economic metrics without allowing UI settings to bypass hard safety constraints.

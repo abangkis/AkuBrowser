@@ -2,7 +2,7 @@
 
 > Status: **Implemented and enforced**
 > Date: **2026-07-15**
-> Runtime baseline: **AkuBridge 0.5.42 / source-fidelity-v44; AkuSidecar 0.6.10**
+> Runtime baseline: **AkuBridge 0.5.44 / source-fidelity-v46; AkuSidecar 0.6.16**
 > Scope: **AkuBridge source parsers, generic capture-quality evaluation, bounded recovery, and AkuSidecar admission**
 
 ## 1. Purpose
@@ -140,8 +140,10 @@ therefore still traceable in snapshot quality diagnostics.
 ## 5. Bounded recovery
 
 AkuSidecar sends `qualityReportRequired: true`, `qualityRetryBudget: 1`, and a
-default `qualityRetrySettleMs: 300`. AkuBridge clamps the retry budget to one
-and settle time to at most 1000 ms.
+profile-derived `qualityRetrySettleMs` (300 or 1,000 ms for the built-in load
+profiles). AkuBridge clamps the retry budget to one and settle time to at most
+1,000 ms. The generic media recovery runtime consumes this value directly;
+adapter `settleMs` remains only a fallback when the caller omits the budget.
 
 For non-media fields, the retry settles and reruns the same primary parser. For
 media, `media-recovery-v1` first reruns the primary extraction after settling,
@@ -255,7 +257,7 @@ Any change to an adapter, field profile, or admission rule must pass:
 - live signed-in X and LinkedIn capture validation after cooperative Bridge
   reload, including one real reasoning invocation.
 
-The current runtime advertises `aku-bridge-0.5.42-source-fidelity-v44`,
+The current runtime advertises `aku-bridge-0.5.44-source-fidelity-v46`,
 `x-dom-v16`, `linkedin-dom-v13`, `report_capture_quality`,
 `recover_missing_media`, `probe_freshness`, and `recover_source_freshness`.
 
