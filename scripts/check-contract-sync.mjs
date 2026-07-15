@@ -26,6 +26,7 @@ assert.equal(fs.existsSync(path.join(sidecarRoot, "package.json")), false, "AkuS
 
 const domain = text(path.join(sidecarRoot, "internal", "domain", "types.go"));
 const engine = text(path.join(sidecarRoot, "internal", "engine", "engine.go"));
+const calibrationEngine = text(path.join(sidecarRoot, "internal", "engine", "calibration.go"));
 const reload = text(path.join(sidecarRoot, "internal", "engine", "reload_actions.go"));
 const http = text(path.join(sidecarRoot, "internal", "httpapi", "server.go"));
 const ui = text(path.join(sidecarRoot, "internal", "httpapi", "web", "app.js"));
@@ -34,7 +35,7 @@ const bridgeCapabilities = text(path.join(bridgeRoot, "bridge-capabilities.js"))
 const bridgeRelay = text(path.join(bridgeRoot, "aku-browser-tab-bridge.js"));
 const activeContract = text(path.join(browserRoot, "contracts", "bridge-contract-v2.md"));
 
-for (const value of ["1.0.0-dev.2", "aku-browser.bridge.v2"]) assert.match(domain, literal(value));
+for (const value of ["1.0.0-dev.3", "aku-browser.bridge.v2"]) assert.match(domain, literal(value));
 for (const value of ["0.6.0", "source-fidelity-v47"]) assert.match(engine, literal(value));
 assert.match(reload, literal("aku-bridge-0.6.0-source-fidelity-v47"));
 
@@ -68,7 +69,9 @@ for (const value of [
   "/api/calibration/sessions",
   "StartCalibration",
   "DecideCalibration",
-]) assert.match(http + engine, literal(value));
+  "ensurePendingFirstCalibration",
+  "LatestCalibrationEligibleSessionID",
+]) assert.match(http + engine + calibrationEngine + text(path.join(sidecarRoot, "internal", "store", "calibration.go")), literal(value));
 
 for (const value of [
   "startPendingFirstCalibration",
@@ -116,7 +119,7 @@ assert.deepEqual(supervised.args, [
 ]);
 assert.deepEqual(supervised.health.expect, {
   status: "ok",
-  version: "1.0.0-dev.2",
+  version: "1.0.0-dev.3",
   runtime: "go",
   bridgeContractVersion: "aku-browser.bridge.v2",
   provider: "codex-app-server",
@@ -128,7 +131,7 @@ console.log(JSON.stringify({
   AkuBrowser: browserPackage.version,
   AkuBridge: bridgePackage.version,
   AkuBridgeRuntime: bridgePackage.akuRuntimeRevision,
-  AkuSidecar: "1.0.0-dev.2",
+  AkuSidecar: "1.0.0-dev.3",
   bridgeContract: "aku-browser.bridge.v2",
   provider: sidecarConfig.reasoning.provider,
 }, null, 2));
