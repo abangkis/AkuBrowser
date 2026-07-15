@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
 > Status: **Source-faithful capture, Settings-first operation, and supervised lifecycle implemented**
-> Version: **0.27**
+> Version: **0.28**
 > Last updated: **2026-07-15**
 > Working name: **AkuBrowser**
 
@@ -193,7 +193,7 @@ third-source requirements are recorded in
 The current runtime baseline is AkuBridge 0.5.40 / source-fidelity-v42 with
 `x-dom-v16`, `linkedin-dom-v13`, `x-freshness-v1`,
 `linkedin-freshness-v2`, `x-media-recovery-v1`, and
-`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.6. The freshness seam is
+`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.7. The freshness seam is
 normatively defined in
 [`Source Freshness Recovery v1`](../contracts/source-freshness-recovery-v1.md),
 and bounded media fallback is defined in
@@ -244,6 +244,14 @@ The default home presentation is now **Timeline**: a rolling buffer of the newes
 `Check for updates` directly starts Unified Catch Up from engine defaults and the active Source Registry. Mode, source scope, and free-form intent are no longer routine homepage controls. Onboarding v0 only selects active sources; it does not restate interests or import historical pilot feedback. Finishing first-time onboarding automatically starts the first update, followed by a bounded forced-label calibration session. Daily `More like this` and `Less like this` remain contextual signals collected outside that calibration lane.
 
 Source controls and BrowserAdapter health are part of Settings rather than a separate Overview destination.
+
+Settings also owns two explicit local reset operations. `Reset learning`
+deletes preference feedback, calibration state, and fitted snapshots while
+preserving timeline, onboarding, source selection, and other settings. `Full
+reset and onboard again` first creates and validates a local SQLite backup,
+then transactionally clears user data and dashboard settings while preserving
+the active Bridge identity. Both operations are rejected while an update is
+active and require a first action plus an exact typed confirmation phrase.
 
 The initial Source Registry contains X and LinkedIn as active, user-triggered, authenticated-browser stream sources. Registry membership is durable product configuration; whether a tab is open is transient BrowserAdapter state. Future `periodic`, `static`, and `push` behavior classes require different acquisition policies and do not imply that background scheduling is implemented. The normative boundary is recorded in [`Home Surface Contract v0`](../contracts/home-surface-v0.md).
 
@@ -920,6 +928,7 @@ remaining mixed with active rules.
 
 | D-140 | Give every Bridge-created capture surface a run/session lease and release it only at the terminal lifecycle boundary. Close the whole managed window only while every remaining tab is still provably Bridge-owned; preserve pre-existing, added, moved, or navigated user tabs and windows. Replay terminal release after UI reload for idempotent recovery | Implemented in AkuBridge 0.5.39 / source-fidelity-v41 and AkuSidecar 0.6.5; unit coverage proves full owned-window cleanup, user-tab preservation, and stale-lease rejection |
 | D-141 | Treat an X status-photo permalink as source-specific evidence that media is expected, even while its nested CDN image is not yet hydrated. Feed that signal into the shared visual-hydration and media-recovery lifecycle so the final outcome is `primary_complete`, `recovered`, or `unavailable`, never a false `not_applicable`. Keep the semantic selector in the X adapter and all retry, allowlist, admission, and truthful-degradation policy generic | Implemented in AkuBridge 0.5.40 / source-fidelity-v42 (`x-dom-v16`) and AkuSidecar 0.6.6 after tracing a text-only World and Science result whose source photo was silently classified as absent |
+| D-142 | Expose `Reset learning` and `Full reset and onboard again` in Settings. Require an operation-specific typed phrase after the initiating click, reject both while work is active, keep learning reset scoped to learning state, and make full reset verified-backup-first while preserving the live Bridge identity and routing directly to onboarding | Implemented in AkuSidecar 0.6.7 with HTTP, SQLite, and frontend contract coverage |
 
 ## 16. Change Discipline
 
