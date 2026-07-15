@@ -8,15 +8,15 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "start": "npm --prefix ../AkuSidecar run start",
-    "dev": "npm --prefix ../AkuSidecar run dev",
+    "start": "node scripts/run-go.mjs run ./cmd/akusidecar --config config/sidecar.json",
+    "dev": "../AkuSidecar/runtime/dev/aku-watch.exe",
     "check": "npm run check:contracts && npm run check:bridge && npm run check:sidecar",
     "check:contracts": "node scripts/check-contract-sync.mjs",
     "check:bridge": "npm --prefix ../AkuBridge run check",
-    "check:sidecar": "npm --prefix ../AkuSidecar run check",
+    "check:sidecar": "node scripts/run-go.mjs test -p 1 ./...",
     "doctor": "node scripts/doctor.mjs",
     "package:bridge": "npm --prefix ../AkuBridge run package:verify",
-    "smoke:http": "npm --prefix ../AkuSidecar run smoke:http",
-    "smoke:codex": "npm --prefix ../AkuSidecar run smoke:codex"
+    "smoke:http": "node scripts/run-go.mjs test -c -o runtime/dev/httpapi-smoke.test.exe ./internal/httpapi && ..\\AkuSidecar\\runtime\\dev\\httpapi-smoke.test.exe -test.run TestHealthAndBootstrapExposeGoBoundary",
+    "smoke:codex": "node scripts/run-go.mjs test -c -o runtime/dev/reasoning-smoke.test.exe ./internal/reasoning && ..\\AkuSidecar\\runtime\\dev\\reasoning-smoke.test.exe -test.run TestCodexAppServerUsesOneManagedStructuredTransport"
   }
 }

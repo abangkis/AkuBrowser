@@ -1,327 +1,112 @@
 import assert from "node:assert/strict";
+import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import {
-  BRIDGE_RUNTIME_REVISION,
-  createBridgeCapabilities,
-} from "../../AkuBridge/bridge-capabilities.js";
-import { BRIDGE_REQUIREMENTS } from "../../AkuSidecar/src/operations/bridge-compatibility.mjs";
-import { BOUNDED_LOAD_PROFILES } from "../../AkuSidecar/src/core/bounded-load-profile.mjs";
 
-const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
-const workspaceRoot = path.dirname(projectRoot);
+const browserRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
+const workspaceRoot = path.dirname(browserRoot);
 const bridgeRoot = path.join(workspaceRoot, "AkuBridge");
 const sidecarRoot = path.join(workspaceRoot, "AkuSidecar");
+const supervisorRoot = path.join(workspaceRoot, "AkuSupervisor");
 
-const browserPackage = readJson(path.join(projectRoot, "package.json"));
-const bridgePackage = readJson(path.join(bridgeRoot, "package.json"));
-const sidecarPackage = readJson(path.join(sidecarRoot, "package.json"));
-const bridgeManifest = readJson(path.join(bridgeRoot, "manifest.json"));
-const versionPattern = /^\d+\.\d+\.\d+$/;
-for (const [component, version] of Object.entries({
-  AkuBrowser: browserPackage.version,
-  AkuBridge: bridgePackage.version,
-  AkuSidecar: sidecarPackage.version,
-})) {
-  assert.match(version, versionPattern, `${component} must declare a semantic version`);
-}
-assert.equal(
-  bridgeManifest.version,
-  bridgePackage.version,
-  "AkuBridge manifest drifted from its package version",
-);
-const declaredBridgeCapabilities = createBridgeCapabilities(bridgeManifest);
-assert.ok(
-  compareVersions(bridgePackage.version, BRIDGE_REQUIREMENTS.minimumExtensionVersion) >= 0,
-  "AkuBridge is older than AkuSidecar's declared compatibility minimum",
-);
-assert.equal(
-  BRIDGE_RUNTIME_REVISION,
-  BRIDGE_REQUIREMENTS.runtimeRevision,
-  "AkuBridge runtime revision drifted from AkuSidecar requirements",
-);
-assert.deepEqual(
-  declaredBridgeCapabilities.adapterVersions,
-  BRIDGE_REQUIREMENTS.adapterVersions,
-  "AkuBridge adapter versions drifted from AkuSidecar requirements",
-);
-for (const action of BRIDGE_REQUIREMENTS.requiredActions) {
-  assert.ok(
-    declaredBridgeCapabilities.actions.includes(action),
-    `AkuBridge must advertise Sidecar-required action ${action}`,
-  );
-}
+const browserPackage = json(path.join(browserRoot, "package.json"));
+const bridgePackage = json(path.join(bridgeRoot, "package.json"));
+const bridgeManifest = json(path.join(bridgeRoot, "manifest.json"));
+const sidecarConfig = json(path.join(sidecarRoot, "config", "sidecar.json"));
+const supervisorProfile = json(path.join(supervisorRoot, "config", "akuworkspace.services.json"));
 
-const canonicalSchema = readJson(path.join(projectRoot, "contracts", "reasoning-result.schema.json"));
-const sidecarSchema = readJson(path.join(sidecarRoot, "schemas", "reasoning-result.schema.json"));
-assert.deepEqual(sidecarSchema, canonicalSchema, "AkuSidecar reasoning schema drifted from AkuBrowser");
-const canonicalAcquisitionPlanSchema = readJson(
-  path.join(projectRoot, "contracts", "acquisition-plan.schema.json"),
-);
-const sidecarAcquisitionPlanSchema = readJson(
-  path.join(sidecarRoot, "schemas", "acquisition-plan.schema.json"),
-);
-assert.deepEqual(
-  sidecarAcquisitionPlanSchema,
-  canonicalAcquisitionPlanSchema,
-  "AkuSidecar acquisition-plan schema drifted from AkuBrowser",
-);
-const canonicalUnifiedSessionSchema = readJson(
-  path.join(projectRoot, "contracts", "unified-session.schema.json"),
-);
-const sidecarUnifiedSessionSchema = readJson(
-  path.join(sidecarRoot, "schemas", "unified-session.schema.json"),
-);
-assert.deepEqual(
-  sidecarUnifiedSessionSchema,
-  canonicalUnifiedSessionSchema,
-  "AkuSidecar unified-session schema drifted from AkuBrowser",
-);
-for (const profile of Object.values(BOUNDED_LOAD_PROFILES)) {
-  assert.ok(
-    profile.maxScrolls <= declaredBridgeCapabilities.captureLimits.maxScrolls,
-    `${profile.id} exceeds AkuBridge's declared scroll ceiling`,
-  );
-  assert.ok(
-    profile.maxItemsPerSource <= canonicalUnifiedSessionSchema.properties.maxItemsPerSource.maximum,
-    `${profile.id} exceeds the unified per-source schema ceiling`,
-  );
-  assert.ok(
-    profile.maxItemsTotal <= canonicalUnifiedSessionSchema.properties.maxItemsTotal.maximum,
-    `${profile.id} exceeds the unified total schema ceiling`,
-  );
-}
-for (const schemaName of [
-  "candidate-evaluation.schema.json",
-  "preference-feedback.schema.json",
-  "preference-profile.schema.json",
-  "selection-decision.schema.json",
-  "preference-eligibility-decision.schema.json",
-  "reasoning-invocation.schema.json",
-  "onboarding-profile.schema.json",
-  "calibration-session.schema.json",
-  "calibration-label.schema.json",
-  "calibration-profile-snapshot.schema.json",
-]) {
-  assert.deepEqual(
-    readJson(path.join(sidecarRoot, "schemas", schemaName)),
-    readJson(path.join(projectRoot, "contracts", schemaName)),
-    `AkuSidecar ${schemaName} drifted from AkuBrowser`,
-  );
-}
-assert.deepEqual(
-  readJson(path.join(sidecarRoot, "config", "reasoning.json")),
-  readJson(path.join(projectRoot, "contracts", "reasoning-routing-v0.json")),
-  "AkuSidecar reasoning routing defaults drifted from AkuBrowser",
-);
+assert.match(browserPackage.version, /^\d+\.\d+\.\d+$/);
+assert.equal(bridgePackage.version, "0.6.0");
+assert.equal(bridgeManifest.version, bridgePackage.version);
+assert.equal(bridgePackage.akuRuntimeRevision, "source-fidelity-v47");
+assert.equal(sidecarConfig.reasoning.provider, "codex-app-server");
+assert.equal(sidecarConfig.reasoning.executable, "runtime/codex-cli/bin/codex.exe");
+assert.equal(fs.existsSync(path.join(sidecarRoot, "package.json")), false, "AkuSidecar must not retain a Node package");
 
-const bridgeService = readText(path.join(bridgeRoot, "service-worker.js"));
-const bridgeCapabilitiesSource = readText(path.join(bridgeRoot, "bridge-capabilities.js"));
-const bridgeTab = readText(path.join(bridgeRoot, "aku-browser-tab-bridge.js"));
-const bridgeContent = readText(path.join(bridgeRoot, "content-script.js"));
-const bridgeFreshnessRecovery = readText(path.join(bridgeRoot, "source-freshness-recovery.js"));
-const bridgeFreshnessRuntime = readText(path.join(bridgeRoot, "source-freshness-runtime.js"));
-const bridgeMediaRecovery = readText(path.join(bridgeRoot, "media-recovery-runtime.js"));
-const bridgeCapturePolicy = readText(path.join(bridgeRoot, "bounded-capture-policy.js"));
-const bridgeQualityPolicy = readText(path.join(bridgeRoot, "capture-quality-policy.js"));
-const sidecarHttp = readText(path.join(sidecarRoot, "src", "http", "app.mjs"));
-const sidecarUi = readText(path.join(sidecarRoot, "public", "app.js"));
-const sidecarContracts = readText(path.join(sidecarRoot, "src", "core", "contracts.mjs"));
-const sidecarJobEngine = readText(path.join(sidecarRoot, "src", "core", "job-engine.mjs"));
-const sidecarSelectionEngine = readText(path.join(sidecarRoot, "src", "core", "selection-engine.mjs"));
-const sidecarPreferenceRuntime = readText(path.join(sidecarRoot, "src", "core", "preference-runtime.mjs"));
-const sidecarPreferenceEligibility = readText(
-  path.join(sidecarRoot, "src", "core", "preference-eligibility-controller.mjs"),
-);
-const sidecarPreferenceFeatures = readText(path.join(sidecarRoot, "src", "core", "preference-features.mjs"));
-const sidecarEngineBenchmark = readText(path.join(sidecarRoot, "src", "core", "engine-replay-benchmark.mjs"));
-const sidecarStateStore = readText(
-  path.join(sidecarRoot, "src", "store", "sqlite-state-store.mjs"),
-);
-const sidecarBrowserAdapter = readText(
-  path.join(sidecarRoot, "src", "browser", "browser-adapter-contract.mjs"),
-);
-const sidecarQualityAdmission = readText(
-  path.join(sidecarRoot, "src", "browser", "observation-quality-policy.mjs"),
-);
-assert.match(
-  sidecarHttp,
-  new RegExp(`APP_VERSION\\s*=\\s*["']${escapeRegExp(sidecarPackage.version)}["']`),
-  "AkuSidecar HTTP version drifted from its package version",
-);
-assert.ok(bridgePackage.akuRuntimeRevision, "AkuBridge must declare an operational runtime revision");
-assert.match(
-  bridgeService + bridgeCapabilitiesSource,
-  new RegExp(escapeRegExp(bridgePackage.akuRuntimeRevision)),
-  "AkuBridge runtime revision drifted from its capability handshake",
-);
+const domain = text(path.join(sidecarRoot, "internal", "domain", "types.go"));
+const engine = text(path.join(sidecarRoot, "internal", "engine", "engine.go"));
+const reload = text(path.join(sidecarRoot, "internal", "engine", "reload_actions.go"));
+const http = text(path.join(sidecarRoot, "internal", "httpapi", "server.go"));
+const ui = text(path.join(sidecarRoot, "internal", "httpapi", "web", "app.js"));
+const bridgeService = text(path.join(bridgeRoot, "service-worker.js"));
+const bridgeCapabilities = text(path.join(bridgeRoot, "bridge-capabilities.js"));
+const bridgeRelay = text(path.join(bridgeRoot, "aku-browser-tab-bridge.js"));
+const activeContract = text(path.join(browserRoot, "contracts", "bridge-contract-v2.md"));
+
+for (const value of ["1.0.0-dev.1", "aku-browser.bridge.v2"]) assert.match(domain, literal(value));
+for (const value of ["0.6.0", "source-fidelity-v47"]) assert.match(engine, literal(value));
+assert.match(reload, literal("aku-bridge-0.6.0-source-fidelity-v47"));
 
 for (const value of [
-  "aku-browser.bridge.v1",
+  "x-dom-v16", "linkedin-dom-v13", "read_only_bounded",
+  "probe_readiness", "probe_freshness", "recover_source_freshness",
+  "collect_visible", "report_capture_quality", "recover_missing_media",
+  "manage_capture_window", "release_capture_surface", "reload_self",
+]) {
+  assert.match(bridgeCapabilities, literal(value));
+  assert.match(engine, literal(value));
+}
+
+for (const value of [
+  "adapterVersions", "manifestVersion", "captureLimits", "adapterVersion",
+  "selectorStrategy", "qualityReports", "platformId", "captureQuality",
+  "mediaRecovery", "evidenceKey",
+]) assert.match(domain, literal(value));
+
+for (const value of [
   "X-Aku-Bridge-Token",
   "X-Aku-Bridge-Id",
   "X-Aku-Bridge-Contract",
-]) {
-  assert.match(bridgeService + bridgeCapabilitiesSource, new RegExp(escapeRegExp(value)));
-  assert.match(sidecarHttp, new RegExp(escapeRegExp(value)));
-}
+  "/api/bridge/heartbeat",
+  "/api/bridge/commands/next",
+  "/api/operations/bridge/actions/reload-self",
+]) assert.match(http, literal(value));
 
 for (const value of [
   "AKU_BROWSER_BRIDGE_PING",
   "AKU_BROWSER_BRIDGE_READY",
   "AKU_BROWSER_DISPATCH",
+  "AKU_BROWSER_BRIDGE_RELOAD_SELF",
   "AKU_BROWSER_BRIDGE_ERROR",
-]) {
-  assert.match(bridgeTab, new RegExp(escapeRegExp(value)));
-  assert.match(sidecarUi, new RegExp(escapeRegExp(value)));
+]) assert.match(ui + bridgeRelay, literal(value));
+
+for (const value of ["aku-browser.bridge.v2", "source-fidelity-v47"]) {
+  assert.match(bridgeService + bridgeCapabilities, literal(value));
+  assert.match(activeContract, literal(value));
 }
 
-assert.match(bridgeService, /AKU_BROWSER_COLLECT_VISIBLE/);
-assert.match(bridgeContent, /AKU_BROWSER_COLLECT_VISIBLE/);
-for (const value of [
-  "browserAdapter",
-  "requestedScrolls",
-  "performedScrolls",
-  "scrollStopReason",
-  "scrollContainer",
-  "pendingNewContent",
-  "pendingNewContentAction",
-  "pendingContentActivationEvidence",
-  "pendingContentPolicy",
-  "feedMutation",
-  "sameTabMutation",
-  "restorationScope",
-  "restoreAttempted",
-  "restored",
-  "feedPosition",
-  "platformId",
-  "acquisitionRound",
-  "continuationRequested",
-  "continuationAnchorMatched",
-  "captureStartScrollY",
-  "sourceFreshness",
-  "mediaRecovery",
-]) {
-  assert.match(bridgeContent, new RegExp(escapeRegExp(value)));
-  assert.match(sidecarContracts, new RegExp(escapeRegExp(value)));
-}
-for (const value of [
-  "source-freshness-recovery-v1",
-  "pending_content_revealed",
-  "feed_changed_after_wake",
-  "adapter_wake_settled",
-  "follow_up_preserved",
-  "freshness_unavailable",
-]) {
-  assert.match(
-    bridgeFreshnessRecovery + bridgeFreshnessRuntime + bridgeContent + sidecarContracts,
-    new RegExp(escapeRegExp(value)),
+for (const schema of ["acquisition-plan.schema.json", "reasoning-result.schema.json"]) {
+  assert.equal(
+    digest(path.join(browserRoot, "contracts", schema)),
+    digest(path.join(sidecarRoot, "schemas", schema)),
+    `${schema} drifted between AkuBrowser and AkuSidecar`,
   );
 }
-assert.match(
-  readText(path.join(projectRoot, "contracts", "source-freshness-recovery-v1.md")),
-  /generic source-freshness state machine|Generic ownership/i,
-);
-for (const value of [
-  "media-recovery-v1",
-  "primary_complete",
-  "primary_hydration",
-  "alternate_dom",
-  "unavailable",
-]) {
-  assert.match(
-    bridgeMediaRecovery + bridgeContent + sidecarContracts + sidecarQualityAdmission,
-    new RegExp(escapeRegExp(value)),
-  );
-}
-assert.match(
-  readText(path.join(projectRoot, "contracts", "media-recovery-v1.md")),
-  /Generic ownership/i,
-);
-assert.match(sidecarStateStore, /media_recovery_json/);
-assert.match(sidecarUi, /source-layout-media-unavailable/);
-assert.match(bridgeCapturePolicy, /maxScrolls: 6/);
-assert.match(bridgeCapturePolicy, /sameTabMutationAllowed/);
-assert.match(bridgeCapturePolicy, /acquisitionRound/);
-assert.match(bridgeCapturePolicy, /continuation/);
-assert.match(bridgeQualityPolicy, /social-post-v1/);
-assert.match(bridgeQualityPolicy, /pending_hydration/);
-assert.match(sidecarContracts, /pending_hydration/);
-for (const value of [
-  "complete",
-  "usable_degraded",
-  "retryable",
-  "invalid",
-]) {
-  assert.match(bridgeQualityPolicy, new RegExp(escapeRegExp(value)));
-  assert.match(sidecarQualityAdmission, new RegExp(escapeRegExp(value)));
-}
-assert.match(bridgeCapturePolicy, /maxQualityRetryBudget: 1/);
-assert.match(sidecarBrowserAdapter, /qualityReportRequired/);
-assert.match(sidecarJobEngine, /admitObservationQuality/);
-assert.match(sidecarBrowserAdapter, /NATIVE_BROWSER_ADAPTER = "aku-bridge"/);
-assert.match(
-  sidecarBrowserAdapter,
-  /pendingContentPolicy: revealPendingContent \? "reveal_if_present" : "detect_only"/,
-);
-assert.match(sidecarBrowserAdapter, /buildObservationContinuation/);
-assert.match(sidecarSelectionEngine, /selection-engine-v1/);
-assert.match(sidecarPreferenceRuntime, /preference-runtime-v2/);
-assert.match(sidecarPreferenceEligibility, /preference-eligibility-v2/);
-assert.match(sidecarPreferenceEligibility, /mode: "promote_unused_budget"/);
-assert.match(sidecarPreferenceEligibility, /live_promotion_unused_budget/);
-assert.match(sidecarPreferenceEligibility, /live_suppression_guarded/);
-assert.doesNotMatch(sidecarPreferenceFeatures, /candidate\.source|assessment\.source/);
-assert.match(sidecarEngineBenchmark, /benchmarkPerformsModelCalls: false/);
-for (const contractName of [
-  "selection-engine-v1.md",
-  "preference-runtime-v2.md",
-  "preference-eligibility-controller-v2.md",
-  "engine-replay-benchmark-v1.md",
-]) {
-  assert.ok(fs.existsSync(path.join(projectRoot, "contracts", contractName)), `${contractName} is required`);
-}
-for (const value of [
-  "evidenceKey",
-  "eventKey",
-  "knowledgeDelta",
-  "exactDuplicatesSuppressed",
-  "previousCheckpointRunId",
-]) {
-  assert.match(sidecarContracts + sidecarJobEngine, new RegExp(escapeRegExp(value)));
-}
-for (const table of [
-  "checkpoints",
-  "knowledge_events",
-  "knowledge_versions",
-  "evidence_dispositions",
-  "candidate_evaluations",
-  "preference_feedback_events",
-  "preference_eligibility_decisions",
-  "reasoning_invocations",
-]) {
-  assert.match(sidecarStateStore, new RegExp(`CREATE TABLE IF NOT EXISTS ${table}`));
-}
-console.log("AkuBrowser cross-repository contracts are synchronized.");
 
-function readJson(file) {
-  return JSON.parse(readText(file));
-}
+const supervised = supervisorProfile.services.akusidecar;
+assert.equal(supervised.command, "C:\\WorkspaceCodex\\AkuWorkspace\\AkuSidecar\\runtime\\dev\\aku-watch.exe");
+assert.deepEqual(supervised.args, []);
+assert.deepEqual(supervised.health.expect, {
+  status: "ok",
+  version: "1.0.0-dev.1",
+  runtime: "go",
+  bridgeContractVersion: "aku-browser.bridge.v2",
+  provider: "codex-app-server",
+});
 
-function readText(file) {
-  return fs.readFileSync(file, "utf8");
-}
+console.log(JSON.stringify({
+  status: "ok",
+  boundary: "go-sidecar-v1",
+  AkuBrowser: browserPackage.version,
+  AkuBridge: bridgePackage.version,
+  AkuBridgeRuntime: bridgePackage.akuRuntimeRevision,
+  AkuSidecar: "1.0.0-dev.1",
+  bridgeContract: "aku-browser.bridge.v2",
+  provider: sidecarConfig.reasoning.provider,
+}, null, 2));
 
-function escapeRegExp(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
-function compareVersions(left, right) {
-  const a = String(left).split(".").map(Number);
-  const b = String(right).split(".").map(Number);
-  for (let index = 0; index < 3; index += 1) {
-    if (a[index] !== b[index]) return a[index] > b[index] ? 1 : -1;
-  }
-  return 0;
-}
+function json(file) { return JSON.parse(fs.readFileSync(file, "utf8")); }
+function text(file) { return fs.readFileSync(file, "utf8"); }
+function digest(file) { return crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex"); }
+function literal(value) { return new RegExp(value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")); }

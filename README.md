@@ -33,8 +33,8 @@ AkuWorkspace/
 
 ## Aggregate commands
 
-Install dependencies in each Node repository once, then run the read-only
-integration checks:
+Install AkuBrowser and AkuBridge dependencies once, ensure Go is available for
+AkuSidecar, then run the read-only integration checks:
 
 ```powershell
 npm run check
@@ -50,16 +50,15 @@ cd ..\AkuSupervisor
 .\scripts\dev.ps1 akusidecar
 ```
 
-Open `http://127.0.0.1:47821`. Configure provider, models, efforts, timeout,
-sources, and capture budgets in AkuBrowser Settings; do not set
-`AKU_REASONING_PROVIDER` for normal startup. Vite provides frontend HMR.
-Backend modules are intentionally not file-watched; restart AkuSidecar
-explicitly through AkuSupervisor after a backend change so persisted work is
-not interrupted by incidental filesystem activity.
-`npm run dev` remains an integration convenience that delegates directly to
-AkuSidecar, but it is not the preferred full-workspace lifecycle path.
+Open `http://127.0.0.1:47821`. AkuSidecar now embeds its UI in the Go binary and
+loads only the strict `config/sidecar.json` contract. Its Go watcher rebuilds
+after source changes but defers replacement while a session is active.
+`npm run dev` remains an integration convenience that launches the Go watcher,
+but AkuSupervisor is the preferred full-workspace lifecycle owner.
 
-When the Codex SDK provider is active, the Sidecar process must be started from a normal host process context so it can spawn Codex CLI. See the [AkuSidecar development runbook](docs/sidecar-development-runbook.md); an ordinary sandboxed command can appear healthy yet fail every reasoning phase with `spawn EPERM`.
+The `codex-app-server` provider must run in a normal host context so it can own
+the bundled `codex.exe` process and local Codex state. See the
+[AkuSidecar development runbook](docs/sidecar-development-runbook.md).
 
 `doctor` is read-only. It checks each component identity, AkuBridge
 package/manifest alignment, the Sidecar health endpoint, SQLite integrity, the
@@ -102,4 +101,4 @@ reasoning. See [the source-adapter quality architecture](docs/source-adapter-qua
 
 Gate 0 technical feasibility is passed. The active pilot now advances a checkpoint per source and mode, suppresses previously delivered exact evidence, and stores material updates as append-only knowledge-event versions.
 
-See [the architecture reference](docs/aku-browser-architecture.md), [Selection Engine v1](contracts/selection-engine-v1.md), [Preference Runtime v2](contracts/preference-runtime-v2.md), [Preference Eligibility Controller v2](contracts/preference-eligibility-controller-v2.md), [Engine Replay Benchmark v1](contracts/engine-replay-benchmark-v1.md), and [bridge contract v1](contracts/bridge-contract-v1.md).
+See [the architecture reference](docs/aku-browser-architecture.md), [Selection Engine v1](contracts/selection-engine-v1.md), [Preference Runtime v2](contracts/preference-runtime-v2.md), and the active [Bridge Contract v2](contracts/bridge-contract-v2.md). Older contracts remain historical design evidence unless the Go rewrite explicitly adopts them.

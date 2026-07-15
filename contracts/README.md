@@ -32,7 +32,8 @@ Current contract artifacts:
 
 - `reasoning-result.schema.json` — validated provider-neutral result items.
 - `acquisition-plan.schema.json` — the finite provider acquisition decision.
-- `bridge-contract-v1.md` — the constrained localhost and page-message bridge protocol.
+- `bridge-contract-v2.md` — the active fresh-boundary localhost and page-message bridge protocol.
+- `bridge-contract-v1.md` — historical pre-Go protocol; not accepted by the active runtime.
 - `unified-session-experiment-v0.md` — the accepted product, lifecycle, merge, feedback, and finite-scroll boundary for the unified X + LinkedIn experiment.
 - `unified-session.schema.json` — the persisted parent-session, child-run, aggregate-result, and coverage resource contract.
 - `learning-loop-experiment-v0.md` — the review-first preference-learning and telemetry boundary.

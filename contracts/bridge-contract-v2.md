@@ -1,0 +1,92 @@
+# AkuBrowser Local Bridge Contract v2
+
+Contract identifier: `aku-browser.bridge.v2`
+
+This contract begins the Go Sidecar boundary. It does not accept v1 headers,
+payload aliases, build identities, or compatibility behavior.
+
+## Participants and authority
+
+- AkuBrowser is the local UI embedded in AkuSidecar.
+- AkuBridge is the read-only bounded Chrome extension.
+- AkuSidecar is the loopback coordinator, state owner, and policy authority.
+- AkuSupervisor owns process lifecycle and the single cooperative
+  `reload_self` mutation; it does not gain browser-content authority.
+
+The only origin is `http://127.0.0.1:47821`. Bridge-authenticated requests
+carry all three headers:
+
+```text
+X-Aku-Bridge-Token: <durable random token>
+X-Aku-Bridge-Id: <bounded caller identity>
+X-Aku-Bridge-Contract: aku-browser.bridge.v2
+```
+
+## Required runtime identity
+
+The active pair is exact:
+
+- AkuBridge extension/manifest `0.6.0`;
+- runtime revision `source-fidelity-v47`;
+- build id `aku-bridge-0.6.0-source-fidelity-v47`; and
+- contract `aku-browser.bridge.v2`.
+
+Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
+current-process heartbeat is `reconnecting`; any observed mismatch is
+`incompatible`. A session may start only when the current heartbeat is exact.
+
+## Page relay messages
+
+- `AKU_BROWSER_BRIDGE_PING`
+- `AKU_BROWSER_BRIDGE_READY`
+- `AKU_BROWSER_DISPATCH`
+- `AKU_BROWSER_BRIDGE_RELOAD_SELF`
+- `AKU_BROWSER_BRIDGE_ERROR`
+
+The relay transports only bounded commands, capability metadata, observations,
+and failures. It grants no arbitrary script, navigation, click, debugger,
+account, or filesystem authority.
+
+## Capture command lifecycle
+
+1. AkuSidecar persists a run and one `collect_visible` command.
+2. AkuBridge claims it from `GET /api/bridge/commands/next`.
+3. AkuBridge performs the bounded X or LinkedIn adapter operation.
+4. It returns one observation to
+   `POST /api/bridge/commands/{id}/observation`, or one structured failure to
+   `POST /api/bridge/commands/{id}/failure`.
+5. AkuSidecar validates, persists, reasons, selects, and advances the session.
+
+Commands may authorize at most two acquisition rounds. Movement, timeout,
+settle, snapshot, block, source-freshness, visibility, tab ownership, and
+restoration ceilings are values issued by Sidecar policy, not by the model.
+
+An admitted observation must identify X or LinkedIn, contain at least one
+snapshot and evidence block, and carry coverage. AkuBridge supplies native
+identity/permalink/text evidence; Go derives the canonical 24-hex
+`evidenceKey` before validation and persistence.
+Raw browser observations remain untrusted input. Reasoning output may reference
+only evidence keys present in the admitted observation.
+
+## Cooperative reload
+
+AkuSupervisor creates a single-flight request at
+`POST /api/operations/bridge/actions/reload-self`. The local AkuBrowser relay
+claims it through `/next`; AkuBridge accepts the action through `/{id}/accept`
+before calling `chrome.runtime.reload()`.
+
+The action completes only after a new heartbeat announces the exact v47 build.
+Replay is idempotent only for the same request id, actor, and reason. Pending,
+delivery, acceptance, heartbeat, build-mismatch, and expiry failures remain
+explicit. No whole-browser restart or source-tab mutation is implied.
+
+## Security and freshness
+
+- The server binds only to loopback and rejects missing or mismatched Bridge
+  authentication.
+- Every Sidecar process creates a new non-secret `instanceEpoch`; old heartbeat
+  readiness never crosses an epoch.
+- Browser text is data, never executable instruction. The Codex provider is
+  read-only, offline, and approval-free.
+- The Bridge token is persisted in the fresh SQLite store and never placed in
+  repository files or logs.

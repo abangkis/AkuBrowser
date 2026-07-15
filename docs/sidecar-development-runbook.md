@@ -1,126 +1,94 @@
-# AkuSidecar Development Runbook
+# AkuSidecar Go Development Runbook
 
 > Last verified: **2026-07-15**
+> Active baseline: **AkuSidecar 1.0.0-dev.1, AkuBridge 0.6.0 / source-fidelity-v47, bridge v2**
 
-## Required startup boundary
+## Runtime boundary
 
-AkuSidecar uses the Codex SDK provider, which launches Codex CLI during candidate evaluation and acquisition planning. The Sidecar must therefore run in a normal host process context with permission to create child processes.
+AkuSidecar is now an in-place Go rewrite. The Node/npm/Vite runtime and its
+SQLite migrations ended at `pre-refactor-2026-07-15`; they are not fallback
+paths. The current process embeds the UI, owns one fresh twelve-table SQLite
+schema, and uses a strict JSON configuration without legacy environment aliases.
 
-Do not start the long-lived development server through an ordinary sandboxed command runner. That process may still:
+The default reasoning transport is `codex-app-server`: Go owns one official
+`codex.exe app-server` process, creates ephemeral read-only threads, sends each
+output schema at turn start, and consumes structured notifications plus token
+usage. `codex-exec` remains an explicit process-per-request conformance option.
 
-- bind `127.0.0.1:47821`;
-- serve `/api/health` successfully;
-- receive AkuBridge captures; and
-- write runs to SQLite;
+## Required files
 
-but fail as soon as reasoning begins with:
+The native Codex distribution is local-only and must exist at:
 
 ```text
-spawn EPERM
+C:\WorkspaceCodex\AkuWorkspace\AkuSidecar\runtime\codex-cli\bin\codex.exe
+C:\WorkspaceCodex\AkuWorkspace\AkuSidecar\runtime\codex-cli\codex-path\
+C:\WorkspaceCodex\AkuWorkspace\AkuSidecar\runtime\codex-cli\codex-resources\
 ```
 
-HTTP health alone is not proof that the reasoning provider can execute.
+The binary and runtime directory are ignored by Git.
 
 ## Preferred startup
 
-AkuSupervisor is the preferred lifecycle owner. It starts AkuSidecar in the
-normal user host context, records the complete npm/server process tree,
-monitors `/api/health`, and provides bounded restart and logs without taking
-over the user's browser.
-
-For active AkuSupervisor development, start the visible watcher and request the
-registered Sidecar service:
+AkuSupervisor remains the visible lifecycle owner. Its checked-in profile
+starts `runtime\dev\aku-watch.exe`. The watcher builds the Sidecar, serves it
+on `127.0.0.1:47821`, and defers a source-triggered restart until
+`/api/sessions/active` reports no active session.
 
 ```powershell
 cd C:\WorkspaceCodex\AkuWorkspace\AkuSupervisor
 .\scripts\dev.ps1 akusidecar
 ```
 
-For the stable Supervisor, start `target\aku-supervisor.exe` visibly and use a
-second terminal for lifecycle requests:
+The exact operational rule is:
 
-```powershell
-.\target\aku-supervisor.exe start akusidecar `
-  --reason "start AkuBrowser development runtime"
-```
+- while the Supervisor watcher is active, its development binary is the owner;
+- promoting AkuSupervisor stable is required only after a newer Supervisor
+  development build exists;
+- promotion happens while the watcher and required services remain live;
+- stop the watcher only after promotion, then start
+  `target\aku-supervisor.exe` for stable operation.
 
-The checked-in Supervisor profile runs `npm run dev` from AkuSidecar with an
-empty environment map. Configure provider, models, efforts, policy, timeout,
-and source behavior through AkuBrowser Settings. Do not set
-`AKU_REASONING_PROVIDER` for normal startup.
-
-`npm run dev` mounts Vite middleware and HMR but deliberately does not run
-Node's file watcher. Codex SDK evaluation occurs inside a persisted active run;
-filesystem activity from that child process must not restart AkuSidecar during
-reasoning. Frontend changes hot-reload. Backend changes require an explicit
-AkuSupervisor restart, which preserves the database and lets the engine resume
-the persisted run.
-
-Direct `npm run dev` remains a component-isolation fallback when AkuSupervisor
-is intentionally unavailable. It must still run in a visible, normal host
-terminal:
+Direct component startup is reserved for isolated diagnostics:
 
 ```powershell
 cd C:\WorkspaceCodex\AkuWorkspace\AkuSidecar
-npm run dev
+.\runtime\dev\aku-watch.exe
 ```
 
-Do not replace AkuSupervisor with a hidden detached `Start-Process` launch. It
-loses the visible ownership, health, audit, restart, and full-tree cleanup
-guarantees that now exist.
+## Verification
 
-## Verification checklist
-
-1. Verify Supervisor ownership and health from a second terminal:
+1. Confirm Supervisor owns the service:
 
    ```powershell
-   cd C:\WorkspaceCodex\AkuWorkspace\AkuSupervisor
    .\target\dev\aku-supervisor.exe status --json
    ```
 
-   Use `target\aku-supervisor.exe` instead when running the promoted stable
-   binary. MCP may inspect the same service read-only through
-   `supervisor_get_service`.
-
-2. Verify HTTP health and the intended provider:
+2. Confirm the fresh Go boundary:
 
    ```powershell
-   (Invoke-WebRequest -UseBasicParsing http://127.0.0.1:47821/api/health).Content
+   Invoke-RestMethod http://127.0.0.1:47821/api/health
    ```
 
-   Expected provider: `codex-sdk`.
+   Required values are `status=ok`, `version=1.0.0-dev.1`, `runtime=go`,
+   `provider=codex-app-server`, and
+   `bridgeContractVersion=aku-browser.bridge.v2`.
 
-3. Verify SQLite integrity:
+3. Confirm `/api/bridge/health` reports `state=healthy`, `compatible=true`,
+   extension `0.6.0`, and runtime revision `source-fidelity-v47` before starting
+   a session.
 
-   ```powershell
-   npm run db:health
-   ```
+4. Run one X + LinkedIn session. Success requires two persisted child runs,
+   structured reasoning output, finite Timeline items, and token telemetry.
 
-4. Run or observe one bounded update. Do not declare startup successful until the newest `reasoning_invocations` row advances beyond immediate `spawn EPERM` failure. A healthy provider invocation takes materially longer than a 3-10 ms spawn failure and ultimately records token usage or a provider-level error.
+5. After AkuBridge source changes, use cooperative reload and validate the
+   exact expected build. Do not use the v1 protocol as a transition path.
 
-5. If the server was restarted while a Chrome tab was open, confirm `/api/health`
-   returns a new `instanceEpoch` and the existing tab automatically returns to
-   both `AkuSidecar ready` and `AkuBridge ready`. Ordinary API polling carries
-   the epoch header, so a completed onboarding tab should re-handshake without
-   a manual reload. Check for updates performs one additional bounded handshake
-   before creating work. When AkuBridge source changed, use
-   `aku-supervisor bridge validate` rather than Chrome control after the
-   one-time extension bootstrap.
+## Failure boundaries
 
-## Recovery from `spawn EPERM`
-
-1. Restart the registered `akusidecar` service through AkuSupervisor so the
-   complete npm/server process tree is replaced and audited.
-2. Keep the database unless a clean onboarding experiment was explicitly requested. Failed runs are useful diagnostics.
-3. Confirm Supervisor reports the complete owned PID tree and healthy transport.
-4. Verify port, health, provider, and one real reasoning invocation.
-5. Retry `Check for updates`. Do not reload or reinstall AkuBridge for this error: capture already succeeded, and the failure is in the Sidecar-to-Codex process boundary.
-
-## Proven incident
-
-During the first source-only onboarding and forced-calibration pilot, two
-Unified Sessions captured X and LinkedIn successfully but both sources failed
-in candidate evaluation with `spawn EPERM`. The server had been launched
-through a sandboxed long-running command. A normal-host launch fixed the
-incident. AkuSupervisor now provides that host-context lifecycle boundary and
-is the preferred durable solution.
+- HTTP health without a successful Codex invocation proves only process and
+  database readiness.
+- A missing Codex executable is a provider configuration failure, not a reason
+  to reintroduce the SDK or Node runtime.
+- A schema mismatch means the development database belongs to another fresh
+  boundary; remove it and let the current schema initialize.
+- A Bridge v1 or stale v46 heartbeat is incompatible by design.

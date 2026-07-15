@@ -1,7 +1,7 @@
 # AkuBrowser — Architecture Reference
 
 > Status: **Source-faithful capture, Settings-first operation, and supervised lifecycle implemented**
-> Version: **0.30**
+> Version: **0.31**
 > Last updated: **2026-07-15**
 > Working name: **AkuBrowser**
 
@@ -95,18 +95,18 @@ The implementation uses a neutral parent workspace containing four independent s
 - `AkuSidecar` owns the pinned AkuBrowser tab, job engine, SQLite state, reasoning providers, validation, and runtime result contract; and
 - `AkuSupervisor` owns generic local-development process lifecycle, health, logs, audit, MCP inspection, and cooperative AkuBridge reload. It does not own product settings.
 
-The parent workspace is not a repository and does not own dependencies. Each project has its own Git history, package manifest, lockfile, tests, and README. AkuBridge and AkuSidecar must not import each other's implementation source. They communicate only through the versioned HTTP/message contract so either side can later be replaced, released, or bundled independently.
+The parent workspace is not a repository and does not own dependencies. Each
+project has its own Git history, toolchain metadata, tests, and README.
+AkuBridge and AkuSidecar must not import each other's implementation source.
+They communicate only through the versioned HTTP/message contract so either
+side can later be replaced, released, or bundled independently.
 
 During local development, AkuSidecar remains one service on
-`127.0.0.1:47821`, normally owned by the visible AkuSupervisor process. Vite is
-mounted as frontend middleware on the existing Sidecar HTTP server rather than
-exposed through a second proxy port. Vite owns HMR for UI assets; Node's
-built-in watcher is intentionally not used because a persisted reasoning run
-must not be interrupted by filesystem activity from Codex SDK execution.
-Backend-module changes use an explicit AkuSupervisor restart, which retains
-ownership of the complete process tree and allows persisted run recovery.
-Production-style `npm start` keeps the static file path and does not require
-Vite at runtime.
+`127.0.0.1:47821`, normally owned by the visible AkuSupervisor process. The Go
+binary embeds the UI and owns the HTTP server, engine, and SQLite store. The Go
+watcher rebuilds source changes but polls the active-session endpoint and
+defers replacement until work is idle. AkuSupervisor retains ownership of the
+complete watcher/server/Codex process tree.
 
 The pinned UI treats a short local transport interruption as recoverable rather
 than as proof that the run failed. Status polling uses a finite reconnect
@@ -198,10 +198,14 @@ remains. A final `retryable` report cannot reach persistence or reasoning.
 The normative design, field profile, recovery budget, admission matrix, and
 third-source requirements are recorded in
 [`Source Adapter and Capture Quality Design`](source-adapter-quality-design.md).
-The current runtime baseline is AkuBridge 0.5.44 / source-fidelity-v46 with
+The current runtime baseline is AkuBridge 0.6.0 / source-fidelity-v47 with
 `x-dom-v16`, `linkedin-dom-v13`, `x-freshness-v1`,
 `linkedin-freshness-v2`, `x-media-recovery-v1`, and
-`linkedin-media-recovery-v1`, plus AkuSidecar 0.6.16. The freshness seam is
+`linkedin-media-recovery-v1`, plus Go AkuSidecar 1.0.0-dev.1. Bridge v47 still
+emits its detailed capture-quality evidence, while the fresh Go v1 boundary
+enforces only structural source/snapshot/evidence-key/coverage admission. The
+old Node report-consistency implementation is not a compatibility fallback.
+The freshness seam is
 normatively defined in
 [`Source Freshness Recovery v1`](../contracts/source-freshness-recovery-v1.md),
 and bounded media fallback is defined in
@@ -639,10 +643,12 @@ path. This is a resolved product decision, not a blocker.
 
 Gate 0 resolved the immediate implementation choices:
 
-- Codex SDK is the initial replaceable ReasoningProvider;
+- Managed Codex App Server is the default ReasoningProvider transport and Go
+  `codex-exec` is retained only for explicit conformance checks;
 - the accepted browser path is the minimal authenticated AkuBridge;
 - extension-to-sidecar transport is the versioned constrained localhost contract;
-- AkuSidecar uses Node, SQLite, and Vite middleware on one visible process and port;
+- AkuSidecar uses Go, embedded UI assets, and fresh SQLite on one visible
+  process and port;
 - browser acquisition uses fixed native budgets and reports restoration/fallback coverage; and
 - observation, acquisition-plan, and reasoning-result schemas are canonical contracts owned by AkuBrowser.
 
@@ -670,7 +676,12 @@ For user-triggered Catch Up and Manual Live, much of the sidecar can technically
 
 This extension-hosted form is called **Sidecar Lite**. It is not a complete equivalent of a native sidecar because Manifest V3 service workers are event-driven and may be terminated when idle or during long operations. Jobs must therefore be resumable from persisted state. A pinned extension page can coordinate work while it is open, but reliable long-running background monitoring should not depend on that page remaining open.
 
-Codex is also a separate concern. A Chrome extension cannot assume it can embed or start a native Codex runtime by itself. The initial Codex App Server or SDK route remains a local-runtime integration unless it is packaged by a native installer or replaced by a remote reasoning service.
+Codex is also a separate concern. A Chrome extension cannot assume it can
+embed or start a native Codex runtime by itself. Go uses a managed Codex App
+Server as the default transport and retains process-per-request `codex exec`
+for explicit conformance checks. Both remain local
+runtime integrations unless packaged by a native installer or replaced by a
+remote reasoning service.
 
 ### 14.2 Packaging phases
 
@@ -974,6 +985,7 @@ remaining mixed with active rules.
 | D-148 | Coordinate bounded load through one persisted profile: Standard 1x, Expanded 2x, Stress 3x, or Custom. Expanded uses four initial native scrolls, ten selected items per source, twenty per Unified Session, Timeline twenty-four, and a one-second media settle; Stress is pre-authorized up to six scrolls, fifteen per source, thirty total, and Timeline thirty-six. Keep the two-round, one-follow-up, one-retry, timeout, restoration, focus-safety, and cleanup ceilings unchanged. Treat Preference Eligibility shadow-only as a temporary migration stage: graduate unused-capacity promotion, bounded promotion, and guarded suppression separately against live traffic, then retire the parallel shadow decision path while retaining audit, baseline comparison, protections, and rollback | Implemented as configurable bounded-load profiles in AkuSidecar 0.6.14 and AkuBridge 0.5.44 / source-fidelity-v46 |
 | D-149 | Retire the parallel eligibility shadow path. Canonicalize feedback by keeping the latest event per source/evidence identity before weighting it; expose `rank_only`, default `promote_unused_budget`, and experimental `guarded_live` authority modes. Default authority may add at most one qualified candidate per source only into unused configured capacity, never replace or hide an admitted item. Suppression requires explicit guarded mode, independent negative support, holdout quality, mandatory-signal protection, and a reliable-item floor. Keep baseline/final decisions and rollback auditable | Implemented as Preference Eligibility Controller v2 in AkuSidecar 0.6.15 |
 | D-150 | Name the full-weight optional Less reason `Not interested` rather than `Wrong topic`. The signal expresses the user's preference directly and must not infer a taxonomy error. Accept `not_interested` for new writes while retaining historical `wrong_topic` rows as equivalent full-weight evidence during replay | Implemented in AkuSidecar 0.6.16 |
+| D-151 | Replace AkuSidecar in place with a Go 1.21 runtime and treat `pre-refactor-2026-07-15` as the complete Node rollback boundary. Start a fresh twelve-table SQLite schema, Bridge Contract v2, and `1.0.0-dev.1` identity; delete npm/Vite/SDK code, historical migrations, aliases, and backward compatibility. Use a managed Codex App Server by default and retain native `codex exec` only for transport conformance. Keep AkuSupervisor lifecycle ownership and exact cooperative AkuBridge reload validation | Implemented on the `go-sidecar-v2` integration line; App Server native smoke passed, and live cutover requires AkuBridge 0.6.0 / source-fidelity-v47 |
 
 ## 16. Change Discipline
 
