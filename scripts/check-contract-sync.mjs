@@ -28,6 +28,7 @@ const domain = text(path.join(sidecarRoot, "internal", "domain", "types.go"));
 const engine = text(path.join(sidecarRoot, "internal", "engine", "engine.go"));
 const calibrationEngine = text(path.join(sidecarRoot, "internal", "engine", "calibration.go"));
 const observationEngine = text(path.join(sidecarRoot, "internal", "engine", "observations.go"));
+const reasoning = text(path.join(sidecarRoot, "internal", "reasoning", "codexexec.go"));
 const reload = text(path.join(sidecarRoot, "internal", "engine", "reload_actions.go"));
 const http = text(path.join(sidecarRoot, "internal", "httpapi", "server.go"));
 const ui = text(path.join(sidecarRoot, "internal", "httpapi", "web", "app.js"));
@@ -96,6 +97,20 @@ for (const value of [
   "anchorRect.right + gap",
   "prefers-reduced-motion: reduce",
 ]) assert.match(ui, literal(value));
+
+for (const value of [
+  "standard: { timelineCapacity: 12, maxItemsPerSource: 5, maxItemsTotal: 10, maxScrolls: 2 }",
+  "expanded: { timelineCapacity: 24, maxItemsPerSource: 10, maxItemsTotal: 20, maxScrolls: 4 }",
+  "stress: { timelineCapacity: 36, maxItemsPerSource: 15, maxItemsTotal: 30, maxScrolls: 6 }",
+  "syncLoadProfileSettings(true)",
+]) assert.match(ui, literal(value));
+
+for (const value of [
+  "candidate_%03d",
+  "Prior knowledge is comparison context only and is never an eligible candidate",
+  "model returned unknown candidate alias",
+  "compactKnowledge",
+]) assert.match(reasoning, literal(value));
 
 for (const value of [
   "AKU_BROWSER_BRIDGE_PING",
