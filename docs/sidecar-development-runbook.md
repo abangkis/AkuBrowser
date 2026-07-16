@@ -1,7 +1,7 @@
 # AkuSidecar Go Development Runbook
 
 > Last verified: **2026-07-15**
-> Active baseline: **AkuSidecar 1.0.0-dev.4, AkuBridge 0.6.0 / source-fidelity-v47, bridge v2**
+> Active baseline: **AkuSidecar 1.0.0-dev.4, AkuBridge 0.6.0 / source-fidelity-v48, bridge v2**
 
 ## Runtime boundary
 
@@ -79,7 +79,7 @@ cd C:\WorkspaceCodex\AkuWorkspace\AkuSidecar
    `bridgeContractVersion=aku-browser.bridge.v2`.
 
 3. Confirm `/api/bridge/health` reports `state=healthy`, `compatible=true`,
-   extension `0.6.0`, and runtime revision `source-fidelity-v47` before starting
+   extension `0.6.0`, and runtime revision `source-fidelity-v48` before starting
    a session.
 
 4. Run one X + LinkedIn session. Success requires two persisted child runs,

@@ -19,7 +19,7 @@ const supervisorProfile = json(path.join(supervisorRoot, "config", "akuworkspace
 assert.match(browserPackage.version, /^\d+\.\d+\.\d+$/);
 assert.equal(bridgePackage.version, "0.6.0");
 assert.equal(bridgeManifest.version, bridgePackage.version);
-assert.equal(bridgePackage.akuRuntimeRevision, "source-fidelity-v47");
+assert.equal(bridgePackage.akuRuntimeRevision, "source-fidelity-v48");
 assert.equal(sidecarConfig.reasoning.provider, "codex-app-server");
 assert.equal(sidecarConfig.reasoning.executable, "runtime/codex-cli/bin/codex.exe");
 assert.equal(fs.existsSync(path.join(sidecarRoot, "package.json")), false, "AkuSidecar must not retain a Node package");
@@ -37,8 +37,8 @@ const bridgeRelay = text(path.join(bridgeRoot, "aku-browser-tab-bridge.js"));
 const activeContract = text(path.join(browserRoot, "contracts", "bridge-contract-v2.md"));
 
 for (const value of ["1.0.0-dev.4", "aku-browser.bridge.v2"]) assert.match(domain, literal(value));
-for (const value of ["0.6.0", "source-fidelity-v47"]) assert.match(engine, literal(value));
-assert.match(reload, literal("aku-bridge-0.6.0-source-fidelity-v47"));
+for (const value of ["0.6.0", "source-fidelity-v48"]) assert.match(engine, literal(value));
+assert.match(reload, literal("aku-bridge-0.6.0-source-fidelity-v48"));
 
 for (const value of [
   "x-dom-v16", "linkedin-dom-v13", "read_only_bounded",
@@ -98,7 +98,7 @@ for (const value of [
   "AKU_BROWSER_BRIDGE_ERROR",
 ]) assert.match(ui + bridgeRelay, literal(value));
 
-for (const value of ["aku-browser.bridge.v2", "source-fidelity-v47"]) {
+for (const value of ["aku-browser.bridge.v2", "source-fidelity-v48"]) {
   assert.match(bridgeService + bridgeCapabilities, literal(value));
   assert.match(activeContract, literal(value));
 }

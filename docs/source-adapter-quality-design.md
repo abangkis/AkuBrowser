@@ -2,7 +2,7 @@
 
 > Status: **AkuBridge v47 implemented; Go-side admission reset to the fresh v1 structural boundary**
 > Date: **2026-07-15**
-> Runtime baseline: **AkuBridge 0.6.0 / source-fidelity-v47; AkuSidecar 1.0.0-dev.4**
+> Runtime baseline: **AkuBridge 0.6.0 / source-fidelity-v48; AkuSidecar 1.0.0-dev.4**
 > Scope: **AkuBridge source parsers, generic capture-quality evaluation, bounded recovery, and AkuSidecar admission**
 
 The detailed Node-side report-consistency and migration behavior described
@@ -264,7 +264,7 @@ Any change to an adapter, field profile, or admission rule must pass:
 - live signed-in X and LinkedIn capture validation after cooperative Bridge
   reload, including one real reasoning invocation.
 
-The current runtime advertises `aku-bridge-0.6.0-source-fidelity-v47`,
+The current runtime advertises `aku-bridge-0.6.0-source-fidelity-v48`,
 `x-dom-v16`, `linkedin-dom-v13`, `report_capture_quality`,
 `recover_missing_media`, `probe_freshness`, and `recover_source_freshness`.
 
