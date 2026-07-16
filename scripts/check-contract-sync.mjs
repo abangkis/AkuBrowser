@@ -92,6 +92,24 @@ for (const value of [
 ]) assert.match(ui + text(path.join(sidecarRoot, "internal", "httpapi", "web", "index.html")), literal(value));
 
 for (const value of [
+  "/api/inbox",
+  "CapturedCandidates",
+  "EvaluatedCandidates",
+  "SelectedCandidates",
+  "AddedItems",
+  "FollowUpFallback",
+  "follow_up_capture",
+]) assert.match(http + domain + text(path.join(sidecarRoot, "internal", "store", "inbox.go")) + text(path.join(sidecarRoot, "internal", "store", "store.go")), literal(value));
+
+for (const value of [
+  "inbox-view-button",
+  "Update Inbox",
+  "BOUNDED RUN LEDGER",
+  "buildInboxSession",
+  "buildInboxRun",
+]) assert.match(ui + text(path.join(sidecarRoot, "internal", "httpapi", "web", "index.html")), literal(value));
+
+for (const value of [
   "BACK_TO_TOP_THRESHOLD_PX = 480",
   "syncBackToTopPosition",
   "anchorRect.right + gap",
@@ -108,7 +126,8 @@ for (const value of [
 for (const value of [
   "candidate_%03d",
   "Prior knowledge is comparison context only and is never an eligible candidate",
-  "model returned unknown candidate alias",
+  "bindEvidenceKeysByPosition",
+  "model returned %d assessments for %d candidates",
   "compactKnowledge",
 ]) assert.match(reasoning, literal(value));
 
