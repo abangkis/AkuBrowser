@@ -44,6 +44,8 @@ The fresh default is `guarded_live`. Once direct-signal authority is ready, pref
 
 Preference cannot suppress an evidence-qualified contradiction, material update, highly urgent update, or highly novel update. Exact previously delivered evidence is always excluded. An existing semantic event is admitted again only as a material update or contradiction.
 
+Direct labels generalize primarily through specific normalized topic tags. Broad topic facets remain a weaker fallback so a correction about one narrow subject does not automatically suppress an entire category such as developer tools or career information.
+
 One neutral, evidence-qualified discovery candidate is retained per source when available and when doing so does not displace a protected update. This prevents the personalized Timeline from becoming a closed filter bubble.
 
 The alternative Settings modes remain available without changing the Settings surface:
