@@ -23,7 +23,7 @@ UI session
   -> finite Timeline, feedback, and Update Inbox
 ```
 
-The default reasoning provider owns one managed `codex app-server` stdio process and constrains each evaluation with the active JSON schema. `codex-exec` remains an explicit conformance transport, not the normal runtime.
+The default reasoning provider owns one managed `codex app-server` stdio process and constrains each evaluation with the active JSON schema. An explicit model-capacity failure may restart that process and retry the same model once inside the original invocation deadline. Cancellation, timeout, validation failure, and model fallback are never retried implicitly. `codex-exec` remains an explicit conformance transport, not the normal runtime.
 
 ## State and recovery
 
@@ -51,6 +51,12 @@ Normal rebuild/restart:
 cd ..\AkuSidecar
 .\scripts\restart-dev.ps1
 ```
+
+Restarting the registered service through AkuSupervisor does not rebuild the
+embedded UI or Go source. Use the command above after source changes; it builds
+the candidate binary and refuses replacement while an update session is active.
+A manual Supervisor stop or restart is an operator lifecycle action and must not
+be issued during capture or reasoning.
 
 Workspace verification:
 
