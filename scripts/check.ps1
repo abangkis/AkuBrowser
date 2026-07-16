@@ -35,8 +35,8 @@ Assert-True ($sidecarConfig.reasoning.provider -eq "codex-app-server") "AkuSidec
 Assert-True ($sidecarConfig.preference.mode -eq "guarded_live") "High-authority guarded personalization must be the fresh default."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $sidecarRoot "package.json"))) "AkuSidecar must not contain a Node package."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $browserRoot "package.json"))) "AkuBrowser must not contain a Node package."
-Assert-True ($domain.Contains('ApplicationVersion    = "1.0.0-dev.5"')) "AkuSidecar version boundary is unexpected."
-Assert-True ($domain.Contains('BridgeContractVersion = "aku-browser.bridge.v2"')) "Bridge contract boundary is unexpected."
+Assert-True ($domain -match 'ApplicationVersion\s*=\s*"1\.0\.0-dev\.5"') "AkuSidecar version boundary is unexpected."
+Assert-True ($domain -match 'BridgeContractVersion\s*=\s*"aku-browser\.bridge\.v2"') "Bridge contract boundary is unexpected."
 
 $schemas = @(
     "acquisition-plan.schema.json",
