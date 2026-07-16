@@ -58,7 +58,7 @@ The alternative Settings modes remain available without changing the Settings su
 
 A semantic event is one specific occurrence, not a broad topic: an actor performs an action or enters a state involving an object in a compatible time window. For example, several authors reporting the same product launch are separate reports of one event; a later capability release, contradiction, or consequence is unique information even when it belongs to that event thread.
 
-After all source runs finish, a separate Event Engine compares the selected reports with a bounded local event index. Deterministic lexical retrieval produces one global shortlist for the check; the App Server resolver may classify reports as `new_event`, `duplicate_report`, `material_update`, `contradiction`, `new_consequence`, or `context_only`. Only a `duplicate_report` with at least `0.92` confidence may merge automatically. Every other relation consumes unique Timeline capacity.
+After all source runs finish, a separate Event Engine compares the selected reports with a bounded local event index. High-precision deterministic retrieval removes URL, platform, and generic-language noise before producing one global shortlist. When there is neither a historical shortlist nor a strong intra-check match, Go takes a local fast path and creates independent event threads without spending another model call. Otherwise, the App Server resolver may classify reports as `new_event`, `duplicate_report`, `material_update`, `contradiction`, `new_consequence`, or `context_only`. Only a `duplicate_report` with at least `0.92` confidence may merge automatically. Every other relation consumes unique Timeline capacity.
 
 Settings expose three explicit display contracts:
 
@@ -76,7 +76,7 @@ The Timeline header reports unique additions and duplicate-report count from the
 
 X and LinkedIn are captured as child runs of one session. After all active sources reach a terminal state, AkuSidecar builds one global personalized order. A diversity guard prevents more than two consecutive items from one source while another source still has an item available. This is not strict round-robin: relevance remains primary and source diversity is a guardrail.
 
-A partial session retains validated results from the source that completed and names the failed source. Update Inbox exposes captured, evaluated, selected, unique, and duplicate-report counts; event-resolver status; capture rounds; snapshots; scrolls; reasoning time; and follow-up failure. A completed session with no additions explicitly reports that outcome.
+A partial session retains validated results from the source that completed and names the failed source. Update Inbox exposes captured, evaluated, selected, unique, and duplicate-report counts; whether semantic resolution used the local fast path or App Server; trigger reason, strongest overlap, and retained-event count; capture rounds; snapshots; scrolls; reasoning time; and follow-up failure. A completed session with no additions explicitly reports that outcome.
 
 ## Feedback semantics
 

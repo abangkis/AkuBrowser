@@ -20,7 +20,7 @@ The system has three runtime pieces:
 - AkuSidecar, rewritten from Node.js to Go, owns the embedded UI, SQLite state, session engine, personalization policy, and one managed Codex App Server process.
 - AkuSupervisor, written in Rust, owns the visible local development lifecycle so the Sidecar never needs a hidden watcher or self-replacement process.
 
-Codex is used as a constrained reasoning component, not as an autonomous browser. One managed Codex App Server process serves two schema-bound adapters: candidate evaluation and a separate semantic event resolver. Go owns the bounded local event index, retrieval shortlist, retention, confidence gate, corrections, budgets, trust, personalization authority, and final composition. Stable local identities never enter model prompts.
+Codex is used as a constrained reasoning component, not as an autonomous browser. One managed Codex App Server process serves two schema-bound adapters: candidate evaluation and a separate semantic event resolver. Go owns the bounded local event index, retrieval shortlist, retention, confidence gate, corrections, budgets, trust, personalization authority, and final composition. When deterministic retrieval finds no plausible relationship, the Event Engine creates local event threads without paying for another model call. Stable local identities never enter model prompts.
 
 ## Challenges
 
