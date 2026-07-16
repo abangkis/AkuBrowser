@@ -91,6 +91,13 @@ for (const value of [
 ]) assert.match(ui + text(path.join(sidecarRoot, "internal", "httpapi", "web", "index.html")), literal(value));
 
 for (const value of [
+  "BACK_TO_TOP_THRESHOLD_PX = 480",
+  "syncBackToTopPosition",
+  "anchorRect.right + gap",
+  "prefers-reduced-motion: reduce",
+]) assert.match(ui, literal(value));
+
+for (const value of [
   "AKU_BROWSER_BRIDGE_PING",
   "AKU_BROWSER_BRIDGE_READY",
   "AKU_BROWSER_DISPATCH",
