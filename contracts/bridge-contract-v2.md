@@ -26,9 +26,9 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 
 The active pair is exact:
 
-- AkuBridge extension/manifest `0.6.0`;
-- runtime revision `source-fidelity-v48`;
-- build id `aku-bridge-0.6.0-source-fidelity-v48`; and
+- AkuBridge extension/manifest `0.6.1`;
+- runtime revision `source-fidelity-v49`;
+- build id `aku-bridge-0.6.1-source-fidelity-v49`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -40,6 +40,9 @@ current-process heartbeat is `reconnecting`; any observed mismatch is
 - `AKU_BROWSER_BRIDGE_PING`
 - `AKU_BROWSER_BRIDGE_READY`
 - `AKU_BROWSER_DISPATCH`
+- `AKU_BROWSER_MEDIA_RECAPTURE`
+- `AKU_BROWSER_MEDIA_RECAPTURE_COMPLETED`
+- `AKU_BROWSER_MEDIA_RECAPTURE_FAILED`
 - `AKU_BROWSER_BRIDGE_RELOAD_SELF`
 - `AKU_BROWSER_BRIDGE_ERROR`
 
@@ -68,6 +71,21 @@ identity/permalink/text evidence; Go derives the canonical 24-hex
 Raw browser observations remain untrusted input. Reasoning output may reference
 only evidence keys present in the admitted observation.
 
+## Item-scoped media recapture
+
+Recapture is a separate bounded Bridge task, not an update session. AkuSidecar
+creates one job for a Timeline item whose captured media outcome is
+`unavailable`. AkuBridge claims the job, opens only its canonical native-post
+URL inside the managed capture surface, performs one zero-scroll capture, and
+returns an observation or structured failure through the dedicated
+`/api/bridge/media-recaptures/{id}` routes.
+
+Sidecar accepts only the requested source and evidence identity. A successful
+result replaces that Timeline item's presentation evidence; it never creates a
+candidate, invokes reasoning, changes semantic-event membership, or consumes
+unique Timeline capacity. The temporary native-post tab and the managed
+surface are released on success and failure.
+
 ## Cooperative reload
 
 AkuSupervisor creates a single-flight request at
@@ -75,7 +93,7 @@ AkuSupervisor creates a single-flight request at
 claims it through `/next`; AkuBridge accepts the action through `/{id}/accept`
 before calling `chrome.runtime.reload()`.
 
-The action completes only after a new heartbeat announces the exact v47 build.
+The action completes only after a new heartbeat announces the exact v49 build.
 Replay is idempotent only for the same request id, actor, and reason. Pending,
 delivery, acceptance, heartbeat, build-mismatch, and expiry failures remain
 explicit. No whole-browser restart or source-tab mutation is implied.

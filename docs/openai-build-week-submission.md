@@ -26,7 +26,7 @@ Codex is used as a constrained reasoning component, not as an autonomous browser
 
 The hardest part was preserving the product experience while replacing the runtime. A first port looked healthy but skipped calibration, changed UI behavior, leaked duplicate LinkedIn entries when a permalink appeared late, and made repeated update checks look like no-ops. Each failure revealed a contract that had been implicit in the old implementation.
 
-Another challenge was separating “the user dislikes this topic” from “this item is old, duplicated, or already known.” Treating every Less reason as preference would teach the wrong model. AkuBrowser now routes those diagnostic corrections separately and uses canonical source/evidence identity so repeated captures do not multiply feedback.
+Another challenge was keeping preference feedback semantically clean. An earlier reason menu mixed “not interested” with freshness, prior knowledge, and duplication. The current contract makes Less like this one direct Not interested signal, while freshness and cross-author repetition remain evidence and Event Engine responsibilities. Canonical source identity also prevents repeated captures from multiplying feedback.
 
 Cross-source ordering was also subtler than round-robin. Strict alternation looks balanced but can lower relevance; pure scoring can let one platform dominate. The final rule keeps global personalized ranking and adds a small diversity guard only when another source has a candidate available.
 

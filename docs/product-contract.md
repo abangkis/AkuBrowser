@@ -82,8 +82,9 @@ A partial session retains validated results from the source that completed and n
 
 - More is full-strength positive preference evidence.
 - Less without a reason is negative preference evidence with reduced weight.
-- Not interested is full-strength negative preference evidence.
-- Already knew, Old info, and Duplicate are diagnostic corrections; they do not train topic dislike.
+- Less like this is one direct, full-strength Not interested signal; it has no secondary reason menu.
+- Freshness, prior knowledge, and cross-author duplication are handled by the evidence and semantic-event contracts instead of being mixed into preference feedback.
+- When a captured post reports unavailable media, Recapture performs one item-scoped browser recovery and updates only that post's local evidence. It is not a new feed check and cannot add or rerank Timeline items.
 - The latest signal for the same source/evidence identity replaces earlier labels during fitting.
 
 All learning stays local and rebuildable from canonical feedback.

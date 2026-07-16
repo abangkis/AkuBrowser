@@ -1,6 +1,6 @@
 # AkuBrowser runtime contract
 
-Status: canonical implementation boundary, 16 July 2026.
+Status: canonical implementation boundary, 17 July 2026.
 
 ## Components
 
@@ -24,7 +24,7 @@ UI session
   -> finite Timeline, feedback, and Update Inbox
 ```
 
-The only Codex transport is one managed `codex app-server` stdio process. Candidate evaluation and semantic event resolution are separate adapters with separate schemas, but share that transport. Each invocation uses an ephemeral read-only thread; no long-lived model thread owns the event index. An explicit model-capacity failure may restart the process and retry the same model once inside the original invocation deadline. Cancellation, timeout, validation failure, and model fallback are never retried implicitly.
+The only Codex transport is one managed `codex app-server` stdio process. Candidate evaluation and semantic event resolution are separate adapters with separate schemas, but share that transport. Each invocation uses an ephemeral read-only thread; no long-lived model thread owns the event index. An explicit model-capacity failure may restart the process and retry the same model once inside the original invocation deadline. Cancellation, timeout, validation failure, and model fallback are never retried implicitly. An unexpected process exit fails the active invocation, discards that transport, and lets the next invocation start a fresh process. App Server callbacks are rejected with a protocol error, and a completed turn without a final structured response is a hard failure rather than an empty result.
 
 The Event Engine runs only after every source run is terminal and before global composition. Go performs bounded retrieval over normalized event summaries rather than raw source text. URL, platform, and generic-language tokens cannot trigger resolution. If no retained event reaches the historical overlap gate and no current pair shares a strong event/topic anchor, Go creates separate local event threads without an App Server call. Otherwise it sends at most the configured 5, 10, or 15 historical event aliases, opaque current-candidate aliases, bounded evaluated summaries, and at most a 600-character evidence excerpt per candidate. The model never receives stable event, evidence, Timeline, session, or run IDs. Trigger reason, strongest overlap, retained-event count, model usage, and resolver status are durable Inbox diagnostics. A resolver failure degrades safely: current reports remain unique and session finalization continues. In `show_all` mode the Event Engine is not invoked.
 
@@ -42,7 +42,7 @@ Full reset is backup-first and idle-only. The health endpoint reports database h
 
 All HTTP listeners remain loopback-only. Bridge routes require the durable Bridge token and exact `aku-browser.bridge.v2` header. Captured source content is untrusted input. Reasoning is read-only, approvals are disabled, structured output is mandatory, and the provider cannot directly navigate, expand the capture budget, or select Timeline items.
 
-Capture degradation is explicit. Missing primary media may yield a usable-degraded item and an Open native post escape hatch; missing evidence is never fabricated. AkuBridge never performs social writes.
+Capture degradation is explicit. Missing primary media may yield a usable-degraded item with a bounded Recapture action. Recapture revisits only that native post, replaces its local presentation evidence when possible, consumes no Timeline capacity or reasoning call, and always cleans up its managed capture surface. The normal Open native post action remains available below the card; missing evidence is never fabricated. AkuBridge never performs social writes.
 
 ## Configuration
 
