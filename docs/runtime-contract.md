@@ -19,17 +19,22 @@ UI session
   -> exact-evidence and event-continuity exclusion
   -> generic trust/materiality admission
   -> local high-authority personalization + discovery lane
+  -> bounded cross-source Event Engine + optional App Server resolution
   -> global cross-source composition + diversity guard
   -> finite Timeline, feedback, and Update Inbox
 ```
 
-The default reasoning provider owns one managed `codex app-server` stdio process and constrains each evaluation with the active JSON schema. An explicit model-capacity failure may restart that process and retry the same model once inside the original invocation deadline. Cancellation, timeout, validation failure, and model fallback are never retried implicitly. `codex-exec` remains an explicit conformance transport, not the normal runtime.
+The only Codex transport is one managed `codex app-server` stdio process. Candidate evaluation and semantic event resolution are separate adapters with separate schemas, but share that transport. Each invocation uses an ephemeral read-only thread; no long-lived model thread owns the event index. An explicit model-capacity failure may restart the process and retry the same model once inside the original invocation deadline. Cancellation, timeout, validation failure, and model fallback are never retried implicitly.
+
+The Event Engine runs only after every source run is terminal and before global composition. Go performs bounded retrieval over the retained SQLite event index and sends at most the configured 5, 10, or 15 historical event aliases plus opaque current-candidate aliases to the resolver. The model never receives stable event, evidence, Timeline, session, or run IDs. A resolver failure is recorded in Update Inbox and degrades safely: current reports remain unique and session finalization continues. In `show_all` mode the Event Engine is not invoked.
 
 ## State and recovery
 
 SQLite schema version 2 is a fresh Go boundary. There is no Node database importer or migration chain. A schema mismatch fails closed. Sessions and feedback are durable; the Bridge heartbeat is process-epoch scoped and must be refreshed after Sidecar replacement.
 
-Exact source evidence cannot be delivered twice. `eventKey` and `knowledgeDelta` distinguish a new event from context, a material update, or a contradiction. Long-form LinkedIn snapshots that later reveal a stable native identity are reconciled before reasoning. On startup, completed Go-schema sessions are idempotently recomposed so the global-order invariant also holds for retained development rows created before this authority change.
+Exact source evidence cannot be delivered twice. Source-scoped `eventKey` and `knowledgeDelta` remain the first continuity boundary; the global semantic event index then groups cross-author and cross-source reports. Only `duplicate_report` is capacity-free. `material_update`, `contradiction`, `new_consequence`, and `context_only` remain unique Timeline information. User corrections persist as `must_merge` or `must_not_merge` constraints and are undoable. Long-form LinkedIn snapshots that later reveal a stable native identity are reconciled before reasoning. On startup, completed Go-schema sessions are idempotently recomposed so the global-order invariant also holds for retained development rows created before this authority change.
+
+Retention is a dual boundary over the local SQLite database and its WAL/SHM working files. The selected age limit is 30, 60, or 90 days and the storage cap is 100, 200, 300, 400, 500 MB, or 1 GB. Cleanup runs at startup, after Settings changes, and after terminal sessions; crossing either boundary removes the oldest terminal history and orphaned event threads.
 
 Full reset is backup-first and idle-only. The health endpoint reports database health but never exposes the absolute database path. Operational diagnosis belongs in the compact Update Inbox and component-native tests.
 
@@ -41,7 +46,7 @@ Capture degradation is explicit. Missing primary media may yield a usable-degrad
 
 ## Configuration
 
-`AkuSidecar/config/sidecar.json` is strict. The fresh preference mode is `guarded_live`; the default reasoning provider is `codex-app-server`. Product Settings remain typed in SQLite and expose source selection, bounded load profile or Custom values, Timeline capacity, capture behavior, personalization mode, calibration, presentation, and stream width.
+`AkuSidecar/config/sidecar.json` is strict. The fresh preference mode is `guarded_live`; the reasoning provider is `codex-app-server` (with `deterministic` retained only for local tests). Product Settings remain typed in SQLite and expose source selection, bounded load profile or Custom values, Timeline capacity, capture behavior, personalization mode, calibration, presentation, stream width, semantic display mode, locked resolver shortlist, and paired event-memory retention/storage.
 
 ## Lifecycle and validation
 

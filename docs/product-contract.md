@@ -42,7 +42,7 @@ The fresh default is `guarded_live`. Once direct-signal authority is ready, pref
 - demote or suppress an ordinary candidate with repeated negative evidence;
 - reorder selected candidates globally across sources.
 
-Preference cannot suppress an evidence-qualified contradiction, material update, highly urgent update, or highly novel update. Exact previously delivered evidence is always excluded. An existing semantic event is admitted again only as a material update or contradiction.
+Preference cannot suppress an evidence-qualified contradiction, material update, highly urgent update, or highly novel update. Exact previously delivered evidence from the same source is always excluded before cross-source event grouping.
 
 Direct labels generalize primarily through specific normalized topic tags. Broad topic facets remain a weaker fallback so a correction about one narrow subject does not automatically suppress an entire category such as developer tools or career information.
 
@@ -54,13 +54,29 @@ The alternative Settings modes remain available without changing the Settings su
 - `promote_unused_budget` may promote only into unused capacity;
 - `guarded_live` provides the high-authority behavior above.
 
+## Cross-source semantic events
+
+A semantic event is one specific occurrence, not a broad topic: an actor performs an action or enters a state involving an object in a compatible time window. For example, several authors reporting the same product launch are separate reports of one event; a later capability release, contradiction, or consequence is unique information even when it belongs to that event thread.
+
+After all source runs finish, a separate Event Engine compares the selected reports with a bounded local event index. Deterministic lexical retrieval produces one global shortlist for the check; the App Server resolver may classify reports as `new_event`, `duplicate_report`, `material_update`, `contradiction`, `new_consequence`, or `context_only`. Only a `duplicate_report` with at least `0.92` confidence may merge automatically. Every other relation consumes unique Timeline capacity.
+
+Settings expose three explicit display contracts:
+
+- `collapse` is the default: a duplicate remains visible as a quiet summary that the user can expand;
+- `show_all` displays every report normally and bypasses semantic retrieval and resolution for new checks;
+- `hide` omits duplicate reports while retaining the relationship locally.
+
+The resolver shortlist maximum is a locked choice of 5, 10, or 15 retained event threads; the default is 10. Event memory is trimmed when either paired boundary is reached: retention is 30, 60, or 90 days, and total local SQLite storage is 100, 200, 300, 400, 500 MB, or 1 GB. Defaults are 30 days and 100 MB.
+
+Users may split a false merge with `Not the same event`, attach a report to one of at most three suggested event threads with `Same event`, and undo the latest correction. These direct corrections create deterministic local constraints for future checks; they do not require a permanent Codex conversation or expose stable database identities to the model.
+
 ## Unified Timeline
 
-The Timeline header reports additions from the latest completed or partial check instead of repeating the configured retention capacity. When older retained items follow the newest additions, their first existing batch marker doubles as the single quiet history boundary. Its default 36 px spacing is user-adjustable from 16 to 80 px in Settings and can be reset without changing other Timeline preferences.
+The Timeline header reports unique additions and duplicate-report count from the latest completed or partial check instead of repeating the configured retention capacity. When older retained items follow the newest additions, their first existing batch marker doubles as the single quiet history boundary. Its default 36 px spacing is user-adjustable from 16 to 80 px in Settings and can be reset without changing other Timeline preferences.
 
 X and LinkedIn are captured as child runs of one session. After all active sources reach a terminal state, AkuSidecar builds one global personalized order. A diversity guard prevents more than two consecutive items from one source while another source still has an item available. This is not strict round-robin: relevance remains primary and source diversity is a guardrail.
 
-A partial session retains validated results from the source that completed and names the failed source. Update Inbox exposes captured, evaluated, selected, and added counts plus capture rounds, snapshots, scrolls, reasoning time, and follow-up failure. A completed session with no additions explicitly reports that outcome.
+A partial session retains validated results from the source that completed and names the failed source. Update Inbox exposes captured, evaluated, selected, unique, and duplicate-report counts; event-resolver status; capture rounds; snapshots; scrolls; reasoning time; and follow-up failure. A completed session with no additions explicitly reports that outcome.
 
 ## Feedback semantics
 

@@ -41,6 +41,7 @@ Assert-True ($domain -match 'BridgeContractVersion\s*=\s*"aku-browser\.bridge\.v
 $schemas = @(
     "acquisition-plan.schema.json",
     "reasoning-result.schema.json",
+    "semantic-event-resolution.schema.json",
     "calibration-session.schema.json",
     "calibration-label.schema.json",
     "calibration-profile-snapshot.schema.json"
