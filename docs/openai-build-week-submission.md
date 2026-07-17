@@ -8,11 +8,15 @@ There is also a quieter attention tax inside every feed: the same occurrence is 
 
 The second insight was about personalization. A platform infers preference from pauses, clicks, and engagement collected behind the scenes. AkuBrowser can ask directly. When a user says More or Not interested, that intentional correction should carry more authority than an opaque behavioral proxy—without letting preference override evidence quality or trap the user inside a filter bubble.
 
+A third question emerged while reading: how much of the conversation was created or amplified by AI? Hiding uncertain content by default would simply replace one opaque algorithm with another. The more useful product direction was to expose bounded AI origin signals, let the user decide where those posts belong, and make every detector correction visible.
+
 ## What it does
 
 AkuBrowser captures a bounded slice of the user's signed-in X and LinkedIn feeds through a read-only Chrome extension. A local Go application quality-admits and reconciles the capture, evaluates each admitted candidate with structured Codex output, removes repeated evidence, groups cross-author and cross-source reports of the same specific event, and builds one finite Timeline.
 
 The cross-author semantic Event Engine is the feature that changed the value of the product for me. It distinguishes a repeated report from a material update, contradiction, consequence, or additional context. True duplicates collapse quietly by default, so the user reads the event once, while every source report remains inspectable and a false merge can be corrected. In a 17 July local validation check, six selected reports became five unique Timeline additions plus one duplicate report. That small example captures the intended experience: preserve provenance, remove repeated attention cost.
+
+AI Detector extends the same attention principle without pretending to solve authorship. A local deterministic text pass annotates only explicit evidence such as a platform label, an author declaration, or prompt residue. A separate asynchronous Codex pass can confirm, dispute, or correct that preliminary result after the Timeline is already usable. Inline badges are the default. The user may route unseen strong signals into a generic side pane, or deliberately activate a warned Hide mode that excludes only direct or Deep-confirmed results. If the deeper assessment says the first badge was wrong, AkuBrowser shows that correction instead of making the badge silently disappear. A direct user correction outranks both detector layers.
 
 The first run leads into calibration before the Timeline opens. Later, direct feedback can promote, replace, demote, and suppress ordinary candidates. Material updates and contradictions remain protected, while one discovery lane preserves useful surprise. X and LinkedIn are ranked together rather than displayed as two separate or rigidly alternating feeds. If nothing clears the newness, materiality, and evidence boundary, AkuBrowser says `0 additions` and stops.
 
@@ -24,7 +28,7 @@ The system has three runtime pieces:
 - AkuSidecar, rewritten from Node.js to Go, owns the embedded UI, SQLite state, session engine, personalization policy, and one managed Codex App Server process.
 - AkuSupervisor, written in Rust, owns the visible local development lifecycle so the Sidecar never needs a hidden watcher or self-replacement process.
 
-Codex is used as a constrained reasoning component, not as an autonomous browser. One managed Codex App Server process serves two schema-bound adapters: candidate evaluation and a separate semantic event resolver. Go owns the bounded local event index, retrieval shortlist, retention, confidence gate, corrections, budgets, trust, personalization authority, and final composition. When deterministic retrieval finds no plausible relationship, the Event Engine creates local event threads without paying for another model call. Stable local identities never enter model prompts.
+Codex is used as a constrained reasoning component, not as an autonomous browser. One managed Codex App Server process serves three schema-bound adapters: candidate evaluation, a separate semantic event resolver, and asynchronous AI Deep Detection. Go owns the bounded local event index, deterministic AI Fast Detection, retrieval shortlist, retention, confidence gates, correction authority, budgets, trust, personalization, and final composition. When deterministic event retrieval finds no plausible relationship, the Event Engine creates local event threads without paying for another model call. Stable local identities never enter model prompts, social content is treated as untrusted evidence, and every App Server thread is ephemeral, read-only, tool-disabled, and schema-bound.
 
 ## Challenges
 
@@ -36,9 +40,13 @@ Cross-source ordering was also subtler than round-robin. Strict alternation look
 
 Cross-author duplication introduced a different problem: two posts can discuss the same topic without reporting the same occurrence. The Event Engine therefore uses high-precision actor/action/object/time matching, defaults to a `0.92` automatic-merge confidence gate with tightly bounded user tuning, and treats updates, contradictions, consequences, and context as unique information. A false merge can be split or reassigned by the user and undone immediately.
 
+AI-origin assessment has an even sharper uncertainty problem. Stylistic “AI detectors” can punish polished human writing and present probabilities as facts. AkuBrowser therefore starts with deterministic evidence rather than style, keeps the model pass asynchronous, uses the language of signals rather than truth, preserves a visible correction when Deep Detection overturns Fast Detection, and never allows a preliminary inferred signal to trigger Hide. The UI primitive is also intentionally generic: AI Signals is one pane hosted by a reusable alternate-view drawer, not a new feed architecture coupled to the detector.
+
 ## What I learned
 
 The most important lesson was that AI product quality depends on explicit authority boundaries. The model is good at describing evidence; it should not silently own capture depth, trust, display budget, or the meaning of user feedback. Those decisions became smaller deterministic policies around a structured model call.
+
+The same boundary applies when the product evaluates AI-origin evidence. A detector may be useful while still being wrong. Reliability comes from naming the evidence, separating preliminary and deeper stages, preserving assessment history, and making the user's correction the highest authority for their own experience—not from displaying a more confident percentage.
 
 I also learned that an empty result can be a feature—and that a post is the wrong unit for an attention product. A finite Timeline loses its purpose if uncertainty always triggers a fallback item or if five accounts repeating one occurrence consume five slots. “Nothing material changed” and “this is the same event” can both be valuable answers.
 
@@ -46,4 +54,4 @@ Finally, documentation became part of the refactor. Historical experiments and b
 
 ## What's next
 
-The next step is to validate both personalization and event grouping across more real update cycles, using direct corrections rather than platform engagement as the tuning signal. After that, the focus is packaging the local system cleanly and extending the source-adapter interface without weakening the bounded contract.
+The next step is to validate personalization, event grouping, and text-first AI origin signals across more real update cycles, using direct corrections rather than platform engagement as the tuning signal. Image and video signals can then be added as separate evidence adapters without letting a text assessment overclaim multimodal detection. After that, the focus is packaging the local system cleanly and extending the source-adapter interface and generic side-pane host without weakening the bounded contract.

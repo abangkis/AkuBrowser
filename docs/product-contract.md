@@ -72,6 +72,25 @@ The resolver shortlist maximum is a locked choice of 5, 10, or 15 retained event
 
 Users may split a false merge with `Not the same event`, attach a report to one of at most three suggested event threads with `Same event`, and undo the latest correction. These direct corrections create deterministic local constraints for future checks; they do not require a permanent Codex conversation or expose stable database identities to the model.
 
+## AI origin signals
+
+AI Detector is a presentation and user-control layer, not an authorship oracle. It records evidence-bounded `AI origin signals`; it never changes candidate selection, personalized ranking, semantic-event membership, or unique Timeline capacity. The first implemented surface is authored text. Image and video assessment remain future extensions and must not be implied by a text result.
+
+Detection has two independent stages:
+
+- **Fast Detection** runs locally and deterministically after final global composition. It recognizes only explicit, auditable evidence such as a platform AI label, an author declaration, or prompt/instruction residue. Style alone—polished prose, lists, regular grammar, or generic wording—is never sufficient. A strong Fast result is marked Preliminary and is not Hide-eligible unless the evidence is a direct platform label or verified provenance.
+- **Deep Detection** starts asynchronously only after the finite Timeline is available. Its separate schema-bound App Server adapter reviews retained posts as untrusted evidence and may confirm, dispute, or correct the Fast result. If it overturns an earlier strong assessment, the badge remains visible as a correction instead of silently disappearing. Failure degrades to the local Fast result and never blocks Timeline delivery.
+
+Labels name the evidence rather than using the ambiguous blanket term “AI disclosed”: for example `Platform AI label`, `Author-declared AI · Preliminary`, `AI signals confirmed`, or `AI assessment corrected`. The user's `This is AI` or `This is not AI` correction has the highest personal presentation authority and can be cleared to reveal the resolved detector history again.
+
+Settings expose three locked presentation modes:
+
+- `inline` is the default and leaves every retained post in the Timeline with a compact expandable badge when applicable;
+- `drawer` routes unseen strong-signal posts into the generic side-pane host, while a post already seen inline does not disappear abruptly when an asynchronous result arrives;
+- `hide` is a high-risk mode protected by warnings and the exact typed phrase `HIDE STRONG AI SIGNALS`. It hides only direct-origin evidence, Deep-confirmed strong signals, or posts explicitly marked AI by the user. Preliminary inferred signals are never hidden. Items remain stored locally and reappear when Hide is disabled.
+
+The side pane is a generic Timeline alternate-view host. AI Detector supplies the first `AI Signals` pane, but does not own the underlying UI primitive.
+
 ## Unified Timeline
 
 The Timeline header reports unique additions and duplicate-report count from the latest completed or partial check instead of repeating the configured retention capacity. When older retained items follow the newest additions, their first existing batch marker doubles as the single quiet history boundary. Its default 36 px spacing is user-adjustable from 16 to 80 px in Settings and can be reset without changing other Timeline preferences. By default, during downward scrolling the back-to-top control may align with each visible older-batch marker as a secondary cue; it returns smoothly to rest when the marker leaves view and does not chase markers during upward scrolling. Users may disable this boundary-follow cue without disabling the ordinary back-to-top control. The return animation defaults to 350 ms, is adjustable from 100 to 1000 ms on the same Settings row, and has an independent reset-to-default action.

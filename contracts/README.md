@@ -6,6 +6,7 @@ This directory contains only contracts that are executed or validated by the cur
 - `acquisition-plan.schema.json` constrains the optional bounded follow-up decision.
 - `reasoning-result.schema.json` constrains per-candidate reasoning, evidence identity, event identity, and knowledge delta.
 - `semantic-event-resolution.schema.json` constrains the separate cross-source event resolver and its high-precision relationship labels.
+- `ai-deep-detection.schema.json` constrains asynchronous Deep Detection without turning an origin signal into a claim of authorship certainty.
 - `calibration-session.schema.json`, `calibration-label.schema.json`, and `calibration-profile-snapshot.schema.json` constrain first-run calibration.
 
-AkuSidecar vendors the six JSON schemas it executes. `scripts/check.ps1` verifies byte-equivalent SHA-256 hashes. Product behavior is defined in `../docs/product-contract.md`; runtime ownership is defined in `../docs/runtime-contract.md`.
+AkuSidecar vendors the seven JSON schemas it executes. `scripts/check.ps1` verifies byte-equivalent SHA-256 hashes. Product behavior is defined in `../docs/product-contract.md`; runtime ownership is defined in `../docs/runtime-contract.md`.
