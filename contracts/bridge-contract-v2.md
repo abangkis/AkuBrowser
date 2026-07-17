@@ -26,9 +26,9 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 
 The active pair is exact:
 
-- AkuBridge extension/manifest `0.6.2`;
-- runtime revision `source-fidelity-v50`;
-- build id `aku-bridge-0.6.2-source-fidelity-v50`; and
+- AkuBridge extension/manifest `0.6.3`;
+- runtime revision `source-fidelity-v51`;
+- build id `aku-bridge-0.6.3-source-fidelity-v51`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -86,6 +86,16 @@ managed window, and guarded after activation and page load. If AkuBridge cannot
 preserve or immediately restore the user's working window and tab, recapture
 fails with `visible_recovery_required` instead of taking foreground focus.
 
+If that bounded background attempt completes with outcome `unavailable`, the
+Timeline may offer a small inline question instead of opening a modal. A
+foreground recapture is a separate job and requires an explicit per-item user
+choice. Sidecar rejects it unless the latest completed attempt for that item was
+an unavailable background attempt. The existing managed window is then focused
+briefly on the canonical native post; its temporary tab and surface are closed
+after capture, and AkuBridge restores the prior working surface unless the user
+has intentionally moved elsewhere. This one-time authorization does not change
+the persisted Quiet capture setting or permit foreground update capture.
+
 Sidecar accepts only the requested source and evidence identity. A successful
 result replaces that Timeline item's presentation evidence; it never creates a
 candidate, invokes reasoning, changes semantic-event membership, or consumes
@@ -99,7 +109,7 @@ AkuSupervisor creates a single-flight request at
 claims it through `/next`; AkuBridge accepts the action through `/{id}/accept`
 before calling `chrome.runtime.reload()`.
 
-The action completes only after a new heartbeat announces the exact v50 build.
+The action completes only after a new heartbeat announces the exact v51 build.
 Replay is idempotent only for the same request id, actor, and reason. Pending,
 delivery, acceptance, heartbeat, build-mismatch, and expiry failures remain
 explicit. No whole-browser restart or source-tab mutation is implied.
