@@ -79,19 +79,25 @@ AI Detector is a presentation and user-control layer, not an authorship oracle. 
 Detection has two independent stages:
 
 - **Fast Detection** runs locally and deterministically after final global composition. It recognizes only explicit, auditable evidence such as a platform AI label, an author declaration, or prompt/instruction residue. Style alone—polished prose, lists, regular grammar, or generic wording—is never sufficient. A strong Fast result is marked Preliminary and is not Hide-eligible unless the evidence is a direct platform label or verified provenance.
-- **Deep Detection** starts asynchronously only after the finite Timeline is available. Its separate schema-bound App Server adapter reviews only eligible retained posts as untrusted evidence and may confirm, dispute, or correct the Fast result. Inadequate text, direct platform/provenance evidence, and active user corrections do not spend another model call because the same captured evidence cannot responsibly improve those outcomes. If Deep Detection overturns an earlier strong assessment, the badge remains visible as a correction instead of silently disappearing. Failure degrades to the local Fast result and never blocks Timeline delivery.
+- **Deep Detection** starts asynchronously only after the finite Timeline is available. Its separate schema-bound App Server adapter reviews only eligible retained posts as untrusted evidence and may confirm, dispute, or correct the Fast result. Every result explicitly assesses the social post and names whether the detected signal belongs to that post, quoted content, attached media, an external artifact, no object, or mixed evidence. `strong_signals` is invalid unless the signal belongs to the social post itself. Inadequate text, direct platform/provenance evidence, and active user corrections do not spend another model call because the same captured evidence cannot responsibly improve those outcomes. If Deep Detection overturns an earlier strong assessment, the badge remains visible as a correction instead of silently disappearing. Failure degrades to the local Fast result and never blocks Timeline delivery.
 
-Labels name the evidence rather than using the ambiguous blanket term “AI disclosed”: for example `Platform AI label`, `Author-declared AI · Preliminary`, `AI signals confirmed`, or `AI assessment corrected`. The user's `This is AI` or `This is not AI` correction has the highest personal presentation authority and can be cleared to reveal the resolved detector history again.
+Labels name the evidence rather than using the ambiguous blanket term “AI disclosed”: for example `Platform AI label`, `Author-declared AI · Preliminary`, `AI signals confirmed`, or `AI assessment corrected`. The user's `Mark as AI-generated` or `Mark as not AI-generated` correction has the highest personal presentation authority and can be cleared to reveal the resolved detector history again.
 
 Settings expose three locked presentation modes:
 
-- `inline` is the default and leaves every retained post in the Timeline with a compact expandable badge when applicable;
+- `inline` is the default and leaves every retained post in the Timeline with one compact expandable AI-signal control. Posts without a strong assessment use a quiet `AI signal · Neutral` state rather than claiming they are definitely human-authored;
 - `drawer` routes unseen strong-signal posts into the generic side-pane host, while a post already seen inline does not disappear abruptly when an asynchronous result arrives;
 - `hide` is a high-risk mode protected by warnings and the exact typed phrase `HIDE STRONG AI SIGNALS`. It hides only direct-origin evidence, Deep-confirmed strong signals, or posts explicitly marked AI by the user. Preliminary inferred signals are never hidden. Items remain stored locally and reappear when Hide is disabled.
 
 The side pane is a generic Timeline alternate-view host. AI Detector supplies the first `AI Signals` pane, but does not own the underlying UI primitive.
 
-Posts without an AI Detector badge expose manual `Mark as AI-generated` and `Mark as not AI-generated` corrections only inside the neutral `⋯` actions menu. The normal card footer never shows an AI-origin label merely because correction controls are available; visible AI wording outside that menu always represents an actual assessment.
+Source attachments are also generic presentation evidence. LinkedIn currently
+maps native job cards and external link previews into bounded `job` or
+`link_preview` records; the Timeline renderer owns their common card UI.
+Attachments are not gallery media, so an external logo or AI-created artifact
+cannot silently inherit the provenance scope of the authored post.
+
+AI status, detector detail, and user correction are one UI family and therefore share the same badge slot at the start of the card toolbar. Clicking that control reveals `Mark as AI-generated` and `Mark as not AI-generated`, or `Clear my correction` after a personal override. Detector transitions—neutral, preliminary, confirmed, disputed, corrected, or user-overridden—change the badge state without moving the actions elsewhere. The card footer remains reserved for source access, More/Less preference feedback, and semantic-event correction.
 
 ## Unified Timeline
 
@@ -99,16 +105,15 @@ The Timeline header reports unique additions and duplicate-report count from the
 
 X and LinkedIn are captured as child runs of one session. After all active sources reach a terminal state, AkuSidecar builds one global personalized order. A diversity guard prevents more than two consecutive items from one source while another source still has an item available. This is not strict round-robin: relevance remains primary and source diversity is a guardrail.
 
-A partial session retains validated results from the source that completed and names the failed source. Update Inbox exposes captured, evaluated, selected, unique, and duplicate-report counts; whether semantic resolution used the local fast path or App Server; trigger reason, strongest overlap, retained-event count, and post-hoc user split/merge counts; Deep Detection status, reviewed-post count, duration, token usage, and safe degradation; capture rounds; snapshots; scrolls; reasoning time; and follow-up failure. A completed session with no additions explicitly reports that outcome.
+A partial session retains validated results from the source that completed and names the failed source. Update Inbox exposes captured, evaluated, selected, unique, and duplicate-report counts; whether semantic resolution used the local fast path or App Server; trigger reason, strongest overlap, retained-event count, and post-hoc user split/merge counts; Deep Detection status, reviewed-post count, duration, token usage, and safe degradation; capture rounds; snapshots; scrolls; reasoning time; and follow-up failure. It also lists the More/Less decisions made on retained Timeline items, so a mistaken choice can be replaced after the item has left the visible Timeline. A completed session with no additions explicitly reports that outcome.
 
 ## Feedback semantics
 
 - More is full-strength positive preference evidence.
-- Less without a reason is negative preference evidence with reduced weight.
 - Less like this is one direct, full-strength Not interested signal; it has no secondary reason menu.
 - Freshness, prior knowledge, and cross-author duplication are handled by the evidence and semantic-event contracts instead of being mixed into preference feedback.
-- When a captured post reports unavailable media, Recapture first performs one quiet, item-scoped browser recovery and updates only that post's local evidence. It is not a new feed check and cannot add or rerank Timeline items. If the background attempt still cannot hydrate the media, the UI quietly offers one explicit foreground attempt; declining it has no side effect, accepting it does not change the persisted Quiet setting, and AkuBrowser restores the prior working surface unless the user intentionally moved elsewhere.
-- The latest signal for the same source/evidence identity replaces earlier labels during fitting.
+- When a captured post reports unavailable media, Recapture first performs one quiet, item-scoped browser acquisition and updates only that post's local evidence. The shared engine exhausts primary DOM, source-exposed structured state, one bounded background hydration reread, and adapter alternate DOM before foreground is eligible. It is not a new feed check and cannot add or rerank Timeline items. If the background attempt still cannot hydrate the media, the UI quietly offers one explicit foreground attempt; declining it has no side effect, accepting it does not change the persisted Quiet setting, and AkuBrowser restores the prior working surface unless the user intentionally moved elsewhere.
+- The latest More or Less signal for the same source/evidence identity replaces earlier labels during fitting. Update Inbox exposes exactly those two correction actions; it does not provide a separate neutral state.
 
 All learning stays local and rebuildable from canonical feedback.
 

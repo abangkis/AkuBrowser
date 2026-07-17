@@ -26,9 +26,9 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 
 The active pair is exact:
 
-- AkuBridge extension/manifest `0.6.3`;
-- runtime revision `source-fidelity-v51`;
-- build id `aku-bridge-0.6.3-source-fidelity-v51`; and
+- AkuBridge extension/manifest `0.6.4`;
+- runtime revision `source-fidelity-v52`;
+- build id `aku-bridge-0.6.4-source-fidelity-v52`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -71,6 +71,12 @@ identity/permalink/text evidence; Go derives the canonical 24-hex
 Raw browser observations remain untrusted input. Reasoning output may reference
 only evidence keys present in the admitted observation.
 
+Attachments are typed separately from post media. A source adapter may emit at
+most three `job`, `link_preview`, or `document` attachments with a canonical
+HTTPS destination, bounded display metadata, and an optional rendered
+thumbnail. The shared Sidecar renderer owns presentation; source adapters do
+not emit HTML.
+
 ## Item-scoped media recapture
 
 Recapture is a separate bounded Bridge task, not an update session. AkuSidecar
@@ -85,6 +91,14 @@ The native-post tab is created inactive, activated only inside the unfocused
 managed window, and guarded after activation and page load. If AkuBridge cannot
 preserve or immediately restore the user's working window and tab, recapture
 fails with `visible_recovery_required` instead of taking foreground focus.
+
+One generic Media Acquisition Engine serves every source adapter. In quiet
+mode it attempts primary DOM evidence, source-exposed structured state, one
+bounded hydration reread, and the adapter's alternate DOM extractor. Only
+after those authorized background paths are exhausted may its audit set
+`foregroundRequired`. A small or minimized window is not used as a substitute:
+responsive layout and document visibility must remain representative while
+the managed window stays unfocused.
 
 If that bounded background attempt completes with outcome `unavailable`, the
 Timeline may offer a small inline question instead of opening a modal. A
@@ -109,7 +123,7 @@ AkuSupervisor creates a single-flight request at
 claims it through `/next`; AkuBridge accepts the action through `/{id}/accept`
 before calling `chrome.runtime.reload()`.
 
-The action completes only after a new heartbeat announces the exact v51 build.
+The action completes only after a new heartbeat announces the exact v52 build.
 Replay is idempotent only for the same request id, actor, and reason. Pending,
 delivery, acceptance, heartbeat, build-mismatch, and expiry failures remain
 explicit. No whole-browser restart or source-tab mutation is implied.
