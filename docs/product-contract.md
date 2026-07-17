@@ -91,13 +91,15 @@ Settings expose three locked presentation modes:
 
 The side pane is a generic Timeline alternate-view host. AI Detector supplies the first `AI Signals` pane, but does not own the underlying UI primitive.
 
+Posts without an AI Detector badge expose manual `Mark as AI-generated` and `Mark as not AI-generated` corrections only inside the neutral `⋯` actions menu. The normal card footer never shows an AI-origin label merely because correction controls are available; visible AI wording outside that menu always represents an actual assessment.
+
 ## Unified Timeline
 
 The Timeline header reports unique additions and duplicate-report count from the latest completed or partial check instead of repeating the configured retention capacity. When older retained items follow the newest additions, their first existing batch marker doubles as the single quiet history boundary. Its default 36 px spacing is user-adjustable from 16 to 80 px in Settings and can be reset without changing other Timeline preferences. By default, during downward scrolling the back-to-top control may align with each visible older-batch marker as a secondary cue; it returns smoothly to rest when the marker leaves view and does not chase markers during upward scrolling. Users may disable this boundary-follow cue without disabling the ordinary back-to-top control. The return animation defaults to 350 ms, is adjustable from 100 to 1000 ms on the same Settings row, and has an independent reset-to-default action.
 
 X and LinkedIn are captured as child runs of one session. After all active sources reach a terminal state, AkuSidecar builds one global personalized order. A diversity guard prevents more than two consecutive items from one source while another source still has an item available. This is not strict round-robin: relevance remains primary and source diversity is a guardrail.
 
-A partial session retains validated results from the source that completed and names the failed source. Update Inbox exposes captured, evaluated, selected, unique, and duplicate-report counts; whether semantic resolution used the local fast path or App Server; trigger reason, strongest overlap, and retained-event count; capture rounds; snapshots; scrolls; reasoning time; and follow-up failure. A completed session with no additions explicitly reports that outcome.
+A partial session retains validated results from the source that completed and names the failed source. Update Inbox exposes captured, evaluated, selected, unique, and duplicate-report counts; whether semantic resolution used the local fast path or App Server; trigger reason, strongest overlap, retained-event count, and post-hoc user split/merge counts; Deep Detection status, reviewed-post count, duration, token usage, and safe degradation; capture rounds; snapshots; scrolls; reasoning time; and follow-up failure. A completed session with no additions explicitly reports that outcome.
 
 ## Feedback semantics
 

@@ -36,7 +36,7 @@ Assert-True ($sidecarConfig.preference.mode -eq "guarded_live") "High-authority 
 Assert-True ($sidecarConfig.capture.profile -eq "standard") "Standard 1x must be the fresh bounded-load default."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $sidecarRoot "package.json"))) "AkuSidecar must not contain a Node package."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $browserRoot "package.json"))) "AkuBrowser must not contain a Node package."
-Assert-True ($domain -match 'ApplicationVersion\s*=\s*"1\.0\.0-dev\.6"') "AkuSidecar version boundary is unexpected."
+Assert-True ($domain -match 'ApplicationVersion\s*=\s*"1\.0\.0-dev\.7"') "AkuSidecar version boundary is unexpected."
 Assert-True ($domain -match 'BridgeContractVersion\s*=\s*"aku-browser\.bridge\.v2"') "Bridge contract boundary is unexpected."
 
 $schemas = @(
@@ -56,7 +56,7 @@ foreach ($schema in $schemas) {
 
 $supervised = $supervisorProfile.services.akusidecar
 Assert-True ($supervised.command -eq (Join-Path $sidecarRoot "runtime\dev\aku-sidecar.exe")) "AkuSupervisor does not own the direct Go binary."
-Assert-True ($supervised.health.expect.version -eq "1.0.0-dev.6") "AkuSupervisor expects the wrong AkuSidecar version."
+Assert-True ($supervised.health.expect.version -eq "1.0.0-dev.7") "AkuSupervisor expects the wrong AkuSidecar version."
 Assert-True ($supervised.health.expect.runtime -eq "go") "AkuSupervisor does not require the Go runtime."
 
 Push-Location $sidecarRoot
@@ -85,7 +85,7 @@ finally { Pop-Location }
     boundary = "high-authority-go-sidecar"
     AkuBridge = $bridgePackage.version
     AkuBridgeRuntime = $bridgePackage.akuRuntimeRevision
-    AkuSidecar = "1.0.0-dev.6"
+    AkuSidecar = "1.0.0-dev.7"
     provider = $sidecarConfig.reasoning.provider
     preferenceAuthority = $sidecarConfig.preference.mode
     boundedLoadDefault = $sidecarConfig.capture.profile
