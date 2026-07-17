@@ -26,9 +26,9 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 
 The active pair is exact:
 
-- AkuBridge extension/manifest `0.6.6`;
-- runtime revision `source-fidelity-v56`;
-- build id `aku-bridge-0.6.6-source-fidelity-v56`; and
+- AkuBridge extension/manifest `0.6.7`;
+- runtime revision `source-fidelity-v57`;
+- build id `aku-bridge-0.6.7-source-fidelity-v57`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -43,6 +43,9 @@ current-process heartbeat is `reconnecting`; any observed mismatch is
 - `AKU_BROWSER_MEDIA_RECAPTURE`
 - `AKU_BROWSER_MEDIA_RECAPTURE_COMPLETED`
 - `AKU_BROWSER_MEDIA_RECAPTURE_FAILED`
+- `AKU_BROWSER_X_MEDIA_EVIDENCE_LOOKUP`
+- `AKU_BROWSER_X_MEDIA_EVIDENCE_RESULT`
+- `AKU_BROWSER_X_MEDIA_EVIDENCE_FAILED`
 - `AKU_BROWSER_BRIDGE_RELOAD_SELF`
 - `AKU_BROWSER_BRIDGE_ERROR`
 
@@ -83,6 +86,28 @@ most three `job`, `link_preview`, or `document` attachments with a canonical
 HTTPS destination, bounded display metadata, and an optional rendered
 thumbnail. The shared Sidecar renderer owns presentation; source adapters do
 not emit HTML.
+
+## Passive X media evidence
+
+X media recovery has a passive path before item-scoped Recapture. A
+`document_start` watcher records an allowlisted media URL while it is present
+inside the owning post. A fixed, traversal-bounded MAIN-world resolver may also
+read media entities already exposed by the matching post's React data. This is
+not arbitrary script authority: only a normalized `x:status:<id>`, media type,
+allowlisted URL, dimensions, and provenance may cross into the isolated
+runtime. Raw React objects, GraphQL/fetch responses, post text, and account
+state are never retained or relayed.
+
+The sanitized extension cache is bounded to 30 minutes, 128 post identities,
+and four media records per post. One UI lookup may request at most 64 identities.
+Sidecar then revalidates the Timeline item's authoritative X identity and the
+strict `pbs.twimg.com`/`video.twimg.com` host and path allowlist before accepting
+`POST /api/bridge/timeline/{id}/media-evidence`. A successful update records a
+completed provenance row with `browserOperation=none` and replaces only local
+presentation evidence. It creates no tab, window, focus change, navigation,
+scroll, Codex invocation, candidate, ranking change, or capacity cost. If the
+cache never obtains matching evidence, the existing Recapture contract remains
+the explicit terminal fallback.
 
 ## Item-scoped media recapture
 
@@ -144,7 +169,7 @@ AkuSupervisor creates a single-flight request at
 claims it through `/next`; AkuBridge accepts the action through `/{id}/accept`
 before calling `chrome.runtime.reload()`.
 
-The action completes only after a new heartbeat announces the exact v52 build.
+The action completes only after a new heartbeat announces the exact v57 build.
 Replay is idempotent only for the same request id, actor, and reason. Pending,
 delivery, acceptance, heartbeat, build-mismatch, and expiry failures remain
 explicit. No whole-browser restart or source-tab mutation is implied.

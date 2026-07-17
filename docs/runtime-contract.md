@@ -23,6 +23,7 @@ UI session
   -> global cross-source composition + diversity guard
   -> local deterministic AI Fast Detection
   -> finite Timeline, feedback, and Update Inbox
+  -> passive X media-evidence completion when matching evidence appears
   -> asynchronous AI Deep Detection + presentation-only refresh
 ```
 
@@ -46,7 +47,34 @@ Full reset is backup-first and idle-only. The health endpoint reports database h
 
 All HTTP listeners remain loopback-only. Bridge routes require the durable Bridge token and exact `aku-browser.bridge.v2` header. Captured source content is untrusted input. Reasoning is read-only, approvals are disabled, structured output is mandatory, and the provider cannot directly navigate, expand the capture budget, or select Timeline items.
 
-Capture degradation is explicit. Missing primary media may yield a usable-degraded item with a bounded Recapture action. One generic Media Acquisition Engine serves every adapter; source adapters contribute only media-kind detection and bounded source-specific extractors. Recapture first revisits only that native post inside the unfocused managed capture surface, then exhausts primary DOM, source-exposed structured state, one background hydration reread, and alternate DOM before it may request foreground visibility. It replaces only local presentation evidence, consumes no Timeline capacity or reasoning call, and always cleans up its temporary tab and surface. A small or minimized window is not used because it can change responsive DOM and hydration; the sufficiently sized managed window remains unfocused behind the working surface. If this quiet attempt completes without media, the UI may show one small inline offer for a separate foreground job. Sidecar accepts that job only after an unavailable background result and explicit per-item consent. The foreground authorization is one-time, does not modify the persisted Quiet setting, and restores the prior working surface unless the user intentionally moved elsewhere. Typed external attachments remain separate from post media and use one generic renderer. The normal Open native post action remains available below the card; missing evidence is never fabricated. AkuBridge never performs social writes.
+Capture degradation is explicit. Missing primary media may yield a usable-degraded
+item while the Timeline remains usable. For X, a `document_start` watcher and a
+fixed bounded MAIN-world resolver can retain only the matching post identity and
+allowlisted media evidence. The sanitized cache keeps 30 minutes, 128 posts, and
+four media records per post. When evidence appears, the UI relay and
+Bridge-authenticated Sidecar endpoint revalidate identity and host/path before
+replacing that item's local evidence. This async path performs no browser
+operation, focus change, reasoning call, ranking change, or capacity spend.
+
+If passive completion has no evidence, the item keeps a bounded Recapture
+action. One generic Media Acquisition Engine serves every adapter; source
+adapters contribute only media-kind detection and bounded source-specific
+extractors. Recapture first revisits only that native post inside the unfocused
+managed capture surface, then exhausts primary DOM, source-exposed structured
+state, one background hydration reread, and alternate DOM before it may request
+foreground visibility. It replaces only local presentation evidence, consumes
+no Timeline capacity or reasoning call, and always cleans up its temporary tab
+and surface. A small or minimized window is not used because it can change
+responsive DOM and hydration; the sufficiently sized managed window remains
+unfocused behind the working surface. If this quiet attempt completes without
+media, the UI may show one small inline offer for a separate foreground job.
+Sidecar accepts that job only after an unavailable background result and
+explicit per-item consent. The foreground authorization is one-time, does not
+modify the persisted Quiet setting, and restores the prior working surface
+unless the user intentionally moved elsewhere. Typed external attachments
+remain separate from post media and use one generic renderer. The normal Open
+native post action remains available below the card; missing evidence is never
+fabricated. AkuBridge never performs social writes.
 
 ## Configuration
 

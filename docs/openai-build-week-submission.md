@@ -10,6 +10,11 @@ The second insight was about personalization. A platform infers preference from 
 
 A third question emerged while reading: how much of the conversation was created or amplified by AI? Hiding uncertain content by default would simply replace one opaque algorithm with another. The more useful product direction was to expose bounded AI origin signals, let the user decide where those posts belong, and make every detector correction visible.
 
+The same attention principle applies to browser acquisition. A missing image
+should not force the product to interrupt the user or hold back an otherwise
+useful Timeline. Evidence can arrive in layers: deliver the bounded text first,
+then complete the matching media quietly if the source exposes it later.
+
 ## What it does
 
 AkuBrowser captures a bounded slice of the user's signed-in X and LinkedIn feeds through a read-only Chrome extension. A local Go application quality-admits and reconciles the capture, evaluates each admitted candidate with structured Codex output, removes repeated evidence, groups cross-author and cross-source reports of the same specific event, and builds one finite Timeline.
@@ -19,6 +24,12 @@ The cross-author semantic Event Engine is the feature that changed the value of 
 AI Detector extends the same attention principle without pretending to solve authorship. A local deterministic text pass annotates only explicit evidence such as a platform label, an author declaration about the social post itself, or prompt residue. A separate asynchronous Codex pass can confirm, dispute, or correct that preliminary result after the Timeline is already usable. Its schema explicitly binds the object being assessed to the scope of the evidence: an AI-created website discussed in a human-authored post is not evidence that AI wrote the post. Because a model can still assign the wrong scope, a deterministic postcondition verifies every proposed strong result against the captured evidence before it receives UI, Drawer, or Hide authority; stale strong results from older contracts are shown as corrected rather than silently trusted. Inline badges are the default, and one stable badge slot holds neutral state, detector transitions, assessment detail, and direct user correction instead of scattering those controls across the card. The user may route unseen strong signals into a generic side pane, or deliberately activate a warned Hide mode that excludes only direct or Deep-confirmed results. If the deeper assessment says the first badge was wrong, AkuBrowser shows that correction instead of making the badge silently disappear. A direct user correction outranks both detector layers.
 
 The first run leads into calibration before the Timeline opens. Later, direct feedback can promote, replace, demote, and suppress ordinary candidates. Material updates and contradictions remain protected, while one discovery lane preserves useful surprise. X and LinkedIn are ranked together rather than displayed as two separate or rigidly alternating feeds. If nothing clears the newness, materiality, and evidence boundary, AkuBrowser says `0 additions` and stops.
+
+X media follows the same finite-delivery rule. The current v57 implementation
+can show a usable-degraded post first, retain only short-lived allowlisted media
+evidence that AkuBridge naturally observes, and complete the matching card
+without opening or focusing another tab. Quiet and explicitly consented
+foreground Recapture remain fallbacks, not the default price of uncertainty.
 
 ## How it was built
 
@@ -30,6 +41,14 @@ The system has three runtime pieces:
 
 Codex is used as a constrained reasoning component, not as an autonomous browser. One managed Codex App Server process serves three schema-bound adapters: candidate evaluation, a separate semantic event resolver, and asynchronous AI Deep Detection. Go owns the bounded local event index, deterministic AI Fast Detection, retrieval shortlist, retention, confidence gates, correction authority, budgets, trust, personalization, and final composition. When deterministic event retrieval finds no plausible relationship, the Event Engine creates local event threads without paying for another model call. Deep Detection likewise skips evidence that is inadequate, already decided by direct platform provenance, or overridden by the user, and uses a separately tuned model profile rather than inheriting selection cost. Stable local identities never enter model prompts, social content is treated as untrusted evidence, and every App Server thread is ephemeral, read-only, tool-disabled, and schema-bound.
 
+AkuBridge handles X media without intercepting GraphQL/fetch traffic or sending
+raw provider state elsewhere. A `document_start` watcher records URLs while
+they are present, while a fixed traversal-bounded MAIN-world resolver reads
+only media entities already exposed by the owning post. The extension keeps a
+sanitized 30-minute cache bounded to 128 post identities and four media records
+each; Sidecar revalidates identity and the media CDN path before applying an
+evidence-only override.
+
 ## Challenges
 
 The hardest part was preserving the product experience while replacing the runtime. A first port looked healthy but skipped calibration, changed UI behavior, leaked duplicate LinkedIn entries when a permalink appeared late, and made repeated update checks look like no-ops. Each failure revealed a contract that had been implicit in the old implementation.
@@ -38,7 +57,16 @@ Another challenge was keeping preference feedback semantically clean. An earlier
 
 Cross-source ordering was also subtler than round-robin. Strict alternation looks balanced but can lower relevance; pure scoring can let one platform dominate. The final rule keeps global personalized ranking and adds a small diversity guard only when another source has a candidate available.
 
-The read-only browser boundary added another class of uncertainty. Social DOM changes, external LinkedIn cards are not the same thing as post images, and X media may hydrate differently in background and foreground windows. AkuBridge now maps source DOM into typed post, attachment, and media evidence. One generic Media Acquisition Engine shares budget, visibility policy, and telemetry across adapters, while each source contributes only bounded detection and extraction strategies. It exhausts quiet background paths before asking the user for a brief foreground capture.
+The read-only browser boundary added another class of uncertainty. Social DOM
+changes, external LinkedIn cards are not the same thing as post images, and X
+media may hydrate differently in background and foreground windows. An active
+tab is not necessarily a focused or document-visible tab, and a hidden DOM can
+expose the correct media URL while reporting zero render geometry. The fix was
+not to discard trusted evidence or steal focus: keep strict CDN and post-root
+validation, distinguish URL discovery from geometry, and move completion into
+an asynchronous evidence layer. One generic Media Acquisition Engine still
+shares budget, visibility policy, and telemetry across adapters, while each
+source contributes bounded strategies and foreground remains explicit consent.
 
 Cross-author duplication introduced a different problem: two posts can discuss the same topic without reporting the same occurrence. The Event Engine therefore uses high-precision actor/action/object/time matching, defaults to a `0.92` automatic-merge confidence gate with tightly bounded user tuning, and treats updates, contradictions, consequences, and context as unique information. A false merge can be split or reassigned by the user and undone immediately.
 
@@ -52,8 +80,20 @@ The same boundary applies when the product evaluates AI-origin evidence. A detec
 
 I also learned that an empty result can be a feature—and that a post is the wrong unit for an attention product. A finite Timeline loses its purpose if uncertainty always triggers a fallback item or if five accounts repeating one occurrence consume five slots. “Nothing material changed” and “this is the same event” can both be valuable answers.
 
+Browser evidence taught the same lesson in another form: primary delivery does
+not need to block until every presentation detail is complete. A bounded item
+can remain truthful and useful, then receive stronger media evidence
+asynchronously, without turning uncertainty into permission to take the
+foreground.
+
 Finally, documentation became part of the refactor. Historical experiments and backward-compatibility contracts were creating more confusion than safety. The active project now keeps one product contract, one runtime contract, the current Bridge protocol, and only the schemas the runtime executes.
 
 ## What's next
 
-The next step is to validate personalization, event grouping, object-scoped text AI signals, generic attachments, and background media acquisition across more real update cycles, using direct corrections rather than platform engagement as the tuning signal. Image and video signals can then be added as separate assessed objects without letting a text assessment overclaim multimodal detection. After that, the focus is packaging the local system cleanly and extending the source-adapter interface and generic side-pane host without weakening the bounded contract.
+The next step is live durability and coverage validation for the v57 passive X
+media path alongside personalization, event grouping, object-scoped text AI
+signals, and generic attachments across more real update cycles. Image and
+video AI signals can then be added as separate assessed objects without letting
+a text assessment overclaim multimodal detection. After that, the focus is
+packaging the local system cleanly and extending the source-adapter interface
+and generic side-pane host without weakening the bounded contract.
