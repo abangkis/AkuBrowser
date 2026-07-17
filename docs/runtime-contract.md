@@ -50,9 +50,9 @@ All HTTP listeners remain loopback-only. Bridge routes require the durable Bridg
 Capture degradation is explicit. Missing primary media may yield a
 usable-degraded item while the Timeline remains usable. Live v57 validation
 showed that Quiet X could detect media roots while hydrated media-container and
-recoverable-URL counts remained at zero. The v58 passive path therefore combines
+recoverable-URL counts remained at zero. The v59 passive path therefore combines
 the existing `document_start` DOM watcher and fixed bounded MAIN-world resolver
-with `x-response-evidence-v1`, a MAIN-world adapter installed at
+with `x-response-evidence-v2`, a MAIN-world adapter installed at
 `document_start`. It observes only successful responses to X's already-issued
 `HomeTimeline`, `HomeLatestTimeline`, and `TweetDetail` GraphQL requests. It
 does not create or retry network traffic.
@@ -61,8 +61,11 @@ Response parsing is transient and bounded. Raw responses, operation URLs, post
 text, account state, and provider authentication never cross worlds or persist;
 only the matching `x:status:<id>` and allowlisted `pbs.twimg.com` or
 `video.twimg.com` media metadata with `x_response_graphql` provenance can enter
-the sanitized cache. The cache keeps 30 minutes, 128 posts, and four media
-records per post. When evidence appears, the UI relay and Bridge-authenticated
+the sanitized media cache. The owning author's allowlisted X avatar URL may
+enter a separate 30-minute, 128-post in-memory cache so Quiet capture can fill
+presentation without foregrounding the tab. Avatar evidence never crosses the
+service worker or Sidecar boundary. The media cache keeps 30 minutes, 128
+posts, and four media records per post. When media evidence appears, the UI relay and Bridge-authenticated
 Sidecar endpoint revalidate identity and host/path before applying
 `passive-x-media-enrichment-v2` to that item's local evidence. This async path
 adds no permission and performs no provider request, browser operation, focus

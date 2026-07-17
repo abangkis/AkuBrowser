@@ -46,13 +46,16 @@ Codex is used as a constrained reasoning component, not as an autonomous browser
 
 AkuBridge handles X media with three bounded evidence inputs: a
 `document_start` DOM watcher, a fixed traversal-bounded MAIN-world React
-resolver, and the v58 `x-response-evidence-v1` adapter. The last one observes
+resolver, and the v59 `x-response-evidence-v2` adapter. The last one observes
 only successful responses to X's already-issued `HomeTimeline`,
 `HomeLatestTimeline`, and `TweetDetail` GraphQL requests. It never issues or
 retries a provider request. Raw responses and post text are parsed only inside
 the page world and are never relayed or stored. The only output is a normalized
-post ID plus at most four allowlisted X media records. The extension keeps that
-sanitized evidence for 30 minutes across at most 128 post identities; Sidecar
+post ID plus at most four allowlisted X media records and, separately, the
+owning author's allowlisted avatar URL. The avatar stays in an ephemeral
+Bridge-only cache to repair Quiet presentation and never becomes post media or
+Sidecar state. The extension keeps sanitized post-media evidence for 30
+minutes across at most 128 post identities; Sidecar
 revalidates the identity and CDN path before applying a presentation-only
 override with `x_response_graphql` provenance. No new permission, tab, window,
 focus change, Codex call, selection/ranking change, or provider authentication

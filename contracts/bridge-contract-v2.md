@@ -26,16 +26,16 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 
 The active pair is exact:
 
-- AkuBridge extension/manifest `0.6.8`;
-- runtime revision `source-fidelity-v58`;
-- build id `aku-bridge-0.6.8-source-fidelity-v58`; and
+- AkuBridge extension/manifest `0.6.9`;
+- runtime revision `source-fidelity-v59`;
+- build id `aku-bridge-0.6.9-source-fidelity-v59`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
 current-process heartbeat is `reconnecting`; any observed mismatch is
 `incompatible`. A session may start only when the current heartbeat is exact.
-The exact v58 capability set includes
-`mediaEvidenceAdapterVersions.x=x-response-evidence-v1` and the bounded
+The exact v59 capability set includes
+`mediaEvidenceAdapterVersions.x=x-response-evidence-v2` and the bounded
 `observe_response_media_evidence` action. These declare evidence observation,
 not authority to issue provider requests or change browser focus.
 
@@ -99,9 +99,9 @@ hydrated media-container and recoverable-URL counts stayed at zero. A DOM-only
 cache therefore could not reliably recover the same evidence that appeared
 after foreground visibility.
 
-In v58, the existing `document_start` DOM watcher and fixed,
+In v59, the existing `document_start` DOM watcher and fixed,
 traversal-bounded MAIN-world React resolver are joined by
-`x-response-evidence-v1`. This MAIN-world adapter also starts at
+`x-response-evidence-v2`. This MAIN-world adapter also starts at
 `document_start` and observes only successful JSON responses for X's exact
 `HomeTimeline`, `HomeLatestTimeline`, and `TweetDetail` GraphQL operations. It
 observes responses to requests X has already issued; it never creates, retries,
@@ -110,14 +110,18 @@ bytes, traversal nodes, depth, properties, candidates, and media count.
 
 This is not arbitrary script authority: only a normalized `x:status:<id>`,
 media type, allowlisted `pbs.twimg.com` or `video.twimg.com` URL, dimensions,
-and `x_response_graphql` provenance may cross into the isolated runtime. Raw
+`x_response_graphql` provenance, and the owning Tweet author's allowlisted
+`pbs.twimg.com/profile_images/` URL may cross into the isolated runtime. Raw
 React objects, raw GraphQL responses, operation URLs, post text, account state,
 cookies, and provider authentication never cross worlds or persist. The
 isolated runtime, extension store, and Sidecar each revalidate the bounded
 envelope and allowlist.
 
-The sanitized extension cache is bounded to 30 minutes, 128 post identities,
-and four media records per post. One UI lookup may request at most 64 identities.
+The sanitized extension media cache is bounded to 30 minutes, 128 post
+identities, and four media records per post. Avatar URLs use a separate
+30-minute, 128-post in-memory cache. They are not published to the service
+worker, written to extension storage, or relayed to Sidecar as post media. One
+UI media lookup may request at most 64 identities.
 Sidecar then revalidates the Timeline item's authoritative X identity and the
 strict `pbs.twimg.com`/`video.twimg.com` host and path allowlist before accepting
 `POST /api/bridge/timeline/{id}/media-evidence`. A successful update records a
