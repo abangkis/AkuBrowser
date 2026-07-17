@@ -23,7 +23,7 @@ UI session
   -> global cross-source composition + diversity guard
   -> local deterministic AI Fast Detection
   -> finite Timeline, feedback, and Update Inbox
-  -> passive X media-evidence completion when matching evidence appears
+  -> passive X DOM/response media-evidence completion when matching evidence appears
   -> asynchronous AI Deep Detection + presentation-only refresh
 ```
 
@@ -47,14 +47,27 @@ Full reset is backup-first and idle-only. The health endpoint reports database h
 
 All HTTP listeners remain loopback-only. Bridge routes require the durable Bridge token and exact `aku-browser.bridge.v2` header. Captured source content is untrusted input. Reasoning is read-only, approvals are disabled, structured output is mandatory, and the provider cannot directly navigate, expand the capture budget, or select Timeline items.
 
-Capture degradation is explicit. Missing primary media may yield a usable-degraded
-item while the Timeline remains usable. For X, a `document_start` watcher and a
-fixed bounded MAIN-world resolver can retain only the matching post identity and
-allowlisted media evidence. The sanitized cache keeps 30 minutes, 128 posts, and
-four media records per post. When evidence appears, the UI relay and
-Bridge-authenticated Sidecar endpoint revalidate identity and host/path before
-replacing that item's local evidence. This async path performs no browser
-operation, focus change, reasoning call, ranking change, or capacity spend.
+Capture degradation is explicit. Missing primary media may yield a
+usable-degraded item while the Timeline remains usable. Live v57 validation
+showed that Quiet X could detect media roots while hydrated media-container and
+recoverable-URL counts remained at zero. The v58 passive path therefore combines
+the existing `document_start` DOM watcher and fixed bounded MAIN-world resolver
+with `x-response-evidence-v1`, a MAIN-world adapter installed at
+`document_start`. It observes only successful responses to X's already-issued
+`HomeTimeline`, `HomeLatestTimeline`, and `TweetDetail` GraphQL requests. It
+does not create or retry network traffic.
+
+Response parsing is transient and bounded. Raw responses, operation URLs, post
+text, account state, and provider authentication never cross worlds or persist;
+only the matching `x:status:<id>` and allowlisted `pbs.twimg.com` or
+`video.twimg.com` media metadata with `x_response_graphql` provenance can enter
+the sanitized cache. The cache keeps 30 minutes, 128 posts, and four media
+records per post. When evidence appears, the UI relay and Bridge-authenticated
+Sidecar endpoint revalidate identity and host/path before applying
+`passive-x-media-enrichment-v2` to that item's local evidence. This async path
+adds no permission and performs no provider request, browser operation, focus
+change, reasoning call, selection/ranking change, semantic grouping change, or
+capacity spend.
 
 If passive completion has no evidence, the item keeps a bounded Recapture
 action. One generic Media Acquisition Engine serves every adapter; source
@@ -78,7 +91,7 @@ fabricated. AkuBridge never performs social writes.
 
 ## Configuration
 
-`AkuSidecar/config/sidecar.json` is strict. The fresh preference mode is `guarded_live`, the fresh bounded-load profile is Standard 1x, and the reasoning provider is `codex-app-server` (with `deterministic` retained only for local tests). Product Settings remain typed in SQLite and expose source selection, bounded load profile or Custom values, Timeline capacity, capture behavior, personalization mode, calibration, presentation, stream width, semantic display mode, locked resolver shortlist, paired event-memory retention/storage, and the locked Inline/Drawer/Hide AI Detector presentation. A persisted user choice such as Expanded 2x remains authoritative across restart; Standard 1x and Inline AI signals apply to a fresh database or full reset.
+`AkuSidecar/config/sidecar.json` is strict. The fresh preference mode is `guarded_live`, the fresh bounded-load profile is Standard 1x, and the reasoning provider is `codex-app-server` (with `deterministic` retained only for local tests). Product Settings remain typed in SQLite and expose source selection, bounded load profile or Custom values, Timeline capacity, capture behavior, personalization mode, calibration, presentation, stream width, semantic display mode, locked resolver shortlist, paired event-memory retention/storage, and the locked Inline/Drawer/Hide AI Detector presentation. Quiet capture uses the dedicated non-focused managed window. Adaptive fidelity directly uses the newest eligible canonical source tab in an ordinary Chrome window; it does not first create or try the Quiet managed window. A persisted user choice such as Expanded 2x remains authoritative across restart; Standard 1x and Inline AI signals apply to a fresh database or full reset.
 
 ## Lifecycle and validation
 

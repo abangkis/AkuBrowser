@@ -25,10 +25,13 @@ AI Detector extends the same attention principle without pretending to solve aut
 
 The first run leads into calibration before the Timeline opens. Later, direct feedback can promote, replace, demote, and suppress ordinary candidates. Material updates and contradictions remain protected, while one discovery lane preserves useful surprise. X and LinkedIn are ranked together rather than displayed as two separate or rigidly alternating feeds. If nothing clears the newness, materiality, and evidence boundary, AkuBrowser says `0 additions` and stops.
 
-X media follows the same finite-delivery rule. The current v57 implementation
-can show a usable-degraded post first, retain only short-lived allowlisted media
-evidence that AkuBridge naturally observes, and complete the matching card
-without opening or focusing another tab. Quiet and explicitly consented
+X media follows the same finite-delivery rule. AkuBrowser can show a
+usable-degraded post first, retain only short-lived allowlisted media evidence,
+and complete the matching card without opening or focusing another tab. Live
+v57 validation made the boundary concrete: a Quiet X document detected media
+roots, but both hydrated media-container and recoverable-URL counts stayed at
+zero. The v58 response-evidence path is the bounded answer to that measured
+gap, not permission to take the foreground. Quiet and explicitly consented
 foreground Recapture remain fallbacks, not the default price of uncertainty.
 
 ## How it was built
@@ -41,13 +44,19 @@ The system has three runtime pieces:
 
 Codex is used as a constrained reasoning component, not as an autonomous browser. One managed Codex App Server process serves three schema-bound adapters: candidate evaluation, a separate semantic event resolver, and asynchronous AI Deep Detection. Go owns the bounded local event index, deterministic AI Fast Detection, retrieval shortlist, retention, confidence gates, correction authority, budgets, trust, personalization, and final composition. When deterministic event retrieval finds no plausible relationship, the Event Engine creates local event threads without paying for another model call. Deep Detection likewise skips evidence that is inadequate, already decided by direct platform provenance, or overridden by the user, and uses a separately tuned model profile rather than inheriting selection cost. Stable local identities never enter model prompts, social content is treated as untrusted evidence, and every App Server thread is ephemeral, read-only, tool-disabled, and schema-bound.
 
-AkuBridge handles X media without intercepting GraphQL/fetch traffic or sending
-raw provider state elsewhere. A `document_start` watcher records URLs while
-they are present, while a fixed traversal-bounded MAIN-world resolver reads
-only media entities already exposed by the owning post. The extension keeps a
-sanitized 30-minute cache bounded to 128 post identities and four media records
-each; Sidecar revalidates identity and the media CDN path before applying an
-evidence-only override.
+AkuBridge handles X media with three bounded evidence inputs: a
+`document_start` DOM watcher, a fixed traversal-bounded MAIN-world React
+resolver, and the v58 `x-response-evidence-v1` adapter. The last one observes
+only successful responses to X's already-issued `HomeTimeline`,
+`HomeLatestTimeline`, and `TweetDetail` GraphQL requests. It never issues or
+retries a provider request. Raw responses and post text are parsed only inside
+the page world and are never relayed or stored. The only output is a normalized
+post ID plus at most four allowlisted X media records. The extension keeps that
+sanitized evidence for 30 minutes across at most 128 post identities; Sidecar
+revalidates the identity and CDN path before applying a presentation-only
+override with `x_response_graphql` provenance. No new permission, tab, window,
+focus change, Codex call, selection/ranking change, or provider authentication
+is involved.
 
 ## Challenges
 
@@ -60,13 +69,17 @@ Cross-source ordering was also subtler than round-robin. Strict alternation look
 The read-only browser boundary added another class of uncertainty. Social DOM
 changes, external LinkedIn cards are not the same thing as post images, and X
 media may hydrate differently in background and foreground windows. An active
-tab is not necessarily a focused or document-visible tab, and a hidden DOM can
-expose the correct media URL while reporting zero render geometry. The fix was
-not to discard trusted evidence or steal focus: keep strict CDN and post-root
-validation, distinguish URL discovery from geometry, and move completion into
-an asynchronous evidence layer. One generic Media Acquisition Engine still
-shares budget, visibility policy, and telemetry across adapters, while each
-source contributes bounded strategies and foreground remains explicit consent.
+tab is not necessarily a focused or document-visible tab. In the v57 live
+trace, Quiet detected the X media roots but hydrated zero containers and
+recovered zero URLs; Adaptive could succeed after visibility changed. Keeping
+the DOM-only implementation would have made the product either unreliable or
+interruptive. The response-evidence adapter instead observes only the three
+already-requested X operations, reduces each response inside the page world to
+a post identity and strict CDN media allowlist, and discards everything else.
+One generic Media Acquisition Engine still shares budget, visibility policy,
+and telemetry across adapters, while each source contributes bounded strategies
+and foreground remains explicit consent. This preserves the user's attention
+without disguising a missing image as complete evidence.
 
 Cross-author duplication introduced a different problem: two posts can discuss the same topic without reporting the same occurrence. The Event Engine therefore uses high-precision actor/action/object/time matching, defaults to a `0.92` automatic-merge confidence gate with tightly bounded user tuning, and treats updates, contradictions, consequences, and context as unique information. A false merge can be split or reassigned by the user and undone immediately.
 
@@ -90,10 +103,11 @@ Finally, documentation became part of the refactor. Historical experiments and b
 
 ## What's next
 
-The next step is live durability and coverage validation for the v57 passive X
-media path alongside personalization, event grouping, object-scoped text AI
-signals, and generic attachments across more real update cycles. Image and
-video AI signals can then be added as separate assessed objects without letting
-a text assessment overclaim multimodal detection. After that, the focus is
-packaging the local system cleanly and extending the source-adapter interface
-and generic side-pane host without weakening the bounded contract.
+The next step is live Quiet durability and coverage validation for the v58 X
+response-evidence path alongside personalization, event grouping,
+object-scoped text AI signals, and generic attachments across more real update
+cycles. Image and video AI signals can then be added as separate assessed
+objects without letting a text assessment overclaim multimodal detection.
+After that, the focus is packaging the local system cleanly and extending the
+source-adapter interface and generic side-pane host without weakening the
+bounded contract.

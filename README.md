@@ -7,10 +7,12 @@ Its cross-author semantic Event Engine treats the underlying event—not the num
 Its AI Detector adds a separate, explicitly uncertain layer for AI origin signals. A local deterministic pass can annotate retained text immediately, while an asynchronous Codex pass may confirm, dispute, or correct that preliminary assessment. Every assessment binds the social post to the actual evidence scope, so an AI-created external artifact is not mislabeled as an AI-authored post. These signals never affect selection or ranking. Inline is the default; users may instead route strong signals into a generic side pane or, after an exact typed warning, hide only direct or Deep-confirmed results. Direct user correction has the highest presentation authority.
 
 X media can also finish passively after the usable Timeline is already on
-screen. AkuBridge keeps only short-lived, allowlisted post-media evidence it
-has naturally observed and may attach it to the matching retained item without
-opening or focusing a new tab. Explicit quiet/foreground Recapture remains the
-fallback when that evidence never appears.
+screen. AkuBridge v58 keeps only short-lived, allowlisted post-media evidence
+from the rendered page or X's already-requested timeline/detail responses and
+may attach it to the matching retained item without making a provider request
+or opening or focusing a tab. Raw responses and post text never leave the page
+world or persist. Explicit quiet/foreground Recapture remains the fallback when
+that evidence never appears.
 
 The personalization rule is equally direct: explicit user feedback has more authority than opaque engagement inferred by a social network. Once the local profile has enough repeated evidence, More and Not interested may promote, replace, demote, or suppress ordinary candidates. Evidence quality, material updates, contradictions, and one bounded discovery lane remain protected.
 

@@ -26,14 +26,18 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 
 The active pair is exact:
 
-- AkuBridge extension/manifest `0.6.7`;
-- runtime revision `source-fidelity-v57`;
-- build id `aku-bridge-0.6.7-source-fidelity-v57`; and
+- AkuBridge extension/manifest `0.6.8`;
+- runtime revision `source-fidelity-v58`;
+- build id `aku-bridge-0.6.8-source-fidelity-v58`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
 current-process heartbeat is `reconnecting`; any observed mismatch is
 `incompatible`. A session may start only when the current heartbeat is exact.
+The exact v58 capability set includes
+`mediaEvidenceAdapterVersions.x=x-response-evidence-v1` and the bounded
+`observe_response_media_evidence` action. These declare evidence observation,
+not authority to issue provider requests or change browser focus.
 
 ## Page relay messages
 
@@ -89,25 +93,41 @@ not emit HTML.
 
 ## Passive X media evidence
 
-X media recovery has a passive path before item-scoped Recapture. A
-`document_start` watcher records an allowlisted media URL while it is present
-inside the owning post. A fixed, traversal-bounded MAIN-world resolver may also
-read media entities already exposed by the matching post's React data. This is
-not arbitrary script authority: only a normalized `x:status:<id>`, media type,
-allowlisted URL, dimensions, and provenance may cross into the isolated
-runtime. Raw React objects, GraphQL/fetch responses, post text, and account
-state are never retained or relayed.
+X media recovery has a passive path before item-scoped Recapture. Live v57
+evidence showed that a Quiet X document could detect media roots while both
+hydrated media-container and recoverable-URL counts stayed at zero. A DOM-only
+cache therefore could not reliably recover the same evidence that appeared
+after foreground visibility.
+
+In v58, the existing `document_start` DOM watcher and fixed,
+traversal-bounded MAIN-world React resolver are joined by
+`x-response-evidence-v1`. This MAIN-world adapter also starts at
+`document_start` and observes only successful JSON responses for X's exact
+`HomeTimeline`, `HomeLatestTimeline`, and `TweetDetail` GraphQL operations. It
+observes responses to requests X has already issued; it never creates, retries,
+or modifies a provider request. Parsing is transient and bounded by response
+bytes, traversal nodes, depth, properties, candidates, and media count.
+
+This is not arbitrary script authority: only a normalized `x:status:<id>`,
+media type, allowlisted `pbs.twimg.com` or `video.twimg.com` URL, dimensions,
+and `x_response_graphql` provenance may cross into the isolated runtime. Raw
+React objects, raw GraphQL responses, operation URLs, post text, account state,
+cookies, and provider authentication never cross worlds or persist. The
+isolated runtime, extension store, and Sidecar each revalidate the bounded
+envelope and allowlist.
 
 The sanitized extension cache is bounded to 30 minutes, 128 post identities,
 and four media records per post. One UI lookup may request at most 64 identities.
 Sidecar then revalidates the Timeline item's authoritative X identity and the
 strict `pbs.twimg.com`/`video.twimg.com` host and path allowlist before accepting
 `POST /api/bridge/timeline/{id}/media-evidence`. A successful update records a
-completed provenance row with `browserOperation=none` and replaces only local
-presentation evidence. It creates no tab, window, focus change, navigation,
-scroll, Codex invocation, candidate, ranking change, or capacity cost. If the
-cache never obtains matching evidence, the existing Recapture contract remains
-the explicit terminal fallback.
+completed `passive-x-media-enrichment-v2` provenance row with
+`browserOperation=none` and replaces only local presentation evidence. It
+creates no provider request, tab, window, focus change, navigation, scroll,
+permission, Codex invocation, candidate, selection/ranking change, semantic
+grouping change, or capacity cost. If the cache never obtains matching
+evidence, the existing quiet Recapture and explicitly consented foreground job
+remain the terminal fallback.
 
 ## Item-scoped media recapture
 
@@ -169,7 +189,7 @@ AkuSupervisor creates a single-flight request at
 claims it through `/next`; AkuBridge accepts the action through `/{id}/accept`
 before calling `chrome.runtime.reload()`.
 
-The action completes only after a new heartbeat announces the exact v57 build.
+The action completes only after a new heartbeat announces the exact v58 build.
 Replay is idempotent only for the same request id, actor, and reason. Pending,
 delivery, acceptance, heartbeat, build-mismatch, and expiry failures remain
 explicit. No whole-browser restart or source-tab mutation is implied.
