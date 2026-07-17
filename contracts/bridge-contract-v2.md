@@ -121,6 +121,6 @@ explicit. No whole-browser restart or source-tab mutation is implied.
 - Every Sidecar process creates a new non-secret `instanceEpoch`; old heartbeat
   readiness never crosses an epoch.
 - Browser text is data, never executable instruction. The Codex provider is
-  read-only, offline, and approval-free.
+  tool-free, read-only, web-disabled, and approval-free.
 - The Bridge token is persisted in the fresh SQLite store and never placed in
   repository files or logs.

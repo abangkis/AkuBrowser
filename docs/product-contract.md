@@ -4,7 +4,7 @@ Status: canonical product boundary, 17 July 2026.
 
 ## Promise
 
-AkuBrowser gives the user a finite answer to “what changed?” across selected social sources. It inspects a bounded capture, explains source-backed updates, learns from direct corrections, and stops. It does not reproduce an infinite feed and it does not claim comprehensive coverage.
+AkuBrowser gives the user a finite answer to “what changed?” across selected social sources. It inspects a bounded capture, explains source-backed updates, counts unique information rather than repeated posts, learns from direct corrections, and stops. It does not reproduce an infinite feed and it does not claim comprehensive coverage.
 
 ## Authority order
 
@@ -29,7 +29,7 @@ Reset learning removes calibration, feedback, and the fitted profile. Full reset
 
 ## Selection and personalization
 
-Every captured candidate is evaluated. The generic base score is:
+Every reconciled candidate that passes Bridge and Sidecar quality admission is evaluated. Captured blocks that remain invalid after the bounded recovery path are diagnosed but do not enter reasoning. The generic base score is:
 
 `0.40 materiality + 0.20 novelty + 0.15 actionability + 0.10 urgency + 0.15 evidence strength`
 
@@ -54,9 +54,11 @@ The alternative Settings modes remain available without changing the Settings su
 - `promote_unused_budget` may promote only into unused capacity;
 - `guarded_live` provides the high-authority behavior above.
 
-## Cross-source semantic events
+## Cross-author semantic attention engine
 
-A semantic event is one specific occurrence, not a broad topic: an actor performs an action or enters a state involving an object in a compatible time window. For example, several authors reporting the same product launch are separate reports of one event; a later capability release, contradiction, or consequence is unique information even when it belongs to that event thread.
+The semantic layer treats an event—not a post—as the unit of unique Timeline capacity. A semantic event is one specific occurrence, not a broad topic: an actor performs an action or enters a state involving an object in a compatible time window. For example, several authors reporting the same product launch are separate reports of one event; a later capability release, contradiction, or consequence is unique information even when it belongs to that event thread.
+
+This is an attention contract, not only a deduplication optimization. Repeated reporting may remain available as provenance, but it should not force the user to reread the same change or consume capacity intended for new information.
 
 After all source runs finish, a separate Event Engine compares the selected reports with a bounded local event index. High-precision deterministic retrieval removes URL, platform, and generic-language noise before producing one global shortlist. When there is neither a historical shortlist nor a strong intra-check match, Go takes a local fast path and creates independent event threads without spending another model call. Otherwise, the App Server resolver may classify reports as `new_event`, `duplicate_report`, `material_update`, `contradiction`, `new_consequence`, or `context_only`. Only a `duplicate_report` that reaches the automatic merge confidence threshold may merge. The default is `0.92`; Settings permits deliberate tuning from `0.85` to `0.95` in `0.01` steps. Every other relation consumes unique Timeline capacity.
 
@@ -84,7 +86,7 @@ A partial session retains validated results from the source that completed and n
 - Less without a reason is negative preference evidence with reduced weight.
 - Less like this is one direct, full-strength Not interested signal; it has no secondary reason menu.
 - Freshness, prior knowledge, and cross-author duplication are handled by the evidence and semantic-event contracts instead of being mixed into preference feedback.
-- When a captured post reports unavailable media, Recapture performs one item-scoped browser recovery and updates only that post's local evidence. It is not a new feed check and cannot add or rerank Timeline items.
+- When a captured post reports unavailable media, Recapture first performs one quiet, item-scoped browser recovery and updates only that post's local evidence. It is not a new feed check and cannot add or rerank Timeline items. If the background attempt still cannot hydrate the media, the UI quietly offers one explicit foreground attempt; declining it has no side effect, accepting it does not change the persisted Quiet setting, and AkuBrowser restores the prior working surface unless the user intentionally moved elsewhere.
 - The latest signal for the same source/evidence identity replaces earlier labels during fitting.
 
 All learning stays local and rebuildable from canonical feedback.
