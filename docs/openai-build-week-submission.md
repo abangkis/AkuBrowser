@@ -30,7 +30,7 @@ Another challenge was keeping preference feedback semantically clean. An earlier
 
 Cross-source ordering was also subtler than round-robin. Strict alternation looks balanced but can lower relevance; pure scoring can let one platform dominate. The final rule keeps global personalized ranking and adds a small diversity guard only when another source has a candidate available.
 
-Cross-author duplication introduced a different problem: two posts can discuss the same topic without reporting the same occurrence. The Event Engine therefore uses high-precision actor/action/object/time matching, requires `0.92` confidence for automatic duplicate merging, and treats updates, contradictions, consequences, and context as unique information. A false merge can be split or reassigned by the user and undone immediately.
+Cross-author duplication introduced a different problem: two posts can discuss the same topic without reporting the same occurrence. The Event Engine therefore uses high-precision actor/action/object/time matching, defaults to a `0.92` automatic-merge confidence gate with tightly bounded user tuning, and treats updates, contradictions, consequences, and context as unique information. A false merge can be split or reassigned by the user and undone immediately.
 
 ## What I learned
 

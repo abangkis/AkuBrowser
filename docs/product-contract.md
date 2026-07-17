@@ -58,7 +58,7 @@ The alternative Settings modes remain available without changing the Settings su
 
 A semantic event is one specific occurrence, not a broad topic: an actor performs an action or enters a state involving an object in a compatible time window. For example, several authors reporting the same product launch are separate reports of one event; a later capability release, contradiction, or consequence is unique information even when it belongs to that event thread.
 
-After all source runs finish, a separate Event Engine compares the selected reports with a bounded local event index. High-precision deterministic retrieval removes URL, platform, and generic-language noise before producing one global shortlist. When there is neither a historical shortlist nor a strong intra-check match, Go takes a local fast path and creates independent event threads without spending another model call. Otherwise, the App Server resolver may classify reports as `new_event`, `duplicate_report`, `material_update`, `contradiction`, `new_consequence`, or `context_only`. Only a `duplicate_report` with at least `0.92` confidence may merge automatically. Every other relation consumes unique Timeline capacity.
+After all source runs finish, a separate Event Engine compares the selected reports with a bounded local event index. High-precision deterministic retrieval removes URL, platform, and generic-language noise before producing one global shortlist. When there is neither a historical shortlist nor a strong intra-check match, Go takes a local fast path and creates independent event threads without spending another model call. Otherwise, the App Server resolver may classify reports as `new_event`, `duplicate_report`, `material_update`, `contradiction`, `new_consequence`, or `context_only`. Only a `duplicate_report` that reaches the automatic merge confidence threshold may merge. The default is `0.92`; Settings permits deliberate tuning from `0.85` to `0.95` in `0.01` steps. Every other relation consumes unique Timeline capacity.
 
 Settings expose three explicit display contracts:
 
@@ -66,7 +66,7 @@ Settings expose three explicit display contracts:
 - `show_all` displays every report normally and bypasses semantic retrieval and resolution for new checks;
 - `hide` omits duplicate reports while retaining the relationship locally.
 
-The resolver shortlist maximum is a locked choice of 5, 10, or 15 retained event threads; the default is 10. Event memory is trimmed when either paired boundary is reached: retention is 30, 60, or 90 days, and total local SQLite storage is 100, 200, 300, 400, 500 MB, or 1 GB. Defaults are 30 days and 100 MB.
+The resolver shortlist maximum is a locked choice of 5, 10, or 15 retained event threads; the default is 10. The automatic merge confidence control is disabled with the shortlist when `Show all reports` turns the engine off. Event memory is trimmed when either paired boundary is reached: retention is 30, 60, or 90 days, and total local SQLite storage is 100, 200, 300, 400, 500 MB, or 1 GB. Defaults are 30 days and 100 MB.
 
 Users may split a false merge with `Not the same event`, attach a report to one of at most three suggested event threads with `Same event`, and undo the latest correction. These direct corrections create deterministic local constraints for future checks; they do not require a permanent Codex conversation or expose stable database identities to the model.
 
