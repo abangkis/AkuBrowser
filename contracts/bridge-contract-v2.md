@@ -26,9 +26,9 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 
 The active pair is exact:
 
-- AkuBridge extension/manifest `0.6.5`;
-- runtime revision `source-fidelity-v53`;
-- build id `aku-bridge-0.6.5-source-fidelity-v53`; and
+- AkuBridge extension/manifest `0.6.6`;
+- runtime revision `source-fidelity-v54`;
+- build id `aku-bridge-0.6.6-source-fidelity-v54`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
