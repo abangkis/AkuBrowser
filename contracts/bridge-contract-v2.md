@@ -27,8 +27,8 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge extension/manifest `0.6.6`;
-- runtime revision `source-fidelity-v55`;
-- build id `aku-bridge-0.6.6-source-fidelity-v55`; and
+- runtime revision `source-fidelity-v56`;
+- build id `aku-bridge-0.6.6-source-fidelity-v56`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -112,6 +112,14 @@ window state, type, focus, dimensions, plus tab active/discarded/load status.
 Chrome window and tab identifiers are not transported. These fields must be
 read together with `documentVisibleObserved`, readiness hydration counts, and
 media-acquisition stages before classifying a quiet-capture failure.
+
+Adaptive capture does not create the Quiet managed window first. It directly
+uses the newest eligible canonical source tab in an ordinary Chrome window. An
+existing tab remains user-owned and is preserved. If no eligible tab exists and
+`openMissingSource` permits creation, Bridge records the new tab under the
+session lease as `close_after_session`; terminal capture-surface cleanup closes
+it only while it remains on the canonical feed. Navigation away from that feed
+is treated as user adoption and the tab is preserved.
 
 If that bounded background attempt completes with outcome `unavailable`, the
 Timeline may offer a small inline question instead of opening a modal. A
