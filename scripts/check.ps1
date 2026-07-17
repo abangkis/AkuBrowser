@@ -33,6 +33,7 @@ Assert-True ($bridgePackage.version -eq $bridgeManifest.version) "AkuBridge pack
 Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-fidelity-v51") "AkuBridge runtime revision is unexpected."
 Assert-True ($sidecarConfig.reasoning.provider -eq "codex-app-server") "AkuSidecar must default to Codex App Server."
 Assert-True ($sidecarConfig.preference.mode -eq "guarded_live") "High-authority guarded personalization must be the fresh default."
+Assert-True ($sidecarConfig.capture.profile -eq "standard") "Standard 1x must be the fresh bounded-load default."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $sidecarRoot "package.json"))) "AkuSidecar must not contain a Node package."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $browserRoot "package.json"))) "AkuBrowser must not contain a Node package."
 Assert-True ($domain -match 'ApplicationVersion\s*=\s*"1\.0\.0-dev\.5"') "AkuSidecar version boundary is unexpected."
@@ -86,4 +87,5 @@ finally { Pop-Location }
     AkuSidecar = "1.0.0-dev.5"
     provider = $sidecarConfig.reasoning.provider
     preferenceAuthority = $sidecarConfig.preference.mode
+    boundedLoadDefault = $sidecarConfig.capture.profile
 } | ConvertTo-Json

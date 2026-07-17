@@ -46,7 +46,7 @@ Capture degradation is explicit. Missing primary media may yield a usable-degrad
 
 ## Configuration
 
-`AkuSidecar/config/sidecar.json` is strict. The fresh preference mode is `guarded_live`; the reasoning provider is `codex-app-server` (with `deterministic` retained only for local tests). Product Settings remain typed in SQLite and expose source selection, bounded load profile or Custom values, Timeline capacity, capture behavior, personalization mode, calibration, presentation, stream width, semantic display mode, locked resolver shortlist, and paired event-memory retention/storage.
+`AkuSidecar/config/sidecar.json` is strict. The fresh preference mode is `guarded_live`, the fresh bounded-load profile is Standard 1x, and the reasoning provider is `codex-app-server` (with `deterministic` retained only for local tests). Product Settings remain typed in SQLite and expose source selection, bounded load profile or Custom values, Timeline capacity, capture behavior, personalization mode, calibration, presentation, stream width, semantic display mode, locked resolver shortlist, and paired event-memory retention/storage. A persisted user choice such as Expanded 2x remains authoritative across restart; Standard 1x applies to a fresh database or full reset.
 
 ## Lifecycle and validation
 
