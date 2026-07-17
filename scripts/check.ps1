@@ -30,7 +30,7 @@ $supervisorProfile = Read-Json (Join-Path $supervisorRoot "config\akuworkspace.s
 $domain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
 
 Assert-True ($bridgePackage.version -eq $bridgeManifest.version) "AkuBridge package and manifest versions differ."
-Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-fidelity-v52") "AkuBridge runtime revision is unexpected."
+Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-fidelity-v53") "AkuBridge runtime revision is unexpected."
 Assert-True ($sidecarConfig.reasoning.provider -eq "codex-app-server") "AkuSidecar must default to Codex App Server."
 Assert-True ($sidecarConfig.preference.mode -eq "guarded_live") "High-authority guarded personalization must be the fresh default."
 Assert-True ($sidecarConfig.capture.profile -eq "standard") "Standard 1x must be the fresh bounded-load default."

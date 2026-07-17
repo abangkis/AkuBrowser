@@ -26,9 +26,9 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 
 The active pair is exact:
 
-- AkuBridge extension/manifest `0.6.4`;
-- runtime revision `source-fidelity-v52`;
-- build id `aku-bridge-0.6.4-source-fidelity-v52`; and
+- AkuBridge extension/manifest `0.6.5`;
+- runtime revision `source-fidelity-v53`;
+- build id `aku-bridge-0.6.5-source-fidelity-v53`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -70,6 +70,13 @@ identity/permalink/text evidence; Go derives the canonical 24-hex
 `evidenceKey` before validation and persistence.
 Raw browser observations remain untrusted input. Reasoning output may reference
 only evidence keys present in the admitted observation.
+
+Source-native presentation context remains separate from authored content.
+LinkedIn may emit `presentation.socialContext` and an optional
+`socialContextAvatarUrl` for feed-routing cues such as `Mohamad Ramzy commented`
+or `Reza Lesmana likes this`. Sidecar displays that cue above the post identity;
+it does not add it to the authored text, author, relationship type, or reasoning
+evidence.
 
 Attachments are typed separately from post media. A source adapter may emit at
 most three `job`, `link_preview`, or `document` attachments with a canonical
