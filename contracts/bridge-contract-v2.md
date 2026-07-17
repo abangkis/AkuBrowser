@@ -26,9 +26,9 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 
 The active pair is exact:
 
-- AkuBridge extension/manifest `0.6.1`;
-- runtime revision `source-fidelity-v49`;
-- build id `aku-bridge-0.6.1-source-fidelity-v49`; and
+- AkuBridge extension/manifest `0.6.2`;
+- runtime revision `source-fidelity-v50`;
+- build id `aku-bridge-0.6.2-source-fidelity-v50`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -80,6 +80,12 @@ URL inside the managed capture surface, performs one zero-scroll capture, and
 returns an observation or structured failure through the dedicated
 `/api/bridge/media-recaptures/{id}` routes.
 
+Quiet capture applies to recapture as strictly as it does to update capture.
+The native-post tab is created inactive, activated only inside the unfocused
+managed window, and guarded after activation and page load. If AkuBridge cannot
+preserve or immediately restore the user's working window and tab, recapture
+fails with `visible_recovery_required` instead of taking foreground focus.
+
 Sidecar accepts only the requested source and evidence identity. A successful
 result replaces that Timeline item's presentation evidence; it never creates a
 candidate, invokes reasoning, changes semantic-event membership, or consumes
@@ -93,7 +99,7 @@ AkuSupervisor creates a single-flight request at
 claims it through `/next`; AkuBridge accepts the action through `/{id}/accept`
 before calling `chrome.runtime.reload()`.
 
-The action completes only after a new heartbeat announces the exact v49 build.
+The action completes only after a new heartbeat announces the exact v50 build.
 Replay is idempotent only for the same request id, actor, and reason. Pending,
 delivery, acceptance, heartbeat, build-mismatch, and expiry failures remain
 explicit. No whole-browser restart or source-tab mutation is implied.
