@@ -27,8 +27,8 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge extension/manifest `0.6.6`;
-- runtime revision `source-fidelity-v54`;
-- build id `aku-bridge-0.6.6-source-fidelity-v54`; and
+- runtime revision `source-fidelity-v55`;
+- build id `aku-bridge-0.6.6-source-fidelity-v55`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -106,6 +106,12 @@ after those authorized background paths are exhausted may its audit set
 `foregroundRequired`. A small or minimized window is not used as a substitute:
 responsive layout and document visibility must remain representative while
 the managed window stays unfocused.
+
+Every returned observation includes a privacy-bounded capture-surface snapshot:
+window state, type, focus, dimensions, plus tab active/discarded/load status.
+Chrome window and tab identifiers are not transported. These fields must be
+read together with `documentVisibleObserved`, readiness hydration counts, and
+media-acquisition stages before classifying a quiet-capture failure.
 
 If that bounded background attempt completes with outcome `unavailable`, the
 Timeline may offer a small inline question instead of opening a modal. A
