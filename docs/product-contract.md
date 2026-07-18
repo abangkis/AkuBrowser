@@ -89,7 +89,7 @@ Settings expose three locked presentation modes:
 - `drawer` routes unseen strong-signal posts into the generic side-pane host, while a post already seen inline does not disappear abruptly when an asynchronous result arrives;
 - `hide` is a high-risk mode protected by warnings and the exact typed phrase `HIDE STRONG AI SIGNALS`. It hides only direct-origin evidence, Deep-confirmed strong signals, or posts explicitly marked AI by the user. Preliminary inferred signals are never hidden. Items remain stored locally and reappear when Hide is disabled.
 
-The side pane is a generic Timeline alternate-view host. AI Detector supplies the first `AI Signals` pane, but does not own the underlying UI primitive.
+The side pane is a generic Timeline alternate-view host. AI Detector supplies the first `AI Signals` pane, but does not own the underlying UI primitive. On wide layouts its closed tab and open edge attach directly to the left edge of the active Timeline stream rather than floating at the viewport edge. The open pane starts no higher than the Timeline heading, grows upward as that heading scrolls toward the viewport inset, then remains bounded and floating at its maximum viewport height. Opening it fully hides the closed tab so no control leaks around the pane edge. Narrower layouts retain the bounded overlay treatment.
 
 Source attachments are also generic presentation evidence. LinkedIn currently
 maps native job cards and external link previews into bounded `job` or
