@@ -67,6 +67,8 @@ The hardest part was preserving the product experience while replacing the runti
 
 Another challenge was keeping preference feedback semantically clean. An earlier reason menu mixed “not interested” with freshness, prior knowledge, and duplication. The current contract makes Less like this one direct Not interested signal, while freshness and cross-author repetition remain evidence and Event Engine responsibilities. Canonical source identity prevents repeated captures from multiplying feedback, and Update Inbox lets the user replace a mistaken More/Less decision later without erasing the local audit trail.
 
+The same control now reaches below the automatic selection line. From the lazy Inspect flow, a user can mark an evaluated candidate as `Should have selected`. AkuBrowser restores it immediately, runs the downstream semantic and AI Detector stages for that item, and turns the correction into its strongest positive taste signal. The action is undoable, and a later More or Less decision can supersede its learning effect. A reasoning failure is recoverable too: `Re-evaluate run` reuses durable captured evidence without reopening the browser.
+
 Cross-source ordering was also subtler than round-robin. Strict alternation looks balanced but can lower relevance; pure scoring can let one platform dominate. The final rule keeps global personalized ranking and adds a small diversity guard only when another source has a candidate available.
 
 The read-only browser boundary added another class of uncertainty. Social DOM
