@@ -47,6 +47,7 @@ decision. The preview does not claim automatic extension installation.
 ## Fresh defaults
 
 The release starts with Standard 1x, Quiet capture, X and LinkedIn enabled,
+and Facebook available but not preselected,
 semantic duplicates collapsed, and AI Signals routed to the visible Drawer.
 The model-backed profiles are:
 

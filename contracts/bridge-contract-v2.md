@@ -27,8 +27,8 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge product version `0.7.0-preview.1` / Chrome manifest version `0.7.0.1`;
-- runtime revision `source-fidelity-v60`;
-- build id `aku-bridge-0.7.0-preview.1-source-fidelity-v60`; and
+- runtime revision `source-adapters-v61`;
+- build id `aku-bridge-0.7.0-preview.1-source-adapters-v61`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -61,7 +61,7 @@ account, or filesystem authority.
 
 1. AkuSidecar persists a run and one `collect_visible` command.
 2. AkuBridge claims it from `GET /api/bridge/commands/next`.
-3. AkuBridge performs the bounded X or LinkedIn adapter operation.
+3. AkuBridge performs the bounded operation through the registered source adapter.
 4. It returns one observation to
    `POST /api/bridge/commands/{id}/observation`, or one structured failure to
    `POST /api/bridge/commands/{id}/failure`.
@@ -71,7 +71,7 @@ Commands may authorize at most two acquisition rounds. Movement, timeout,
 settle, snapshot, block, source-freshness, visibility, tab ownership, and
 restoration ceilings are values issued by Sidecar policy, not by the model.
 
-An admitted observation must identify X or LinkedIn, contain at least one
+An admitted observation must identify a source registered by both peers, contain at least one
 snapshot and evidence block, and carry coverage. AkuBridge supplies native
 identity/permalink/text evidence; Go derives the canonical 24-hex
 `evidenceKey` before validation and persistence.

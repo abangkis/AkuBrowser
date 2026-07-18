@@ -35,6 +35,7 @@ if (-not $DistributionOnly) {
 }
 $domain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
 $bridgeCapabilities = Get-Content -LiteralPath (Join-Path $bridgeRoot "bridge-capabilities.js") -Raw
+$sourceCatalog = Get-Content -LiteralPath (Join-Path $bridgeRoot "source-catalog.js") -Raw
 $responseEvidenceAdapter = Get-Content -LiteralPath (Join-Path $bridgeRoot "x-response-evidence-adapter.js") -Raw
 
 Assert-True ($releaseManifest.version -eq "0.7.0-preview.1") "AkuBrowser release version is unexpected."
@@ -43,9 +44,12 @@ Assert-True ($releaseManifest.distribution.windows.format -eq "portable-zip") "W
 Assert-True ($bridgePackage.version -eq $bridgeManifest.version_name) "AkuBridge package and manifest version name differ."
 Assert-True ($bridgePackage.version -eq $releaseManifest.components.akuBridge.version) "AkuBridge product version drifted from the release manifest."
 Assert-True ($bridgeManifest.version -eq $releaseManifest.components.akuBridge.chromeVersion) "AkuBridge Chrome version drifted from the release manifest."
-Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-fidelity-v60") "AkuBridge runtime revision is unexpected."
+Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-adapters-v61") "AkuBridge runtime revision is unexpected."
 Assert-True ($bridgePackage.akuRuntimeRevision -eq $releaseManifest.components.akuBridge.runtimeRevision) "AkuBridge runtime revision drifted from the release manifest."
-Assert-True ($bridgeCapabilities -match 'mediaEvidenceAdapterVersions:\s*\{\s*x:\s*"x-response-evidence-v2"\s*\}') "AkuBridge X media-evidence adapter boundary is unexpected."
+foreach ($source in @("x", "linkedin", "facebook")) {
+    Assert-True ($sourceCatalog -match ('id:\s*"' + [regex]::Escape($source) + '"')) "AkuBridge source catalog is missing $source."
+}
+Assert-True ($sourceCatalog -match 'mediaEvidenceAdapterVersion:\s*"x-response-evidence-v2"') "AkuBridge X media-evidence adapter boundary is unexpected."
 Assert-True ($bridgeCapabilities -match '"observe_response_media_evidence"') "AkuBridge response-evidence action is missing."
 Assert-True ($responseEvidenceAdapter -match 'RUNTIME_REVISION\s*=\s*"x-response-evidence-v2"') "AkuBridge response-evidence runtime is unexpected."
 foreach ($operation in @("HomeTimeline", "HomeLatestTimeline", "TweetDetail")) {

@@ -9,7 +9,7 @@ include AkuSupervisor.
 - Windows 10 or newer on x64 hardware;
 - Codex App installed and locally signed in, or a Codex CLI build that includes
   App Server;
-- Google Chrome already signed in to X and LinkedIn.
+- Google Chrome already signed in to every source you enable (X, LinkedIn, or Facebook).
 
 ## Start AkuBrowser
 

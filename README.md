@@ -4,7 +4,7 @@ Current preview release: **`0.7.0-preview.1`**. The canonical component tuple,
 bundle boundary, and preview prerequisites are recorded in
 [`release/release-manifest.json`](release/release-manifest.json).
 
-AkuBrowser turns a bounded sample of X and LinkedIn into one finite, source-backed Timeline. It is designed for people who want to keep up without surrendering their attention to another infinite feed.
+AkuBrowser turns bounded samples from the user's chosen social feeds into one finite, source-backed Timeline. The current source registry supports X, LinkedIn, and Facebook. It is designed for people who want to keep up without surrendering their attention to another infinite feed.
 
 Its cross-author semantic Event Engine treats the underlying event—not the number of posts about it—as the unit of attention. When different authors or sources report the same specific occurrence, AkuBrowser can collapse the repetition while preserving the reports for inspection and correction. The user reads the change once instead of paying the same attention cost again for every account that repeated it.
 
@@ -57,7 +57,7 @@ cd ..\AkuSidecar
 Open `http://127.0.0.1:11122`. Load `..\AkuBridge` as an unpacked Chrome extension once; subsequent extension reloads are coordinated through AkuSupervisor.
 
 The preview package assumes Codex App with App Server is installed and signed
-in locally, and that Chrome is already signed in to X and LinkedIn. AkuBridge
+in locally, and that Chrome is already signed in to every enabled source. AkuBridge
 is bundled as an unpacked payload and installed manually through Chrome
 Developer mode. See [Preview release](docs/preview-release.md).
 

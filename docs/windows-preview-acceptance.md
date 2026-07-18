@@ -29,7 +29,7 @@ AkuSupervisor:
 1. start from a machine or Windows account with no AkuBrowser database;
 2. confirm Codex App is installed and locally signed in, then run
    `Start-AkuBrowser.ps1 -DiagnoseCodex`;
-3. confirm Chrome is signed in to X and LinkedIn;
+3. confirm Chrome is signed in to every source that will be enabled (X, LinkedIn, or Facebook);
 4. load the bundled AkuBridge directory through Chrome Developer mode;
 5. run `Start-AkuBrowser.cmd`;
 6. complete onboarding and calibration;

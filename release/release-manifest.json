@@ -20,7 +20,7 @@
     "akuBridge": {
       "version": "0.7.0-preview.1",
       "chromeVersion": "0.7.0.1",
-      "runtimeRevision": "source-fidelity-v60",
+      "runtimeRevision": "source-adapters-v61",
       "contractVersion": "aku-browser.bridge.v2"
     }
   },
@@ -38,7 +38,7 @@
   },
   "previewPrerequisites": [
     "Codex App with Codex App Server installed and locally signed in",
-    "Google Chrome with X and LinkedIn already signed in",
+    "Google Chrome with every enabled source (X, LinkedIn, or Facebook) already signed in",
     "Manual AkuBridge installation through Chrome Developer mode"
   ]
 }
