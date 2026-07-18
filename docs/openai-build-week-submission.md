@@ -52,8 +52,11 @@ only successful responses to X's already-issued `HomeTimeline`,
 retries a provider request. Raw responses and post text are parsed only inside
 the page world and are never relayed or stored. The only output is a normalized
 post ID plus at most four allowlisted X media records and, separately, the
-owning author's allowlisted avatar URL. The avatar stays in an ephemeral
-Bridge-only cache to repair Quiet presentation and never becomes post media or
+owning author's allowlisted avatar URL. A 30-minute Bridge hot cache repairs
+Quiet presentation; a bounded seven-day extension-local fallback retains only
+the sanitized avatar URL and at most 512 normalized status-or-handle keys so a
+later run can reuse previously observed presentation evidence. Neither cache
+stores post text or raw responses, and the avatar never becomes post media or
 Sidecar state. The extension keeps sanitized post-media evidence for 30
 minutes across at most 128 post identities; Sidecar
 revalidates the identity and CDN path before applying a presentation-only

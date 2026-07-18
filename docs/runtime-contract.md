@@ -62,9 +62,13 @@ text, account state, and provider authentication never cross worlds or persist;
 only the matching `x:status:<id>` and allowlisted `pbs.twimg.com` or
 `video.twimg.com` media metadata with `x_response_graphql` provenance can enter
 the sanitized media cache. The owning author's allowlisted X avatar URL may
-enter a separate 30-minute, 128-post in-memory cache so Quiet capture can fill
-presentation without foregrounding the tab. Avatar evidence never crosses the
-service worker or Sidecar boundary. The media cache keeps 30 minutes, 128
+enter a separate 30-minute, 256-key in-memory cache so Quiet capture can fill
+presentation without foregrounding the tab. A service-worker-owned cross-run
+fallback persists only that sanitized URL and normalized status/handle keys
+for seven days, capped at 512 keys. Capture consults it only after current DOM
+and response evidence fail to expose the avatar. No raw response, post text,
+account state, or authentication enters this store, and avatar evidence never
+crosses into Sidecar state or post media. The media cache keeps 30 minutes, 128
 posts, and four media records per post. When media evidence appears, the UI relay and Bridge-authenticated
 Sidecar endpoint revalidate identity and host/path before applying
 `passive-x-media-enrichment-v2` to that item's local evidence. This async path

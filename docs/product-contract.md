@@ -95,7 +95,10 @@ Source attachments are also generic presentation evidence. LinkedIn currently
 maps native job cards and external link previews into bounded `job` or
 `link_preview` records; the Timeline renderer owns their common card UI.
 Attachments are not gallery media, so an external logo or AI-created artifact
-cannot silently inherit the provenance scope of the authored post.
+cannot silently inherit the provenance scope of the authored post. Attachment
+destinations and thumbnails must use HTTPS. A source card that exposes only an
+insecure target is omitted as presentation evidence without discarding the
+otherwise valid captured post.
 
 AI status, detector detail, and user correction are one UI family and therefore share the same badge slot at the start of the card toolbar. Clicking that control reveals `Mark as AI-generated` and `Mark as not AI-generated`, or `Clear my correction` after a personal override. Detector transitions—neutral, preliminary, confirmed, disputed, corrected, or user-overridden—change the badge state without moving the actions elsewhere. The card footer remains reserved for source access, More/Less preference feedback, and semantic-event correction.
 
