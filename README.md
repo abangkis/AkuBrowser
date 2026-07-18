@@ -54,7 +54,7 @@ cd ..\AkuSidecar
 .\scripts\restart-dev.ps1
 ```
 
-Open `http://127.0.0.1:47821`. Load `..\AkuBridge` as an unpacked Chrome extension once; subsequent extension reloads are coordinated through AkuSupervisor.
+Open `http://127.0.0.1:11122`. Load `..\AkuBridge` as an unpacked Chrome extension once; subsequent extension reloads are coordinated through AkuSupervisor.
 
 The preview package assumes Codex App with App Server is installed and signed
 in locally, and that Chrome is already signed in to X and LinkedIn. AkuBridge

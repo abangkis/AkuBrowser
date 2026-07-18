@@ -13,7 +13,7 @@ payload aliases, build identities, or compatibility behavior.
 - AkuSupervisor owns process lifecycle and the single cooperative
   `reload_self` mutation; it does not gain browser-content authority.
 
-The only origin is `http://127.0.0.1:47821`. Bridge-authenticated requests
+The only origin is `http://127.0.0.1:11122`. Bridge-authenticated requests
 carry all three headers:
 
 ```text

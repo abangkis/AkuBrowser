@@ -2,7 +2,7 @@
 param(
     [string] $CodexPath = $env:AKU_CODEX_PATH,
     [ValidateRange(1, 65535)]
-    [int] $Port = 47821,
+    [int] $Port = 11122,
     [string] $DataDirectory = "",
     [switch] $NoOpen,
     [switch] $DiagnoseCodex

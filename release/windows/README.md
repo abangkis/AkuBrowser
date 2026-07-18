@@ -18,7 +18,7 @@ include AkuSupervisor.
 3. Keep its terminal open while using AkuBrowser.
 4. Press Ctrl+C in that terminal to stop AkuBrowser.
 
-The launcher opens `http://127.0.0.1:47821` after Sidecar becomes healthy.
+The launcher opens `http://127.0.0.1:11122` after Sidecar becomes healthy.
 User data is stored under `%LOCALAPPDATA%\AkuBrowser\data` and is not removed
 when the extracted bundle is replaced.
 
