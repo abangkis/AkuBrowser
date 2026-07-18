@@ -146,6 +146,11 @@ $packageConfig.database.path = "data/aku-sidecar.db"
 $packageConfig.reasoning.executable = ""
 Write-Utf8NoBom (Join-Path $configDirectory "sidecar.json") ($packageConfig | ConvertTo-Json -Depth 10)
 
+$schemaOutput = Join-Path $artifactRoot "schemas"
+New-Item -ItemType Directory -Force -Path $schemaOutput | Out-Null
+Get-ChildItem -LiteralPath (Join-Path $sidecarRoot "schemas") -Filter "*.schema.json" -File |
+    ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $schemaOutput }
+
 $bridgeVerificationText = & node (Join-Path $bridgeRoot "scripts\verify-extension-package.mjs")
 if ($LASTEXITCODE -ne 0) { throw "AkuBridge package verification failed." }
 $bridgeVerification = ($bridgeVerificationText | Out-String) | ConvertFrom-Json

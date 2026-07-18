@@ -71,6 +71,13 @@ foreach ($required in @(
     "AkuSidecar.exe",
     "AkuBridge\manifest.json",
     "config\sidecar.json",
+    "schemas\acquisition-plan.schema.json",
+    "schemas\ai-deep-detection.schema.json",
+    "schemas\calibration-label.schema.json",
+    "schemas\calibration-profile-snapshot.schema.json",
+    "schemas\calibration-session.schema.json",
+    "schemas\reasoning-result.schema.json",
+    "schemas\semantic-event-resolution.schema.json",
     "release-manifest.json",
     "artifact-manifest.json",
     "checksums.sha256",
@@ -129,7 +136,6 @@ $process = $null
 try {
     $arguments = @(
         "--config", (Join-Path $ArtifactDirectory "config\sidecar.json"),
-        "--provider", "deterministic",
         "--database", $database,
         "--port", [string]$port
     ) | ForEach-Object { ConvertTo-NativeArgument ([string]$_) }
@@ -160,6 +166,7 @@ try {
     Assert-True ($null -ne $health -and $health.status -eq "ok") "Packaged AkuSidecar did not become healthy."
     Assert-True ($health.version -eq $release.components.akuSidecar.version) "Packaged AkuSidecar reports the wrong version."
     Assert-True ($health.runtime -eq "go") "Packaged AkuSidecar does not report the Go runtime."
+    Assert-True ($health.provider -eq "codex-app-server") "Packaged AkuSidecar did not initialize the release reasoning provider."
 
     $bootstrap = Invoke-RestMethod -Uri "http://127.0.0.1:$port/api/bootstrap" -TimeoutSec 5
     Assert-True ($bootstrap.settings.loadProfile -eq "standard") "Packaged fresh database does not use Standard 1x."

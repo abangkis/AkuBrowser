@@ -15,9 +15,11 @@ Run from AkuBrowser:
 The build gate validates the release tuple, executes Sidecar and Bridge tests,
 builds a stripped Windows x64 Sidecar, copies only the verified extension
 payload, records source commits, generates per-file SHA-256 checksums, and
-creates the portable ZIP. The smoke gate revalidates every checksum, starts the
-packaged Sidecar with a fresh deterministic database on a temporary loopback
-port, and verifies health, bootstrap, and embedded UI delivery.
+creates the portable ZIP. The smoke gate revalidates every checksum, requires
+every runtime schema, capability-checks the discovered Codex runtime, starts
+the packaged Sidecar with the release App Server provider and a fresh database
+on a temporary loopback port, and verifies health, bootstrap, and embedded UI
+delivery.
 
 ## Manual clean-machine gate
 
