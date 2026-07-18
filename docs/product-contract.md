@@ -123,6 +123,8 @@ An evaluated candidate that was not automatically selected exposes `Should have 
 
 All learning stays local and rebuildable from canonical feedback.
 
+The detailed data flow, feature lifecycle, authority resolution, fitting weights, and persisted-model boundary are specified in `preference-learning-contract.md`.
+
 ## Non-goals
 
 AkuBrowser does not like, post, reply, follow, message, or mutate a source account. It does not optimize for session length, hide capture limitations, guarantee that a bounded sample contains every important post, or preserve compatibility with the retired Node Sidecar.
