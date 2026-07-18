@@ -47,7 +47,7 @@ Full reset is backup-first and idle-only. The health endpoint reports database h
 
 ## Trust boundary
 
-All HTTP listeners remain loopback-only. Bridge routes require the durable Bridge token and exact `aku-browser.bridge.v2` header. Captured source content is untrusted input. Reasoning is read-only, approvals are disabled, structured output is mandatory, and the provider cannot directly navigate, expand the capture budget, or select Timeline items.
+All HTTP listeners remain loopback-only. AkuSidecar rejects non-loopback Host values before routing. A non-empty browser Origin must be the exact local UI origin; Chrome-extension origins are accepted only on Bridge routes, which still require the durable Bridge token and exact `aku-browser.bridge.v2` header. JSON mutations require `application/json`. Captured source content is untrusted input. Reasoning is read-only, approvals are disabled, structured output is mandatory, and the provider cannot directly navigate, expand the capture budget, select Timeline items, or choose link destinations. Native post links are rebound after inference from the matching captured evidence key and must satisfy the source-specific canonical HTTPS policy.
 
 Capture degradation is explicit. Missing primary media may yield a
 usable-degraded item while the Timeline remains usable. Live v57 validation
