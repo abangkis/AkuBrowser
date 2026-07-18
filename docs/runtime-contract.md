@@ -41,7 +41,7 @@ Exact source evidence cannot be delivered twice. Source-scoped `eventKey` and `k
 
 Retention is a dual boundary over the local SQLite database and its WAL/SHM working files. The selected age limit is 30, 60, or 90 days and the storage cap is 100, 200, 300, 400, 500 MB, or 1 GB. Cleanup runs at startup, after Settings changes, and after terminal sessions; crossing either boundary removes the oldest terminal history and orphaned event threads.
 
-Full reset is backup-first and idle-only. The health endpoint reports database health but never exposes the absolute database path. Operational diagnosis belongs in the compact Update Inbox and component-native tests.
+Full reset is backup-first and idle-only. The health endpoint reports database health but never exposes the absolute database path. Operational diagnosis belongs in the compact Update Inbox and component-native tests. Inbox run inspection is a read-only, lazy projection over existing observations, candidate assessments, Timeline rows, and semantic reports. `GET /api/inbox/runs/{runId}/trace` accepts one of `captured`, `evaluated`, `selected`, or `added`, returns at most 20 rows per request, and never adds a second diagnostic persistence model. Evidence identities repeated across capture snapshots collapse to one row; `duplicate_report` remains inspectable but is excluded from the Added stage and count.
 
 ## Trust boundary
 
