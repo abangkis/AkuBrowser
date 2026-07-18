@@ -20,13 +20,17 @@ that evidence never appears.
 
 The personalization rule is equally direct: explicit user feedback has more authority than opaque engagement inferred by a social network. Once the local profile has enough repeated evidence, More and Not interested may promote, replace, demote, or suppress ordinary candidates. Evidence quality, material updates, contradictions, and one bounded discovery lane remain protected.
 
-## Workspace boundary
+## Distribution and workspace boundary
 
-AkuBrowser is a documentation and integration repository; it has no Node package or application runtime.
+AkuBrowser is the distribution authority as well as the product-contract and
+integration repository. It owns release manifests, portable bundle assembly,
+checksums, launchers, and acceptance guidance, while keeping application
+runtime code in its component repositories. AkuBrowser has no Node package or
+application runtime of its own.
 
 | Repository | Responsibility | Runtime |
 | --- | --- | --- |
-| `AkuBrowser` | Product contract, canonical schemas, integration check | PowerShell only |
+| `AkuBrowser` | Product contract, canonical schemas, distribution assembly, integration and artifact checks | PowerShell only |
 | `AkuBridge` | Read-only bounded Chrome capture | Browser JavaScript / Node test tooling |
 | `AkuSidecar` | UI, sessions, SQLite, reasoning, selection, personalization | Go |
 | `AkuSupervisor` | Visible development process ownership | Rust |
@@ -57,11 +61,23 @@ in locally, and that Chrome is already signed in to X and LinkedIn. AkuBridge
 is bundled as an unpacked payload and installed manually through Chrome
 Developer mode. See [Preview release](docs/preview-release.md).
 
+Build and smoke-test the Windows x64 portable preview from this repository:
+
+```powershell
+.\scripts\build-windows-preview.ps1
+.\scripts\test-windows-preview.ps1
+```
+
+The generated directory, ZIP, and ZIP checksum are written beneath
+`artifacts\`. Use `-AllowDirty` only while developing the pipeline; a publishable
+artifact requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees.
+
 ## Canonical documentation
 
 - [Product contract](docs/product-contract.md)
 - [Runtime contract](docs/runtime-contract.md)
 - [Preview release](docs/preview-release.md)
+- [Windows preview acceptance](docs/windows-preview-acceptance.md)
 - [OpenAI Build Week submission draft](docs/openai-build-week-submission.md)
 - [Bridge Contract v2](contracts/bridge-contract-v2.md)
 - [Active machine-readable schemas](contracts/README.md)

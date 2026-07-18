@@ -1,5 +1,7 @@
 [CmdletBinding()]
-param()
+param(
+    [switch] $DistributionOnly
+)
 
 $ErrorActionPreference = "Stop"
 $browserRoot = Split-Path -Parent $PSScriptRoot
@@ -27,12 +29,17 @@ $bridgePackage = Read-Json (Join-Path $bridgeRoot "package.json")
 $bridgeManifest = Read-Json (Join-Path $bridgeRoot "manifest.json")
 $releaseManifest = Read-Json (Join-Path $browserRoot "release\release-manifest.json")
 $sidecarConfig = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
-$supervisorProfile = Read-Json (Join-Path $supervisorRoot "config\akuworkspace.services.json")
+$supervisorProfile = $null
+if (-not $DistributionOnly) {
+    $supervisorProfile = Read-Json (Join-Path $supervisorRoot "config\akuworkspace.services.json")
+}
 $domain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
 $bridgeCapabilities = Get-Content -LiteralPath (Join-Path $bridgeRoot "bridge-capabilities.js") -Raw
 $responseEvidenceAdapter = Get-Content -LiteralPath (Join-Path $bridgeRoot "x-response-evidence-adapter.js") -Raw
 
 Assert-True ($releaseManifest.version -eq "0.7.0-preview.1") "AkuBrowser release version is unexpected."
+Assert-True ($releaseManifest.distribution.authorityRepository -eq "AkuBrowser") "AkuBrowser must remain the distribution authority."
+Assert-True ($releaseManifest.distribution.windows.format -eq "portable-zip") "Windows preview must remain a portable ZIP."
 Assert-True ($bridgePackage.version -eq $bridgeManifest.version_name) "AkuBridge package and manifest version name differ."
 Assert-True ($bridgePackage.version -eq $releaseManifest.components.akuBridge.version) "AkuBridge product version drifted from the release manifest."
 Assert-True ($bridgeManifest.version -eq $releaseManifest.components.akuBridge.chromeVersion) "AkuBridge Chrome version drifted from the release manifest."
@@ -77,10 +84,12 @@ foreach ($schema in $schemas) {
     Assert-True ($canonical -eq $runtime) "$schema drifted between AkuBrowser and AkuSidecar."
 }
 
-$supervised = $supervisorProfile.services.akusidecar
-Assert-True ($supervised.command -eq (Join-Path $sidecarRoot "runtime\dev\aku-sidecar.exe")) "AkuSupervisor does not own the direct Go binary."
-Assert-True ($supervised.health.expect.version -eq "0.7.0-preview.1") "AkuSupervisor expects the wrong AkuSidecar version."
-Assert-True ($supervised.health.expect.runtime -eq "go") "AkuSupervisor does not require the Go runtime."
+if (-not $DistributionOnly) {
+    $supervised = $supervisorProfile.services.akusidecar
+    Assert-True ($supervised.command -eq (Join-Path $sidecarRoot "runtime\dev\aku-sidecar.exe")) "AkuSupervisor does not own the direct Go binary."
+    Assert-True ($supervised.health.expect.version -eq "0.7.0-preview.1") "AkuSupervisor expects the wrong AkuSidecar version."
+    Assert-True ($supervised.health.expect.runtime -eq "go") "AkuSupervisor does not require the Go runtime."
+}
 
 Push-Location $sidecarRoot
 try {
@@ -96,12 +105,14 @@ try {
 }
 finally { Pop-Location }
 
-Push-Location $supervisorRoot
-try {
-    & cargo test --test schema_contract
-    if ($LASTEXITCODE -ne 0) { throw "AkuSupervisor schema contract failed." }
+if (-not $DistributionOnly) {
+    Push-Location $supervisorRoot
+    try {
+        & cargo test --test schema_contract
+        if ($LASTEXITCODE -ne 0) { throw "AkuSupervisor schema contract failed." }
+    }
+    finally { Pop-Location }
 }
-finally { Pop-Location }
 
 [ordered]@{
     status = "ok"

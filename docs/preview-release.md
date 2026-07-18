@@ -3,6 +3,15 @@
 `0.7.0-preview.1` is the first unified local packaging boundary. The release
 contains AkuSidecar and an unpacked AkuBridge payload. AkuSupervisor and
 AkuSupervisorConformance remain development tooling and are not shipped.
+AkuBrowser is the distribution authority: it owns portable bundle assembly,
+release provenance, launchers, checksums, and acceptance documentation.
+AkuSidecar and AkuBridge remain the authoritative source-component projects.
+
+The first Windows delivery format is a portable x64 ZIP, not an installer. It
+contains the Sidecar executable, release configuration, the verified unpacked
+Bridge payload, and a foreground launcher. The package stores user data under
+`%LOCALAPPDATA%\AkuBrowser` and requires no AkuSupervisor process or development
+workspace path.
 
 ## Preview prerequisites
 
@@ -57,3 +66,9 @@ reset.
 machine-readable release authority. The annotated Git tag
 `v0.7.0-preview.1` identifies the compatible checkpoint in every AkuWorkspace
 repository, including non-bundled development tooling.
+
+The compatibility tag predates the distribution pipeline. It must never be
+moved. Local bundle candidates may target this tuple while the build and smoke
+gate are developed; the first published distributable produced by the new
+pipeline advances to the next preview version so its AkuBrowser tag includes
+the exact distribution sources.
