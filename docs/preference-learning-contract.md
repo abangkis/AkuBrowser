@@ -154,6 +154,35 @@ The recommended long-term boundary is therefore:
 - a reusable snapshot must carry a fitting-algorithm version and a source-event watermark or digest;
 - any mismatch must fall back to rebuilding from canonical evidence.
 
+## Proposed validated projection contract
+
+Status: accepted direction, not implemented yet.
+
+The persisted model should remain an optimization boundary, never independent authority. A future stored projection should include at least:
+
+- `algorithmVersion`: identifies the exact normalization, weighting, and activation rules;
+- `sourceWatermark`: identifies the newest canonical learning event included in the fit;
+- `sourceDigest`: binds the projection to the resolved effective-signal set, including active undo/reset boundaries;
+- `effectiveSignalCount`: supports a cheap consistency check without replacing the digest;
+- `fittedAt`: distinguishes canonical event time from projection time;
+- the fitted weights and authority flags already present in `preference.Profile`.
+
+The serving rule should be deterministic:
+
+1. resolve the current canonical learning watermark and digest;
+2. load the stored projection only when its algorithm version, watermark, digest, and signal count all match;
+3. otherwise rebuild from canonical evidence and atomically replace the projection;
+4. never repair canonical feedback from the projection.
+
+More, Less, calibration completion, selection-correction create/undo, Reset learning, and any retention operation that changes effective evidence must invalidate or refresh the projection. This removes the current interval in which `preference_model` can be stale after direct feedback while preserving fast reads when nothing changed.
+
+Two lifecycle boundaries need explicit follow-up design:
+
+- **Learning retention must be independent from bulky run retention.** Expiring screenshots, observations, reasoning telemetry, or old Timeline payloads should not silently erase compact user-taste evidence. A future canonical learning ledger should retain only the evidence identity, normalized semantic features, user direction, origin, authority timestamps, and reset/undo state needed to refit.
+- **Semantic feature correction is separate from preference-direction correction.** More/Less must continue to mean user taste. If tag/facet correction is added, it should be an inspectable correction to the candidate description or evaluator-consistency layer, not another hidden meaning attached to Less.
+
+Until that contract exists, the active safe behavior remains rebuild-on-fit from canonical evidence. The singleton `preference_model` row is diagnostic materialization and must not be treated as a trustworthy cache by new code.
+
 ## Current code authority
 
 - `AkuSidecar/internal/reasoning/prompts.go`: Candidate Evaluator boundary.
