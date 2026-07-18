@@ -26,15 +26,15 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 
 The active pair is exact:
 
-- AkuBridge extension/manifest `0.6.9`;
-- runtime revision `source-fidelity-v59`;
-- build id `aku-bridge-0.6.9-source-fidelity-v59`; and
+- AkuBridge product version `0.7.0-preview.1` / Chrome manifest version `0.7.0.1`;
+- runtime revision `source-fidelity-v60`;
+- build id `aku-bridge-0.7.0-preview.1-source-fidelity-v60`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
 current-process heartbeat is `reconnecting`; any observed mismatch is
 `incompatible`. A session may start only when the current heartbeat is exact.
-The exact v59 capability set includes
+The exact v60 capability set includes
 `mediaEvidenceAdapterVersions.x=x-response-evidence-v2` and the bounded
 `observe_response_media_evidence` action. These declare evidence observation,
 not authority to issue provider requests or change browser focus.
@@ -99,7 +99,7 @@ hydrated media-container and recoverable-URL counts stayed at zero. A DOM-only
 cache therefore could not reliably recover the same evidence that appeared
 after foreground visibility.
 
-In v59, the existing `document_start` DOM watcher and fixed,
+In v60, the existing `document_start` DOM watcher and fixed,
 traversal-bounded MAIN-world React resolver are joined by
 `x-response-evidence-v2`. This MAIN-world adapter also starts at
 `document_start` and observes only successful JSON responses for X's exact
@@ -193,7 +193,7 @@ AkuSupervisor creates a single-flight request at
 claims it through `/next`; AkuBridge accepts the action through `/{id}/accept`
 before calling `chrome.runtime.reload()`.
 
-The action completes only after a new heartbeat announces the exact v58 build.
+The action completes only after a new heartbeat announces the exact v60 build.
 Replay is idempotent only for the same request id, actor, and reason. Pending,
 delivery, acceptance, heartbeat, build-mismatch, and expiry failures remain
 explicit. No whole-browser restart or source-tab mutation is implied.

@@ -50,7 +50,7 @@ All HTTP listeners remain loopback-only. Bridge routes require the durable Bridg
 Capture degradation is explicit. Missing primary media may yield a
 usable-degraded item while the Timeline remains usable. Live v57 validation
 showed that Quiet X could detect media roots while hydrated media-container and
-recoverable-URL counts remained at zero. The v59 passive path therefore combines
+recoverable-URL counts remained at zero. The v60 passive path therefore combines
 the existing `document_start` DOM watcher and fixed bounded MAIN-world resolver
 with `x-response-evidence-v2`, a MAIN-world adapter installed at
 `document_start`. It observes only successful responses to X's already-issued
@@ -98,7 +98,9 @@ fabricated. AkuBridge never performs social writes.
 
 ## Configuration
 
-`AkuSidecar/config/sidecar.json` is strict. The fresh preference mode is `guarded_live`, the fresh bounded-load profile is Standard 1x, and the current reasoning provider is `codex-app-server` (with `deterministic` retained only for local tests). Product Settings remain typed in SQLite and expose source selection, bounded load profile or Custom values, Timeline capacity, capture behavior, personalization mode, calibration, presentation, stream width, semantic display mode, locked resolver shortlist, paired event-memory retention/storage, the locked Inline/Drawer/Hide AI Detector presentation, and one bounded reasoning profile per model-backed process. Saving a profile affects the next invocation and does not restart Sidecar or mutate its installation config. Quiet capture uses the dedicated non-focused managed window. Adaptive fidelity directly uses the newest eligible canonical source tab in an ordinary Chrome window; it does not first create or try the Quiet managed window. A persisted user choice such as Expanded 2x remains authoritative across restart; Standard 1x, Luna XHigh process profiles, and Inline AI signals apply to a fresh database or full reset.
+`AkuSidecar/config/sidecar.json` is strict. The fresh preference mode is `guarded_live`, the fresh bounded-load profile is Standard 1x, and the current reasoning provider is `codex-app-server` (with `deterministic` retained only for local tests). Product Settings remain typed in SQLite and expose source selection, bounded load profile or Custom values, Timeline capacity, capture behavior, personalization mode, calibration, presentation, stream width, semantic display mode, locked resolver shortlist, paired event-memory retention/storage, the locked Inline/Drawer/Hide AI Detector presentation, and one bounded reasoning profile per model-backed process. Saving a profile affects the next invocation and does not restart Sidecar or mutate its installation config. Quiet capture uses the dedicated non-focused managed window. Adaptive fidelity directly uses the newest eligible canonical source tab in an ordinary Chrome window; it does not first create or try the Quiet managed window. A persisted user choice such as Expanded 2x remains authoritative across restart. For a fresh database or full reset, `0.7.0-preview.1` uses Standard 1x, Drawer presentation, Luna High for acquisition planning, semantic resolution, and AI Deep Detection, and Luna XHigh only for candidate evaluation.
+
+The `0.7.0-preview.1` package assumes Codex App with App Server is installed and locally signed in, while Chrome is already signed in to X and LinkedIn. It bundles AkuBridge as an unpacked payload for manual Developer-mode installation. Codex discovery, missing-login assistance, and automated browser-extension distribution are explicitly deferred beyond this preview.
 
 ## Lifecycle and validation
 

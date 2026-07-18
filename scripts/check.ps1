@@ -25,15 +25,19 @@ function Assert-True([bool]$Condition, [string]$Message) {
 
 $bridgePackage = Read-Json (Join-Path $bridgeRoot "package.json")
 $bridgeManifest = Read-Json (Join-Path $bridgeRoot "manifest.json")
+$releaseManifest = Read-Json (Join-Path $browserRoot "release\release-manifest.json")
 $sidecarConfig = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $supervisorProfile = Read-Json (Join-Path $supervisorRoot "config\akuworkspace.services.json")
 $domain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
 $bridgeCapabilities = Get-Content -LiteralPath (Join-Path $bridgeRoot "bridge-capabilities.js") -Raw
 $responseEvidenceAdapter = Get-Content -LiteralPath (Join-Path $bridgeRoot "x-response-evidence-adapter.js") -Raw
 
-Assert-True ($bridgePackage.version -eq $bridgeManifest.version) "AkuBridge package and manifest versions differ."
-Assert-True ($bridgePackage.version -eq "0.6.9") "AkuBridge extension version is unexpected."
-Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-fidelity-v59") "AkuBridge runtime revision is unexpected."
+Assert-True ($releaseManifest.version -eq "0.7.0-preview.1") "AkuBrowser release version is unexpected."
+Assert-True ($bridgePackage.version -eq $bridgeManifest.version_name) "AkuBridge package and manifest version name differ."
+Assert-True ($bridgePackage.version -eq $releaseManifest.components.akuBridge.version) "AkuBridge product version drifted from the release manifest."
+Assert-True ($bridgeManifest.version -eq $releaseManifest.components.akuBridge.chromeVersion) "AkuBridge Chrome version drifted from the release manifest."
+Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-fidelity-v60") "AkuBridge runtime revision is unexpected."
+Assert-True ($bridgePackage.akuRuntimeRevision -eq $releaseManifest.components.akuBridge.runtimeRevision) "AkuBridge runtime revision drifted from the release manifest."
 Assert-True ($bridgeCapabilities -match 'mediaEvidenceAdapterVersions:\s*\{\s*x:\s*"x-response-evidence-v2"\s*\}') "AkuBridge X media-evidence adapter boundary is unexpected."
 Assert-True ($bridgeCapabilities -match '"observe_response_media_evidence"') "AkuBridge response-evidence action is missing."
 Assert-True ($responseEvidenceAdapter -match 'RUNTIME_REVISION\s*=\s*"x-response-evidence-v2"') "AkuBridge response-evidence runtime is unexpected."
@@ -43,10 +47,20 @@ foreach ($operation in @("HomeTimeline", "HomeLatestTimeline", "TweetDetail")) {
 Assert-True ($sidecarConfig.reasoning.provider -eq "codex-app-server") "AkuSidecar must default to Codex App Server."
 Assert-True ($sidecarConfig.preference.mode -eq "guarded_live") "High-authority guarded personalization must be the fresh default."
 Assert-True ($sidecarConfig.capture.profile -eq "standard") "Standard 1x must be the fresh bounded-load default."
+Assert-True ($sidecarConfig.reasoning.planning.effort -eq "high") "Acquisition planning must default to Luna High."
+Assert-True ($sidecarConfig.reasoning.evaluation.effort -eq "xhigh") "Candidate evaluation must default to Luna XHigh."
+Assert-True ($sidecarConfig.reasoning.semanticEvent.effort -eq "high") "Semantic resolution must default to Luna High."
+Assert-True ($sidecarConfig.reasoning.aiDetection.effort -eq "high") "AI Deep Detection must default to Luna High."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $sidecarRoot "package.json"))) "AkuSidecar must not contain a Node package."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $browserRoot "package.json"))) "AkuBrowser must not contain a Node package."
-Assert-True ($domain -match 'ApplicationVersion\s*=\s*"1\.0\.0-dev\.14"') "AkuSidecar version boundary is unexpected."
+Assert-True ($domain -match 'ApplicationVersion\s*=\s*"0\.7\.0-preview\.1"') "AkuSidecar version boundary is unexpected."
+Assert-True ($releaseManifest.components.akuSidecar.version -eq "0.7.0-preview.1") "AkuSidecar release manifest version is unexpected."
 Assert-True ($domain -match 'BridgeContractVersion\s*=\s*"aku-browser\.bridge\.v2"') "Bridge contract boundary is unexpected."
+Assert-True ($domain -match 'DefaultAIDetectionPresentation\s*=\s*"drawer"') "AI Detector must default to Drawer."
+Assert-True ($domain -match 'DefaultReasoningAcquisition\s*=\s*"luna_high"') "Acquisition profile default drifted."
+Assert-True ($domain -match 'DefaultReasoningEvaluation\s*=\s*"luna_xhigh"') "Evaluation profile default drifted."
+Assert-True ($domain -match 'DefaultReasoningSemantic\s*=\s*"luna_high"') "Semantic profile default drifted."
+Assert-True ($domain -match 'DefaultReasoningAIDeep\s*=\s*"luna_high"') "AI Deep profile default drifted."
 
 $schemas = @(
     "acquisition-plan.schema.json",
@@ -65,7 +79,7 @@ foreach ($schema in $schemas) {
 
 $supervised = $supervisorProfile.services.akusidecar
 Assert-True ($supervised.command -eq (Join-Path $sidecarRoot "runtime\dev\aku-sidecar.exe")) "AkuSupervisor does not own the direct Go binary."
-Assert-True ($supervised.health.expect.version -eq "1.0.0-dev.14") "AkuSupervisor expects the wrong AkuSidecar version."
+Assert-True ($supervised.health.expect.version -eq "0.7.0-preview.1") "AkuSupervisor expects the wrong AkuSidecar version."
 Assert-True ($supervised.health.expect.runtime -eq "go") "AkuSupervisor does not require the Go runtime."
 
 Push-Location $sidecarRoot
@@ -92,9 +106,10 @@ finally { Pop-Location }
 [ordered]@{
     status = "ok"
     boundary = "high-authority-go-sidecar"
+    release = $releaseManifest.version
     AkuBridge = $bridgePackage.version
     AkuBridgeRuntime = $bridgePackage.akuRuntimeRevision
-    AkuSidecar = "1.0.0-dev.14"
+    AkuSidecar = "0.7.0-preview.1"
     provider = $sidecarConfig.reasoning.provider
     preferenceAuthority = $sidecarConfig.preference.mode
     boundedLoadDefault = $sidecarConfig.capture.profile
