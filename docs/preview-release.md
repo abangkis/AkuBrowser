@@ -18,7 +18,8 @@ workspace path.
 This preview deliberately defers prerequisite discovery and login assistance.
 Before installation, the tester must have:
 
-- Codex App installed with Codex App Server available;
+- Codex App installed with Codex App Server available, or a compatible Codex
+  CLI; AkuSidecar discovers and capability-checks the runtime;
 - a valid local Codex login;
 - Google Chrome installed;
 - an active X login in Chrome; and

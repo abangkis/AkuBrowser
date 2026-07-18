@@ -7,8 +7,8 @@ include AkuSupervisor.
 ## Prerequisites
 
 - Windows 10 or newer on x64 hardware;
-- Codex App installed and locally signed in, with `codex.exe` available through
-  its Windows app execution alias;
+- Codex App installed and locally signed in, or a Codex CLI build that includes
+  App Server;
 - Google Chrome already signed in to X and LinkedIn.
 
 ## Start AkuBrowser
@@ -22,14 +22,24 @@ The launcher opens `http://127.0.0.1:47821` after Sidecar becomes healthy.
 User data is stored under `%LOCALAPPDATA%\AkuBrowser\data` and is not removed
 when the extracted bundle is replaced.
 
-If Windows cannot resolve the Codex App execution alias, launch explicitly:
+The launcher automatically checks `AKU_CODEX_PATH`, `PATH`, managed Codex App
+runtime folders, Windows App aliases, and common npm CLI locations. It accepts a
+candidate only after `codex app-server --help` confirms the required capability.
+Inspect the result without starting AkuBrowser:
+
+```powershell
+.\Start-AkuBrowser.ps1 -DiagnoseCodex
+```
+
+If automatic discovery still cannot find a custom installation, launch
+explicitly:
 
 ```powershell
 .\Start-AkuBrowser.ps1 -CodexPath "C:\path\to\codex.exe"
 ```
 
-Automatic Codex App discovery and login assistance are intentionally deferred
-for this preview.
+Login assistance remains outside this preview. Discovery reports the locations
+it checked and links to the Codex setup guide without collecting credentials.
 
 ## Install AkuBridge manually
 

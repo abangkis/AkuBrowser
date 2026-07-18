@@ -102,6 +102,21 @@ Assert-True ($artifactRelease.version -eq $release.version) "Artifact release ve
 Assert-True ($bridgeManifest.version_name -eq $release.components.akuBridge.version) "Bundled AkuBridge product version differs from the release tuple."
 Assert-True ($bridgeManifest.version -eq $release.components.akuBridge.chromeVersion) "Bundled AkuBridge Chrome version differs from the release tuple."
 
+$savedPath = $env:PATH
+try {
+    $env:PATH = "$env:SystemRoot\System32"
+    $codexProbeText = & (Join-Path $ArtifactDirectory "AkuSidecar.exe") --discover-codex
+    $codexProbeExit = $LASTEXITCODE
+}
+finally {
+    $env:PATH = $savedPath
+}
+$codexProbe = ($codexProbeText | Out-String) | ConvertFrom-Json
+Assert-True ($codexProbeExit -eq 0) "Packaged AkuSidecar could not discover Codex with PATH restricted."
+Assert-True ($codexProbe.status -eq "ok") "Packaged Codex discovery did not return an ok status."
+Assert-True (-not [string]::IsNullOrWhiteSpace($codexProbe.executable)) "Packaged Codex discovery returned no executable."
+Assert-True (-not [string]::IsNullOrWhiteSpace($codexProbe.version)) "Packaged Codex discovery returned no version."
+
 $listener = [Net.Sockets.TcpListener]::new([Net.IPAddress]::Loopback, 0)
 $listener.Start()
 $port = ([Net.IPEndPoint]$listener.LocalEndpoint).Port
@@ -164,6 +179,8 @@ try {
         defaultLoadProfile = $bootstrap.settings.loadProfile
         defaultAIPresentation = $bootstrap.settings.aiDetectionPresentation
         defaultEvaluationProfile = $bootstrap.settings.reasoningEvaluationProfile
+        codexDiscoverySource = $codexProbe.source
+        codexVersion = $codexProbe.version
     } | ConvertTo-Json
 }
 finally {

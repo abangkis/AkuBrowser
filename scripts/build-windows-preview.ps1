@@ -143,7 +143,7 @@ $configDirectory = Join-Path $artifactRoot "config"
 New-Item -ItemType Directory -Force -Path $configDirectory | Out-Null
 $packageConfig = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $packageConfig.database.path = "data/aku-sidecar.db"
-$packageConfig.reasoning.executable = "codex.exe"
+$packageConfig.reasoning.executable = ""
 Write-Utf8NoBom (Join-Path $configDirectory "sidecar.json") ($packageConfig | ConvertTo-Json -Depth 10)
 
 $bridgeVerificationText = & node (Join-Path $bridgeRoot "scripts\verify-extension-package.mjs")

@@ -25,7 +25,8 @@ Before publishing a preview artifact, test the extracted ZIP without
 AkuSupervisor:
 
 1. start from a machine or Windows account with no AkuBrowser database;
-2. confirm Codex App is installed and locally signed in;
+2. confirm Codex App is installed and locally signed in, then run
+   `Start-AkuBrowser.ps1 -DiagnoseCodex`;
 3. confirm Chrome is signed in to X and LinkedIn;
 4. load the bundled AkuBridge directory through Chrome Developer mode;
 5. run `Start-AkuBrowser.cmd`;
@@ -35,5 +36,7 @@ AkuSupervisor:
 9. reset AkuBrowser and confirm onboarding starts from zero; and
 10. confirm no AkuSupervisor process or development workspace path is required.
 
-Codex/CLI discovery, login remediation, installer signing, and automatic Chrome
-extension installation are outside the `0.7.0-preview.1` acceptance boundary.
+Login remediation, installer signing, and automatic Chrome extension
+installation are outside the `0.7.0-preview.1` acceptance boundary. Codex
+discovery is owned by the cross-platform AkuSidecar runtime probe and
+capability-checks App Server.

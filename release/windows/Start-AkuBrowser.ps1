@@ -4,7 +4,8 @@ param(
     [ValidateRange(1, 65535)]
     [int] $Port = 47821,
     [string] $DataDirectory = "",
-    [switch] $NoOpen
+    [switch] $NoOpen,
+    [switch] $DiagnoseCodex
 )
 
 $ErrorActionPreference = "Stop"
@@ -13,30 +14,38 @@ $sidecarPath = Join-Path $bundleRoot "AkuSidecar.exe"
 $configPath = Join-Path $bundleRoot "config\sidecar.json"
 $releasePath = Join-Path $bundleRoot "release-manifest.json"
 
-function Resolve-CodexPath([string] $RequestedPath) {
-    $candidate = $RequestedPath
-    if ([string]::IsNullOrWhiteSpace($candidate)) {
-        foreach ($name in @("codex.exe", "codex")) {
-            $command = Get-Command $name -ErrorAction SilentlyContinue
-            if ($null -ne $command) {
-                return $command.Source
+function Resolve-CodexRuntime([string] $RequestedPath) {
+    $probeArguments = @("--discover-codex")
+    if (-not [string]::IsNullOrWhiteSpace($RequestedPath)) {
+        $probeArguments += @("--codex-path", $RequestedPath)
+    }
+
+    $probeText = (& $sidecarPath @probeArguments | Out-String).Trim()
+    $probeExit = $LASTEXITCODE
+    try {
+        $probe = $probeText | ConvertFrom-Json
+    }
+    catch {
+        Write-Host "AkuBrowser could not read the Codex runtime diagnostic." -ForegroundColor Red
+        Write-Host "Run: .\Start-AkuBrowser.ps1 -DiagnoseCodex"
+        return $null
+    }
+
+    if ($probeExit -ne 0 -or $probe.status -ne "ok") {
+        Write-Host $probe.message -ForegroundColor Red
+        if ($null -ne $probe.attempts) {
+            Write-Host "Locations checked:"
+            foreach ($attempt in $probe.attempts | Select-Object -First 12) {
+                $label = if ([string]::IsNullOrWhiteSpace($attempt.path)) { $attempt.source } else { $attempt.path }
+                Write-Host "  - $label [$($attempt.source)]: $($attempt.reason)"
             }
         }
-        throw "Codex App Server was not found. Install and sign in to Codex App, or rerun with -CodexPath <path-to-codex.exe>."
+        Write-Host "Install and sign in to Codex App, or install Codex CLI with App Server support."
+        Write-Host "Then retry, set AKU_CODEX_PATH, or use -CodexPath <path-to-codex>."
+        Write-Host "Codex setup: https://help.openai.com/en/articles/11096431"
+        return $null
     }
-
-    if ($candidate -notmatch '[\\/]') {
-        $command = Get-Command $candidate -ErrorAction SilentlyContinue
-        if ($null -ne $command) {
-            return $command.Source
-        }
-    }
-
-    $resolved = $ExecutionContext.SessionState.Path.GetUnresolvedProviderPathFromPSPath($candidate)
-    if (-not (Test-Path -LiteralPath $resolved -PathType Leaf)) {
-        throw "Codex executable was not found: $resolved"
-    }
-    return $resolved
+    return $probe
 }
 
 function Open-Browser([string] $Url) {
@@ -83,6 +92,13 @@ $release = Get-Content -LiteralPath $releasePath -Raw | ConvertFrom-Json
 $browserUrl = "http://127.0.0.1:$Port"
 $healthUrl = "$browserUrl/api/health"
 
+$codexRuntime = Resolve-CodexRuntime $CodexPath
+if ($null -eq $codexRuntime) { exit 2 }
+Write-Host "Codex runtime: $($codexRuntime.version)"
+Write-Host "Discovered from: $($codexRuntime.source)"
+Write-Host "Executable: $($codexRuntime.executable)"
+if ($DiagnoseCodex) { exit 0 }
+
 try {
     $active = Invoke-RestMethod -Uri $healthUrl -TimeoutSec 2
     if ($active.status -eq "ok" -and $active.version -eq $release.version) {
@@ -96,7 +112,6 @@ catch {
     if ($_.Exception.Message -like "Port $Port is already owned*") { throw }
 }
 
-$resolvedCodex = Resolve-CodexPath $CodexPath
 if ([string]::IsNullOrWhiteSpace($DataDirectory)) {
     $localData = [Environment]::GetFolderPath("LocalApplicationData")
     if ([string]::IsNullOrWhiteSpace($localData)) {
@@ -121,7 +136,7 @@ if (-not $NoOpen) {
 
 & $sidecarPath `
     --config $configPath `
-    --codex-path $resolvedCodex `
+    --codex-path $($codexRuntime.executable) `
     --database $databasePath `
     --port $Port
 exit $LASTEXITCODE
