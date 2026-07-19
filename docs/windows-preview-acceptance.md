@@ -42,8 +42,9 @@ During the first onboarding check, confirm that the separate learning carousel
 is visible below the sticky progress panel, advances automatically, supports
 manual Previous/Next and direct slide selection, and disappears outside the
 active first-run check. Its width must follow the configured Timeline stream,
-and one slide must explain Capture, Evaluate, Compose, and Publish without
-claiming that every optional model stage blocks publication. Confirm that
+and two consecutive slides must explain Capture/Evaluate followed by
+Compose/Publish, using readable body text without claiming that every optional
+model stage blocks publication. Confirm that
 the Inbox semantic summary reports the local onboarding path without a model
 invocation, that neither an AI Fast assessment nor an AI Deep job exists for
 the onboarding session, and that unchecked items expose no AI badge. If a source reasoning run is deliberately made to fail before any
