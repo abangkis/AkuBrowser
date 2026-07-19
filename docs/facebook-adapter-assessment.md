@@ -47,7 +47,7 @@ It was not rewritten or generalized for Facebook. The existing DOM watcher,
 MAIN-world resolver, response evidence, bounded caches, recapture policy, and
 host sanitization remain protected by the original regression suite.
 
-## Facebook v1 scope
+## Facebook feed-post scope
 
 - signed-in desktop Facebook Home Feed only;
 - main feed post, author or Page identity, exposed timestamp/permalink, social
@@ -62,10 +62,17 @@ host sanitization remain protected by the original regression suite.
 - text can remain usable when media is unavailable;
 - quiet-first capture and explicit foreground permission remain global policy.
 
-Candidate discovery prefers semantic `feed`/`article` roles and independent
-post-action evidence. It does not depend on Facebook's obfuscated class names.
+Candidate discovery prefers semantic `feed`/`article` roles and the explicit
+`Actions for this post by ...` boundary. A Reels action boundary is not a feed
+post boundary. It does not depend on Facebook's obfuscated class names.
 Selector mismatch, login required, feed shell, and a valid zero-addition result
 remain distinct telemetry outcomes.
+
+Facebook virtualizes its Home Feed and may keep only one tall gallery post in
+the rendered frontier. The generic capture runtime therefore accepts a bounded
+per-adapter scroll-step multiplier. Facebook uses `2x`; X and LinkedIn remain
+at `1x`. Scroll count, timeout, restoration, and all other movement authority
+remain global and bounded.
 
 An initial zero-block observation is not accepted as a normal result. The
 generic Bridge runtime records bounded selector/readiness diagnostics and
@@ -79,7 +86,9 @@ the run ledger.
 
 Facebook CDN URLs can expire before Timeline retention. Preview v1 therefore
 uses best-effort currently rendered URLs and reports unavailable media honestly;
-it does not introduce a local byte cache. Durable media caching is a separate
+it does not introduce a local byte cache. The Sidecar CSP explicitly permits
+the adapter's bounded `fbcdn.net` and `fbsbx.com` media hosts so a valid captured
+URL can be replayed in the local Timeline. Durable media caching is a separate
 storage, cleanup, and privacy decision.
 
 Facebook Home Feed can include audience-restricted material. AkuBrowser keeps
@@ -103,17 +112,20 @@ The implementation is accepted at the code and synthetic-runtime layer when:
 5. Sidecar registry, schema 6, dynamic UI, heartbeat, and session creation accept
    three registered sources;
 6. package verification and distribution contracts agree on runtime revision
-   `source-adapters-v68`.
+   `source-adapters-v69`.
 
-Facebook adapter v5 also treats the current Home Feed header as an explicit
+Facebook adapter v7 also treats the current Home Feed header as an explicit
 adapter responsibility. It resolves the author from bounded profile links
-before the post body and reconstructs Facebook's visually rendered relative
+or the explicit post-action label before the post body and rejects presence
+labels such as `Online status indicator Active`. It reconstructs Facebook's visually rendered relative
 timestamp while excluding its absolutely positioned decoy glyphs. The generic
 Bridge core continues to receive ordinary `author`, `timestampText`, and
 estimated `publishedAt` fields; it does not contain Facebook DOM rules.
-Post identity is normalized from direct `posts/pfbid`, story, video/watch, or
+Post identity is normalized from direct `posts/pfbid`, legacy `story.php`, video/watch, or
 carousel `set=pcb.<post-id>` evidence. Comment and tracking parameters are
 removed before the canonical URL and platform id enter generic deduplication.
+The legacy `story.php` route names ordinary feed-post permalinks; the separate
+Facebook Stories surface (`/stories/`) remains outside this adapter.
 
 Live Facebook acceptance still requires a signed-in user session and repeated
 captures of ordinary, shared, Page, suggested, sponsored, image, and video
