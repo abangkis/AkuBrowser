@@ -49,6 +49,9 @@ decision. The preview does not claim automatic extension installation.
 The release starts with Standard 1x, Quiet capture, Progressive wait, X,
 LinkedIn, and Facebook enabled,
 semantic duplicates collapsed, and AI Signals routed to the visible Drawer.
+AI Detection is enabled by default and can be disabled as one unit, stopping
+both local Fast Detection and asynchronous Deep Detection. Native resurfacing
+uses Smart handling with a seven-day cooldown by default.
 The model-backed profiles are:
 
 | Process | Default profile |

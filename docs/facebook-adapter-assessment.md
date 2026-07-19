@@ -7,7 +7,7 @@ Status: implemented for local preview development, 19 July 2026.
 Facebook is an available AkuBrowser source behind the same bounded, read-only
 pipeline used by X and LinkedIn:
 
-`bounded capture -> Candidate Evaluation -> preference selection -> global composition -> semantic event resolution -> AI Fast Detection -> Timeline -> async AI Deep Detection`
+`bounded capture -> native resurface check -> Candidate Evaluation -> preference selection -> global composition -> semantic event resolution -> optional AI Fast Detection -> Timeline -> optional async AI Deep Detection`
 
 AkuBrowser shows what the signed-in source feed presents, then gives the user
 authority over what remains in their finite Timeline. Facebook does not receive
@@ -74,11 +74,13 @@ per-adapter scroll-step multiplier. Facebook uses `2x`; X and LinkedIn remain
 at `1x`. Scroll count, timeout, restoration, and all other movement authority
 remain global and bounded.
 
-The shared block filter also exposes one bounded per-adapter minimum text
-length. X and LinkedIn retain the 40-character default. Facebook accepts an
-8-character caption because a short-caption image post can still carry an
-explicit post-action author, a native Facebook identity, and hydrated media.
-This does not admit Stories or Reels and does not relax any other source.
+Evidence admission is modality-based rather than text-length-based. Every
+adapter declares its supported evidence family and extracts normalized text,
+media, attachments, and native identity. Generic Bridge admission accepts a
+stable, attributable text, media, or attachment-bearing feed post and rejects
+identity-only shells. This allows short-caption and media-led Facebook posts
+without weakening X or LinkedIn capture, and it does not admit Stories or
+Reels as top-level candidates.
 
 An initial zero-block observation is not accepted as a normal result. The
 generic Bridge runtime records bounded selector/readiness diagnostics and
@@ -120,7 +122,7 @@ The implementation is accepted at the code and synthetic-runtime layer when:
 6. package verification and distribution contracts agree on runtime revision
    `source-adapters-v71`.
 
-Facebook adapter v9 also treats the current Home Feed header as an explicit
+Facebook adapter v10 also treats the current Home Feed header as an explicit
 adapter responsibility. It resolves the author from bounded profile links
 or the explicit post-action label before the post body and rejects presence
 labels such as `Online status indicator Active`. It reconstructs Facebook's visually rendered relative
@@ -132,6 +134,14 @@ carousel `set=pcb.<post-id>` evidence. Comment and tracking parameters are
 removed before the canonical URL and platform id enter generic deduplication.
 The legacy `story.php` route names ordinary feed-post permalinks; the separate
 Facebook Stories surface (`/stories/`) remains outside this adapter.
+
+A Home Feed video can expose no stable wrapper permalink while still exposing
+an embedded `/reel/<id>` anchor. Adapter v10 accepts that anchor as the native
+evidence destination for the already-admitted feed post; it does not discover
+or capture the Reels player feed. Poster images beneath `/videos/` or `/reel/`
+are typed as video previews, so the generic Timeline can display an explicit
+video cue even when quiet capture cannot obtain a playback URL or a useful
+poster frame. The native evidence link remains available for direct review.
 
 Live Facebook acceptance still requires a signed-in user session and repeated
 captures of ordinary, shared, Page, suggested, sponsored, image, and video
