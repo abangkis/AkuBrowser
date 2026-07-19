@@ -74,6 +74,12 @@ per-adapter scroll-step multiplier. Facebook uses `2x`; X and LinkedIn remain
 at `1x`. Scroll count, timeout, restoration, and all other movement authority
 remain global and bounded.
 
+The shared block filter also exposes one bounded per-adapter minimum text
+length. X and LinkedIn retain the 40-character default. Facebook accepts an
+8-character caption because a short-caption image post can still carry an
+explicit post-action author, a native Facebook identity, and hydrated media.
+This does not admit Stories or Reels and does not relax any other source.
+
 An initial zero-block observation is not accepted as a normal result. The
 generic Bridge runtime records bounded selector/readiness diagnostics and
 consults the source catalog for recovery policy. Facebook opts into one
@@ -112,9 +118,9 @@ The implementation is accepted at the code and synthetic-runtime layer when:
 5. Sidecar registry, schema 6, dynamic UI, heartbeat, and session creation accept
    three registered sources;
 6. package verification and distribution contracts agree on runtime revision
-   `source-adapters-v69`.
+   `source-adapters-v70`.
 
-Facebook adapter v7 also treats the current Home Feed header as an explicit
+Facebook adapter v8 also treats the current Home Feed header as an explicit
 adapter responsibility. It resolves the author from bounded profile links
 or the explicit post-action label before the post body and rejects presence
 labels such as `Online status indicator Active`. It reconstructs Facebook's visually rendered relative
