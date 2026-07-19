@@ -88,6 +88,13 @@ foreach ($required in @(
     Assert-True (Test-Path -LiteralPath (Join-Path $ArtifactDirectory $required) -PathType Leaf) "Artifact is missing $required"
 }
 
+$bundleReadme = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "README.md") -Raw
+$bridgeInstallInstruction = $bundleReadme.IndexOf('Select the `AkuBridge` directory inside this bundle.', [StringComparison]::Ordinal)
+$launcherInstruction = $bundleReadme.IndexOf('run `Start-AkuBrowser.cmd`.', [StringComparison]::OrdinalIgnoreCase)
+Assert-True ($bridgeInstallInstruction -ge 0) "Bundle README does not explain how to load AkuBridge."
+Assert-True ($launcherInstruction -ge 0) "Bundle README does not explain how to start AkuBrowser."
+Assert-True ($bridgeInstallInstruction -lt $launcherInstruction) "Bundle README must install AkuBridge before starting AkuBrowser."
+
 $checksumLines = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "checksums.sha256")
 foreach ($line in $checksumLines) {
     if ($line -notmatch '^([0-9a-f]{64})  (.+)$') {

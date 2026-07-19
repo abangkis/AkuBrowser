@@ -11,12 +11,21 @@ include AkuSupervisor.
   App Server;
 - Google Chrome already signed in to every source you enable (X, LinkedIn, or Facebook).
 
-## Start AkuBrowser
+## Install and start
 
 1. Extract the complete ZIP to a writable directory.
-2. Run `Start-AkuBrowser.cmd`.
-3. Keep its terminal open while using AkuBrowser.
-4. Press Ctrl+C in that terminal to stop AkuBrowser.
+2. Open `chrome://extensions` in Google Chrome.
+3. Enable **Developer mode**.
+4. Choose **Load unpacked**.
+5. Select the `AkuBridge` directory inside this bundle.
+6. Confirm that AkuBridge is enabled, then run `Start-AkuBrowser.cmd`.
+7. Keep its terminal open while using AkuBrowser.
+8. Press Ctrl+C in that terminal to stop AkuBrowser.
+
+Install AkuBridge before starting AkuBrowser. This ensures the capture bridge is
+available when onboarding begins instead of launching a partially working
+system. The extension must stay at the extracted path; moving or deleting that
+directory will make Chrome unable to reload it.
 
 The launcher opens `http://127.0.0.1:11122` after Sidecar becomes healthy.
 User data is stored under `%LOCALAPPDATA%\AkuBrowser\data` and is not removed
@@ -40,17 +49,6 @@ explicitly:
 
 Login assistance remains outside this preview. Discovery reports the locations
 it checked and links to the Codex setup guide without collecting credentials.
-
-## Install AkuBridge manually
-
-1. Open `chrome://extensions`.
-2. Enable **Developer mode**.
-3. Choose **Load unpacked**.
-4. Select the `AkuBridge` directory inside this bundle.
-5. Return to AkuBrowser and confirm that AkuBridge is ready.
-
-The extension must stay at that extracted path. Moving or deleting the folder
-will make Chrome unable to reload it.
 
 ## Verify the download
 

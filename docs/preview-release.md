@@ -41,7 +41,11 @@ install a local extension. The tester must:
 2. enable Developer mode;
 3. choose **Load unpacked**;
 4. select the bundled `AkuBridge` directory; and
-5. return to AkuBrowser and confirm the Bridge-ready status.
+5. confirm that the extension is enabled before starting AkuBrowser.
+
+AkuBridge is deliberately installed first so onboarding never begins with only
+half of the local system available. After the extension is ready, run the
+bundled `Start-AkuBrowser.cmd` launcher and confirm the Bridge-ready status.
 
 Future Store, private-test, or enterprise distribution is a separate release
 decision. The preview does not claim automatic extension installation.
