@@ -38,7 +38,10 @@ AkuSupervisor:
 9. reset AkuBrowser and confirm onboarding starts from zero without classifying pre-reset native items as resurfaced;
 10. confirm no AkuSupervisor process or development workspace path is required.
 
-During the first onboarding check, confirm that the waiting guide is visible and
+During the first onboarding check, confirm that the separate learning carousel
+is visible below the sticky progress panel, advances automatically, supports
+manual Previous/Next and direct slide selection, and disappears outside the
+active first-run check. Confirm that
 the Inbox semantic summary reports the local onboarding path without a model
 invocation. If a source reasoning run is deliberately made to fail before any
 candidate validates, the recovery action must say **Check for updates again**;
