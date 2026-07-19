@@ -39,6 +39,6 @@ AkuSupervisor:
 10. confirm no AkuSupervisor process or development workspace path is required.
 
 Login remediation, installer signing, and automatic Chrome extension
-installation are outside the `0.7.0-preview.1` acceptance boundary. Codex
+installation are outside the `0.7.0-preview.2` acceptance boundary. Codex
 discovery is owned by the cross-platform AkuSidecar runtime probe and
 capability-checks App Server.

@@ -28,10 +28,10 @@ The first run leads into calibration before the Timeline opens. Later, direct fe
 X media follows the same finite-delivery rule. AkuBrowser can show a
 usable-degraded post first, retain only short-lived allowlisted media evidence,
 and complete the matching card without opening or focusing another tab. Live
-v57 validation made the boundary concrete: a Quiet X document detected media
+validation made the boundary concrete: a Quiet X document detected media
 roots, but both hydrated media-container and recoverable-URL counts stayed at
-zero. The v58 response-evidence path is the bounded answer to that measured
-gap, not permission to take the foreground. Quiet and explicitly consented
+zero. The response-evidence path is the bounded answer to that measured gap,
+not permission to take the foreground. Quiet and explicitly consented
 foreground Recapture remain fallbacks, not the default price of uncertainty.
 
 ## How it was built
@@ -111,11 +111,13 @@ Finally, documentation became part of the refactor. Historical experiments and b
 
 ## What's next
 
-The next step is live Quiet durability and coverage validation for the v58 X
-response-evidence path alongside personalization, event grouping,
-object-scoped text AI signals, and generic attachments across more real update
-cycles. Image and video AI signals can then be added as separate assessed
-objects without letting a text assessment overclaim multimodal detection.
-After that, the focus is packaging the local system cleanly and extending the
-source-adapter interface and generic side-pane host without weakening the
-bounded contract.
+AkuBrowser will keep strengthening the parts that protect a user's attention:
+reliable quiet capture, high-authority personalization, event-level repetition
+control, honest AI-origin signals, and clear source provenance. New sources and
+media modalities will enter through the same bounded adapter and assessed-object
+contracts rather than weakening the core with source-specific shortcuts.
+
+The product will also keep reducing setup and operating friction while
+preserving local ownership, inspectability, and explicit consent whenever a
+browser action could interrupt the user. The direction is durable even as
+individual adapters, models, packaging formats, and release milestones evolve.

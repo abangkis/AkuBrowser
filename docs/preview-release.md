@@ -1,7 +1,10 @@
-# AkuBrowser 0.7.0-preview.1
+# AkuBrowser 0.7.0-preview.2
 
-`0.7.0-preview.1` is the first unified local packaging boundary. The release
-contains AkuSidecar and an unpacked AkuBridge payload. AkuSupervisor and
+`0.7.0-preview.2` is the current source-aligned Windows preview candidate. It
+retains the unified packaging boundary established by preview.1 and adds the
+current three-source, progressive scheduling, native-resurface, execution
+timing, and AI Detection controls. The release contains AkuSidecar and an
+unpacked AkuBridge payload. AkuSupervisor and
 AkuSupervisorConformance remain development tooling and are not shipped.
 AkuBrowser is the distribution authority: it owns portable bundle assembly,
 release provenance, launchers, checksums, and acceptance documentation.
@@ -15,19 +18,18 @@ workspace path.
 
 ## Preview prerequisites
 
-This preview deliberately defers prerequisite discovery and login assistance.
+This preview discovers and capability-checks a compatible Codex runtime but
+deliberately defers guided installation and login assistance.
 Before installation, the tester must have:
 
 - Codex App installed with Codex App Server available, or a compatible Codex
   CLI; AkuSidecar discovers and capability-checks the runtime;
 - a valid local Codex login;
 - Google Chrome installed;
-- an active X login in Chrome; and
-- an active LinkedIn login in Chrome.
+- an active Chrome login for every enabled source: X, LinkedIn, and/or Facebook.
 
-AkuBrowser does not collect or manage Codex, X, or LinkedIn credentials.
-Missing-app and signed-out flows are planned after the first Windows bundle and
-macOS Sidecar port.
+AkuBrowser does not collect or manage Codex or social-source credentials.
+Guided missing-app and signed-out recovery remain outside this preview boundary.
 
 ## Manual AkuBridge installation
 
@@ -68,12 +70,9 @@ reset.
 ## Version authority
 
 [`release/release-manifest.json`](../release/release-manifest.json) is the
-machine-readable release authority. The annotated Git tag
-`v0.7.0-preview.1` identifies the compatible checkpoint in every AkuWorkspace
-repository, including non-bundled development tooling.
-
-The compatibility tag predates the distribution pipeline. It must never be
-moved. Local bundle candidates may target this tuple while the build and smoke
-gate are developed; the first published distributable produced by the new
-pipeline advances to the next preview version so its AkuBrowser tag includes
-the exact distribution sources.
+machine-readable release authority. The immutable `v0.7.0-preview.1` tags remain
+the historical compatibility checkpoint and must never be moved. Once this
+candidate is accepted, `v0.7.0-preview.2` tags must identify the exact source
+commits used by the published bundle in each AkuWorkspace repository. Local
+candidate builds before that acceptance record their source commits and dirty
+state directly in `artifact-manifest.json`.

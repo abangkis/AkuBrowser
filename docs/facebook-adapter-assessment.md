@@ -120,7 +120,7 @@ The implementation is accepted at the code and synthetic-runtime layer when:
 5. Sidecar registry, schema 6, dynamic UI, heartbeat, and session creation accept
    three registered sources;
 6. package verification and distribution contracts agree on runtime revision
-   `source-adapters-v71`.
+   `source-adapters-v72`.
 
 Facebook adapter v10 also treats the current Home Feed header as an explicit
 adapter responsibility. It resolves the author from bounded profile links
