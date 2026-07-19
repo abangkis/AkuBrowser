@@ -66,6 +66,12 @@ carousel appears immediately above the Timeline and remains visible during a lat
 check; disable it and confirm the panel and its timer stop without cancelling the
 run.
 
+When a completed session is still releasing its managed capture surface, confirm
+**Check for updates** remains briefly disabled and the header explains **Finishing
+capture cleanup…**. If AkuBridge is temporarily incompatible or reconnecting, the
+same location must explain **Waiting for AkuBridge to reconnect…** rather than
+leaving a disabled action unexplained.
+
 Login remediation, installer signing, and automatic Chrome extension
 installation are outside the `0.7.0-preview.2` acceptance boundary. Codex
 discovery is owned by the cross-platform AkuSidecar runtime probe and
