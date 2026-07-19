@@ -15,9 +15,9 @@ a separate ranking, preference, semantic-event, AI Detector, Inbox, retention,
 or correction path. More/Less feedback and selection correction use the same
 source-bound evidence contract.
 
-Facebook is available in onboarding and Settings but is not preselected. The
-fresh release default remains X plus LinkedIn. Enabling Facebook requires an
-existing signed-in Chrome session; AkuBrowser does not automate login.
+Facebook is available and preselected with X and LinkedIn during fresh
+onboarding. It requires an existing signed-in Chrome session; AkuBrowser does
+not automate login.
 
 ## Generic source architecture
 
@@ -67,6 +67,14 @@ post-action evidence. It does not depend on Facebook's obfuscated class names.
 Selector mismatch, login required, feed shell, and a valid zero-addition result
 remain distinct telemetry outcomes.
 
+An initial zero-block observation is not accepted as a normal result. The
+generic Bridge runtime records bounded selector/readiness diagnostics and
+consults the source catalog for recovery policy. Facebook opts into one
+`reload_managed_once` recovery of its Bridge-owned quiet-capture tab. X and
+LinkedIn do not opt in, shared user tabs are never reloaded, and a second empty
+capture fails explicitly as `capture_empty` with the diagnostic receipt kept in
+the run ledger.
+
 ## Media and privacy limits
 
 Facebook CDN URLs can expire before Timeline retention. Preview v1 therefore
@@ -95,7 +103,17 @@ The implementation is accepted at the code and synthetic-runtime layer when:
 5. Sidecar registry, schema 6, dynamic UI, heartbeat, and session creation accept
    three registered sources;
 6. package verification and distribution contracts agree on runtime revision
-   `source-adapters-v62`.
+   `source-adapters-v66`.
+
+Facebook adapter v4 also treats the current Home Feed header as an explicit
+adapter responsibility. It resolves the author from bounded profile links
+before the post body and reconstructs Facebook's visually rendered relative
+timestamp while excluding its absolutely positioned decoy glyphs. The generic
+Bridge core continues to receive ordinary `author`, `timestampText`, and
+estimated `publishedAt` fields; it does not contain Facebook DOM rules.
+Post identity is normalized from direct `posts/pfbid`, story, video/watch, or
+carousel `set=pcb.<post-id>` evidence. Comment and tracking parameters are
+removed before the canonical URL and platform id enter generic deduplication.
 
 Live Facebook acceptance still requires a signed-in user session and repeated
 captures of ordinary, shared, Page, suggested, sponsored, image, and video

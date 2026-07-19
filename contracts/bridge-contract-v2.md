@@ -27,8 +27,8 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge product version `0.7.0-preview.1` / Chrome manifest version `0.7.0.1`;
-- runtime revision `source-adapters-v62`;
-- build id `aku-bridge-0.7.0-preview.1-source-adapters-v62`; and
+- runtime revision `source-adapters-v66`;
+- build id `aku-bridge-0.7.0-preview.1-source-adapters-v66`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -70,6 +70,11 @@ account, or filesystem authority.
 Commands may authorize at most two acquisition rounds. Movement, timeout,
 settle, snapshot, block, source-freshness, visibility, tab ownership, and
 restoration ceilings are values issued by Sidecar policy, not by the model.
+Each command also carries the registered source's `sourceHydrationTimeoutMs`.
+The source registry owns its default and a fixed window of five seconds below
+or above that default; Settings accepts only whole-second values inside that
+window. LinkedIn's value is one total readiness budget spanning its initial
+background observation and, when required, its activation retry.
 
 An admitted observation must identify a source registered by both peers, contain at least one
 snapshot and evidence block, and carry coverage. AkuBridge supplies native
