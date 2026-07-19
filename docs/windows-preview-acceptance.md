@@ -41,7 +41,9 @@ AkuSupervisor:
 During the first onboarding check, confirm that the separate learning carousel
 is visible below the sticky progress panel, advances automatically, supports
 manual Previous/Next and direct slide selection, and disappears outside the
-active first-run check. Confirm that
+active first-run check. Its width must follow the configured Timeline stream,
+and one slide must explain Capture, Evaluate, Compose, and Publish without
+claiming that every optional model stage blocks publication. Confirm that
 the Inbox semantic summary reports the local onboarding path without a model
 invocation. If a source reasoning run is deliberately made to fail before any
 candidate validates, the recovery action must say **Check for updates again**;
