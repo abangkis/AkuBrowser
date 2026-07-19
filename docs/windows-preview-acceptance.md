@@ -35,8 +35,14 @@ AkuSupervisor:
 6. complete onboarding and calibration;
 7. run Check for updates and inspect captured, evaluated, and selected evidence;
 8. stop with Ctrl+C, restart, and confirm local state persists;
-9. reset AkuBrowser and confirm onboarding starts from zero; and
+9. reset AkuBrowser and confirm onboarding starts from zero without classifying pre-reset native items as resurfaced;
 10. confirm no AkuSupervisor process or development workspace path is required.
+
+During the first onboarding check, confirm that the waiting guide is visible and
+the Inbox semantic summary reports the local onboarding path without a model
+invocation. If a source reasoning run is deliberately made to fail before any
+candidate validates, the recovery action must say **Check for updates again**;
+the Sidecar must remain ready and the captured trace must remain inspectable.
 
 Login remediation, installer signing, and automatic Chrome extension
 installation are outside the `0.7.0-preview.2` acceptance boundary. Codex

@@ -3,7 +3,9 @@
 `0.7.0-preview.2` is the current source-aligned Windows preview candidate. It
 retains the unified packaging boundary established by preview.1 and adds the
 current three-source, progressive scheduling, native-resurface, execution
-timing, and AI Detection controls. The release contains AkuSidecar and an
+timing, onboarding recovery, and AI Detection controls. The first calibration
+check builds its semantic index locally without a model-backed cross-author
+comparison; later checks use the full Event Engine. The release contains AkuSidecar and an
 unpacked AkuBridge payload. AkuSupervisor and
 AkuSupervisorConformance remain development tooling and are not shipped.
 AkuBrowser is the distribution authority: it owns portable bundle assembly,
@@ -30,6 +32,9 @@ Before installation, the tester must have:
 
 AkuBrowser does not collect or manage Codex or social-source credentials.
 Guided missing-app and signed-out recovery remain outside this preview boundary.
+If the first check produces no validated calibration candidate, AkuBrowser keeps
+the captured trace in Update Inbox and offers **Check for updates again** instead
+of presenting a terminal calibration error.
 
 ## Manual AkuBridge installation
 

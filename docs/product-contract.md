@@ -25,7 +25,7 @@ Social engagement is useful for discovery, but it is indirect behavioral inferen
 4. The local profile becomes active when repeated directional evidence is sufficient.
 5. Later checks go directly to the finite Timeline and Update Inbox.
 
-Reset learning removes calibration, More/Less feedback, and the fitted profile. Historical selection corrections and their restored Timeline items remain auditable, but corrections older than the reset boundary no longer train the rebuilt profile. Full reset first creates a verified SQLite backup, then clears Timeline, runs, learning, onboarding, and settings while preserving the Bridge identity.
+Reset learning removes calibration, More/Less feedback, and the fitted profile. Historical selection corrections and their restored Timeline items remain auditable, but corrections older than the reset boundary no longer train the rebuilt profile. Full reset first creates a verified SQLite backup, then clears Timeline, runs, learning, onboarding, settings, and native content-continuity history while preserving the Bridge identity.
 
 ## Selection and personalization
 
