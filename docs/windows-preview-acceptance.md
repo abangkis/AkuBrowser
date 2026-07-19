@@ -45,13 +45,16 @@ active first-run check. Its width must follow the configured Timeline stream,
 and one slide must explain Capture, Evaluate, Compose, and Publish without
 claiming that every optional model stage blocks publication. Confirm that
 the Inbox semantic summary reports the local onboarding path without a model
-invocation. If a source reasoning run is deliberately made to fail before any
+invocation, that neither an AI Fast assessment nor an AI Deep job exists for
+the onboarding session, and that unchecked items expose no AI badge. If a source reasoning run is deliberately made to fail before any
 candidate validates, the recovery action must say **Check for updates again**;
 the Sidecar must remain ready and the captured trace must remain inspectable.
 After calibration completes, its More and Less choices must remain selected on
 the corresponding Timeline cards; Neutral must remain unselected. A later
 Timeline choice must replace the calibration state without duplicating its
-learning signal.
+learning signal. Update Inbox must show the same effective More/Less choices,
+identify choices originating in calibration, omit Neutral, and use canonical
+reconciled capture counts identical to Inspect Flow.
 
 Login remediation, installer signing, and automatic Chrome extension
 installation are outside the `0.7.0-preview.2` acceptance boundary. Codex

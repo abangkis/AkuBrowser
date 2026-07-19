@@ -63,7 +63,7 @@ The event is tied to the Timeline item, run, session, and canonical evidence key
 
 Newest evidence wins. If timestamps tie, routine feedback outranks a selection correction, which outranks calibration. This is why a later More or Less choice can correct the taste effect of `Should have selected` without deleting its separate selection audit.
 
-Completed calibration labels remain visible on their original Timeline items: More and Less render as the active button state, while Neutral remains visually neutral. This is a read projection of `calibration_samples`, not a duplicate routine feedback event, so calibration keeps its higher fitting authority. A later Timeline More or Less event replaces that visible state and becomes the newest canonical preference signal.
+Completed calibration labels remain visible on their original Timeline items and in the corresponding Update Inbox diagnostic: More and Less render as the active button state, while Neutral remains visually neutral and is omitted from the Inbox decision list. These are read projections of `calibration_samples`, not duplicate routine feedback events, so calibration keeps its higher fitting authority. A later Timeline or Inbox More/Less event replaces that visible state and becomes the newest canonical preference signal.
 
 The current contribution before normalization is:
 
