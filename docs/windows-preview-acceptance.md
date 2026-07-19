@@ -43,6 +43,10 @@ the Inbox semantic summary reports the local onboarding path without a model
 invocation. If a source reasoning run is deliberately made to fail before any
 candidate validates, the recovery action must say **Check for updates again**;
 the Sidecar must remain ready and the captured trace must remain inspectable.
+After calibration completes, its More and Less choices must remain selected on
+the corresponding Timeline cards; Neutral must remain unselected. A later
+Timeline choice must replace the calibration state without duplicating its
+learning signal.
 
 Login remediation, installer signing, and automatic Chrome extension
 installation are outside the `0.7.0-preview.2` acceptance boundary. Codex
