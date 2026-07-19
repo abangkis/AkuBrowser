@@ -44,7 +44,7 @@ Assert-True ($releaseManifest.distribution.windows.format -eq "portable-zip") "W
 Assert-True ($bridgePackage.version -eq $bridgeManifest.version_name) "AkuBridge package and manifest version name differ."
 Assert-True ($bridgePackage.version -eq $releaseManifest.components.akuBridge.version) "AkuBridge product version drifted from the release manifest."
 Assert-True ($bridgeManifest.version -eq $releaseManifest.components.akuBridge.chromeVersion) "AkuBridge Chrome version drifted from the release manifest."
-Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-adapters-v70") "AkuBridge runtime revision is unexpected."
+Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-adapters-v71") "AkuBridge runtime revision is unexpected."
 Assert-True ($bridgePackage.akuRuntimeRevision -eq $releaseManifest.components.akuBridge.runtimeRevision) "AkuBridge runtime revision drifted from the release manifest."
 foreach ($source in @("x", "linkedin", "facebook")) {
     Assert-True ($sourceCatalog -match ('id:\s*"' + [regex]::Escape($source) + '"')) "AkuBridge source catalog is missing $source."

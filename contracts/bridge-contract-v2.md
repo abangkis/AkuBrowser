@@ -27,8 +27,8 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge product version `0.7.0-preview.1` / Chrome manifest version `0.7.0.1`;
-- runtime revision `source-adapters-v70`;
-- build id `aku-bridge-0.7.0-preview.1-source-adapters-v70`; and
+- runtime revision `source-adapters-v71`;
+- build id `aku-bridge-0.7.0-preview.1-source-adapters-v71`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -77,11 +77,23 @@ window. LinkedIn's value is one total readiness budget spanning its initial
 background observation and, when required, its activation retry.
 
 An admitted observation must identify a source registered by both peers, contain at least one
-snapshot and evidence block, and carry coverage. AkuBridge supplies native
-identity/permalink/text evidence; Go derives the canonical 24-hex
+snapshot and evidence block, and carry coverage. Every adapter declares the
+`feed_post` family and its supported evidence modalities. Generic Bridge
+admission requires author, one native or stable identity, and at least one of
+text, image, video, typed attachment, or quoted-post evidence. Caption length
+does not decide whether content exists. Stable text of at least 40 characters
+is only the fallback identity when a native platform id and permalink are both
+unavailable. AkuBridge supplies the admitted evidence; Go derives the canonical 24-hex
 `evidenceKey` before validation and persistence.
 Raw browser observations remain untrusted input. Reasoning output may reference
 only evidence keys present in the admitted observation.
+
+AkuSidecar recomputes the minimum evidence invariant and rejects identity-only
+blocks, invalid native permalinks, malformed attachments, and bounded-resource
+violations. The reasoning projection strips media URLs but preserves at most six
+media metadata entries containing only kind, bounded alt text, dimensions, and
+provenance. The evaluator must state limitations instead of claiming unseen
+visual details.
 
 Source-native presentation context remains separate from authored content.
 LinkedIn may emit `presentation.socialContext` and an optional
