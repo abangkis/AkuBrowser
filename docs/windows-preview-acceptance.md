@@ -57,6 +57,12 @@ learning signal. Update Inbox must show the same effective More/Less choices,
 identify choices originating in calibration, omit Neutral, and use canonical
 reconciled capture counts identical to Inspect Flow.
 
+For first-run performance, confirm that every source records exactly one capture
+round, no Acquisition Planning invocation is retained, and normal later checks
+can still request a second round. After onboarding, enable **Learning panel after
+onboarding** during an active update and confirm the carousel appears immediately;
+disable it and confirm the panel and its timer stop without cancelling the run.
+
 Login remediation, installer signing, and automatic Chrome extension
 installation are outside the `0.7.0-preview.2` acceptance boundary. Codex
 discovery is owned by the cross-platform AkuSidecar runtime probe and
