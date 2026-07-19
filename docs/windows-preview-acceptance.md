@@ -72,6 +72,12 @@ capture cleanup…**. If AkuBridge is temporarily incompatible or reconnecting, 
 same location must explain **Waiting for AkuBridge to reconnect…** rather than
 leaving a disabled action unexplained.
 
+During an active check, confirm the progress panel explains that processing keeps
+running while the user reviews other areas and offers direct actions for **View
+Update Inbox** and **View Settings**. Moving to either view must not stop polling,
+capture, or later Timeline composition; returning to Timeline must show current
+progress rather than restarting the check.
+
 Login remediation, installer signing, and automatic Chrome extension
 installation are outside the `0.7.0-preview.2` acceptance boundary. Codex
 discovery is owned by the cross-platform AkuSidecar runtime probe and
