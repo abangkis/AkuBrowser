@@ -31,7 +31,7 @@ AkuSupervisor:
    `Start-AkuBrowser.ps1 -DiagnoseCodex`;
 3. confirm Chrome is signed in to every source that will be enabled (X, LinkedIn, or Facebook);
 4. load the bundled AkuBridge directory through Chrome Developer mode;
-5. run `Start-AkuBrowser.cmd`;
+5. run `.\Start-AkuBrowser.ps1` from PowerShell (`Start-AkuBrowser.cmd` is the fallback);
 6. complete onboarding and calibration;
 7. run Check for updates and inspect captured, evaluated, and selected evidence;
 8. stop with Ctrl+C, restart, and confirm local state persists;

@@ -45,7 +45,9 @@ install a local extension. The tester must:
 
 AkuBridge is deliberately installed first so onboarding never begins with only
 half of the local system available. After the extension is ready, run the
-bundled `Start-AkuBrowser.cmd` launcher and confirm the Bridge-ready status.
+bundled `.\Start-AkuBrowser.ps1` launcher from PowerShell and confirm the
+Bridge-ready status. `Start-AkuBrowser.cmd` remains a convenience fallback and
+delegates to the same PowerShell script.
 
 Future Store, private-test, or enterprise distribution is a separate release
 decision. The preview does not claim automatic extension installation.

@@ -18,16 +18,27 @@ include AkuSupervisor.
 3. Enable **Developer mode**.
 4. Choose **Load unpacked**.
 5. Select the `AkuBridge` directory inside this bundle.
-6. Confirm that AkuBridge is enabled, then run `Start-AkuBrowser.cmd`.
-7. Keep its terminal open while using AkuBrowser.
-8. Press Ctrl+C in that terminal to stop AkuBrowser.
+6. Confirm that AkuBridge is enabled.
+7. Open PowerShell in the extracted directory and run:
+
+   ```powershell
+   .\Start-AkuBrowser.ps1
+   ```
+
+8. If running PowerShell scripts is unavailable, use `Start-AkuBrowser.cmd` as
+   the fallback launcher.
+9. Keep its terminal open while using AkuBrowser.
+10. Press Ctrl+C in that terminal to stop AkuBrowser.
 
 Install AkuBridge before starting AkuBrowser. This ensures the capture bridge is
 available when onboarding begins instead of launching a partially working
 system. The extension must stay at the extracted path; moving or deleting that
 directory will make Chrome unable to reload it.
 
-The launcher opens `http://127.0.0.1:11122` after Sidecar becomes healthy.
+`Start-AkuBrowser.ps1` is the primary launcher and exposes the diagnostic and
+configuration options documented below. `Start-AkuBrowser.cmd` delegates to the
+same script and is retained only as a convenience fallback. The launcher opens
+`http://127.0.0.1:11122` after Sidecar becomes healthy.
 User data is stored under `%LOCALAPPDATA%\AkuBrowser\data` and is not removed
 when the extracted bundle is replaced.
 

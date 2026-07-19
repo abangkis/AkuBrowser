@@ -90,10 +90,13 @@ foreach ($required in @(
 
 $bundleReadme = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "README.md") -Raw
 $bridgeInstallInstruction = $bundleReadme.IndexOf('Select the `AkuBridge` directory inside this bundle.', [StringComparison]::Ordinal)
-$launcherInstruction = $bundleReadme.IndexOf('run `Start-AkuBrowser.cmd`.', [StringComparison]::OrdinalIgnoreCase)
+$primaryLauncherInstruction = $bundleReadme.IndexOf('.\Start-AkuBrowser.ps1', [StringComparison]::OrdinalIgnoreCase)
+$fallbackLauncherInstruction = $bundleReadme.IndexOf('use `Start-AkuBrowser.cmd` as', [StringComparison]::OrdinalIgnoreCase)
 Assert-True ($bridgeInstallInstruction -ge 0) "Bundle README does not explain how to load AkuBridge."
-Assert-True ($launcherInstruction -ge 0) "Bundle README does not explain how to start AkuBrowser."
-Assert-True ($bridgeInstallInstruction -lt $launcherInstruction) "Bundle README must install AkuBridge before starting AkuBrowser."
+Assert-True ($primaryLauncherInstruction -ge 0) "Bundle README does not identify Start-AkuBrowser.ps1 as the primary launcher."
+Assert-True ($fallbackLauncherInstruction -ge 0) "Bundle README does not identify Start-AkuBrowser.cmd as the fallback launcher."
+Assert-True ($bridgeInstallInstruction -lt $primaryLauncherInstruction) "Bundle README must install AkuBridge before starting AkuBrowser."
+Assert-True ($primaryLauncherInstruction -lt $fallbackLauncherInstruction) "Bundle README must present the PowerShell launcher before the CMD fallback."
 
 $checksumLines = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "checksums.sha256")
 foreach ($line in $checksumLines) {
