@@ -103,9 +103,9 @@ The implementation is accepted at the code and synthetic-runtime layer when:
 5. Sidecar registry, schema 6, dynamic UI, heartbeat, and session creation accept
    three registered sources;
 6. package verification and distribution contracts agree on runtime revision
-   `source-adapters-v66`.
+   `source-adapters-v68`.
 
-Facebook adapter v4 also treats the current Home Feed header as an explicit
+Facebook adapter v5 also treats the current Home Feed header as an explicit
 adapter responsibility. It resolves the author from bounded profile links
 before the post body and reconstructs Facebook's visually rendered relative
 timestamp while excluding its absolutely positioned decoy glyphs. The generic
@@ -119,3 +119,12 @@ Live Facebook acceptance still requires a signed-in user session and repeated
 captures of ordinary, shared, Page, suggested, sponsored, image, and video
 entries. A live selector or media gap is an adapter defect; it must not be
 worked around by adding source-specific branches to generic orchestration.
+
+The adapter also owns classification of Facebook's explicit account-level
+service outage surface. A signed-in tab at `/sorry.php?msg=account` with the
+rendered `Account Temporarily Unavailable` heading reports typed
+`source_unavailable` / `site_outage` readiness instead of falling through to a
+selector or visibility error. Generic Bridge orchestration carries that typed
+outcome without foreground recovery, and Sidecar retains results from healthy
+sources as a warning-tone partial session. This is failure isolation, not an
+outage detector: AkuBrowser never infers a global incident from an empty feed.
