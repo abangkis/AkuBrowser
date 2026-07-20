@@ -95,6 +95,7 @@ $fallbackLauncherInstruction = $bundleReadme.IndexOf('use `Start-AkuBrowser.cmd`
 Assert-True ($bridgeInstallInstruction -ge 0) "Bundle README does not explain how to load AkuBridge."
 Assert-True ($primaryLauncherInstruction -ge 0) "Bundle README does not identify Start-AkuBrowser.ps1 as the primary launcher."
 Assert-True ($fallbackLauncherInstruction -ge 0) "Bundle README does not identify Start-AkuBrowser.cmd as the fallback launcher."
+Assert-True ($bundleReadme.IndexOf('exception for that exact file', [StringComparison]::OrdinalIgnoreCase) -ge 0) "Bundle README does not explain the narrow AkuSidecar.exe antivirus exception."
 Assert-True ($bridgeInstallInstruction -lt $primaryLauncherInstruction) "Bundle README must install AkuBridge before starting AkuBrowser."
 Assert-True ($primaryLauncherInstruction -lt $fallbackLauncherInstruction) "Bundle README must present the PowerShell launcher before the CMD fallback."
 

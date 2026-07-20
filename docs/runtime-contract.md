@@ -111,6 +111,24 @@ fabricated. AkuBridge never performs social writes.
 
 The `0.7.0-preview.2` package assumes Codex App with App Server is installed and locally signed in, while Chrome is already signed in to every enabled source. It bundles AkuBridge as an unpacked payload for manual Developer-mode installation. A cross-platform AkuSidecar probe resolves an explicit override, `AKU_CODEX_PATH`, `PATH`, managed Codex App runtimes, and common CLI locations in that order; a candidate is accepted only when its App Server capability probe succeeds. Launchers and future installers consume this same JSON contract instead of maintaining their own path lists. Missing-login assistance and automated browser-extension distribution remain deferred beyond this preview.
 
+## Local model-usage ledger
+
+AkuSidecar projects provider-reported usage for each bounded check across the
+same four replaceable reasoning roles exposed in Settings: Acquisition
+Planning, Candidate Evaluation, Semantic Event Resolution, and AI Deep
+Detection. The projection reads the existing reasoning, semantic-resolution,
+and asynchronous AI job ledgers; it does not create a second token-accounting
+source of truth. Per-check detail is loaded on demand from Update Inbox, while
+the linked aggregate view covers 7, 30, or 90 days of locally retained checks.
+
+Input tokens already include cached input, so cached input is a breakout and is
+never added to input again. Reasoning output is likewise presented as a
+breakout. Failed invocations remain visible because they may have consumed
+tokens. Missing provider telemetry is reported as unavailable rather than zero,
+and asynchronous AI Deep usage may update after Timeline publication. Aggregate
+usage is explicitly local AkuBrowser history, not account-wide Codex usage;
+database reset, retention expiry, or storage trimming can narrow it.
+
 ## Lifecycle and validation
 
 Normal rebuild/restart:

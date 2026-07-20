@@ -9,7 +9,9 @@ include AkuSupervisor.
 - Windows 10 or newer on x64 hardware;
 - Codex App installed and locally signed in, or a Codex CLI build that includes
   App Server;
-- Google Chrome already signed in to every source you enable (X, LinkedIn, or Facebook).
+- Google Chrome already signed in to every source you enable (X, LinkedIn, or Facebook);
+- if antivirus protection causes a problem during installation or onboarding,
+  add an exception for the bundled `AkuSidecar.exe` file before trying again.
 
 ## Install and start
 
@@ -41,6 +43,20 @@ same script and is retained only as a convenience fallback. The launcher opens
 `http://127.0.0.1:11122` after Sidecar becomes healthy.
 User data is stored under `%LOCALAPPDATA%\AkuBrowser\data` and is not removed
 when the extracted bundle is replaced.
+
+## Antivirus warning
+
+Avast or another antivirus may occasionally block or quarantine
+`AkuSidecar.exe`, especially immediately after extracting a new preview build.
+If the launcher cannot find or start that file, open the antivirus quarantine
+or protection history, restore `AkuSidecar.exe` if it was removed, and add an
+exception for that exact file in the extracted AkuBrowser directory. Then run
+`Start-AkuBrowser.ps1` again.
+
+Keep the exception as narrow as possible: do not disable antivirus protection
+and do not exclude the entire Downloads folder. If you move or extract the
+bundle to a different directory, the antivirus application may require a new
+exception for the new `AkuSidecar.exe` path.
 
 The launcher automatically checks `AKU_CODEX_PATH`, `PATH`, managed Codex App
 runtime folders, Windows App aliases, and common npm CLI locations. It accepts a
