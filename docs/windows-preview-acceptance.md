@@ -36,7 +36,8 @@ AkuSupervisor:
 7. run Check for updates and inspect captured, evaluated, and selected evidence;
 8. stop with Ctrl+C, restart, and confirm local state persists;
 9. reset AkuBrowser and confirm onboarding starts from zero without classifying pre-reset native items as resurfaced;
-10. confirm no AkuSupervisor process or development workspace path is required.
+10. after onboarding is complete, restart or temporarily delay AkuSidecar and refresh the page; the Timeline must remain in a restoring state until bootstrap succeeds and source onboarding must not reappear. Only Full reset may intentionally expose onboarding again;
+11. confirm no AkuSupervisor process or development workspace path is required.
 
 During the first onboarding check, confirm that the separate learning carousel
 is visible below the sticky progress panel, advances automatically, supports
