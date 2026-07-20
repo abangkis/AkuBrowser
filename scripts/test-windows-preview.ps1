@@ -7,6 +7,32 @@ param(
 $ErrorActionPreference = "Stop"
 $browserRoot = Split-Path -Parent $PSScriptRoot
 $release = Get-Content -LiteralPath (Join-Path $browserRoot "release\release-manifest.json") -Raw | ConvertFrom-Json
+
+function Remove-TemporaryDirectory([string] $Path) {
+    $absolutePath = [IO.Path]::GetFullPath($Path)
+    $tempPrefix = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    if (-not $absolutePath.StartsWith($tempPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Refusing to remove a directory outside the temporary root: $absolutePath"
+    }
+    if (-not (Test-Path -LiteralPath $absolutePath)) {
+        return
+    }
+
+    for ($attempt = 1; $attempt -le 10; $attempt++) {
+        try {
+            Remove-Item -LiteralPath $absolutePath -Recurse -Force -ErrorAction Stop
+            return
+        }
+        catch {
+            if ($attempt -eq 10) {
+                Write-Warning "Preview validation passed, but temporary cleanup remains deferred because another process still holds a file: $absolutePath"
+                return
+            }
+            Start-Sleep -Milliseconds 300
+        }
+    }
+}
+
 if ([string]::IsNullOrWhiteSpace($ArtifactDirectory)) {
     if ([string]::IsNullOrWhiteSpace($ZipPath)) {
         $ZipPath = Join-Path $browserRoot "artifacts\AkuBrowser-$($release.version)-windows-x64.zip"
@@ -22,11 +48,7 @@ if ([string]::IsNullOrWhiteSpace($ArtifactDirectory)) {
         & $PSCommandPath -ArtifactDirectory $extractionRoot
     }
     finally {
-        $absoluteExtraction = [IO.Path]::GetFullPath($extractionRoot)
-        $tempPrefix = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
-        if ($absoluteExtraction.StartsWith($tempPrefix, [StringComparison]::OrdinalIgnoreCase) -and (Test-Path -LiteralPath $absoluteExtraction)) {
-            Remove-Item -LiteralPath $absoluteExtraction -Recurse -Force
-        }
+        Remove-TemporaryDirectory -Path $extractionRoot
     }
     exit 0
 }
@@ -206,9 +228,5 @@ finally {
         Stop-Process -Id $process.Id -Force -ErrorAction SilentlyContinue
         $process.WaitForExit(5000) | Out-Null
     }
-    $absoluteSmoke = [IO.Path]::GetFullPath($smokeRoot)
-    $tempRoot = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
-    if ($absoluteSmoke.StartsWith($tempRoot, [StringComparison]::OrdinalIgnoreCase) -and (Test-Path -LiteralPath $absoluteSmoke)) {
-        Remove-Item -LiteralPath $absoluteSmoke -Recurse -Force
-    }
+    Remove-TemporaryDirectory -Path $smokeRoot
 }
