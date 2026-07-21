@@ -3,7 +3,10 @@
 `0.7.0-preview.2` is the current source-aligned Windows preview candidate. It
 retains the unified packaging boundary established by preview.1 and adds the
 current three-source, progressive scheduling, native-resurface, execution
-timing, onboarding recovery, and AI Detection controls. The first calibration
+timing, onboarding recovery, and AI Signals controls. This is the packaged
+candidate described by the OpenAI Build Week
+[final project story](openai-build-week-submission.md) and
+[implementation evidence](../BUILD_WEEK.md). The first calibration
 check builds its semantic index locally without a model-backed cross-author
 comparison; later checks use the full Event Engine. The release contains AkuSidecar and an
 unpacked AkuBridge payload. AkuSupervisor and

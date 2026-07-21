@@ -4,6 +4,15 @@ This portable preview contains the Go AkuSidecar runtime and AkuBridge as an
 unpacked Chrome extension. It does not install a Windows service and does not
 include AkuSupervisor.
 
+## OpenAI Build Week preview
+
+This is the judge-ready package for the AkuBrowser Build Week story. It
+demonstrates bounded capture from authenticated X, Facebook, and LinkedIn
+feeds; Codex-backed Acquisition Planning, Candidate Evaluation, Semantic Event
+Resolution, and AI Deep Detection; deterministic preference filtering; and a
+finite, source-backed Timeline. AkuSupervisor remains optional development
+tooling and is intentionally excluded from this preview.
+
 ## Prerequisites
 
 - Windows 10 or newer on x64 hardware;

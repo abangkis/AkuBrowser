@@ -8,7 +8,13 @@ AkuBrowser turns bounded samples from the user's chosen social feeds into one fi
 
 Its cross-author semantic Event Engine treats the underlying event—not the number of posts about it—as the unit of attention. When different authors or sources report the same specific occurrence, AkuBrowser can collapse the repetition while preserving the reports for inspection and correction. The user reads the change once instead of paying the same attention cost again for every account that repeated it.
 
-Its AI Detector adds a separate, explicitly uncertain layer for AI origin signals. A local deterministic pass can annotate retained text immediately, while an asynchronous Codex pass may confirm, dispute, or correct that preliminary assessment. Every assessment binds the social post to the actual evidence scope, so an AI-created external artifact is not mislabeled as an AI-authored post. These signals never affect selection or ranking. Drawer is the preview default; users may instead keep strong signals inline or, after an exact typed warning, hide only direct or Deep-confirmed results. Direct user correction has the highest presentation authority.
+Its AI Signals layer adds a separate, explicitly uncertain view of AI origin.
+A local deterministic pass can annotate retained text immediately, while an
+asynchronous Codex pass may confirm, dispute, or correct that preliminary
+assessment. These signals never affect relevance selection or ranking. Drawer
+is the preview default; users may instead keep strong signals inline or, after
+an exact typed warning, hide only direct or Deep-confirmed results. Direct user
+correction has the highest presentation authority.
 
 X media can also finish passively after the usable Timeline is already on
 screen. AkuBridge v60 keeps only short-lived, allowlisted post-media evidence
@@ -33,7 +39,7 @@ application runtime of its own.
 | `AkuBrowser` | Product contract, canonical schemas, distribution assembly, integration and artifact checks | PowerShell only |
 | `AkuBridge` | Read-only bounded Chrome capture | Browser JavaScript / Node test tooling |
 | `AkuSidecar` | UI, sessions, SQLite, reasoning, selection, personalization | Go |
-| `AkuSupervisor` | Visible development process ownership | Rust |
+| `AkuSupervisor` | Visible development process ownership, health, logs, cooperative Bridge reload, and read-only MCP inspection | Rust |
 
 Only AkuBridge uses npm, because it is the Chrome extension. AkuSidecar is fully Go. AkuSupervisor starts the Sidecar executable directly.
 
@@ -74,13 +80,19 @@ artifact requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees.
 
 ## OpenAI Build Week
 
-AkuBrowser is a pre-existing project that was materially extended during the
-OpenAI Build Week submission period. Codex was used throughout the extension
-work for contract design, Go runtime changes, source-adapter debugging, test
-generation, recovery paths, and release validation. GPT-5.6/Codex provided
-structured reasoning and implementation acceleration, while product scope,
-trust boundaries, deterministic limits, and final acceptance decisions remained
-human-owned.
+AkuBrowser began as an early bounded X/LinkedIn prototype and was materially
+extended during OpenAI Build Week. Working with Codex, the project rewrote
+AkuSidecar from Node.js to Go, moved runtime reasoning to Codex App Server,
+activated preference filtering, added cross-source semantic event resolution
+and AI Signals, expanded capture to Facebook, strengthened recovery, and built
+a verifiable Windows x64 portable preview.
+
+Codex accelerated architecture, implementation, live debugging, tests,
+documentation, and release preparation. In the running product, GPT-5.6 powers
+schema-bound Acquisition Planning, Candidate Evaluation, Semantic Event
+Resolution, and AI Deep Detection. AkuSidecar—not the model—remains responsible
+for permissions, budgets, validation, preference authority, SQLite state, and
+final composition.
 
 The submission evidence, the distinction between earlier work and dated
 submission-period extensions, and the private-repository judge workflow are in
@@ -94,7 +106,7 @@ submission-period extensions, and the private-repository judge workflow are in
 - [Preview release](docs/preview-release.md)
 - [Windows preview acceptance](docs/windows-preview-acceptance.md)
 - [Build Week evidence and judge checklist](BUILD_WEEK.md)
-- [OpenAI Build Week submission draft](docs/openai-build-week-submission.md)
+- [OpenAI Build Week final project story](docs/openai-build-week-submission.md)
 - [Bridge Contract v2](contracts/bridge-contract-v2.md)
 - [Active machine-readable schemas](contracts/README.md)
 

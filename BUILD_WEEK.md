@@ -1,93 +1,108 @@
-# AkuBrowser — OpenAI Build Week evidence
+# AkuBrowser - OpenAI Build Week evidence
 
 Status: **submission-ready candidate**  
 Current preview: **`0.7.0-preview.2`**  
-Target: **Windows x64 portable ZIP**
+Supported platform: **Windows x64**
+Supported sources: **X, Facebook, and LinkedIn**
 
-This document connects the four private repositories, records what changed
-during the submission period, and gives judges a path to install and test the
-project without rebuilding the stack. The copy-ready narrative is in
+This document connects the private repositories, distinguishes the
+pre-existing prototype from Build Week extensions, describes how Codex and
+GPT-5.6 contributed, and gives judges a path to run the project without
+rebuilding it. The canonical story is
 [`docs/openai-build-week-submission.md`](docs/openai-build-week-submission.md).
 
-## What is being submitted
+## Product direction
 
-AkuBrowser is a finite, user-steered layer over infinite social feeds. It uses a
-read-only Chrome extension to capture bounded evidence from the user's signed-in
-X, LinkedIn, and Facebook sessions. AkuSidecar validates and evaluates that
-evidence with schema-bound Codex App Server calls, applies deterministic trust,
-continuity, preference, and capacity policies, and renders one finite,
-source-backed Timeline with an explicit end.
+AkuBrowser is a finite, user-steered layer over infinite feeds. It combines
+bounded capture from the user's authenticated Chrome session with structured
+Codex reasoning, deterministic preference filtering, cross-source semantic
+event resolution, knowledge continuity, AI Signals, and one finite Timeline.
 
-The central product promise is preference-based filtering, not only reordering.
-After repeated direct evidence, calibration, More/Less, and `Should have
-selected` signals can promote, replace, demote, or suppress ordinary candidates.
-Material updates, contradictions, evidence quality, and one bounded discovery
-lane remain protected so personalization does not become an opaque filter
-bubble.
+The authority boundary is deliberate: AkuBridge observes, Codex plans and
+evaluates, AkuSidecar owns policy and state, and the user remains the final
+authority. AI Signals are a separate presentation layer and never silently own
+relevance selection or ranking.
 
 ## Repository map
 
-| Private repository | Role in the submission | Runtime |
-| --- | --- | --- |
-| [AkuBrowser](https://github.com/abangkis/AkuBrowser) | Product contracts, schemas, release manifest, Windows packaging, cross-repo checks, and this evidence | PowerShell |
-| [AkuBridge](https://github.com/abangkis/AkuBridge) | Bounded, read-only Manifest V3 capture for X, LinkedIn, and Facebook | Chrome JavaScript |
-| [AkuSidecar](https://github.com/abangkis/AkuSidecar) | UI, SQLite continuity, sessions, selection, personalization, semantic events, AI Detection, and Codex App Server integration | Go |
-| [AkuSupervisor](https://github.com/abangkis/AkuSupervisor) | Visible development lifecycle ownership, health, logs, cooperative Bridge reload, and read-only MCP inspection | Rust |
+All repositories carry the Apache License 2.0.
 
-The current preview bundles AkuSidecar, AkuBridge, release configuration,
-launchers, provenance, and SHA-256 checksums. AkuSupervisor remains development
-tooling and is intentionally excluded from the portable preview. It is a future
-candidate for the local lifecycle engine in a full AkuBrowser installer.
+| Private repository | Build Week role | Runtime |
+| --- | --- | --- |
+| [AkuBrowser](https://github.com/abangkis/AkuBrowser) | Product contracts, schemas, release authority, Windows packaging, aggregate checks, final story, and this evidence | PowerShell |
+| [AkuBridge](https://github.com/abangkis/AkuBridge) | Bounded, read-only Manifest V3 capture for X, LinkedIn, and Facebook | Chrome JavaScript |
+| [AkuSidecar](https://github.com/abangkis/AkuSidecar) | UI, SQLite, sessions, preference filtering, semantic events, AI Signals, and Codex App Server integration | Go |
+| [AkuSupervisor](https://github.com/abangkis/AkuSupervisor) | Optional development lifecycle ownership, health, logs, cooperative Bridge reload, and read-only MCP inspection | Rust |
+| [AkuSupervisorConformance](https://github.com/abangkis/AkuSupervisorConformance) | Optional lifecycle compatibility laboratory; supporting evidence only, not an AkuBrowser runtime component | Rust |
+
+The portable preview contains AkuSidecar, AkuBridge, release configuration,
+launchers, provenance, and SHA-256 checksums. AkuSupervisor and
+AkuSupervisorConformance are intentionally excluded from the current end-user
+bundle. Bundling Supervisor as a local lifecycle engine is future work.
 
 ## Pre-existing work and Build Week extensions
 
-AkuBrowser existed before the submission period as a bounded X/LinkedIn capture
-prototype. The work evaluated for this submission is the material extension
-completed after the submission period opened. The dated history below is an
-audit trail; it is not a claim that every line of every commit was generated by
-Codex.
+Before the submission period, AkuBrowser was an early bounded X/LinkedIn
+prototype. The project was materially extended after the submission period
+opened. The dated Git history is the audit trail; the examples below are not a
+claim that every line in every commit was generated by Codex.
 
-| Area | Submission-period evidence in the private repositories |
-| --- | --- |
-| Product/runtime boundary | AkuSidecar's Go runtime, preview.2 release tuple, strict schemas, onboarding recovery, and local model-usage ledger (`AkuSidecar` commits `3527ea0`, `0cc8dae`, `7ff06f6`, `73725f1`) |
-| Preference-based selection | Guarded-live calibration and direct feedback that affect eligibility, with protected updates and discovery coverage (`AkuSidecar/internal/preference`, `AkuSidecar/internal/selection`, and the active product/runtime contracts) |
-| Source fidelity | Generic adapter registry and a bounded Facebook adapter, while preserving X and LinkedIn provenance (`AkuBridge` commits `9978ce1`, `27ba581`, `f85bb2f`, `c5f1c4d`) |
-| Browser safety and media | Response-backed X media evidence, modality-based admission, bounded recovery, no provider requests, and no social writes (`AkuBridge` current `source-adapters-v72` payload) |
-| Packaging and operations | Windows x64 portable ZIP, checksums, clean-machine acceptance, direct Sidecar ownership, and read-only Supervisor MCP bootstrap (`AkuBrowser` `0.7.0-preview.2`, `AkuSupervisor` commits `22c6846`, `f783cc3`, `7b66c67`) |
+The Build Week work includes:
 
-The release manifest is the machine-readable authority for the component tuple:
-[`release/release-manifest.json`](release/release-manifest.json).
+- rewriting AkuSidecar from Node.js to Go while preserving SQLite state,
+  recovery, and product behavior (`bd6d78a`, `72460a1`);
+- integrating Codex App Server for Acquisition Planning, Candidate Evaluation,
+  Semantic Event Resolution, and AI Deep Detection, with process-specific
+  GPT-5.6 profiles and local usage telemetry (`f458f4a`, `7ff06f6`);
+- implementing preference-aware selection with calibration, More/Less
+  feedback, local learning, filtering, and correction controls (`194811e`,
+  `0b63c25`);
+- building a cross-source Semantic Event Engine that collapses duplicate
+  reports while preserving updates, contradictions, and different perspectives
+  (`432dca4`, `8565283`);
+- expanding bounded, source-faithful capture to X, LinkedIn, and Facebook with
+  shared quality, freshness, media, and lifecycle controls (`d5f5409`,
+  `065d305`, `9978ce1`, `27ba581`);
+- adding AI Fast and Deep Detection with user-controlled Inline, Drawer, and
+  explicitly confirmed Hide modes (`37180f6`, `3c9691f`);
+- strengthening onboarding, session recovery, exact-evidence suppression,
+  resurfacing, reset, and Sidecar-restart behavior;
+- packaging a verifiable Windows x64 preview with launchers, provenance,
+  checksums, and a bundled unpacked AkuBridge payload (`adedc2a`, `7f2ca26`);
+  and
+- extending AkuSupervisor with lifecycle ownership, cooperative Bridge reload,
+  health and log monitoring, read-only MCP support, and cross-repository
+  regression gates (`9696523`, `96e7dab`, `22c6846`).
 
-## Codex collaboration
+## How Codex and GPT-5.6 were used
 
-Codex and GPT-5.6 were used throughout the submission-period extension for:
+Codex accelerated contract design, the Go rewrite, preference and semantic
+engines, live source debugging, AI Detection, recovery paths, tests,
+documentation, and release preparation. GPT-5.6 is also part of the running
+product through four schema-bound roles:
 
-- decomposing the product into Bridge, Sidecar, Browser, and Supervisor
-  contracts;
-- implementing and reviewing Go selection, continuity, semantic-event, AI
-  Detection, recovery, and usage-ledger changes;
-- debugging live source DOM/media behavior and translating observations into
-  bounded adapter contracts;
-- generating tests and acceptance checks across the four repositories; and
-- preparing the portable release, provenance manifest, checksums, and testing
-  guidance.
+1. **Acquisition Planning** decides whether the available evidence is
+   sufficient or whether one additional bounded observation would help.
+2. **Candidate Evaluation** describes topics, materiality, novelty, urgency,
+   actionability, and evidence strength.
+3. **Semantic Event Resolution** compares likely cross-author and cross-source
+   reports when deterministic retrieval finds a plausible relationship.
+4. **AI Deep Detection** asynchronously reviews retained posts after the
+   Timeline is already usable.
 
-Human decisions remained authoritative for the product goal, preference
-semantics, security boundary, source permissions, model profiles, release
-scope, and whether a result was safe to claim in the submission.
+Candidate Evaluation defaults to Luna XHigh. Acquisition Planning, Semantic
+Event Resolution, and AI Deep Detection default to Luna High. The user can
+select only profiles from a bounded catalog; arbitrary model strings are not
+accepted. AkuSidecar remains authoritative for permissions, budgets,
+validation, filtering, persistence, and rendering.
 
 ## Private judge access
 
-The Devpost rules allow a private repository when it is shared with both
-`testing@devpost.com` and `build-week-event@openai.com`. Before submitting,
-share all four private repositories (or a private umbrella repository containing
-the exact release artifacts and links) with those accounts. Do not make the
-repositories public solely for the competition.
-
-The repository URL field should point to AkuBrowser. The testing instructions
-must also identify the linked AkuBridge, AkuSidecar, and AkuSupervisor
-repositories and the exact preview artifact. Judges should not need to rebuild
-the project to try it.
+The submission uses private repositories. Share AkuBrowser, AkuBridge,
+AkuSidecar, AkuSupervisor, and AkuSupervisorConformance with
+`testing@devpost.com` and `build-week-event@openai.com`. The Devpost repository
+field should point to AkuBrowser, which links the other repositories and the
+exact preview artifact.
 
 ## Judge installation path
 
@@ -97,25 +112,24 @@ Use the existing artifact:
 artifacts/AkuBrowser-0.7.0-preview.2-windows-x64.zip
 ```
 
-1. On Windows x64, extract the complete ZIP to a writable directory.
+1. Extract the complete ZIP on Windows x64.
 2. Confirm Codex App with App Server is installed and locally signed in.
-3. Confirm Chrome is signed in to every source that will be enabled.
+3. Confirm Chrome is signed in to each source that will be enabled.
 4. Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**,
    and select the bundled `AkuBridge` directory.
-5. From the extracted directory, run `.\Start-AkuBrowser.ps1` and keep the
-   terminal open. `Start-AkuBrowser.cmd` is the fallback launcher.
-6. Complete onboarding, run the first bounded calibration, then use **Check
-   for updates**. Try More/Less on Timeline cards and inspect the Update Inbox
-   to see captured, evaluated, selected, duplicate, and preference decisions.
-7. Press Ctrl+C in the launcher terminal to stop the local runtime.
+5. Run `.\Start-AkuBrowser.ps1` from PowerShell and keep the terminal open.
+   `Start-AkuBrowser.cmd` is the fallback launcher.
+6. Complete onboarding and calibration, run **Check for updates**, provide
+   More/Less feedback, and inspect Update Inbox diagnostics.
+7. Press Ctrl+C in the launcher terminal to stop AkuBrowser.
 
-The preview does not collect Codex or social credentials. AkuBridge installation
-is intentionally manual because the preview is an unpacked Chrome extension;
-automatic extension installation and signed installer delivery are future work.
+The preview never collects Codex or social credentials. Automatic extension
+installation, login assistance, a signed installer, macOS/Linux support, and a
+bundled Supervisor are future work.
 
-## Verification for maintainers
+## Verification
 
-Run from the AkuBrowser repository:
+From AkuBrowser:
 
 ```powershell
 .\scripts\check.ps1
@@ -123,31 +137,26 @@ Run from the AkuBrowser repository:
 .\scripts\test-windows-preview.ps1
 ```
 
-The checks verify release identities and schemas, run Go tests in AkuSidecar,
-run npm checks and package verification in AkuBridge, and run the AkuSupervisor
-schema contract. The preview build records source commits, checksums every
-bundled file, and emits the portable ZIP. A publishable build must come from
-clean AkuBrowser, AkuSidecar, and AkuBridge trees.
+The gate checks versions and schemas, runs AkuSidecar Go tests, runs AkuBridge
+JavaScript checks and tests, and executes the AkuSupervisor schema contract.
+The preview build records source commits and SHA-256 checksums. A publishable
+artifact requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees.
 
-## Submission fields still requiring manual entry
+## Manual submission fields
 
-- Public YouTube demo under three minutes, with audio and an explanation of how
-  Codex/GPT-5.6 was used. Image and video work is intentionally deferred until
-  the final H-3/H-2 window.
-- Devpost category and repository URL.
+- A public YouTube demonstration under three minutes, with audio explaining
+  what was built and how Codex/GPT-5.6 were used.
+- The final category, repository URL, and test-build link.
 - The `/feedback` Codex Session ID for the project thread where the majority of
-  the core functionality was built. This is a Codex project-thread identifier,
-  not a Git commit, Devpost ID, or OpenAI account usage ID. Paste the value only
-  after confirming it from the relevant Codex thread.
+  core functionality was built. This is not a Git commit or Devpost ID.
 
-## Final truth check
+## Truth boundary
 
-The submission story must describe the current `0.7.0-preview.2` behavior:
-three registered sources, real guarded-live preference filtering, event-level
-deduplication, bounded media evidence, asynchronous AI Detector, portable
-Windows packaging, and Supervisor as development tooling with read-only MCP.
-Anything not present in the preview—automatic Chrome extension installation,
-login assistance, a signed installer, or Supervisor bundled into the product—
-must remain clearly labeled as future work.
+The final story describes current `0.7.0-preview.2` behavior: three registered
+sources, real preference filtering, cross-source semantic event resolution,
+AI Fast and Deep Detection, finite Timeline composition, portable Windows
+packaging, and AkuSupervisor as optional development tooling with read-only MCP
+inspection. Automatic extension installation, a guided installer, a bundled
+Supervisor, additional websites, and macOS/Linux support remain future work.
 
 Official rules: [OpenAI Build Week rules](https://openai.devpost.com/rules).
