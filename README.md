@@ -72,12 +72,28 @@ The generated directory, ZIP, and ZIP checksum are written beneath
 `artifacts\`. Use `-AllowDirty` only while developing the pipeline; a publishable
 artifact requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees.
 
+## OpenAI Build Week
+
+AkuBrowser is a pre-existing project that was materially extended during the
+OpenAI Build Week submission period. Codex was used throughout the extension
+work for contract design, Go runtime changes, source-adapter debugging, test
+generation, recovery paths, and release validation. GPT-5.6/Codex provided
+structured reasoning and implementation acceleration, while product scope,
+trust boundaries, deterministic limits, and final acceptance decisions remained
+human-owned.
+
+The submission evidence, the distinction between earlier work and dated
+submission-period extensions, and the private-repository judge workflow are in
+[`BUILD_WEEK.md`](BUILD_WEEK.md). The copy-ready project story is in
+[`docs/openai-build-week-submission.md`](docs/openai-build-week-submission.md).
+
 ## Canonical documentation
 
 - [Product contract](docs/product-contract.md)
 - [Runtime contract](docs/runtime-contract.md)
 - [Preview release](docs/preview-release.md)
 - [Windows preview acceptance](docs/windows-preview-acceptance.md)
+- [Build Week evidence and judge checklist](BUILD_WEEK.md)
 - [OpenAI Build Week submission draft](docs/openai-build-week-submission.md)
 - [Bridge Contract v2](contracts/bridge-contract-v2.md)
 - [Active machine-readable schemas](contracts/README.md)

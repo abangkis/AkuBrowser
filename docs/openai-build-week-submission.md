@@ -42,11 +42,20 @@ The system has three runtime pieces:
 - AkuSidecar, rewritten from Node.js to Go, owns the embedded UI, SQLite state, session engine, personalization policy, and one managed Codex App Server process.
 - AkuSupervisor, written in Rust, owns the visible local development lifecycle so the Sidecar never needs a hidden watcher or self-replacement process.
 
+AkuSupervisor is a development and operations companion, not part of the
+current portable preview. It preserves process ownership, health, lifecycle
+events, and bounded logs, and it already exposes a deliberately read-only MCP
+surface for inspection by Codex or another agent. Lifecycle mutation remains
+behind the authenticated human/CLI control path. A future AkuBrowser bundle
+could include Supervisor as the local lifecycle engine that launches and
+maintains AkuSidecar, while keeping the same typed operations, audit trail, and
+MCP authority boundary.
+
 Codex is used as a constrained reasoning component, not as an autonomous browser. One managed Codex App Server process currently serves schema-bound acquisition planning, candidate evaluation, semantic event resolution, and asynchronous AI Deep Detection. Candidate evaluation alone defaults to Luna `xhigh`; acquisition planning, semantic event resolution, and AI Deep Detection default to Luna `high`. A bounded per-process picker lets the user compare Luna High/XHigh, Terra High/XHigh, and Sol Medium without accepting arbitrary model strings. Go owns the bounded local event index, deterministic AI Fast Detection, retrieval shortlist, retention, confidence gates, correction authority, budgets, trust, personalization, and final composition. The AI Detection master switch can disable both Fast and Deep Detection without changing selection or Timeline composition, avoiding all Deep Detection token use. When deterministic event retrieval finds no plausible relationship, the Event Engine creates local event threads without paying for another model call. Deep Detection likewise skips evidence that is inadequate, already decided by direct platform provenance, or overridden by the user. Each adapter depends on a generic structured-inference contract rather than Codex-specific code, so the reasoning backend and its option catalog remain replaceable without weakening product authority. Stable local identities never enter model prompts, social content is treated as untrusted evidence, and every current App Server thread is ephemeral, read-only, tool-disabled, and schema-bound.
 
 AkuBridge handles X media with three bounded evidence inputs: a
 `document_start` DOM watcher, a fixed traversal-bounded MAIN-world React
-resolver, and the v59 `x-response-evidence-v2` adapter. The last one observes
+resolver, and the v60 `x-response-evidence-v2` adapter. The last one observes
 only successful responses to X's already-issued `HomeTimeline`,
 `HomeLatestTimeline`, and `TweetDetail` GraphQL requests. It never issues or
 retries a provider request. Raw responses and post text are parsed only inside
@@ -92,6 +101,26 @@ without disguising a missing image as complete evidence.
 Cross-author duplication introduced a different problem: two posts can discuss the same topic without reporting the same occurrence. The Event Engine therefore uses high-precision actor/action/object/time matching, defaults to a `0.92` automatic-merge confidence gate with tightly bounded user tuning, and treats updates, contradictions, consequences, and context as unique information. A false merge can be split or reassigned by the user and undone immediately.
 
 AI-origin assessment has an even sharper uncertainty problem. Stylistic “AI detectors” can punish polished human writing and present probabilities as facts. AkuBrowser therefore starts with deterministic evidence rather than style, keeps the model pass asynchronous, uses the language of signals rather than truth, preserves a visible correction when Deep Detection overturns Fast Detection, and never allows a preliminary inferred signal to trigger Hide. The UI primitive is also intentionally generic: AI Signals is one pane hosted by a reusable alternate-view drawer, not a new feed architecture coupled to the detector.
+
+## Accomplishments we are proud of
+
+- Shipped a current Windows x64 portable preview (`0.7.0-preview.2`) with a
+  launcher, release manifest, source provenance, checksums, and an unpacked
+  AkuBridge payload, so judges can try the product without rebuilding four
+  repositories.
+- Rebuilt AkuSidecar from Node.js to Go while keeping the browser boundary,
+  SQLite continuity, structured reasoning contracts, and deterministic policy
+  authority explicit and testable.
+- Made preference-based filtering real: calibration, More/Less, and
+  `Should have selected` signals can promote, replace, demote, or suppress
+  ordinary candidates after repeated evidence, while material updates,
+  contradictions, evidence quality, and one discovery lane remain protected.
+- Added event-level deduplication, source-fidelity adapters for X, LinkedIn,
+  and Facebook, bounded media recovery, onboarding recovery, and a local model
+  usage ledger without giving Codex direct browser or filesystem control.
+- Built AkuSupervisor's visible lifecycle ownership and read-only MCP adapter,
+  giving future agentic integrations structured status and logs instead of
+  unrestricted operating-system access.
 
 ## What I learned
 
