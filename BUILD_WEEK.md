@@ -1,11 +1,11 @@
 # AkuBrowser - OpenAI Build Week evidence
 
-Status: **submission-ready candidate**  
+Status: **submission-ready preview**
 Current preview: **`0.7.0-preview.3`**
-Supported platform: **Windows x64**
+Supported platforms: **Windows x64; macOS x64 and arm64**
 Supported sources: **X, Facebook, and LinkedIn**
 
-This document connects the private repositories, distinguishes the
+This document connects the component repositories, distinguishes the
 pre-existing prototype from Build Week extensions, describes how Codex and
 GPT-5.6 contributed, and gives judges a path to run the project without
 rebuilding it. The canonical story is
@@ -27,9 +27,9 @@ relevance selection or ranking.
 
 All repositories carry the Apache License 2.0.
 
-| Private repository | Build Week role | Runtime |
+| Repository | Build Week role | Runtime |
 | --- | --- | --- |
-| [AkuBrowser](https://github.com/abangkis/AkuBrowser) | Product contracts, schemas, release authority, Windows packaging, aggregate checks, final story, and this evidence | PowerShell |
+| [AkuBrowser](https://github.com/abangkis/AkuBrowser) | Product contracts, schemas, release authority, Windows and macOS packaging, aggregate checks, final story, and this evidence | PowerShell + POSIX shell |
 | [AkuBridge](https://github.com/abangkis/AkuBridge) | Bounded, read-only Manifest V3 capture for X, LinkedIn, and Facebook | Chrome JavaScript |
 | [AkuSidecar](https://github.com/abangkis/AkuSidecar) | UI, SQLite, sessions, preference filtering, semantic events, AI Signals, and Codex App Server integration | Go |
 | [AkuSupervisor](https://github.com/abangkis/AkuSupervisor) | Optional development lifecycle ownership, health, logs, cooperative Bridge reload, and read-only MCP inspection | Rust |
@@ -67,8 +67,9 @@ The Build Week work includes:
   explicitly confirmed Hide modes (`37180f6`, `3c9691f`);
 - strengthening onboarding, session recovery, exact-evidence suppression,
   resurfacing, reset, and Sidecar-restart behavior;
-- packaging a verifiable Windows x64 preview with launchers, provenance,
-  checksums, and a bundled unpacked AkuBridge payload (`adedc2a`, `7f2ca26`);
+- packaging verifiable Windows x64 and macOS x64/arm64 previews with native
+  Sidecar executables, platform launchers, provenance, checksums, and a bundled
+  unpacked AkuBridge payload (`adedc2a`, `7f2ca26`);
   and
 - extending AkuSupervisor with lifecycle ownership, cooperative Bridge reload,
   health and log monitoring, read-only MCP support, and cross-repository
@@ -96,36 +97,41 @@ select only profiles from a bounded catalog; arbitrary model strings are not
 accepted. AkuSidecar remains authoritative for permissions, budgets,
 validation, filtering, persistence, and rendering.
 
-## Private judge access
+## Repository and release access
 
-The submission uses private repositories. Share AkuBrowser, AkuBridge,
-AkuSidecar, AkuSupervisor, and AkuSupervisorConformance with
-`testing@devpost.com` and `build-week-event@openai.com`. The Devpost repository
-field should point to AkuBrowser, which links the other repositories and the
-exact preview artifact.
+The Devpost repository field should point to AkuBrowser, the distribution
+authority that links the component repositories, canonical documentation, and
+the exact GitHub Release assets. If any supporting repository is private when
+the submission is reviewed, grant the required judge accounts access to that
+repository separately.
 
 ## Judge installation path
 
-Use the existing artifact:
+Choose the published artifact matching the judge machine from the
+[`v0.7.0-preview.3` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.0-preview.3):
 
 ```text
-artifacts/AkuBrowser-0.7.0-preview.3-windows-x64.zip
+AkuBrowser-0.7.0-preview.3-windows-x64.zip
+AkuBrowser-0.7.0-preview.3-macos-universal.zip
 ```
 
-1. Extract the complete ZIP on Windows x64.
+1. Extract the complete ZIP on Windows x64, Intel Mac, or Apple-silicon Mac as
+   indicated by the artifact name.
 2. Confirm Codex App with App Server is installed and locally signed in.
 3. Confirm Chrome is signed in to each source that will be enabled.
 4. Open `chrome://extensions`, enable Developer mode, choose **Load unpacked**,
    and select the bundled `AkuBridge` directory.
-5. Run `.\Start-AkuBrowser.ps1` from PowerShell and keep the terminal open.
-   `Start-AkuBrowser.cmd` is the fallback launcher.
+5. On Windows, run `.\Start-AkuBrowser.ps1` from PowerShell;
+   `Start-AkuBrowser.cmd` is the fallback. On macOS, run
+   `./Start-AkuBrowser.sh` from Terminal or double-click
+   `Start-AkuBrowser.command`. Keep the launcher terminal open.
 6. Complete onboarding and calibration, run **Check for updates**, provide
    More/Less feedback, and inspect Update Inbox diagnostics.
 7. Press Ctrl+C in the launcher terminal to stop AkuBrowser.
 
 The preview never collects Codex or social credentials. Automatic extension
-installation, login assistance, a signed installer, macOS/Linux support, and a
-bundled Supervisor are future work.
+installation, login assistance, signed/notarized installers, automatic
+updates, Linux support, and a bundled Supervisor are future work.
 
 ## Verification
 
@@ -135,6 +141,13 @@ From AkuBrowser:
 .\scripts\check.ps1
 .\scripts\build-windows-preview.ps1
 .\scripts\test-windows-preview.ps1
+```
+
+On macOS, build and smoke-test the native host architecture with:
+
+```sh
+./scripts/build-macos-preview.sh
+./scripts/test-macos-preview.sh
 ```
 
 The gate checks versions and schemas, runs AkuSidecar Go tests, runs AkuBridge
@@ -154,9 +167,10 @@ artifact requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees.
 
 The final story describes current `0.7.0-preview.3` behavior: three registered
 sources, real preference filtering, cross-source semantic event resolution,
-AI Fast and Deep Detection, finite Timeline composition, portable Windows
-packaging, and AkuSupervisor as optional development tooling with read-only MCP
-inspection. Automatic extension installation, a guided installer, a bundled
-Supervisor, additional websites, and macOS/Linux support remain future work.
+AI Fast and Deep Detection, finite Timeline composition, portable Windows and
+macOS packaging, and AkuSupervisor as optional development tooling with
+read-only MCP inspection. Automatic extension installation, a guided signed
+installer, automatic updates, a bundled Supervisor, additional websites, and
+Linux support remain future work.
 
 Official rules: [OpenAI Build Week rules](https://openai.devpost.com/rules).

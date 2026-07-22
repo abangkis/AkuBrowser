@@ -1,6 +1,6 @@
 # AkuBrowser 0.7.0-preview.3
 
-`0.7.0-preview.3` is the current source-aligned Windows and macOS preview candidate. It
+`0.7.0-preview.3` is the current source-aligned Windows and macOS preview. It
 retains the unified packaging boundary established by preview.1 and adds the
 current three-source, progressive scheduling, native-resurface, execution
 timing, onboarding recovery, and AI Signals controls. This is the packaged
@@ -15,8 +15,9 @@ AkuBrowser is the distribution authority: it owns portable bundle assembly,
 release provenance, launchers, checksums, and acceptance documentation.
 AkuSidecar and AkuBridge remain the authoritative source-component projects.
 
-The Windows delivery format is a portable x64 ZIP, not an installer. The macOS
-delivery format is a portable ZIP for x64 or arm64. Both contain the Sidecar
+The Windows delivery format is a portable x64 ZIP, not an installer. The
+published macOS delivery is one universal portable ZIP containing both x64 and
+arm64 Sidecar slices. Both platform bundles contain the Sidecar
 executable, release configuration, the verified unpacked Bridge payload, and a
 foreground launcher. The packages require no AkuSupervisor process or
 development workspace path. Windows stores user data under
@@ -65,6 +66,24 @@ check before opening the local UI. See the bundled
 [`release/macos/README.md`](../release/macos/README.md) for Codex discovery,
 custom executable paths, and checksum verification.
 
+## Build and acceptance
+
+Windows x64 artifacts are built and smoke-tested with
+`scripts/build-windows-preview.ps1` and `scripts/test-windows-preview.ps1`.
+macOS artifacts are built on a Mac with `scripts/build-macos-preview.sh` and
+smoke-tested with `scripts/test-macos-preview.sh`. The build pipeline can
+produce native `x64` or `arm64` bundles for focused testing; the published
+`0.7.0-preview.3` asset is `macos-universal` and runs on Intel and Apple
+silicon.
+Both published platform bundles and their adjacent checksum files are available
+from the [`v0.7.0-preview.3` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.0-preview.3).
+
+The automated gates verify the bundle manifest, bundled-file checksums,
+Sidecar health, both supported loopback hostnames, fresh-database defaults, and
+the embedded UI. Final acceptance still requires a clean machine on the target
+OS and architecture. See [Windows preview acceptance](windows-preview-acceptance.md)
+and [macOS preview acceptance](macos-preview-acceptance.md).
+
 Future Store, private-test, or enterprise distribution is a separate release
 decision. The preview does not claim automatic extension installation.
 
@@ -93,8 +112,7 @@ reset.
 
 [`release/release-manifest.json`](../release/release-manifest.json) is the
 machine-readable release authority. The immutable `v0.7.0-preview.1` tags remain
-the historical compatibility checkpoint and must never be moved. Once this
-candidate is accepted, `v0.7.0-preview.3` tags must identify the exact source
-commits used by the published bundle in each AkuWorkspace repository. Local
-candidate builds before that acceptance record their source commits and dirty
-state directly in `artifact-manifest.json`.
+the historical compatibility checkpoint and must never be moved. The published
+`v0.7.0-preview.3` tags identify the release source checkpoints; each generated
+bundle additionally records its exact AkuBrowser, AkuSidecar, and AkuBridge
+commits and dirty state in `artifact-manifest.json`.

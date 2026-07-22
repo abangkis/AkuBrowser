@@ -87,7 +87,8 @@ extended during OpenAI Build Week. Working with Codex, the project rewrote
 AkuSidecar from Node.js to Go, moved runtime reasoning to Codex App Server,
 activated preference filtering, added cross-source semantic event resolution
 and AI Signals, expanded capture to Facebook, strengthened recovery, and built
-a verifiable Windows x64 portable preview.
+verifiable portable previews for Windows x64 and macOS on Intel and Apple
+silicon.
 
 Codex accelerated architecture, implementation, live debugging, tests,
 documentation, and release preparation. In the running product, GPT-5.6 powers
@@ -97,7 +98,7 @@ for permissions, budgets, validation, preference authority, SQLite state, and
 final composition.
 
 The submission evidence, the distinction between earlier work and dated
-submission-period extensions, and the private-repository judge workflow are in
+submission-period extensions, and the release/judge workflow are in
 [`BUILD_WEEK.md`](BUILD_WEEK.md). The copy-ready project story is in
 [`docs/openai-build-week-submission.md`](docs/openai-build-week-submission.md).
 
@@ -107,14 +108,21 @@ needed on the build machine; end users only need Codex App/App Server and
 Chrome. Build and smoke-test the host architecture with:
 
 ```sh
-./scripts/build-macos-preview.sh --allow-dirty
+./scripts/build-macos-preview.sh
 ./scripts/test-macos-preview.sh
 ```
 
-Use `--architecture arm64` or `--architecture universal` for Apple silicon or
-dual-architecture artifacts. The artifact directory, ZIP, and ZIP checksum are
-written beneath `artifacts/`. Installation and launcher details are in
+The default target matches the build Mac. Use `--architecture x64` or
+`--architecture arm64` for a native single-architecture artifact, or
+`--architecture universal` for the dual-architecture form published in the
+`0.7.0-preview.3` GitHub Release. Use
+`--allow-dirty` only for local pipeline development; a publishable artifact
+requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees. The artifact
+directory, ZIP, and ZIP checksum are written beneath `artifacts/`. Installation
+and launcher details are in
 [`release/macos/README.md`](release/macos/README.md).
+Published downloads are available from the
+[`v0.7.0-preview.3` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.0-preview.3).
 
 ## Canonical documentation
 
@@ -122,6 +130,7 @@ written beneath `artifacts/`. Installation and launcher details are in
 - [Runtime contract](docs/runtime-contract.md)
 - [Preview release](docs/preview-release.md)
 - [Windows preview acceptance](docs/windows-preview-acceptance.md)
+- [macOS preview acceptance](docs/macos-preview-acceptance.md)
 - [Build Week evidence and judge checklist](BUILD_WEEK.md)
 - [OpenAI Build Week final project story](docs/openai-build-week-submission.md)
 - [Bridge Contract v2](contracts/bridge-contract-v2.md)

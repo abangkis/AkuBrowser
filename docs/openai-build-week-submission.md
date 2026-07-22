@@ -69,8 +69,8 @@ AkuBrowser is divided into independent components:
   managed Codex App Server process for Acquisition Planning, Candidate
   Evaluation, Semantic Event Resolution, and AI Deep Detection.
 - **AkuBrowser** is the main product and integration repository. It owns the
-  architecture, canonical contracts, compatibility checks, Windows packaging,
-  and aggregate development workflows.
+  architecture, canonical contracts, compatibility checks, Windows and macOS
+  packaging, and aggregate development workflows.
 - **AkuSupervisor** is an optional Rust lifecycle tool for development. It owns
   visible process lifecycle, health, bounded logs, and cooperative AkuBridge
   reload. Its current MCP runtime surface is deliberately read-only; start,
@@ -107,8 +107,9 @@ The Build Week work includes:
   explicitly confirmed Hide modes;
 - strengthening onboarding, session recovery, exact-evidence suppression,
   resurfacing, reset, and Sidecar-restart behavior;
-- packaging a verifiable Windows x64 portable preview with launchers,
-  provenance, checksums, and a bundled unpacked AkuBridge payload; and
+- packaging verifiable Windows x64 and macOS x64/arm64 portable previews with
+  native Sidecar executables, platform launchers, provenance, checksums, and a
+  bundled unpacked AkuBridge payload; and
 - extending AkuSupervisor with lifecycle ownership, cooperative Bridge reload,
   health and log monitoring, read-only MCP support, and synchronized
   cross-repository regression tests.
@@ -138,7 +139,7 @@ validated, and browser movement and filtering authority remain deterministic.
 Development and runtime reasoning also compete for limited Codex tokens, which
 made model selection and usage telemetry part of the engineering work. Finally,
 the local stack spans Chrome, Go, SQLite, Codex, and Rust, so packaging it behind
-one clear Windows entry point became a product challenge of its own.
+clear Windows and macOS entry points became a product challenge of its own.
 
 ## Accomplishments that we are proud of
 
@@ -176,14 +177,15 @@ the original idea is useful and feasible.
 
 ## What's next for AkuBrowser
 
-AkuBrowser currently provides a Windows x64 portable preview for X, Facebook,
-and LinkedIn. The package includes AkuBridge and AkuSidecar; AkuSupervisor
-remains separate development tooling. Our immediate next step is to simplify
-installation and updates through one guided product experience and evaluate
-bundling AkuSupervisor as the local lifecycle engine.
+AkuBrowser currently provides portable previews for Windows x64 and macOS on
+Intel and Apple silicon for X, Facebook, and LinkedIn. Each package includes
+AkuBridge and a native AkuSidecar; AkuSupervisor remains separate,
+Windows-focused development tooling. Our next direction is to simplify
+installation and updates through one guided product experience and evaluate a
+portable local lifecycle boundary.
 
 Future versions will support more social platforms, other websites, additional
-media types, and eventually macOS and Linux. The adapter architecture will
+media types, and Linux. The adapter architecture will
 become more generic and reusable without sacrificing source fidelity,
 preference authority, provenance, quiet capture, explicit consent, or the clear
 finish line.

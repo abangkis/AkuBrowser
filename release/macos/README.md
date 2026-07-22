@@ -5,7 +5,8 @@ unpacked Chrome extension. It does not include `AkuSupervisor`.
 
 ## Prerequisites
 
-- macOS on the architecture named by the bundle (`x64` for Intel or `arm64` for Apple silicon);
+- macOS on Intel or Apple silicon; the published `0.7.0-preview.3` universal
+  bundle contains native x64 and arm64 Sidecar slices;
 - Codex App with App Server available and locally signed in, or a compatible Codex CLI;
 - Google Chrome already signed in to every source you enable (X, LinkedIn, or Facebook).
 
