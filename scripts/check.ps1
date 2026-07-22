@@ -64,7 +64,7 @@ Assert-True ($sidecarConfig.reasoning.semanticEvent.effort -eq "high") "Semantic
 Assert-True ($sidecarConfig.reasoning.aiDetection.effort -eq "high") "AI Deep Detection must default to Luna High."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $sidecarRoot "package.json"))) "AkuSidecar must not contain a Node package."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $browserRoot "package.json"))) "AkuBrowser must not contain a Node package."
-Assert-True ($domain -match 'ApplicationVersion\s*=\s*"0\.7\.0-preview\.2"') "AkuSidecar version boundary is unexpected."
+Assert-True ($domain -match 'ApplicationVersion\s*=\s*"0\.7\.0-preview\.3"') "AkuSidecar version boundary is unexpected."
 Assert-True ($releaseManifest.components.akuSidecar.version -eq "0.7.0-preview.3") "AkuSidecar release manifest version is unexpected."
 Assert-True ($domain -match 'BridgeContractVersion\s*=\s*"aku-browser\.bridge\.v2"') "Bridge contract boundary is unexpected."
 Assert-True ($domain -match 'DefaultAIDetectionPresentation\s*=\s*"drawer"') "AI Detector must default to Drawer."
