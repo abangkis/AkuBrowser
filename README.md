@@ -36,7 +36,7 @@ application runtime of its own.
 
 | Repository | Responsibility | Runtime |
 | --- | --- | --- |
-| `AkuBrowser` | Product contract, canonical schemas, distribution assembly, integration and artifact checks | PowerShell only |
+| `AkuBrowser` | Product contract, canonical schemas, distribution assembly, integration and artifact checks | PowerShell + POSIX shell release tooling |
 | `AkuBridge` | Read-only bounded Chrome capture | Browser JavaScript / Node test tooling |
 | `AkuSidecar` | UI, sessions, SQLite, reasoning, selection, personalization | Go |
 | `AkuSupervisor` | Visible development process ownership, health, logs, cooperative Bridge reload, and read-only MCP inspection | Rust |
@@ -60,7 +60,9 @@ cd ..\AkuSidecar
 .\scripts\restart-dev.ps1
 ```
 
-Open `http://127.0.0.1:11122`. Load `..\AkuBridge` as an unpacked Chrome extension once; subsequent extension reloads are coordinated through AkuSupervisor.
+Open `http://127.0.0.1:11122` (or `http://localhost:11122`). Load
+`..\AkuBridge` as an unpacked Chrome extension once; subsequent extension
+reloads are coordinated through AkuSupervisor.
 
 The preview package assumes Codex App with App Server is installed and signed
 in locally, and that Chrome is already signed in to every enabled source. AkuBridge
@@ -98,6 +100,21 @@ The submission evidence, the distinction between earlier work and dated
 submission-period extensions, and the private-repository judge workflow are in
 [`BUILD_WEEK.md`](BUILD_WEEK.md). The copy-ready project story is in
 [`docs/openai-build-week-submission.md`](docs/openai-build-week-submission.md).
+
+On macOS, the same preview boundary is packaged with the native Go Sidecar and
+the unpacked AkuBridge extension. Go, Node.js, npm, and the macOS `zip` tools are
+needed on the build machine; end users only need Codex App/App Server and
+Chrome. Build and smoke-test the host architecture with:
+
+```sh
+./scripts/build-macos-preview.sh --allow-dirty
+./scripts/test-macos-preview.sh
+```
+
+Use `--architecture arm64` or `--architecture universal` for Apple silicon or
+dual-architecture artifacts. The artifact directory, ZIP, and ZIP checksum are
+written beneath `artifacts/`. Installation and launcher details are in
+[`release/macos/README.md`](release/macos/README.md).
 
 ## Canonical documentation
 

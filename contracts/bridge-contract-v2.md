@@ -13,7 +13,9 @@ payload aliases, build identities, or compatibility behavior.
 - AkuSupervisor owns process lifecycle and the single cooperative
   `reload_self` mutation; it does not gain browser-content authority.
 
-The only origin is `http://127.0.0.1:11122`. Bridge-authenticated requests
+The supported local UI origins are `http://127.0.0.1:11122` and
+`http://localhost:11122`. `127.0.0.1` remains the canonical launcher origin;
+`localhost` is an equivalent loopback alias. Bridge-authenticated requests
 carry all three headers:
 
 ```text

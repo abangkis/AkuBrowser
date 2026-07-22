@@ -1,6 +1,6 @@
 # AkuBrowser 0.7.0-preview.3
 
-`0.7.0-preview.3` is the current source-aligned Windows preview candidate. It
+`0.7.0-preview.3` is the current source-aligned Windows and macOS preview candidate. It
 retains the unified packaging boundary established by preview.1 and adds the
 current three-source, progressive scheduling, native-resurface, execution
 timing, onboarding recovery, and AI Signals controls. This is the packaged
@@ -15,11 +15,13 @@ AkuBrowser is the distribution authority: it owns portable bundle assembly,
 release provenance, launchers, checksums, and acceptance documentation.
 AkuSidecar and AkuBridge remain the authoritative source-component projects.
 
-The first Windows delivery format is a portable x64 ZIP, not an installer. It
-contains the Sidecar executable, release configuration, the verified unpacked
-Bridge payload, and a foreground launcher. The package stores user data under
-`%LOCALAPPDATA%\AkuBrowser` and requires no AkuSupervisor process or development
-workspace path.
+The Windows delivery format is a portable x64 ZIP, not an installer. The macOS
+delivery format is a portable ZIP for x64 or arm64. Both contain the Sidecar
+executable, release configuration, the verified unpacked Bridge payload, and a
+foreground launcher. The packages require no AkuSupervisor process or
+development workspace path. Windows stores user data under
+`%LOCALAPPDATA%\AkuBrowser`; macOS stores it under
+`~/Library/Application Support/AkuBrowser/data`.
 
 ## Preview prerequisites
 
@@ -56,6 +58,12 @@ half of the local system available. After the extension is ready, run the
 bundled `.\Start-AkuBrowser.ps1` launcher from PowerShell and confirm the
 Bridge-ready status. `Start-AkuBrowser.cmd` remains a convenience fallback and
 delegates to the same PowerShell script.
+
+On macOS, run `./Start-AkuBrowser.sh` from Terminal or double-click
+`Start-AkuBrowser.command`; the macOS launcher performs the same Sidecar health
+check before opening the local UI. See the bundled
+[`release/macos/README.md`](../release/macos/README.md) for Codex discovery,
+custom executable paths, and checksum verification.
 
 Future Store, private-test, or enterprise distribution is a separate release
 decision. The preview does not claim automatic extension installation.

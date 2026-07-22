@@ -49,7 +49,9 @@ directory will make Chrome unable to reload it.
 `Start-AkuBrowser.ps1` is the primary launcher and exposes the diagnostic and
 configuration options documented below. `Start-AkuBrowser.cmd` delegates to the
 same script and is retained only as a convenience fallback. The launcher opens
-`http://127.0.0.1:11122` after Sidecar becomes healthy.
+`http://127.0.0.1:11122` after Sidecar becomes healthy; `http://localhost:11122`
+is also supported. Reload AkuBridge and refresh the page after switching
+between the two origins.
 User data is stored under `%LOCALAPPDATA%\AkuBrowser\data` and is not removed
 when the extracted bundle is replaced.
 

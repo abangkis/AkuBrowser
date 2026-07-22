@@ -10,6 +10,19 @@
       "format": "portable-zip",
       "launcher": "Start-AkuBrowser.cmd"
     },
+    "macos": {
+      "architectures": [
+        "x64",
+        "arm64"
+      ],
+      "format": "portable-zip",
+      "launcher": "Start-AkuBrowser.command",
+      "dataDirectory": "~/Library/Application Support/AkuBrowser/data"
+    },
+    "localOrigins": [
+      "http://127.0.0.1:11122",
+      "http://localhost:11122"
+    ],
     "akuBridgeInstallation": "manual-unpacked"
   },
   "components": {
@@ -29,6 +42,7 @@
       "AkuSidecar",
       "AkuBridge unpacked payload",
       "Windows launcher and release configuration",
+      "macOS launcher and release configuration",
       "Release provenance and SHA-256 checksums"
     ],
     "excludes": [
