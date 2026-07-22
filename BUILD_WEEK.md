@@ -1,7 +1,7 @@
 # AkuBrowser - OpenAI Build Week evidence
 
 Status: **submission-ready candidate**  
-Current preview: **`0.7.0-preview.2`**  
+Current preview: **`0.7.0-preview.3`**
 Supported platform: **Windows x64**
 Supported sources: **X, Facebook, and LinkedIn**
 
@@ -109,7 +109,7 @@ exact preview artifact.
 Use the existing artifact:
 
 ```text
-artifacts/AkuBrowser-0.7.0-preview.2-windows-x64.zip
+artifacts/AkuBrowser-0.7.0-preview.3-windows-x64.zip
 ```
 
 1. Extract the complete ZIP on Windows x64.
@@ -152,7 +152,7 @@ artifact requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees.
 
 ## Truth boundary
 
-The final story describes current `0.7.0-preview.2` behavior: three registered
+The final story describes current `0.7.0-preview.3` behavior: three registered
 sources, real preference filtering, cross-source semantic event resolution,
 AI Fast and Deep Detection, finite Timeline composition, portable Windows
 packaging, and AkuSupervisor as optional development tooling with read-only MCP

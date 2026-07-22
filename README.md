@@ -1,6 +1,6 @@
 # AkuBrowser
 
-Current preview release: **`0.7.0-preview.2`**. The canonical component tuple,
+Current preview release: **`0.7.0-preview.3`**. The canonical component tuple,
 bundle boundary, and preview prerequisites are recorded in
 [`release/release-manifest.json`](release/release-manifest.json).
 

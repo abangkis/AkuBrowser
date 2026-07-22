@@ -1,6 +1,6 @@
-# AkuBrowser 0.7.0-preview.2
+# AkuBrowser 0.7.0-preview.3
 
-`0.7.0-preview.2` is the current source-aligned Windows preview candidate. It
+`0.7.0-preview.3` is the current source-aligned Windows preview candidate. It
 retains the unified packaging boundary established by preview.1 and adds the
 current three-source, progressive scheduling, native-resurface, execution
 timing, onboarding recovery, and AI Signals controls. This is the packaged
@@ -86,7 +86,7 @@ reset.
 [`release/release-manifest.json`](../release/release-manifest.json) is the
 machine-readable release authority. The immutable `v0.7.0-preview.1` tags remain
 the historical compatibility checkpoint and must never be moved. Once this
-candidate is accepted, `v0.7.0-preview.2` tags must identify the exact source
+candidate is accepted, `v0.7.0-preview.3` tags must identify the exact source
 commits used by the published bundle in each AkuWorkspace repository. Local
 candidate builds before that acceptance record their source commits and dirty
 state directly in `artifact-manifest.json`.
