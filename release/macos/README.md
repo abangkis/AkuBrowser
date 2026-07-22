@@ -35,9 +35,10 @@ The launcher opens the canonical `http://127.0.0.1:11122` origin. You may also
 use `http://localhost:11122`; reload the unpacked AkuBridge extension and
 refresh the AkuBrowser tab after switching between the two origins.
 
-The launcher checks `AKU_CODEX_PATH`, the Codex App locations known to
-AkuSidecar, and common CLI locations. It accepts a candidate only after the
-App Server capability probe succeeds. To inspect discovery without starting:
+The launcher checks `AKU_CODEX_PATH`, the standard `Codex.app` and
+`ChatGPT.app` locations, the Codex-managed runtime directory, and common CLI
+locations. It accepts a candidate only after the App Server capability probe
+succeeds. To inspect discovery without starting:
 
 ```sh
 ./Start-AkuBrowser.sh --diagnose-codex
