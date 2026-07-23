@@ -90,7 +90,9 @@ Users may split a false merge with `Not the same event`, attach a report to one 
 
 ## AI origin signals
 
-AI Detector is a presentation and user-control layer, not an authorship oracle. It records evidence-bounded `AI origin signals`; it never changes candidate selection, personalized ranking, semantic-event membership, or unique Timeline capacity. The first implemented surface is authored text. Image and video assessment remain future extensions and must not be implied by a text result.
+AI Detector is a presentation and user-control layer, not an authorship oracle. It records evidence-bounded `AI origin signals`; it never changes candidate selection, personalized ranking, semantic-event membership, or unique Timeline capacity. Text assessment remains scoped to the authored social post. Image provenance is a separate asynchronous contract: AkuSidecar may inspect an already captured image for an embedded C2PA manifest after the Timeline is usable. A C2PA result describes the attached image only and must never be promoted into a claim that the post caption or author is AI-generated. Video provenance is not implemented.
+
+The first image-provenance adapter invokes local `c2patool` with remote manifest and OCSP fetching disabled. It downloads only HTTPS images from the source registry's media-host allowlist into a bounded temporary file, stores the verification result and SHA-256 identity, and deletes the bytes after inspection. A missing manifest is neutral. An invalid manifest is visible as failed provenance, not AI evidence. A valid manifest whose action declares `trainedAlgorithmicMedia` or `compositeWithTrainedAlgorithmicMedia` is a direct attached-media signal. Signing trust is retained separately so AkuBrowser can distinguish verified trusted provenance from a valid but not locally trusted declaration.
 
 Detection has two independent stages:
 
@@ -101,9 +103,11 @@ Labels name the evidence rather than using the ambiguous blanket term “AI disc
 
 Settings expose three locked presentation modes:
 
-- `drawer` is the preview default and routes unseen strong-signal posts into the generic side-pane host, while a post already seen inline does not disappear abruptly when an asynchronous result arrives;
+- `drawer` is the preview default and routes strong-signal posts into the generic side-pane host. Inference-only results preserve an already-seen inline item, but direct C2PA AI-media provenance moves the item into the drawer even after publication because the attached image has crossed the configured secondary-content boundary;
 - `inline` leaves every retained post in the Timeline with one compact expandable AI-signal control. Posts without a strong assessment use a quiet `AI signal · Neutral` state rather than claiming they are definitely human-authored;
 - `hide` is a high-risk mode protected by warnings and the exact typed phrase `HIDE STRONG AI SIGNALS`. It hides only direct-origin evidence, Deep-confirmed strong signals, or posts explicitly marked AI by the user. Preliminary inferred signals are never hidden. Items remain stored locally and reappear when Hide is disabled.
+
+When a direct C2PA image signal routes an item into the drawer, `Mark as not AI-generated` is the user's highest personal presentation authority and restores the item to the Timeline. The provenance receipt remains inspectable rather than being deleted. Clearing that correction restores system routing.
 
 The side pane is a generic Timeline alternate-view host. AI Detector supplies the first `AI Signals` pane, but does not own the underlying UI primitive. On wide layouts the unbounded edge of its closed tab and the open edge of its pane attach directly to the left edge of the active Timeline stream rather than floating at the viewport edge. Both the closed tab and open pane derive their vertical anchor from the first Timeline card below the latest `Checked` divider, then inset that anchor by the card's actual top-left radius so the attachment begins where the card edge is straight. This alignment remains live while the progress panel changes the Timeline layout. The pane grows upward as that card scrolls toward the viewport inset, then remains bounded and floating at its maximum viewport height. Opening it fully hides the closed tab so no control leaks around the pane edge. Narrower layouts retain the bounded overlay treatment.
 
