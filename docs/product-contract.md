@@ -1,6 +1,6 @@
 # AkuBrowser product contract
 
-Status: canonical product boundary, 17 July 2026.
+Status: canonical product boundary, 23 July 2026.
 
 ## Promise
 
@@ -19,11 +19,19 @@ Social engagement is useful for discovery, but it is indirect behavioral inferen
 
 ## First-run experience
 
-1. The user chooses X, LinkedIn, or both.
+1. The user chooses among the registered X, LinkedIn, and Facebook sources.
 2. AkuBrowser performs one bounded capture to obtain real candidates.
 3. Before the Timeline opens, the user calibrates a source-balanced sample with More, Neutral, Less, or a capture issue.
 4. The local profile becomes active when repeated directional evidence is sufficient.
 5. Later checks go directly to the finite Timeline and Update Inbox.
+
+Later checks may also be prepared by Auto Update while AkuSidecar is running.
+Prepared batches remain outside the Timeline until explicitly opened, or until
+the bounded finish-line auto-load policy reveals a batch that existed when the
+reading session began. Queue, freshness, and local model-budget limits prevent
+this from becoming an endless background feed. See the reader-facing lifecycle
+in [`auto-update-guide.md`](auto-update-guide.md) and its normative boundaries in
+[`auto-update-contract.md`](auto-update-contract.md).
 
 Reset learning removes calibration, More/Less feedback, and the fitted profile. Historical selection corrections and their restored Timeline items remain auditable, but corrections older than the reset boundary no longer train the rebuilt profile. Full reset first creates a verified SQLite backup, then clears Timeline, runs, learning, onboarding, settings, and native content-continuity history while preserving the Bridge identity.
 

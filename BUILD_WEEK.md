@@ -170,7 +170,7 @@ sources, real preference filtering, cross-source semantic event resolution,
 AI Fast and Deep Detection, finite Timeline composition, portable Windows and
 macOS packaging, and AkuSupervisor as optional development tooling with
 read-only MCP inspection. Automatic extension installation, a guided signed
-installer, automatic updates, a bundled Supervisor, additional websites, and
+installer, automatic software updates, a bundled Supervisor, additional websites, and
 Linux support remain future work.
 
 Official rules: [OpenAI Build Week rules](https://openai.devpost.com/rules).

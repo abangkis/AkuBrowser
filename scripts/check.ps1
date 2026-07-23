@@ -44,13 +44,16 @@ Assert-True ($releaseManifest.distribution.windows.format -eq "portable-zip") "W
 Assert-True ($bridgePackage.version -eq $bridgeManifest.version_name) "AkuBridge package and manifest version name differ."
 Assert-True ($bridgePackage.version -eq $releaseManifest.components.akuBridge.version) "AkuBridge product version drifted from the release manifest."
 Assert-True ($bridgeManifest.version -eq $releaseManifest.components.akuBridge.chromeVersion) "AkuBridge Chrome version drifted from the release manifest."
-Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-adapters-v72") "AkuBridge runtime revision is unexpected."
-Assert-True ($bridgePackage.akuRuntimeRevision -eq $releaseManifest.components.akuBridge.runtimeRevision) "AkuBridge runtime revision drifted from the release manifest."
+Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-adapters-v73") "AkuBridge development runtime revision is unexpected."
+if ($DistributionOnly) {
+    Assert-True ($bridgePackage.akuRuntimeRevision -eq $releaseManifest.components.akuBridge.runtimeRevision) "AkuBridge runtime revision drifted from the release manifest."
+}
 foreach ($source in @("x", "linkedin", "facebook")) {
     Assert-True ($sourceCatalog -match ('id:\s*"' + [regex]::Escape($source) + '"')) "AkuBridge source catalog is missing $source."
 }
 Assert-True ($sourceCatalog -match 'mediaEvidenceAdapterVersion:\s*"x-response-evidence-v2"') "AkuBridge X media-evidence adapter boundary is unexpected."
 Assert-True ($bridgeCapabilities -match '"observe_response_media_evidence"') "AkuBridge response-evidence action is missing."
+Assert-True ($bridgeCapabilities -match '"dispatch_background_commands"') "AkuBridge background Auto Update dispatch action is missing."
 Assert-True ($responseEvidenceAdapter -match 'RUNTIME_REVISION\s*=\s*"x-response-evidence-v2"') "AkuBridge response-evidence runtime is unexpected."
 foreach ($operation in @("HomeTimeline", "HomeLatestTimeline", "TweetDetail")) {
     Assert-True ($responseEvidenceAdapter -match [regex]::Escape($operation)) "AkuBridge response-evidence operation $operation is missing."

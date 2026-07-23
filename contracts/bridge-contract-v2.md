@@ -29,17 +29,18 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge product version `0.7.0-preview.3` / Chrome manifest version `0.7.0.2`;
-- runtime revision `source-adapters-v72`;
-- build id `aku-bridge-0.7.0-preview.3-source-adapters-v72`; and
+- runtime revision `source-adapters-v73`;
+- build id `aku-bridge-0.7.0-preview.3-source-adapters-v73`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
 current-process heartbeat is `reconnecting`; any observed mismatch is
 `incompatible`. A session may start only when the current heartbeat is exact.
-The exact v60 capability set includes
+The exact v73 capability set includes
 `mediaEvidenceAdapterVersions.x=x-response-evidence-v2` and the bounded
-`observe_response_media_evidence` action. These declare evidence observation,
-not authority to issue provider requests or change browser focus.
+`observe_response_media_evidence` and `dispatch_background_commands` actions.
+These declare evidence observation and bounded Sidecar-command dispatch, not
+authority to issue provider requests or take unbounded browser control.
 
 ## Page relay messages
 
@@ -53,6 +54,7 @@ not authority to issue provider requests or change browser focus.
 - `AKU_BROWSER_X_MEDIA_EVIDENCE_RESULT`
 - `AKU_BROWSER_X_MEDIA_EVIDENCE_FAILED`
 - `AKU_BROWSER_BRIDGE_RELOAD_SELF`
+- `AKU_BROWSER_CONFIGURE_BACKGROUND_DISPATCH`
 - `AKU_BROWSER_BRIDGE_ERROR`
 
 The relay transports only bounded commands, capability metadata, observations,
@@ -68,6 +70,19 @@ account, or filesystem authority.
    `POST /api/bridge/commands/{id}/observation`, or one structured failure to
    `POST /api/bridge/commands/{id}/failure`.
 5. AkuSidecar validates, persists, reasons, selects, and advances the session.
+
+When Auto Update is enabled, the trusted AkuBrowser page may give the Bridge
+service worker the loopback endpoint and durable Bridge token. The service
+worker stores only that local dispatch configuration, polls the authenticated
+pending-command endpoint at a bounded one-minute cadence, and executes the
+same persisted command lifecycle. A `401` or `403` deletes the stored token and
+stops the alarm until the trusted page configures it again. Claiming a command
+remains atomic, so page dispatch and background dispatch cannot execute the
+same command twice. A managed capture lease remains bound across acquisition
+follow-ups and is released by the service worker only after the owning session
+becomes terminal. Each background poll also republishes the authenticated
+capability heartbeat so a restarted Sidecar can re-establish exact compatibility
+without an open UI page.
 
 Commands may authorize at most two acquisition rounds. Movement, timeout,
 settle, snapshot, block, source-freshness, visibility, tab ownership, and
