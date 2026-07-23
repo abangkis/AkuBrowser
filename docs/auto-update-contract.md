@@ -9,17 +9,23 @@ boundaries allow it.
 
 ## Scheduling and authority
 
-- **Adaptive** is the default. It catches up after AkuBrowser is opened and only
-  continues while access is recent.
-- **Fixed periodic** checks at the chosen minimum interval while AkuSidecar is
-  alive and the configured AkuBridge service worker can reach it.
+- **Adaptive activity** is the default. It catches up after AkuBrowser is
+  opened and only continues while actual pointer, keyboard, touch, wheel, or
+  visible-tab-return activity is recent. Status polling is not user activity.
+- **Fixed background** does not require recent human activity while AkuSidecar
+  is alive and the configured AkuBridge service worker can reach it.
+- Open prepared-queue capacity is refilled on a configurable 3-, 5-, or
+  10-minute cadence, with 5 minutes as the default. Revealing or expiring a
+  prepared batch establishes a new vacancy boundary; a failed or empty
+  automatic attempt establishes the next attempt boundary. Another automatic
+  run cannot begin before the later applicable boundary.
 - Manual **Check for updates** and user settings remain authoritative. Manual
   and automatic sessions never overlap.
 - Settings exposes **Run automatic check now** for an explicit user-triggered
   background run. It keeps the same onboarding, Bridge, queue, active-session,
   and token-budget gates, but deliberately bypasses only the scheduler's
-  interval and adaptive recent-use gates. Resetting the quota alone never
-  bypasses the interval.
+  configured refill delay and adaptive recent-use gates. Resetting the quota alone
+  never bypasses those scheduler boundaries.
 - Automatic work pauses when the prepared queue is full or its daily allowance
   is exhausted. The selectable daily boundaries are 1M, 2M, 3M, and 5M tokens,
   with 1M as the default. A protected share is unavailable to automatic work
@@ -48,6 +54,13 @@ Urgency is time sensitivity, not importance or popularity. The most urgent item
 in a prepared batch can shorten its effective freshness window to 12, 4, or 2
 hours. Expired batches remain represented by their underlying run diagnostics;
 they are not published into the Timeline.
+
+Expiration opens a queue slot but does not count as user activity. Adaptive
+activity leaves that slot empty while the user is inactive and resumes on
+return, preventing unattended freshness churn. Fixed background may refill the
+slot while the user is away. The status contract exposes prepared count,
+configured limit, and available slots so this state is visible rather than
+inferred.
 
 ## Model budget
 
@@ -88,9 +101,9 @@ state from SQLite and catches up when policy allows.
 
 The first trusted AkuBrowser page access configures AkuBridge with the local
 Sidecar endpoint and durable Bridge token. AkuBridge then polls for persisted
-pending capture commands at a bounded one-minute cadence, so Fixed periodic
-work can continue after the page closes. Adaptive mode still requires recent
-UI access by policy. Invalid or rotated credentials are deleted by AkuBridge
+pending capture commands at a bounded one-minute cadence, so Fixed background
+work can continue after the page closes. Adaptive activity still requires
+recent human interaction by policy. Invalid or rotated credentials are deleted by AkuBridge
 after an authenticated rejection and are configured again on the next trusted
 page access. Background and page dispatch both claim the same command, so only
 one can win. AkuBridge persists the active capture lease across bounded

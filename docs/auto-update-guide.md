@@ -20,26 +20,37 @@ alive. It also requires compatible AkuBridge state, completed onboarding and
 first-run calibration, no active manual or automatic check, queue capacity, and
 enough local model budget for the estimated next run.
 
-The configured interval is a minimum distance between terminal checks, not an
-appointment on the clock. With the default four-hour interval, a check that
-finishes at 10:20 cannot be followed by another automatic check before 14:20.
-It may start later if another boundary is still blocking it.
+The scheduler treats the prepared queue as bounded capacity, not as a
+four-hour appointment. When a slot opens because a batch is revealed, expires,
+or a prior automatic check produced no prepared batch, the scheduler waits for
+the configured refill delay before it may try to refill that slot. The setting
+offers 3, 5, and 10 minutes; 5 minutes is the default. If more capacity
+remains after the next check, another refill may start no sooner than that
+delay later. Queue and model-budget boundaries can delay it further.
 
-**Adaptive** scheduling associates work with recent use. Opening or using
-AkuBrowser records recent access. If the minimum interval has passed, the
-scheduler may catch up; after access is no longer recent, it waits again.
-**Fixed periodic** scheduling does not require recent UI access. While
-AkuSidecar is alive, its bounded scheduler keeps checking the interval and the
-other admission boundaries. AkuBridge's service worker can claim pending
-capture commands even when the AkuBrowser page is closed. Neither mode starts
-a stopped AkuSidecar or bypasses queue, budget, or active-session limits.
+**Adaptive activity** is the default and associates refilling with actual user
+activity. Opening AkuBrowser records one access; later pointer, keyboard,
+touch, wheel, or visible-tab-return activity renews it at a bounded rate.
+Background status polling does not count. After activity is no longer recent,
+the scheduler pauses even when freshness expiration opens a queue slot. When
+the user returns, AkuSidecar catches up under the same refill-delay, capacity,
+and budget rules. This prevents an unattended open page from continually
+replacing batches while its user sleeps.
+
+**Fixed background** scheduling does not require recent human activity. While
+AkuSidecar is alive, its bounded scheduler may refill an open slot after each
+configured refill boundary. This is an explicit opt-in for users who prefer prepared
+work while away; queue capacity, freshness, and budget still bound it.
+AkuBridge's service worker can claim pending capture commands even when the
+AkuBrowser page is closed. Neither mode starts a stopped AkuSidecar or bypasses
+queue, budget, or active-session limits.
 
 Settings also provides **Run automatic check now** when the user wants to
 start a background-style batch immediately. This explicit action still checks
 onboarding, Bridge readiness, prepared-batch capacity, active sessions, and
 the automatic token allowance. It bypasses only the scheduler's minimum
-interval and Adaptive recent-use wait; resetting the quota does not itself
-force a run.
+configured refill delay and Adaptive recent-use waits; resetting the quota does not
+itself force a run.
 
 ## Prepared batches and reading continuity
 
@@ -48,6 +59,11 @@ Prepared items remain absent from the Timeline query, but the session and its
 diagnostics are already visible in Update Inbox. The default finish-line action
 is **Open next prepared batch**. Revealing changes that batch from `prepared` to
 `visible` without rerunning reasoning.
+
+Settings reports queue capacity explicitly as prepared batches, configured
+limit, and open slots. A prepared count of zero therefore does not mean Auto
+Update is disabled; it means all configured slots are currently available for
+refill when scheduling, activity, and budget admission permit it.
 
 The existing Timeline remains in its current reading order when a prepared
 batch is opened. The newly revealed batch is placed after the material the user
@@ -100,6 +116,11 @@ popularity. Same-day information may shorten freshness to 12 hours, information
 useful within a few hours to 4 hours, and immediate or action-critical material
 to 2 hours. An expired unread batch is not published into the Timeline; its
 diagnostic session remains inspectable.
+
+Expiration opens queue capacity, but it does not by itself prove that the user
+is present. Adaptive activity therefore leaves the slot empty while the user
+is inactive and resumes when the user returns. Fixed background may refill it
+while the user is away, within its configured refill and budget boundaries.
 
 ## Capture lease and manual checks
 
