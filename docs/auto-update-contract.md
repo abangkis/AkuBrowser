@@ -15,6 +15,11 @@ boundaries allow it.
   alive and the configured AkuBridge service worker can reach it.
 - Manual **Check for updates** and user settings remain authoritative. Manual
   and automatic sessions never overlap.
+- Settings exposes **Run automatic check now** for an explicit user-triggered
+  background run. It keeps the same onboarding, Bridge, queue, active-session,
+  and token-budget gates, but deliberately bypasses only the scheduler's
+  interval and adaptive recent-use gates. Resetting the quota alone never
+  bypasses the interval.
 - Automatic work pauses when the prepared queue is full or its daily allowance
   is exhausted. The selectable daily boundaries are 1M, 2M, 3M, and 5M tokens,
   with 1M as the default. A protected share is unavailable to automatic work

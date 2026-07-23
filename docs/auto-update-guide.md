@@ -34,6 +34,13 @@ other admission boundaries. AkuBridge's service worker can claim pending
 capture commands even when the AkuBrowser page is closed. Neither mode starts
 a stopped AkuSidecar or bypasses queue, budget, or active-session limits.
 
+Settings also provides **Run automatic check now** when the user wants to
+start a background-style batch immediately. This explicit action still checks
+onboarding, Bridge readiness, prepared-batch capacity, active sessions, and
+the automatic token allowance. It bypasses only the scheduler's minimum
+interval and Adaptive recent-use wait; resetting the quota does not itself
+force a run.
+
 ## Prepared batches and reading continuity
 
 An automatic session with selected items becomes a prepared batch in SQLite.
