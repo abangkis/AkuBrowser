@@ -41,7 +41,9 @@ newest-first order and moving the reader to the top. Optional auto-load uses the
 finish-line continuity path and never scrolls on the user's behalf. The header
 also keeps **Update now** available as an independent `user/visible/user`
 request, regardless of whether Auto Update is enabled or a prepared batch is
-waiting.
+waiting. Starting another update remains blocked while any update is active,
+but revealing an already-terminal prepared batch remains available during that
+work: it changes only queue visibility and the local Timeline projection.
 
 The queue defaults to two batches. Unread batches expire at the configured
 freshness boundary. Candidate Evaluation supplies urgency on a stable rubric:

@@ -73,6 +73,10 @@ position, appends the revealed material after what the user just consumed, and
 marks its first item with a **New prepared batch** boundary. **Update now**
 remains a separate direct action beside these controls, so a reader never has
 to visit Settings or wait for the scheduler to request fresh material.
+If another update is already preparing the next batch, **Update now** remains
+disabled but both reveal paths remain usable for any previously prepared
+batch. Reading available material is independent from producing future
+material.
 
 Completing background preparation updates only queue status and available
 actions. It does not rerender the visible Timeline or move the reader.
@@ -135,10 +139,12 @@ cancellation, restart, or any cleanup that was not acknowledged earlier.
 Cleanup closes only Bridge-owned surfaces and preserves user-created tabs.
 
 Updates never overlap. A scheduler-triggered prepared update waits while a
-user-visible update is active, and a user action cannot start while preparation
-is running. The UI shows the active policy, keeps Inbox and Settings available,
-and converges every path on the same finite Timeline, provenance,
-personalization authority, and inspectable run ledger.
+user-visible update is active, and another update cannot start while
+preparation is running. Revealing a previously prepared, terminal batch is not
+an update run and remains available. The UI shows the active policy, keeps
+Timeline reading, Inbox, and Settings available, and converges every path on
+the same finite Timeline, provenance, personalization authority, and
+inspectable run ledger.
 
 | Entry point | Trigger | Delivery | Budget authority |
 | --- | --- | --- | --- |
