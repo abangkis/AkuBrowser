@@ -33,7 +33,7 @@ AkuSupervisor:
 4. load the bundled AkuBridge directory through Chrome Developer mode;
 5. run `.\Start-AkuBrowser.ps1` from PowerShell (`Start-AkuBrowser.cmd` is the fallback);
 6. complete onboarding and calibration;
-7. run Check for updates and inspect captured, evaluated, and selected evidence;
+7. with Auto Update off, run **Update now**; with it enabled, use **Prepare batch now** and **Load latest batch**; inspect captured, evaluated, and selected evidence;
 8. stop with Ctrl+C, restart, and confirm local state persists;
 9. reset AkuBrowser and confirm onboarding starts from zero without classifying pre-reset native items as resurfaced;
 10. after onboarding is complete, restart or temporarily delay AkuSidecar and refresh the page; the Timeline must remain in a restoring state until bootstrap succeeds and source onboarding must not reappear. Only Full reset may intentionally expose onboarding again;
@@ -49,7 +49,7 @@ model stage blocks publication. Confirm that
 the Inbox semantic summary reports the local onboarding path without a model
 invocation, that neither an AI Fast assessment nor an AI Deep job exists for
 the onboarding session, and that unchecked items expose no AI badge. If a source reasoning run is deliberately made to fail before any
-candidate validates, the recovery action must say **Check for updates again**;
+candidate validates, the recovery action must say **Update now again**;
 the Sidecar must remain ready and the captured trace must remain inspectable.
 After calibration completes, its More and Less choices must remain selected on
 the corresponding Timeline cards; Neutral must remain unselected. A later
@@ -68,7 +68,7 @@ check; disable it and confirm the panel and its timer stop without cancelling th
 run.
 
 When a completed session is still releasing its managed capture surface, confirm
-**Check for updates** remains briefly disabled and the header explains **Finishing
+the active update action remains briefly disabled and the header explains **Finishing
 capture cleanup…**. If AkuBridge is temporarily incompatible or reconnecting, the
 same location must explain **Waiting for AkuBridge to reconnect…** rather than
 leaving a disabled action unexplained.

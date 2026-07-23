@@ -39,7 +39,7 @@ Before installation, the tester must have:
 AkuBrowser does not collect or manage Codex or social-source credentials.
 Guided missing-app and signed-out recovery remain outside this preview boundary.
 If the first check produces no validated calibration candidate, AkuBrowser keeps
-the captured trace in Update Inbox and offers **Check for updates again** instead
+the captured trace in Update Inbox and offers **Update now again** instead
 of presenting a terminal calibration error.
 
 ## Manual AkuBridge installation

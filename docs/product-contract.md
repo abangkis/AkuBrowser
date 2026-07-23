@@ -25,13 +25,20 @@ Social engagement is useful for discovery, but it is indirect behavioral inferen
 4. The local profile becomes active when repeated directional evidence is sufficient.
 5. Later checks go directly to the finite Timeline and Update Inbox.
 
-Later checks may also be prepared by Auto Update while AkuSidecar is running.
+Later updates may also be prepared by Auto Update while AkuSidecar is running.
 Prepared batches remain outside the Timeline until explicitly opened, or until
 the bounded finish-line auto-load policy reveals a batch that existed when the
 reading session began. Queue, freshness, and local model-budget limits prevent
 this from becoming an endless background feed. See the reader-facing lifecycle
 in [`auto-update-guide.md`](auto-update-guide.md) and its normative boundaries in
 [`auto-update-contract.md`](auto-update-contract.md).
+
+All entry points use one update pipeline. Each session records who triggered
+it, whether selected items are immediately visible or remain prepared, and
+whether it spends user-reserved or automatic budget. With Auto Update enabled,
+the Timeline header offers **Load latest batch** only when prepared material is
+available; the finish line offers **Continue with next batch**. With Auto Update
+disabled, **Update now** runs the same pipeline and publishes directly.
 
 Reset learning removes calibration, More/Less feedback, and the fitted profile. Historical selection corrections and their restored Timeline items remain auditable, but corrections older than the reset boundary no longer train the rebuilt profile. Full reset first creates a verified SQLite backup, then clears Timeline, runs, learning, onboarding, settings, and native content-continuity history while preserving the Bridge identity.
 
