@@ -120,7 +120,7 @@ The implementation is accepted at the code and synthetic-runtime layer when:
 5. Sidecar registry, schema 6, dynamic UI, heartbeat, and session creation accept
    three registered sources;
 6. development package verification and integration contracts agree on runtime
-   revision `source-adapters-v73`; immutable published release manifests retain
+   revision `source-adapters-v76`; immutable published release manifests retain
    the revision of their uploaded artifacts.
 
 Facebook adapter v10 also treats the current Home Feed header as an explicit

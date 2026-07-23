@@ -24,7 +24,7 @@ The scheduler treats the prepared queue as bounded capacity, not as a
 four-hour appointment. When a slot opens because a batch is revealed, expires,
 or a prior automatic check produced no prepared batch, the scheduler waits for
 the configured refill delay before it may try to refill that slot. The setting
-offers 3, 5, and 10 minutes; 5 minutes is the default. If more capacity
+offers 3, 5, 10, 15, and 30 minutes; 5 minutes is the default. If more capacity
 remains after the next check, another refill may start no sooner than that
 delay later. Queue and model-budget boundaries can delay it further.
 
@@ -70,7 +70,9 @@ Timeline header reveals one batch, reconstructs the newest-first Timeline,
 scrolls to the top, and reports how many items were loaded. **Continue with next
 batch** at the finish line preserves the current reading order and scroll
 position, appends the revealed material after what the user just consumed, and
-marks its first item with a **New prepared batch** boundary.
+marks its first item with a **New prepared batch** boundary. **Update now**
+remains a separate direct action beside these controls, so a reader never has
+to visit Settings or wait for the scheduler to request fresh material.
 
 Completing background preparation updates only queue status and available
 actions. It does not rerender the visible Timeline or move the reader.
@@ -90,9 +92,9 @@ the daily quota and the automatic allowance can contain it.
 
 The selectable daily quotas are 1M, 2M, 3M, and 5M tokens. The default is 1M.
 The user-reserve percentage is removed from the automatic allowance, so
-prepared work cannot consume the entire configured quota. When Auto Update is
-off, **Update now** uses that higher-authority user reserve and publishes its
-result directly into the Timeline.
+prepared work cannot consume the entire configured quota. **Update now** uses
+that higher-authority user reserve and publishes its result directly into the
+Timeline whether Auto Update is enabled or disabled.
 
 When the daily quota or automatic allowance cannot contain the estimated next
 run, the scheduler enters `budget_paused`. The Timeline shows the paused state,
@@ -127,9 +129,10 @@ while the user is away, within its configured refill and budget boundaries.
 AkuBridge assigns the automatic session a capture lease: an ownership record
 for the Bridge-managed source tab or quiet-capture window. The lease is retained
 across initial and follow-up acquisition so the adapter keeps the same source
-frontier instead of reopening or losing its place. It is released only after
-the owning session becomes terminal. Cleanup closes only Bridge-owned surfaces
-and preserves user-created tabs.
+frontier instead of reopening or losing its place. It is released when the
+source run becomes terminal; the session-level release remains a fallback for
+cancellation, restart, or any cleanup that was not acknowledged earlier.
+Cleanup closes only Bridge-owned surfaces and preserves user-created tabs.
 
 Updates never overlap. A scheduler-triggered prepared update waits while a
 user-visible update is active, and a user action cannot start while preparation
@@ -142,4 +145,4 @@ personalization authority, and inspectable run ledger.
 | First-run onboarding | `onboarding` | `visible` | `user` |
 | Sidecar scheduler | `scheduler` | `prepared` | `automatic` |
 | Settings **Prepare batch now** | `user` | `prepared` | `automatic` |
-| Timeline **Update now** (Auto Update off) | `user` | `visible` | `user` |
+| Timeline **Update now** | `user` | `visible` | `user` |

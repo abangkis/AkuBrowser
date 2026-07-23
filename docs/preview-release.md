@@ -89,7 +89,8 @@ decision. The preview does not claim automatic extension installation.
 
 ## Fresh defaults
 
-The release starts with Standard 1x, Quiet capture, Progressive wait, X,
+The release starts with Standard 1x, Quiet capture with one managed window per
+source, Progressive wait, X,
 LinkedIn, and Facebook enabled,
 semantic duplicates collapsed, and AI Signals routed to the visible Drawer.
 AI Detection is enabled by default and can be disabled as one unit, stopping

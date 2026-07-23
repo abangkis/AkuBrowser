@@ -52,7 +52,7 @@ Test Intel and Apple-silicon artifacts on matching hardware. Before publishing:
    Server runtime is found;
 8. run `./Start-AkuBrowser.sh`, or double-click `Start-AkuBrowser.command`, and
    keep the terminal open;
-9. complete onboarding and calibration, run **Update now** with Auto Update disabled or load a prepared batch with it enabled, provide
+9. complete onboarding and calibration, run **Update now** directly or load a prepared batch, provide
    More/Less feedback, and inspect Update Inbox and Settings;
 10. stop AkuBrowser with Ctrl+C and confirm it exits cleanly;
 11. restart the same extracted bundle and confirm state is retained under

@@ -125,7 +125,7 @@ AkuBrowser-0.7.0-preview.3-macos-universal.zip
    `Start-AkuBrowser.cmd` is the fallback. On macOS, run
    `./Start-AkuBrowser.sh` from Terminal or double-click
    `Start-AkuBrowser.command`. Keep the launcher terminal open.
-6. Complete onboarding and calibration, run **Update now** with Auto Update disabled or load a prepared batch with it enabled, provide
+6. Complete onboarding and calibration, run **Update now** directly or load a prepared batch, provide
    More/Less feedback, and inspect Update Inbox diagnostics.
 7. Press Ctrl+C in the launcher terminal to stop AkuBrowser.
 

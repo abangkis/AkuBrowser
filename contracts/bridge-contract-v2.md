@@ -29,8 +29,8 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge product version `0.7.0-preview.3` / Chrome manifest version `0.7.0.2`;
-- runtime revision `source-adapters-v73`;
-- build id `aku-bridge-0.7.0-preview.3-source-adapters-v73`; and
+- runtime revision `source-adapters-v76`;
+- build id `aku-bridge-0.7.0-preview.3-source-adapters-v76`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -177,10 +177,19 @@ returns an observation or structured failure through the dedicated
 `/api/bridge/media-recaptures/{id}` routes.
 
 Quiet capture applies to recapture as strictly as it does to update capture.
+The default `quiet` policy owns one shared non-focused managed window;
+`quiet_multi_window` remains an experimental per-source-window option;
+`adaptive_fidelity` uses an ordinary canonical source tab. Multiple managed
+windows isolate source hydration but never authorize concurrent browser
+capture.
 The native-post tab is created inactive, activated only inside the unfocused
 managed window, and guarded after activation and page load. If AkuBridge cannot
 preserve or immediately restore the user's working window and tab, recapture
 fails with `visible_recovery_required` instead of taking foreground focus.
+Chrome's extension focus state is browser-scoped: it cannot identify which
+non-Chrome desktop application currently owns foreground focus. Per-source
+multi-window capture is therefore experimental and must not be treated as a
+guarantee that Chrome can never surface while another application is active.
 
 One generic Media Acquisition Engine serves every source adapter. In quiet
 mode it attempts primary DOM evidence, source-exposed structured state, one

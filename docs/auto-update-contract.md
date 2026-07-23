@@ -14,8 +14,8 @@ boundaries allow it.
   visible-tab-return activity is recent. Status polling is not user activity.
 - **Fixed background** does not require recent human activity while AkuSidecar
   is alive and the configured AkuBridge service worker can reach it.
-- Open prepared-queue capacity is refilled on a configurable 3-, 5-, or
-  10-minute cadence, with 5 minutes as the default. Revealing or expiring a
+- Open prepared-queue capacity is refilled on a configurable 3-, 5-, 10-, 15-,
+  or 30-minute cadence, with 5 minutes as the default. Revealing or expiring a
   prepared batch establishes a new vacancy boundary; a failed or empty
   automatic attempt establishes the next attempt boundary. Another automatic
   run cannot begin before the later applicable boundary.
@@ -38,7 +38,10 @@ Timeline items are hidden in a prepared batch until the user reveals it. The
 finish line offers **Continue with next batch**, preserving reading order and
 scroll position. The Timeline header offers **Load latest batch**, rebuilding
 newest-first order and moving the reader to the top. Optional auto-load uses the
-finish-line continuity path and never scrolls on the user's behalf.
+finish-line continuity path and never scrolls on the user's behalf. The header
+also keeps **Update now** available as an independent `user/visible/user`
+request, regardless of whether Auto Update is enabled or a prepared batch is
+waiting.
 
 The queue defaults to two batches. Unread batches expire at the configured
 freshness boundary. Candidate Evaluation supplies urgency on a stable rubric:
@@ -97,8 +100,8 @@ Every update session carries three independent authority fields:
 
 The scheduler uses `scheduler/prepared/automatic`. **Prepare batch now** uses
 `user/prepared/automatic`. Onboarding uses
-`onboarding/visible/user`. When Auto Update is disabled, **Update now** uses
-`user/visible/user`. There is no separate manual pipeline.
+`onboarding/visible/user`. **Update now** always uses `user/visible/user`.
+There is no separate manual pipeline.
 
 The Timeline exposes `paused` and `budget_paused` without requiring a visit to
 Settings. Settings remains the control surface for changing or resetting the
@@ -119,7 +122,8 @@ recent human interaction by policy. Invalid or rotated credentials are deleted b
 after an authenticated rejection and are configured again on the next trusted
 page access. Background and page dispatch both claim the same command, so only
 one can win. AkuBridge persists the active capture lease across bounded
-follow-up commands and releases the managed surface after the owning automatic
-session becomes terminal. The same poll refreshes the authenticated Bridge
+follow-up commands and releases each source surface when that source run becomes
+terminal; it releases the remaining session surface after the owning automatic
+session becomes terminal as a fallback. The same poll refreshes the authenticated Bridge
 heartbeat, allowing a restarted Sidecar to recover exact Bridge compatibility
 without waiting for the UI to open.
