@@ -1,6 +1,6 @@
-# AkuBrowser 0.7.0-preview.3
+# AkuBrowser 0.7.1
 
-`0.7.0-preview.3` is the current source-aligned Windows and macOS preview. It
+`0.7.1` is the current source-aligned Windows preview. It
 retains the unified packaging boundary established by preview.1 and adds the
 current three-source, progressive scheduling, native-resurface, execution
 timing, onboarding recovery, and AI Signals controls. This is the packaged
@@ -75,8 +75,11 @@ smoke-tested with `scripts/test-macos-preview.sh`. The build pipeline can
 produce native `x64` or `arm64` bundles for focused testing; the published
 `0.7.0-preview.3` asset is `macos-universal` and runs on Intel and Apple
 silicon.
-Both published platform bundles and their adjacent checksum files are available
-from the [`v0.7.0-preview.3` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.0-preview.3).
+The Windows 0.7.1 bundle and its adjacent checksum are available from the
+[`v0.7.1` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.1).
+The previously published macOS universal bundle remains available from the
+[`v0.7.0-preview.3` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.0-preview.3)
+until a matching macOS 0.7.1 build is produced.
 
 The automated gates verify the bundle manifest, bundled-file checksums,
 Sidecar health, both supported loopback hostnames, fresh-database defaults, and
@@ -114,6 +117,6 @@ reset.
 [`release/release-manifest.json`](../release/release-manifest.json) is the
 machine-readable release authority. The immutable `v0.7.0-preview.1` tags remain
 the historical compatibility checkpoint and must never be moved. The published
-`v0.7.0-preview.3` tags identify the release source checkpoints; each generated
+`v0.7.1` tags identify the current release source checkpoints; each generated
 bundle additionally records its exact AkuBrowser, AkuSidecar, and AkuBridge
 commits and dirty state in `artifact-manifest.json`.
