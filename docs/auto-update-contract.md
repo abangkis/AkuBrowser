@@ -37,7 +37,12 @@ Any session with `delivery=prepared` remains inspectable in Update Inbox, but it
 Timeline items are hidden in a prepared batch until the user reveals it. The
 finish line offers **Continue with next batch**, preserving reading order and
 scroll position. The Timeline header offers **Load latest batch**, rebuilding
-newest-first order and moving the reader to the top. Optional auto-load uses the
+newest-first order by explicitly placing the newly revealed batch before the
+currently visible Timeline, then moving the reader to the top. Repeated header
+reveals therefore show Batch 2 above Batch 1. The finish-line path explicitly
+places each newly revealed batch after the currently visible Timeline, so
+Batch 2 continues below Batch 1. Neither path infers presentation order from
+session completion timestamps. Optional auto-load uses the
 finish-line continuity path and never scrolls on the user's behalf. The header
 also keeps **Update now** available as an independent `user/visible/user`
 request, regardless of whether Auto Update is enabled or a prepared batch is

@@ -67,10 +67,14 @@ refill when scheduling, activity, and budget admission permit it.
 
 AkuBrowser provides two intentional reveal paths. **Load latest batch** in the
 Timeline header reveals one batch, reconstructs the newest-first Timeline,
-scrolls to the top, and reports how many items were loaded. **Continue with next
-batch** at the finish line preserves the current reading order and scroll
-position, appends the revealed material after what the user just consumed, and
-marks its first item with a **New prepared batch** boundary. **Update now**
+places that newly revealed batch above the material already on screen, scrolls
+to the top, and reports how many items were loaded. Repeating this action places
+Batch 2 above Batch 1. **Continue with next batch** at the finish line preserves
+the current reading order and scroll position, appends the revealed material
+after what the user just consumed, and marks its first item with a **New
+prepared batch** boundary. Repeating this action places Batch 2 below Batch 1.
+Both paths use an explicit placement rule instead of relying on session
+completion timestamps. **Update now**
 remains a separate direct action beside these controls, so a reader never has
 to visit Settings or wait for the scheduler to request fresh material.
 If another update is already preparing the next batch, **Update now** remains
