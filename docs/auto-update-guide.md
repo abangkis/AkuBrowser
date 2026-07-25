@@ -137,8 +137,9 @@ while the user is away, within its configured refill and budget boundaries.
 AkuBridge assigns the automatic session a capture lease: an ownership record
 for the Bridge-managed source tab or quiet-capture window. The lease is retained
 across initial and follow-up acquisition so the adapter keeps the same source
-frontier instead of reopening or losing its place. It is released when the
-source run becomes terminal; the session-level release remains a fallback for
+frontier instead of reopening or losing its place. It is released when
+Acquisition Planning can no longer request another capture and Candidate
+Evaluation begins; source/session terminal release remains a fallback for
 cancellation, restart, or any cleanup that was not acknowledged earlier.
 Cleanup closes only Bridge-owned surfaces and preserves user-created tabs.
 

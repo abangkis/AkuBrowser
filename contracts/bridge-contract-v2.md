@@ -29,8 +29,8 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge product version `0.7.1` / Chrome manifest version `0.7.1.0`;
-- runtime revision `source-adapters-v77`;
-- build id `aku-bridge-0.7.1-source-adapters-v77`; and
+- runtime revision `source-adapters-v78`;
+- build id `aku-bridge-0.7.1-source-adapters-v78`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -79,8 +79,9 @@ same persisted command lifecycle. A `401` or `403` deletes the stored token and
 stops the alarm until the trusted page configures it again. Claiming a command
 remains atomic, so page dispatch and background dispatch cannot execute the
 same command twice. A managed capture lease remains bound across acquisition
-follow-ups and is released by the service worker only after the owning session
-becomes terminal. Each background poll also republishes the authenticated
+follow-ups. Each source surface is released once Acquisition Planning can no
+longer request another capture and Candidate Evaluation begins; source/session
+terminal cleanup remains the fallback. Each background poll also republishes the authenticated
 capability heartbeat so a restarted Sidecar can re-establish exact compatibility
 without an open UI page.
 
@@ -209,9 +210,10 @@ Adaptive capture does not create the Quiet managed window first. It directly
 uses the newest eligible canonical source tab in an ordinary Chrome window. An
 existing tab remains user-owned and is preserved. If no eligible tab exists and
 `openMissingSource` permits creation, Bridge records the new tab under the
-session lease as `close_after_session`; terminal capture-surface cleanup closes
-it only while it remains on the canonical feed. Navigation away from that feed
-is treated as user adoption and the tab is preserved.
+session lease as `close_after_session`; capture-surface cleanup closes it only
+while it remains on the registered source. A same-source internal redirect
+remains Bridge-owned and is reset to the canonical feed before reuse. Navigation
+outside that source is treated as user adoption and the tab is preserved.
 
 If that bounded background attempt completes with outcome `unavailable`, the
 Timeline may offer a small inline question instead of opening a modal. A

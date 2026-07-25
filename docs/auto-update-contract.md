@@ -129,8 +129,8 @@ recent human interaction by policy. Invalid or rotated credentials are deleted b
 after an authenticated rejection and are configured again on the next trusted
 page access. Background and page dispatch both claim the same command, so only
 one can win. AkuBridge persists the active capture lease across bounded
-follow-up commands and releases each source surface when that source run becomes
-terminal; it releases the remaining session surface after the owning automatic
-session becomes terminal as a fallback. The same poll refreshes the authenticated Bridge
+follow-up commands and releases each source surface when acquisition is closed
+and Candidate Evaluation begins; terminal source/session cleanup remains the
+fallback. The same poll refreshes the authenticated Bridge
 heartbeat, allowing a restarted Sidecar to recover exact Bridge compatibility
 without waiting for the UI to open.
