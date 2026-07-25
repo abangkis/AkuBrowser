@@ -13,8 +13,10 @@ Run from AkuBrowser:
 ```
 
 The build gate validates the release tuple, executes Sidecar and Bridge tests,
-builds a stripped Windows x64 Sidecar, copies only the verified extension
-payload, records source commits, generates per-file SHA-256 checksums, and
+builds a stripped Windows x64 Sidecar, verifies the pinned c2patool version and
+SHA-256 before copying it beside the Sidecar, copies only the verified extension
+payload, includes the exact upstream c2patool MIT and Apache-2.0 license texts,
+records source commits, generates per-file SHA-256 checksums, and
 creates the portable ZIP. The smoke gate revalidates every checksum, requires
 every runtime schema, capability-checks the discovered Codex runtime, starts
 the packaged Sidecar with the release App Server provider and a fresh database
@@ -80,6 +82,6 @@ capture, or later Timeline composition; returning to Timeline must show current
 progress rather than restarting the check.
 
 Login remediation, installer signing, and automatic Chrome extension
-installation are outside the `0.7.1` acceptance boundary. Codex
+installation are outside the `0.7.2` acceptance boundary. Codex
 discovery is owned by the cross-platform AkuSidecar runtime probe and
 capability-checks App Server.

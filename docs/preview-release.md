@@ -1,6 +1,6 @@
-# AkuBrowser 0.7.1
+# AkuBrowser 0.7.2
 
-`0.7.1` is the current source-aligned Windows preview. It
+`0.7.2` is the current source-aligned Windows preview. It
 retains the unified packaging boundary established by preview.1 and adds the
 current three-source, progressive scheduling, native-resurface, execution
 timing, onboarding recovery, and AI Signals controls. This is the packaged
@@ -20,7 +20,10 @@ published macOS delivery is one universal portable ZIP containing both x64 and
 arm64 Sidecar slices. Both platform bundles contain the Sidecar
 executable, release configuration, the verified unpacked Bridge payload, and a
 foreground launcher. The packages require no AkuSupervisor process or
-development workspace path. Windows stores user data under
+development workspace path. The Windows bundle also carries a pinned
+`c2patool.exe` so image-only C2PA inspection works without a separate tool
+installation. Its required version and SHA-256 are release-manifest inputs and
+are checked again by artifact acceptance. Windows stores user data under
 `%LOCALAPPDATA%\AkuBrowser`; macOS stores it under
 `~/Library/Application Support/AkuBrowser/data`.
 
@@ -75,11 +78,11 @@ smoke-tested with `scripts/test-macos-preview.sh`. The build pipeline can
 produce native `x64` or `arm64` bundles for focused testing; the published
 `0.7.0-preview.3` asset is `macos-universal` and runs on Intel and Apple
 silicon.
-The Windows 0.7.1 bundle and its adjacent checksum are available from the
-[`v0.7.1` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.1).
+The Windows 0.7.2 bundle and its adjacent checksum are available from the
+[`v0.7.2` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.2).
 The previously published macOS universal bundle remains available from the
 [`v0.7.0-preview.3` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.0-preview.3)
-until a matching macOS 0.7.1 build is produced.
+until a matching macOS 0.7.2 build is produced.
 
 The automated gates verify the bundle manifest, bundled-file checksums,
 Sidecar health, both supported loopback hostnames, fresh-database defaults, and
@@ -117,6 +120,6 @@ reset.
 [`release/release-manifest.json`](../release/release-manifest.json) is the
 machine-readable release authority. The immutable `v0.7.0-preview.1` tags remain
 the historical compatibility checkpoint and must never be moved. The published
-`v0.7.1` tags identify the current release source checkpoints; each generated
+`v0.7.2` tags identify the current release source checkpoints; each generated
 bundle additionally records its exact AkuBrowser, AkuSidecar, and AkuBridge
 commits and dirty state in `artifact-manifest.json`.

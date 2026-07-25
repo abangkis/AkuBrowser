@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
     [string] $OutputRoot = "",
+    [string] $C2paToolPath = "",
     [switch] $SkipValidation,
     [switch] $AllowDirty
 )
@@ -11,6 +12,10 @@ $workspaceRoot = Split-Path -Parent $browserRoot
 $bridgeRoot = Join-Path $workspaceRoot "AkuBridge"
 $sidecarRoot = Join-Path $workspaceRoot "AkuSidecar"
 $releaseManifestPath = Join-Path $browserRoot "release\release-manifest.json"
+if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
+    $C2paToolPath = Join-Path $sidecarRoot "runtime\dev\c2patool.exe"
+}
+$C2paToolPath = [IO.Path]::GetFullPath($C2paToolPath)
 
 function Read-Json([string] $Path) {
     return Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
@@ -69,6 +74,12 @@ Assert-True ($release.components.akuBridge.version -eq $bridgePackage.version) "
 Assert-True ($release.components.akuBridge.chromeVersion -eq $bridgeManifest.version) "AkuBridge Chrome version differs from the release tuple."
 Assert-True ($release.components.akuBridge.version -eq $bridgeManifest.version_name) "AkuBridge product version differs from its manifest version name."
 Assert-True ($sidecarDomain -match ('ApplicationVersion\s*=\s*"' + [regex]::Escape($release.components.akuSidecar.version) + '"')) "AkuSidecar version differs from the release tuple."
+Assert-True (Test-Path -LiteralPath $C2paToolPath -PathType Leaf) "The required Windows c2patool source was not found: $C2paToolPath"
+$c2paToolVersionText = (& $C2paToolPath --version | Out-String).Trim()
+Assert-True ($LASTEXITCODE -eq 0) "The selected c2patool binary could not report its version."
+Assert-True ($c2paToolVersionText -eq "c2patool $($release.components.c2paTool.version)") "c2patool version differs from the release tuple: $c2paToolVersionText"
+$c2paToolSha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $C2paToolPath).Hash.ToLowerInvariant()
+Assert-True ($c2paToolSha256 -eq $release.components.c2paTool.sha256) "c2patool SHA-256 differs from the pinned release binary."
 
 $sourceRepositories = [ordered]@{
     akuBrowser = $browserRoot
@@ -102,6 +113,7 @@ Reset-ArtifactPath $zipPath $OutputRoot
 Reset-ArtifactPath $zipChecksumPath $OutputRoot
 
 $sidecarOutput = Join-Path $artifactRoot "AkuSidecar.exe"
+$c2paToolOutput = Join-Path $artifactRoot "c2patool.exe"
 $cacheRoot = Join-Path $workspaceRoot ".go-cache"
 $savedEnvironment = @{
     GOOS = $env:GOOS
@@ -138,6 +150,25 @@ finally {
         }
     }
 }
+Copy-Item -LiteralPath $C2paToolPath -Destination $c2paToolOutput
+$c2paLicenseOutput = Join-Path $artifactRoot "third-party\c2patool"
+New-Item -ItemType Directory -Force -Path $c2paLicenseOutput | Out-Null
+Copy-Item -LiteralPath (Join-Path $browserRoot "release\third-party\c2patool\LICENSE-MIT") -Destination $c2paLicenseOutput
+Copy-Item -LiteralPath (Join-Path $browserRoot "release\third-party\c2patool\THIRD-PARTY-NOTICE.md") -Destination $c2paLicenseOutput
+$c2paApacheLicense = (Get-Content -LiteralPath (Join-Path $browserRoot "LICENSE") -Raw).
+    Replace("`r`n", "`n").
+    Replace("Copyright [yyyy] [name of copyright owner]", "Copyright 2020 Adobe").
+    Replace(
+        "      `"Work`" shall mean the work of authorship, whether in Source or Object`n" +
+        "      form, made available under the License, as indicated by a copyright`n" +
+        "      notice that is included in or attached to the work (an example is`n" +
+        "      provided in the Appendix below).",
+        "      `"Work`" shall mean the work of authorship, whether in Source or`n" +
+        "      Object form, made available under the License, as indicated by a`n" +
+        "      copyright notice that is included in or attached to the work`n" +
+        "      (an example is provided in the Appendix below)."
+    )
+Write-Utf8NoBom (Join-Path $c2paLicenseOutput "LICENSE-APACHE") $c2paApacheLicense
 
 $configDirectory = Join-Path $artifactRoot "config"
 New-Item -ItemType Directory -Force -Path $configDirectory | Out-Null
@@ -182,6 +213,20 @@ $artifactManifest = [ordered]@{
     sourceDirty = @($dirtyRepositories)
     components = $release.components
     akuBridgeFingerprint = $bridgeVerification.fingerprint
+    bundledTools = [ordered]@{
+        c2paTool = [ordered]@{
+            version = $release.components.c2paTool.version
+            sha256 = $c2paToolSha256
+            file = "c2patool.exe"
+            sourcePolicy = $release.components.c2paTool.sourcePolicy
+            workspaceSource = $release.components.c2paTool.workspaceSource
+            licenses = @(
+                "third-party/c2patool/LICENSE-MIT",
+                "third-party/c2patool/LICENSE-APACHE",
+                "third-party/c2patool/THIRD-PARTY-NOTICE.md"
+            )
+        }
+    }
 }
 Write-Utf8NoBom (Join-Path $artifactRoot "artifact-manifest.json") ($artifactManifest | ConvertTo-Json -Depth 10)
 
@@ -208,6 +253,9 @@ $zipHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $zipPath).Hash.ToLowerIn
     zip = $zipPath
     zipSha256 = $zipHash
     sidecarBytes = (Get-Item -LiteralPath $sidecarOutput).Length
+    c2paToolBytes = (Get-Item -LiteralPath $c2paToolOutput).Length
+    c2paToolVersion = $release.components.c2paTool.version
+    c2paToolSha256 = $c2paToolSha256
     bridgeFiles = @($bridgeVerification.files).Count
     sourceCommits = $sourceCommits
     sourceDirty = @($dirtyRepositories)

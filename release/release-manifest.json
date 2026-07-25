@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "product": "AkuBrowser",
-  "version": "0.7.1",
+  "version": "0.7.2",
   "channel": "preview",
   "distribution": {
     "authorityRepository": "AkuBrowser",
@@ -27,19 +27,31 @@
   },
   "components": {
     "akuSidecar": {
-      "version": "0.7.1",
+      "version": "0.7.2",
       "runtime": "go"
     },
     "akuBridge": {
-      "version": "0.7.1",
-      "chromeVersion": "0.7.1.0",
+      "version": "0.7.2",
+      "chromeVersion": "0.7.2.0",
       "runtimeRevision": "source-adapters-v79",
       "contractVersion": "aku-browser.bridge.v2"
+    },
+    "c2paTool": {
+      "version": "0.26.60",
+      "sha256": "90cbcebe30250f8e8c53416d32ed86065dc04a23be86e4a2337f5cd1badfa0b7",
+      "sourcePolicy": "pinned-local-release-binary",
+      "workspaceSource": "AkuSidecar/runtime/dev/c2patool.exe",
+      "license": "MIT OR Apache-2.0",
+      "licenseSha256": {
+        "mit": "89375a50de90d2dcaa04406086da832ad452ebcaf6ab402ef3d51b8401a67c71",
+        "apache2": "86bdd5dafab77451044b6fd6d2efab23e3410ce658eb097f04c04f4f54aed62f"
+      }
     }
   },
   "bundle": {
     "includes": [
       "AkuSidecar",
+      "Windows c2patool 0.26.60 for local image provenance verification",
       "AkuBridge unpacked payload",
       "Windows launcher and release configuration",
       "macOS launcher and release configuration",

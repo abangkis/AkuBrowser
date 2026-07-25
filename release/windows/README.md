@@ -1,8 +1,9 @@
 # AkuBrowser Windows Preview
 
 This portable preview contains the Go AkuSidecar runtime and AkuBridge as an
-unpacked Chrome extension. It does not install a Windows service and does not
-include AkuSupervisor.
+unpacked Chrome extension. It also includes the pinned `c2patool.exe` runtime
+used for local, image-only Content Credentials verification. It does not
+install a Windows service and does not include AkuSupervisor.
 
 ## OpenAI Build Week preview
 
@@ -92,3 +93,7 @@ it checked and links to the Codex setup guide without collecting credentials.
 
 `checksums.sha256` contains a SHA-256 digest for every bundled file. The ZIP is
 published with a separate `.sha256` file for download-level verification.
+The release manifest additionally pins the bundled c2patool version and
+SHA-256, while `artifact-manifest.json` records the exact tool included in this
+build. Exact upstream MIT and Apache-2.0 license texts and the third-party
+notice are included under `third-party/c2patool`.

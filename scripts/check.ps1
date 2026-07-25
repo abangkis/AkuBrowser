@@ -38,7 +38,7 @@ $bridgeCapabilities = Get-Content -LiteralPath (Join-Path $bridgeRoot "bridge-ca
 $sourceCatalog = Get-Content -LiteralPath (Join-Path $bridgeRoot "source-catalog.js") -Raw
 $responseEvidenceAdapter = Get-Content -LiteralPath (Join-Path $bridgeRoot "x-response-evidence-adapter.js") -Raw
 
-Assert-True ($releaseManifest.version -eq "0.7.1") "AkuBrowser release version is unexpected."
+Assert-True ($releaseManifest.version -eq "0.7.2") "AkuBrowser release version is unexpected."
 Assert-True ($releaseManifest.distribution.authorityRepository -eq "AkuBrowser") "AkuBrowser must remain the distribution authority."
 Assert-True ($releaseManifest.distribution.windows.format -eq "portable-zip") "Windows preview must remain a portable ZIP."
 Assert-True ($bridgePackage.version -eq $bridgeManifest.version_name) "AkuBridge package and manifest version name differ."
@@ -67,8 +67,13 @@ Assert-True ($sidecarConfig.reasoning.semanticEvent.effort -eq "high") "Semantic
 Assert-True ($sidecarConfig.reasoning.aiDetection.effort -eq "high") "AI Deep Detection must default to Luna High."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $sidecarRoot "package.json"))) "AkuSidecar must not contain a Node package."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $browserRoot "package.json"))) "AkuBrowser must not contain a Node package."
-Assert-True ($domain -match 'ApplicationVersion\s*=\s*"0\.7\.1"') "AkuSidecar version boundary is unexpected."
-Assert-True ($releaseManifest.components.akuSidecar.version -eq "0.7.1") "AkuSidecar release manifest version is unexpected."
+Assert-True ($domain -match 'ApplicationVersion\s*=\s*"0\.7\.2"') "AkuSidecar version boundary is unexpected."
+Assert-True ($releaseManifest.components.akuSidecar.version -eq "0.7.2") "AkuSidecar release manifest version is unexpected."
+Assert-True ($releaseManifest.components.c2paTool.version -eq "0.26.60") "Pinned c2patool version is unexpected."
+Assert-True ($releaseManifest.components.c2paTool.sha256 -eq "90cbcebe30250f8e8c53416d32ed86065dc04a23be86e4a2337f5cd1badfa0b7") "Pinned c2patool SHA-256 is unexpected."
+Assert-True ($releaseManifest.components.c2paTool.workspaceSource -eq "AkuSidecar/runtime/dev/c2patool.exe") "Pinned c2patool workspace source is unexpected."
+Assert-True ($releaseManifest.components.c2paTool.licenseSha256.mit -eq "89375a50de90d2dcaa04406086da832ad452ebcaf6ab402ef3d51b8401a67c71") "Pinned c2patool MIT license SHA-256 is unexpected."
+Assert-True ($releaseManifest.components.c2paTool.licenseSha256.apache2 -eq "86bdd5dafab77451044b6fd6d2efab23e3410ce658eb097f04c04f4f54aed62f") "Pinned c2patool Apache license SHA-256 is unexpected."
 Assert-True ($domain -match 'BridgeContractVersion\s*=\s*"aku-browser\.bridge\.v2"') "Bridge contract boundary is unexpected."
 Assert-True ($domain -match 'DefaultAIDetectionPresentation\s*=\s*"drawer"') "AI Detector must default to Drawer."
 Assert-True ($domain -match 'DefaultReasoningAcquisition\s*=\s*"luna_high"') "Acquisition profile default drifted."
@@ -94,7 +99,7 @@ foreach ($schema in $schemas) {
 if (-not $DistributionOnly) {
     $supervised = $supervisorProfile.services.akusidecar
     Assert-True ($supervised.command -eq (Join-Path $sidecarRoot "runtime\dev\aku-sidecar.exe")) "AkuSupervisor does not own the direct Go binary."
-    Assert-True ($supervised.health.expect.version -eq "0.7.1") "AkuSupervisor expects the wrong AkuSidecar version."
+    Assert-True ($supervised.health.expect.version -eq "0.7.2") "AkuSupervisor expects the wrong AkuSidecar version."
     Assert-True ($supervised.health.expect.runtime -eq "go") "AkuSupervisor does not require the Go runtime."
 }
 
@@ -127,7 +132,7 @@ if (-not $DistributionOnly) {
     release = $releaseManifest.version
     AkuBridge = $bridgePackage.version
     AkuBridgeRuntime = $bridgePackage.akuRuntimeRevision
-    AkuSidecar = "0.7.1"
+    AkuSidecar = "0.7.2"
     provider = $sidecarConfig.reasoning.provider
     preferenceAuthority = $sidecarConfig.preference.mode
     boundedLoadDefault = $sidecarConfig.capture.profile

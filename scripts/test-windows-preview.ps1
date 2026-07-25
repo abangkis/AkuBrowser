@@ -91,6 +91,10 @@ function ConvertTo-NativeArgument([string] $Value) {
 
 foreach ($required in @(
     "AkuSidecar.exe",
+    "c2patool.exe",
+    "third-party\c2patool\LICENSE-MIT",
+    "third-party\c2patool\LICENSE-APACHE",
+    "third-party\c2patool\THIRD-PARTY-NOTICE.md",
     "AkuBridge\manifest.json",
     "config\sidecar.json",
     "schemas\acquisition-plan.schema.json",
@@ -137,10 +141,30 @@ foreach ($line in $checksumLines) {
 }
 
 $artifactRelease = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "release-manifest.json") -Raw | ConvertFrom-Json
+$artifactManifest = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "artifact-manifest.json") -Raw | ConvertFrom-Json
 $bridgeManifest = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "AkuBridge\manifest.json") -Raw | ConvertFrom-Json
 Assert-True ($artifactRelease.version -eq $release.version) "Artifact release version differs from AkuBrowser."
 Assert-True ($bridgeManifest.version_name -eq $release.components.akuBridge.version) "Bundled AkuBridge product version differs from the release tuple."
 Assert-True ($bridgeManifest.version -eq $release.components.akuBridge.chromeVersion) "Bundled AkuBridge Chrome version differs from the release tuple."
+$c2paToolPath = Join-Path $ArtifactDirectory "c2patool.exe"
+$c2paToolHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $c2paToolPath).Hash.ToLowerInvariant()
+Assert-True ($c2paToolHash -eq $artifactRelease.components.c2paTool.sha256) "Bundled c2patool SHA-256 differs from the release pin."
+Assert-True ($artifactManifest.bundledTools.c2paTool.sha256 -eq $c2paToolHash) "Artifact provenance does not record the bundled c2patool hash."
+Assert-True ($artifactManifest.bundledTools.c2paTool.workspaceSource -eq $artifactRelease.components.c2paTool.workspaceSource) "Artifact provenance does not record the pinned c2patool workspace source."
+Assert-True (@($artifactManifest.bundledTools.c2paTool.licenses).Count -eq 3) "Artifact provenance does not record all c2patool license files."
+$c2paMIT = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "third-party\c2patool\LICENSE-MIT") -Raw
+$c2paApache = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "third-party\c2patool\LICENSE-APACHE") -Raw
+$c2paNotice = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "third-party\c2patool\THIRD-PARTY-NOTICE.md") -Raw
+Assert-True ($c2paMIT.Contains("© Copyright 2020 Adobe. All rights reserved.")) "Bundled c2patool MIT license is not the upstream 0.26.60 text."
+Assert-True ($c2paApache.Contains("Copyright 2020 Adobe")) "Bundled c2patool Apache license is not the upstream 0.26.60 text."
+Assert-True ($c2paNotice.Contains("c2patool-v0.26.60")) "Bundled c2patool notice does not identify the pinned upstream release."
+$c2paMITHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $ArtifactDirectory "third-party\c2patool\LICENSE-MIT")).Hash.ToLowerInvariant()
+$c2paApacheHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $ArtifactDirectory "third-party\c2patool\LICENSE-APACHE")).Hash.ToLowerInvariant()
+Assert-True ($c2paMITHash -eq $artifactRelease.components.c2paTool.licenseSha256.mit) "Bundled c2patool MIT license differs byte-for-byte from upstream 0.26.60."
+Assert-True ($c2paApacheHash -eq $artifactRelease.components.c2paTool.licenseSha256.apache2) "Bundled c2patool Apache license differs byte-for-byte from upstream 0.26.60."
+$c2paToolVersion = (& $c2paToolPath --version | Out-String).Trim()
+Assert-True ($LASTEXITCODE -eq 0) "Bundled c2patool could not report its version."
+Assert-True ($c2paToolVersion -eq "c2patool $($artifactRelease.components.c2paTool.version)") "Bundled c2patool version differs from the release pin."
 
 $savedPath = $env:PATH
 try {
@@ -200,6 +224,8 @@ try {
     Assert-True ($health.version -eq $release.components.akuSidecar.version) "Packaged AkuSidecar reports the wrong version."
     Assert-True ($health.runtime -eq "go") "Packaged AkuSidecar does not report the Go runtime."
     Assert-True ($health.provider -eq "codex-app-server") "Packaged AkuSidecar did not initialize the release reasoning provider."
+    Assert-True ($health.mediaProvenanceRuntime.available -eq $true) "Packaged AkuSidecar did not discover the adjacent c2patool runtime."
+    Assert-True ($health.mediaProvenanceRuntime.provider -eq "c2patool") "Packaged AkuSidecar reports the wrong media-provenance provider."
 
     $bootstrap = Invoke-RestMethod -Uri "http://127.0.0.1:$port/api/bootstrap" -TimeoutSec 5
     Assert-True ($bootstrap.settings.loadProfile -eq "standard") "Packaged fresh database does not use Standard 1x."
@@ -221,6 +247,8 @@ try {
         defaultEvaluationProfile = $bootstrap.settings.reasoningEvaluationProfile
         codexDiscoverySource = $codexProbe.source
         codexVersion = $codexProbe.version
+        c2paToolVersion = $artifactRelease.components.c2paTool.version
+        c2paToolSha256 = $c2paToolHash
     } | ConvertTo-Json
 }
 finally {
