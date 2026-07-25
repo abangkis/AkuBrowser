@@ -33,7 +33,7 @@
     "akuBridge": {
       "version": "0.7.1",
       "chromeVersion": "0.7.1.0",
-      "runtimeRevision": "source-adapters-v76",
+      "runtimeRevision": "source-adapters-v79",
       "contractVersion": "aku-browser.bridge.v2"
     }
   },
