@@ -120,10 +120,10 @@ The implementation is accepted at the code and synthetic-runtime layer when:
 5. Sidecar registry, schema 6, dynamic UI, heartbeat, and session creation accept
    three registered sources;
 6. development package verification and integration contracts agree on runtime
-   revision `source-adapters-v76`; immutable published release manifests retain
+   revision `source-adapters-v77`; immutable published release manifests retain
    the revision of their uploaded artifacts.
 
-Facebook adapter v10 also treats the current Home Feed header as an explicit
+Facebook adapter v11 also treats the current Home Feed header as an explicit
 adapter responsibility. It resolves the author from bounded profile links
 or the explicit post-action label before the post body and rejects presence
 labels such as `Online status indicator Active`. It reconstructs Facebook's visually rendered relative
@@ -136,8 +136,15 @@ removed before the canonical URL and platform id enter generic deduplication.
 The legacy `story.php` route names ordinary feed-post permalinks; the separate
 Facebook Stories surface (`/stories/`) remains outside this adapter.
 
+A structural Home Feed card can be present without containing a capture-eligible
+post, for example Facebook's private Memories promotion with only Send and Share
+actions. Adapter v11 reports those cards separately from eligible post
+candidates. The generic readiness contract keeps the bounded hydration wait,
+then admits `feed_empty` into capture so scrolling can still discover a later
+post without misreporting a selector regression.
+
 A Home Feed video can expose no stable wrapper permalink while still exposing
-an embedded `/reel/<id>` anchor. Adapter v10 accepts that anchor as the native
+an embedded `/reel/<id>` anchor. Adapter v11 accepts that anchor as the native
 evidence destination for the already-admitted feed post; it does not discover
 or capture the Reels player feed. Poster images beneath `/videos/` or `/reel/`
 are typed as video previews, so the generic Timeline can display an explicit
