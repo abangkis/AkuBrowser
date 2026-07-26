@@ -39,7 +39,7 @@ Assert-True ($releaseManifest.distribution.windows.format -eq "portable-zip") "W
 Assert-True ($bridgePackage.version -eq $bridgeManifest.version_name) "AkuBridge package and manifest version name differ."
 Assert-True ($bridgePackage.version -eq $releaseManifest.components.akuBridge.version) "AkuBridge product version drifted from the release manifest."
 Assert-True ($bridgeManifest.version -eq $releaseManifest.components.akuBridge.chromeVersion) "AkuBridge Chrome version drifted from the release manifest."
-Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-adapters-v80") "AkuBridge development runtime revision is unexpected."
+Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-adapters-v81") "AkuBridge development runtime revision is unexpected."
 if ($DistributionOnly) {
     Assert-True ($bridgePackage.akuRuntimeRevision -eq $releaseManifest.components.akuBridge.runtimeRevision) "AkuBridge runtime revision drifted from the release manifest."
 }

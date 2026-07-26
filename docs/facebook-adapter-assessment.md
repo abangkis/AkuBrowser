@@ -1,6 +1,6 @@
 # Facebook source adapter contract
 
-Status: implemented for local preview development, 19 July 2026.
+Status: implemented for local preview development, updated 26 July 2026.
 
 ## Product boundary
 
@@ -90,6 +90,16 @@ LinkedIn do not opt in, shared user tabs are never reloaded, and a second empty
 capture fails explicitly as `capture_empty` with the diagnostic receipt kept in
 the run ledger.
 
+Facebook v14 also owns a separate managed-load recovery declaration. When a
+newly created or canonically reset Bridge-owned Facebook surface does not reach
+Chrome's completed navigation state within 20 seconds, AkuBridge requests and
+verifies cleanup of that surface before recreating it once. Recreation is
+forbidden after a lease mismatch, an unconfirmed release, or a second timeout.
+The retry stays in the configured Quiet background path and never authorizes
+foreground recovery. Final failure is typed as navigation or cleanup failure,
+and the Inbox retains the release-requested, released/reconciled, and focus
+telemetry needed to distinguish a slow Facebook page from a leaked window.
+
 ## Media and privacy limits
 
 Facebook CDN URLs can expire before Timeline retention. Preview v1 therefore
@@ -120,10 +130,10 @@ The implementation is accepted at the code and synthetic-runtime layer when:
 5. Sidecar registry, schema 7, dynamic UI, heartbeat, and session creation accept
    three registered sources;
 6. development package verification and integration contracts agree on runtime
-   revision `source-adapters-v80`; immutable published release manifests retain
+   revision `source-adapters-v81`; immutable published release manifests retain
    the revision of their uploaded artifacts.
 
-Facebook adapter v13 also treats the current Home Feed header as an explicit
+Facebook adapter v14 also treats the current Home Feed header as an explicit
 adapter responsibility. It resolves the author from bounded profile links
 or the explicit post-action label before the post body and rejects presence
 labels such as `Online status indicator Active`. It reconstructs Facebook's visually rendered relative

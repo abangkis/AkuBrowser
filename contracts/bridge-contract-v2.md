@@ -29,14 +29,14 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge product version `0.7.3` / Chrome manifest version `0.7.3.0`;
-- runtime revision `source-adapters-v80`;
-- build id `aku-bridge-0.7.3-source-adapters-v80`; and
+- runtime revision `source-adapters-v81`;
+- build id `aku-bridge-0.7.3-source-adapters-v81`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
 current-process heartbeat is `reconnecting`; any observed mismatch is
 `incompatible`. A session may start only when the current heartbeat is exact.
-The exact v73 capability set includes
+The exact v81 capability set includes
 `mediaEvidenceAdapterVersions.x=x-response-evidence-v2` and the bounded
 `observe_response_media_evidence` and `dispatch_background_commands` actions.
 These declare evidence observation and bounded Sidecar-command dispatch, not
@@ -84,6 +84,13 @@ longer request another capture and Candidate Evaluation begins; source/session
 terminal cleanup remains the fallback. Each background poll also republishes the authenticated
 capability heartbeat so a restarted Sidecar can re-establish exact compatibility
 without an open UI page.
+
+Managed-load recovery is source-declared and bounded. Facebook may recreate
+one newly created or canonically reset Bridge-owned Quiet surface after a typed
+`tab_load_timeout`. AkuBridge must first obtain a safe cleanup outcome for the
+old surface. A lease mismatch, missing ownership receipt, second timeout, or
+user-owned surface ends recovery without opening another window. This policy
+does not apply to X or LinkedIn and does not authorize foreground capture.
 
 Commands may authorize at most two acquisition rounds. Movement, timeout,
 settle, snapshot, block, source-freshness, visibility, tab ownership, and
