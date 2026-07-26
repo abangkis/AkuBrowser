@@ -1,6 +1,6 @@
 # AkuBrowser
 
-Current preview release: **`0.7.2`**. The canonical component tuple,
+Current preview release: **`0.7.3`**. The canonical component tuple,
 bundle boundary, and preview prerequisites are recorded in
 [`release/release-manifest.json`](release/release-manifest.json).
 
@@ -114,15 +114,16 @@ Chrome. Build and smoke-test the host architecture with:
 
 The default target matches the build Mac. Use `--architecture x64` or
 `--architecture arm64` for a native single-architecture artifact, or
-`--architecture universal` for the dual-architecture form published in the
-`0.7.2` GitHub Release. Use
+`--architecture universal` for a dual-architecture form. Use
 `--allow-dirty` only for local pipeline development; a publishable artifact
 requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees. The artifact
 directory, ZIP, and ZIP checksum are written beneath `artifacts/`. Installation
 and launcher details are in
 [`release/macos/README.md`](release/macos/README.md).
-Published downloads are available from the
-[`v0.7.2` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.2).
+The `v0.7.3` tag is the source checkpoint for the next bundle. Published
+downloads remain available from the
+[`v0.7.2` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.2)
+until matching `0.7.3` assets complete platform acceptance.
 
 ## Canonical documentation
 
