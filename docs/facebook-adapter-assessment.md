@@ -181,6 +181,16 @@ capture runtime to advance to the next already-admitted candidate when one is
 below the viewport. If none is available, the existing bounded viewport scroll
 remains the fallback. X and LinkedIn retain their existing scroll behavior.
 
+AkuSidecar consumes that same bounded frontier as a cost guardrail. Facebook
+declares `local_frontier` follow-up planning: after at least one scroll, zero
+new candidates, and no explicit `has more` signal, acquisition finishes without
+an additional planning-model invocation. Candidate evaluation remains
+model-backed. Update Inbox also projects the generic media-acquisition summary
+as a collapsed Media evidence panel; this reuses local observation data and
+does not add capture work or tokens. The measured trade-off and current sample
+limits are recorded in
+[facebook-adapter-cost-performance.md](facebook-adapter-cost-performance.md).
+
 The adapter also owns classification of Facebook's explicit account-level
 service outage surface. A signed-in tab at `/sorry.php?msg=account` with the
 rendered `Account Temporarily Unavailable` heading reports typed
