@@ -57,6 +57,11 @@ Undo never mutates or deletes the earlier event. It appends a `clear` event that
 supersedes the active decision for the same target. The UI can inspect the full
 event history, including clears.
 
+Ledger insertion order is the causal authority when feedback from different
+object scopes must be resolved. Wall-clock timestamps remain reader-facing
+telemetry only; equal timestamps can occur on Windows and random event IDs must
+never decide which user action wins.
+
 Post, media, and quote feedback follow the configured local retention boundary.
 Explicit account rules are retained until cleared or Reset learning/full reset
 because they are deliberate durable policy rather than an inference from one
