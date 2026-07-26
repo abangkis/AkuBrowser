@@ -170,4 +170,4 @@ cd ..\AkuBrowser
 .\scripts\check.ps1
 ```
 
-The check verifies schema and version boundaries, runs `go test -p 1 ./...` in AkuSidecar, `npm run check` only inside AkuBridge, and the AkuSupervisor schema-contract test. No command may push changes; repository push remains an explicit user-approved step.
+The check verifies AkuBrowser, AkuSidecar, and AkuBridge schema/version boundaries, runs `go test -p 1 ./...` in AkuSidecar, and runs `npm run check` only inside AkuBridge. It neither reads AkuSupervisor configuration nor requires the AkuSupervisor repository. Supervisor-specific validation belongs to AkuSupervisor itself. No command may push changes; repository push remains an explicit user-approved step.

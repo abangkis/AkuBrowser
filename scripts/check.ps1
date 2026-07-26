@@ -8,7 +8,6 @@ $browserRoot = Split-Path -Parent $PSScriptRoot
 $workspaceRoot = Split-Path -Parent $browserRoot
 $bridgeRoot = Join-Path $workspaceRoot "AkuBridge"
 $sidecarRoot = Join-Path $workspaceRoot "AkuSidecar"
-$supervisorRoot = Join-Path $workspaceRoot "AkuSupervisor"
 $cacheRoot = Join-Path $workspaceRoot ".go-cache"
 $env:GOCACHE = Join-Path $cacheRoot "build"
 $env:GOMODCACHE = Join-Path $cacheRoot "mod"
@@ -29,10 +28,6 @@ $bridgePackage = Read-Json (Join-Path $bridgeRoot "package.json")
 $bridgeManifest = Read-Json (Join-Path $bridgeRoot "manifest.json")
 $releaseManifest = Read-Json (Join-Path $browserRoot "release\release-manifest.json")
 $sidecarConfig = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
-$supervisorProfile = $null
-if (-not $DistributionOnly) {
-    $supervisorProfile = Read-Json (Join-Path $supervisorRoot "config\akuworkspace.services.json")
-}
 $domain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
 $bridgeCapabilities = Get-Content -LiteralPath (Join-Path $bridgeRoot "bridge-capabilities.js") -Raw
 $sourceCatalog = Get-Content -LiteralPath (Join-Path $bridgeRoot "source-catalog.js") -Raw
@@ -96,13 +91,6 @@ foreach ($schema in $schemas) {
     Assert-True ($canonical -eq $runtime) "$schema drifted between AkuBrowser and AkuSidecar."
 }
 
-if (-not $DistributionOnly) {
-    $supervised = $supervisorProfile.services.akusidecar
-    Assert-True ($supervised.command -eq (Join-Path $sidecarRoot "runtime\dev\aku-sidecar.exe")) "AkuSupervisor does not own the direct Go binary."
-    Assert-True ($supervised.health.expect.version -eq "0.7.3") "AkuSupervisor expects the wrong AkuSidecar version."
-    Assert-True ($supervised.health.expect.runtime -eq "go") "AkuSupervisor does not require the Go runtime."
-}
-
 Push-Location $sidecarRoot
 try {
     & go test -p 1 ./...
@@ -116,15 +104,6 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "AkuBridge checks failed." }
 }
 finally { Pop-Location }
-
-if (-not $DistributionOnly) {
-    Push-Location $supervisorRoot
-    try {
-        & cargo test --test schema_contract
-        if ($LASTEXITCODE -ne 0) { throw "AkuSupervisor schema contract failed." }
-    }
-    finally { Pop-Location }
-}
 
 [ordered]@{
     status = "ok"

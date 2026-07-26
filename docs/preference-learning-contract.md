@@ -97,10 +97,13 @@ A feature disappears from a rebuilt profile when no current effective non-neutra
 
 - Reset learning removes calibration and routine feedback;
 - a selection correction is undone and no other effective signal supplies the feature;
-- full reset removes all learning data;
-- current retention enforcement deletes the old terminal session that owns its assessment and feedback through foreign-key cascade.
+- full reset removes all learning data.
 
-The last item is an implementation coupling, not an ideal personalization guarantee. Today knowledge/session retention and learning-evidence lifetime are not fully separated. If long-lived personal taste must survive short evidence retention, AkuBrowser should later retain a compact canonical learning ledger independently of expired run payloads.
+Knowledge/session retention no longer removes learned taste. Before terminal sessions or
+large run payloads are trimmed, AkuSidecar projects their effective normalized evidence
+into `preference_learning_ledger`. That ledger has no foreign key to a session or run and
+retains only event identity, source/evidence identity, direction, origin, timestamp,
+assessment features, and active undo/reset state.
 
 ## 4. How the profile affects a future Timeline
 
@@ -128,7 +131,11 @@ In the default `guarded_live` mode, the profile can promote, replace, demote, su
 
 ## 5. Why canonical evidence remains the source of truth
 
-The stored `preference_model` is currently written but not read as selection authority. Every active selection fit is rebuilt from canonical feedback, calibration, selection corrections, and their candidate assessments.
+The compact learning ledger is canonical serving evidence after source runs become
+eligible for retention. While source rows still exist, they are synchronized into that
+ledger before every fit and before retention. The stored `preference_model` is a validated
+cache: it is reused only when its algorithm version, source watermark, source digest, and
+effective signal count exactly match the currently resolved ledger.
 
 AI feedback is intentionally outside this contract. AI/not-AI/Unsure events and
 Personal AI Policy are defined in [ai-feedback-contract.md](ai-feedback-contract.md);
@@ -145,26 +152,27 @@ Benefits of this evidence-first design:
 
 Costs of this design:
 
-- fitting reads and recomputes more data than loading one ready-made model;
+- every fit must first resolve a compact signal signature before it may reuse the cache;
 - provenance tables and conflict resolution are more complex;
-- retention of source evidence must be designed carefully so learning does not disappear accidentally;
-- the persisted snapshot may be temporarily stale after a More/Less click because it is refreshed at the next fit, even though canonical feedback is already correct;
-- without a model version and source watermark, the stored snapshot is useful mainly for diagnostics rather than safe cache reuse.
+- source mutation and retention paths must keep the compact ledger synchronized;
+- the persisted snapshot may be stale after a More/Less click, but its digest mismatch
+  makes that stale row ineligible and forces the next fit to rebuild it.
 
 Making the persisted model the sole source of truth would make startup and scoring cheaper and bound storage more aggressively. It would also require every feedback, undo, reset, retention operation, and fitting-algorithm migration to update that model transactionally. A stale or corrupted aggregate could no longer be explained or corrected from user evidence, and changing the fitting rules would either preserve obsolete behavior or discard accumulated taste.
 
-The recommended long-term boundary is therefore:
+The implemented boundary is therefore:
 
 - canonical user evidence and candidate features remain authoritative;
-- `preference_model` may become a validated cache or serving projection;
+- `preference_model` is a validated cache and serving projection;
 - a reusable snapshot must carry a fitting-algorithm version and a source-event watermark or digest;
 - any mismatch must fall back to rebuilding from canonical evidence.
 
-## Proposed validated projection contract
+## Validated projection contract
 
-Status: accepted direction, not implemented yet.
+Status: implemented.
 
-The persisted model should remain an optimization boundary, never independent authority. A future stored projection should include at least:
+The persisted model remains an optimization boundary, never independent authority. Its
+stored envelope includes:
 
 - `algorithmVersion`: identifies the exact normalization, weighting, and activation rules;
 - `sourceWatermark`: identifies the newest canonical learning event included in the fit;
@@ -180,21 +188,24 @@ The serving rule should be deterministic:
 3. otherwise rebuild from canonical evidence and atomically replace the projection;
 4. never repair canonical feedback from the projection.
 
-More, Less, calibration completion, selection-correction create/undo, Reset learning, and any retention operation that changes effective evidence must invalidate or refresh the projection. This removes the current interval in which `preference_model` can be stale after direct feedback while preserving fast reads when nothing changed.
+More, Less, calibration changes, selection-correction create/undo, and retention change
+the resolved ledger signature. Reset learning deletes both ledger and projection. A stale
+projection therefore fails validation automatically; a persisted fit atomically replaces
+it with the current envelope.
 
-Two lifecycle boundaries need explicit follow-up design:
+One lifecycle boundary remains separate:
 
-- **Learning retention must be independent from bulky run retention.** Expiring screenshots, observations, reasoning telemetry, or old Timeline payloads should not silently erase compact user-taste evidence. A future canonical learning ledger should retain only the evidence identity, normalized semantic features, user direction, origin, authority timestamps, and reset/undo state needed to refit.
 - **Semantic feature correction is separate from preference-direction correction.** More/Less must continue to mean user taste. If tag/facet correction is added, it should be an inspectable correction to the candidate description or evaluator-consistency layer, not another hidden meaning attached to Less.
-
-Until that contract exists, the active safe behavior remains rebuild-on-fit from canonical evidence. The singleton `preference_model` row is diagnostic materialization and must not be treated as a trustworthy cache by new code.
 
 ## Current code authority
 
 - `AkuSidecar/internal/reasoning/prompts.go`: Candidate Evaluator boundary.
 - `AkuSidecar/schemas/reasoning-result.schema.json`: tag and facet shape.
-- `AkuSidecar/internal/store/store.go`: append-only feedback and canonical signal resolution.
+- `AkuSidecar/internal/store/store.go`: append-only feedback.
+- `AkuSidecar/internal/store/preference_learning.go`: compact retained learning ledger,
+  effective-signal resolution, and projection loading.
 - `AkuSidecar/internal/preference/preference.go`: deterministic fitting and alignment.
 - `AkuSidecar/internal/selection/selection.go`: Timeline admission and ranking effects.
-- `AkuSidecar/internal/engine/calibration.go`: profile rebuild and snapshot persistence.
+- `AkuSidecar/internal/engine/calibration.go`: signature validation, cache reuse, profile
+  rebuild, and snapshot persistence.
 - `AkuSidecar/internal/store/calibration.go`: persisted `preference_model` projection.

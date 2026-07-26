@@ -51,7 +51,7 @@ Run the workspace check from this repository:
 .\scripts\check.ps1
 ```
 
-That command verifies the cross-repository identities and schemas, runs Go tests in AkuSidecar, runs npm checks inside AkuBridge, and runs the AkuSupervisor schema contract. AkuBrowser itself does not install npm dependencies.
+That command verifies the AkuBrowser, AkuSidecar, and AkuBridge identities and schemas, runs Go tests in AkuSidecar, and runs npm checks inside AkuBridge. It does not read AkuSupervisor configuration or require AkuSupervisor to be present. AkuBrowser itself does not install npm dependencies.
 
 For normal local operation, build AkuSidecar and let AkuSupervisor own its lifecycle:
 
