@@ -44,8 +44,12 @@ signal attached to another object, known human authorship, or insufficient
 evidence. Style alone is not a canonical reason.
 
 `Unsure` is not a weak `not_ai` verdict. It leaves current detector evidence
-inspectable and prioritizes the item in the next bounded Deep Detection
-shortlist. It does not route an otherwise-neutral post into the AI drawer.
+inspectable and immediately queues one bounded Deep Detection review for that
+item when AI Detection is enabled. While the job is pending, the personal
+request has first shortlist priority and does not route an otherwise-neutral
+post into the AI drawer. Once a newer Deep assessment is durable, the request
+is considered fulfilled and the badge reflects that assessment; the original
+`unsure` event remains in the append-only history.
 
 ### 2. Canonical append-only ledger
 
@@ -115,6 +119,8 @@ never passed to selection scoring.
 ## API and lifecycle
 
 - `POST /api/timeline/{id}/ai-feedback` appends a scoped verdict;
+- an enabled `unsure` verdict queues item-scoped Deep Detection asynchronously
+  without blocking the feedback response or Timeline;
 - `GET /api/timeline/{id}/ai-feedback` returns inspectable matching history;
 - `POST /api/ai-feedback/{id}/undo` appends a superseding `clear`;
 - Reset learning clears AI feedback alongside preference evidence;

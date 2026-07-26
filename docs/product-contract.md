@@ -103,7 +103,7 @@ Each Update Inbox check includes a collapsed `AI Detector yield` receipt. It sep
 
 The repository keeps a local, source-controlled AI review corpus with positive and negative controls. Its acceptance test reports shortlist true positives, false positives, true negatives, and false negatives without invoking a model. The corpus is a regression and contract harness, not a claim of real-world detector accuracy; production quality must still be measured from observed local receipts and voluntary user corrections.
 
-Labels name the evidence rather than using the ambiguous blanket term “AI disclosed”: for example `Platform AI label`, `Author-declared AI · Preliminary`, `AI signals confirmed`, or `AI assessment corrected`. The user's object-scoped `Mark as AI-generated` or `Mark as not AI-generated` feedback has the highest personal presentation authority for that same object and can be cleared to reveal the resolved detector history again. `Unsure` requests review without asserting either verdict.
+Labels name the evidence rather than using the ambiguous blanket term “AI disclosed”: for example `Platform AI label`, `Author-declared AI · Preliminary`, `AI signals confirmed`, or `AI assessment corrected`. The user's object-scoped `Mark as AI-generated` or `Mark as not AI-generated` feedback has the highest personal presentation authority for that same object and can be cleared to reveal the resolved detector history again. `Unsure` requests one immediate bounded Deep review without asserting either verdict. Its pending badge remains until a newer Deep assessment is durable, after which presentation follows that assessment while the request remains inspectable in feedback history.
 
 Settings expose three locked presentation modes:
 
