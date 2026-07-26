@@ -61,7 +61,9 @@ item and only increased latency.
    improve diagnostics.
 3. The local frontier fast path applies only after at least one completed
    scroll, zero new candidates, and no explicit `has more` candidate signal.
-   X and LinkedIn retain their current planning behavior.
+   LinkedIn now declares the same generic capability behind stricter complete,
+   non-deadline-exhausted capture guards; X retains model planning. This does
+   not change Facebook's adapter, hydration, or media behavior.
 4. Candidate evaluation remains model-backed whenever a new Facebook item
    survives continuity filtering. The optimization removes only follow-up
    planning that cannot point to a new frontier.
@@ -89,8 +91,8 @@ item and only increased latency.
   the local frontier signal?
 - How often does a rendered Facebook media root end as unavailable, and which
   extraction stage fails?
-- After enough diverse runs, should the same local frontier rule become a
-  generic source capability rather than a Facebook-only declaration?
+- Do later Facebook layouts require a stricter source-specific guard on the
+  already generic local-frontier capability?
 
 ## Caveats and assumptions
 
