@@ -128,6 +128,7 @@ Published downloads are available from the
 
 - [Product contract](docs/product-contract.md)
 - [Runtime contract](docs/runtime-contract.md)
+- [AI Feedback Engine contract](docs/ai-feedback-contract.md)
 - [Preview release](docs/preview-release.md)
 - [Windows preview acceptance](docs/windows-preview-acceptance.md)
 - [macOS preview acceptance](docs/macos-preview-acceptance.md)

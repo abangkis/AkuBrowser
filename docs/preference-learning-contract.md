@@ -130,6 +130,10 @@ In the default `guarded_live` mode, the profile can promote, replace, demote, su
 
 The stored `preference_model` is currently written but not read as selection authority. Every active selection fit is rebuilt from canonical feedback, calibration, selection corrections, and their candidate assessments.
 
+AI feedback is intentionally outside this contract. AI/not-AI/Unsure events and
+Personal AI Policy are defined in [ai-feedback-contract.md](ai-feedback-contract.md);
+they cannot add topic/facet weights or influence selection scoring.
+
 Benefits of this evidence-first design:
 
 - **User corrections remain explainable.** A weight can be traced back to specific direct decisions.

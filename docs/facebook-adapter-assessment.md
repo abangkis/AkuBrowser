@@ -25,7 +25,7 @@ AkuSidecar owns one source registry. It supplies source identity, display
 metadata, default activation, adapter versions, optional capabilities, and
 source behavior metadata. `Source.Valid`, Settings validation, heartbeat
 compatibility, onboarding controls, Timeline presentation, and database source
-definitions consume this registry. SQLite schema 6 references the seeded
+definitions consume this registry. SQLite schema 7 references the seeded
 `source_definitions` table instead of repeating fixed source enums. Reasoning no
 longer owns or returns source identity; Sidecar binds each result to its run.
 
@@ -117,7 +117,7 @@ The implementation is accepted at the code and synthetic-runtime layer when:
 3. the Facebook adapter passes Home Feed conformance for readiness, normalized
    evidence, social context, sponsorship marking, and canonical links;
 4. generic Bridge core contains no source-name control-flow branches;
-5. Sidecar registry, schema 6, dynamic UI, heartbeat, and session creation accept
+5. Sidecar registry, schema 7, dynamic UI, heartbeat, and session creation accept
    three registered sources;
 6. development package verification and integration contracts agree on runtime
    revision `source-adapters-v79`; immutable published release manifests retain
