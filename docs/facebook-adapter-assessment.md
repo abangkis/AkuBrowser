@@ -130,10 +130,10 @@ The implementation is accepted at the code and synthetic-runtime layer when:
 5. Sidecar registry, schema 7, dynamic UI, heartbeat, and session creation accept
    three registered sources;
 6. development package verification and integration contracts agree on runtime
-   revision `source-adapters-v81`; immutable published release manifests retain
+   revision `source-adapters-v82`; immutable published release manifests retain
    the revision of their uploaded artifacts.
 
-Facebook adapter v14 also treats the current Home Feed header as an explicit
+Facebook adapter v15 also treats the current Home Feed header as an explicit
 adapter responsibility. It resolves the author from bounded profile links
 or the explicit post-action label before the post body and rejects presence
 labels such as `Online status indicator Active`. It reconstructs Facebook's visually rendered relative
@@ -165,6 +165,14 @@ Live Facebook acceptance still requires a signed-in user session and repeated
 captures of ordinary, shared, Page, suggested, sponsored, image, and video
 entries. A live selector or media gap is an adapter defect; it must not be
 worked around by adding source-specific branches to generic orchestration.
+
+Adapter v15 also exports bounded candidate-admission diagnostics with each
+snapshot. It distinguishes structural cards from capture-eligible and visible
+posts and names the adapter-owned admission or rejection reason. AkuBridge only
+sanitizes and transports this generic telemetry; AkuSidecar stores it and the
+Update Inbox renders it collapsed. Counts are observations per snapshot, not
+unique-post totals, so the run rollup uses maxima rather than summing repeated
+DOM candidates.
 
 The adapter also owns classification of Facebook's explicit account-level
 service outage surface. A signed-in tab at `/sorry.php?msg=account` with the
