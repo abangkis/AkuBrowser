@@ -122,15 +122,22 @@ active background work. A later Sidecar start reconstructs queue and schedule
 state from SQLite and catches up when policy allows.
 
 The first trusted AkuBrowser page access configures AkuBridge with the local
-Sidecar endpoint and durable Bridge token. AkuBridge then polls for persisted
+Sidecar endpoint and durable Bridge token. AkuBridge polls for persisted
 pending capture commands at a bounded one-minute cadence, so Fixed background
-work can continue after the page closes. Adaptive activity still requires
+work can continue after the page closes. After a background observation it
+also performs a short bounded session pump: as soon as one source closes
+Acquisition, Bridge receives an explicit per-source cleanup request and releases
+that source without waiting for the next alarm. The one-minute alarm remains a
+crash/reload fallback rather than the primary cleanup timer. Adaptive activity still requires
 recent human interaction by policy. Invalid or rotated credentials are deleted by AkuBridge
 after an authenticated rejection and are configured again on the next trusted
 page access. Background and page dispatch both claim the same command, so only
 one can win. AkuBridge persists the active capture lease across bounded
-follow-up commands and releases each source surface when acquisition is closed
-and Candidate Evaluation begins; terminal source/session cleanup remains the
-fallback. The same poll refreshes the authenticated Bridge
+follow-up commands in a version-two managed-surface ledger. Every Bridge-created
+managed window or Adaptive tab remains in that ledger until a cleanup receipt
+exists. Ledger reconciliation runs when the extension starts or reloads and
+before another lease takes ownership; it closes only still-provable Bridge
+surfaces and preserves anything adopted by the user. Terminal source/session
+cleanup remains the fallback. The same poll refreshes the authenticated Bridge
 heartbeat, allowing a restarted Sidecar to recover exact Bridge compatibility
 without waiting for the UI to open.

@@ -135,13 +135,19 @@ while the user is away, within its configured refill and budget boundaries.
 ## Capture lease and update policy
 
 AkuBridge assigns the automatic session a capture lease: an ownership record
-for the Bridge-managed source tab or quiet-capture window. The lease is retained
-across initial and follow-up acquisition so the adapter keeps the same source
-frontier instead of reopening or losing its place. It is released when
-Acquisition Planning can no longer request another capture and Candidate
-Evaluation begins; source/session terminal release remains a fallback for
-cancellation, restart, or any cleanup that was not acknowledged earlier.
-Cleanup closes only Bridge-owned surfaces and preserves user-created tabs.
+for every Bridge-created source tab or quiet-capture window. The lease is
+retained across initial and follow-up acquisition so the adapter keeps the same
+source frontier instead of reopening or losing its place. A durable
+managed-surface ledger keeps each surface until Bridge records a cleanup
+receipt, including across extension reload. When Acquisition Planning can no
+longer request another capture and Candidate Evaluation begins, Auto Update
+sends an explicit cleanup action for that source immediately. A short
+background pump handles the normal path; the one-minute extension alarm plus
+terminal source/session release remain recovery fallbacks. Reconciliation also
+runs before a new lease takes ownership. Cleanup closes only still-provable
+Bridge surfaces and preserves user-created or user-adopted tabs. Update Inbox
+shows the resulting created/reused, release-requested, released,
+user-preserved, reconciliation, and focus-intervention receipts.
 
 Updates never overlap. A scheduler-triggered prepared update waits while a
 user-visible update is active, and another update cannot start while
