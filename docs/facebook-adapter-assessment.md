@@ -120,10 +120,10 @@ The implementation is accepted at the code and synthetic-runtime layer when:
 5. Sidecar registry, schema 7, dynamic UI, heartbeat, and session creation accept
    three registered sources;
 6. development package verification and integration contracts agree on runtime
-   revision `source-adapters-v79`; immutable published release manifests retain
+   revision `source-adapters-v80`; immutable published release manifests retain
    the revision of their uploaded artifacts.
 
-Facebook adapter v12 also treats the current Home Feed header as an explicit
+Facebook adapter v13 also treats the current Home Feed header as an explicit
 adapter responsibility. It resolves the author from bounded profile links
 or the explicit post-action label before the post body and rejects presence
 labels such as `Online status indicator Active`. It reconstructs Facebook's visually rendered relative
