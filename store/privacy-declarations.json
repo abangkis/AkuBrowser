@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "singlePurpose": "Build and personalize a private AI feed from the X, LinkedIn, and Facebook sources explicitly enabled by the user.",
+  "dataCategories": {
+    "personallyIdentifiableInformation": true,
+    "healthInformation": false,
+    "financialAndPaymentInformation": false,
+    "authenticationInformation": false,
+    "personalCommunications": false,
+    "location": false,
+    "webHistory": true,
+    "userActivity": true,
+    "websiteContent": true
+  },
+  "uses": [
+    "core_functionality",
+    "personalization",
+    "security",
+    "reliability"
+  ],
+  "sold": false,
+  "advertising": false,
+  "humanReview": "Only with explicit user consent for specific support material, for security, or where required by law.",
+  "remoteCode": false,
+  "companionRuntimeRequired": true,
+  "thirdPartyProcessing": [
+    {
+      "party": "OpenAI",
+      "condition": "Only when the user invokes AI-backed features through their signed-in Codex App.",
+      "data": "Selected source content and bounded task prompts."
+    }
+  ],
+  "privacyPolicy": "https://github.com/abangkis/AkuBrowser/blob/main/PRIVACY.md",
+  "support": "https://github.com/abangkis/AkuBrowser/issues"
+}

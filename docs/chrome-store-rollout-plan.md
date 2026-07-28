@@ -98,6 +98,12 @@ Exit:
 
 ## Stage 6 — Chrome Web Store readiness
 
+Implementation: Store listing, privacy declarations, permission justification,
+reviewer guidance, and submission gates live under `store/`; the public privacy
+policy lives in `PRIVACY.md`. The checked-in readiness test and deterministic
+ZIP builder live in `scripts/test-chrome-store-readiness.ps1` and
+`scripts/build-chrome-store-package.ps1`.
+
 Deliver:
 
 - Store listing under `AkuBrowser`;
