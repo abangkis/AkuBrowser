@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "product": "AkuBrowser",
+  "version": "0.7.4",
+  "scenarios": [
+    {
+      "id": "first_install",
+      "expectedState": "runtime_install_required",
+      "automatedBoundary": "extension-client-and-installer",
+      "cleanMachineRequired": true
+    },
+    {
+      "id": "chrome_restart",
+      "expectedState": "runtime_ready",
+      "automatedBoundary": "extension-lifecycle-and-native-host",
+      "cleanMachineRequired": true
+    },
+    {
+      "id": "pc_restart",
+      "expectedState": "runtime_ready",
+      "automatedBoundary": "extension-lifecycle-and-native-host",
+      "cleanMachineRequired": true
+    },
+    {
+      "id": "sidecar_recovery",
+      "expectedState": "runtime_ready",
+      "automatedBoundary": "native-host",
+      "cleanMachineRequired": true
+    },
+    {
+      "id": "extension_update",
+      "expectedState": "runtime_ready",
+      "automatedBoundary": "extension-lifecycle",
+      "cleanMachineRequired": true
+    },
+    {
+      "id": "incompatible_tuple",
+      "expectedState": "runtime_incompatible",
+      "automatedBoundary": "extension-client-and-native-host",
+      "cleanMachineRequired": false
+    },
+    {
+      "id": "interrupted_staging",
+      "expectedState": "known_good_preserved",
+      "automatedBoundary": "installer",
+      "cleanMachineRequired": false
+    },
+    {
+      "id": "failed_candidate_rollback",
+      "expectedState": "known_good_preserved",
+      "automatedBoundary": "native-host-authority",
+      "cleanMachineRequired": false
+    },
+    {
+      "id": "runtime_repair",
+      "expectedState": "runtime_ready",
+      "automatedBoundary": "installer-and-native-host",
+      "cleanMachineRequired": true
+    },
+    {
+      "id": "uninstall_reinstall",
+      "expectedState": "runtime_ready",
+      "automatedBoundary": "installer",
+      "cleanMachineRequired": true
+    }
+  ]
+}

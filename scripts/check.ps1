@@ -28,6 +28,7 @@ function Assert-True([bool]$Condition, [string]$Message) {
 $bridgePackage = Read-Json (Join-Path $bridgeRoot "package.json")
 $bridgeManifest = Read-Json (Join-Path $bridgeRoot "manifest.json")
 $releaseManifest = Read-Json (Join-Path $browserRoot "release\release-manifest.json")
+$lifecycleAcceptance = Read-Json (Join-Path $browserRoot "acceptance\windows-runtime-lifecycle.json")
 $sidecarConfig = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $domain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
 $bridgeCapabilities = Get-Content -LiteralPath (Join-Path $bridgeRoot "bridge-capabilities.js") -Raw
@@ -35,6 +36,23 @@ $sourceCatalog = Get-Content -LiteralPath (Join-Path $bridgeRoot "source-catalog
 $responseEvidenceAdapter = Get-Content -LiteralPath (Join-Path $bridgeRoot "x-response-evidence-adapter.js") -Raw
 
 Assert-True ($releaseManifest.version -eq "0.7.4") "AkuBrowser release version is unexpected."
+Assert-True ($lifecycleAcceptance.version -eq $releaseManifest.version) "Lifecycle acceptance version drifted from the release manifest."
+$expectedLifecycleScenarios = @(
+    "first_install",
+    "chrome_restart",
+    "pc_restart",
+    "sidecar_recovery",
+    "extension_update",
+    "incompatible_tuple",
+    "interrupted_staging",
+    "failed_candidate_rollback",
+    "runtime_repair",
+    "uninstall_reinstall"
+)
+Assert-True ($lifecycleAcceptance.scenarios.Count -eq $expectedLifecycleScenarios.Count) "Lifecycle acceptance scenario count is unexpected."
+foreach ($scenario in $expectedLifecycleScenarios) {
+    Assert-True ($lifecycleAcceptance.scenarios.id -contains $scenario) "Lifecycle acceptance is missing $scenario."
+}
 Assert-True ($releaseManifest.distribution.authorityRepository -eq "AkuBrowser") "AkuBrowser must remain the distribution authority."
 Assert-True ($releaseManifest.distribution.windows.format -eq "portable-zip") "Windows preview must remain a portable ZIP."
 Assert-True ($bridgePackage.version -eq $bridgeManifest.version_name) "AkuBridge package and manifest version name differ."

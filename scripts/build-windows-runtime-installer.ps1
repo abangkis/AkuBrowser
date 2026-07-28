@@ -116,6 +116,7 @@ if (-not $UnsignedLocalCandidate) {
         "abcdefghijklmnopabcdefghijklmnop"
     )
     Assert-True ($placeholderIds -notcontains $ExtensionId) "Production installer builds reject placeholder extension IDs."
+    Assert-True ($ExtensionId -notmatch '^([a-p])\1{31}$') "Production installer builds reject repeated-character placeholder extension IDs."
     Assert-True ($CertificatePath -or $SigningThumbprint) "Production installer builds require an Authenticode signing certificate."
     Assert-True (-not [string]::IsNullOrWhiteSpace($TimestampUrl)) "Production installer builds require an RFC 3161 timestamp URL."
 }

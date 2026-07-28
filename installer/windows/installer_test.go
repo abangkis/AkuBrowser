@@ -62,6 +62,12 @@ func TestInstallRepairAndUninstallPreserveUserData(t *testing.T) {
 	if _, err := os.Stat(filepath.Join(installRoot, "host", "AkuBrowserRuntimeHost.exe")); !os.IsNotExist(err) {
 		t.Fatalf("program file survived uninstall: %v", err)
 	}
+
+	if err := installer.Install(); err != nil {
+		t.Fatalf("reinstall: %v", err)
+	}
+	assertFileContent(t, userData, "durable-user-data")
+	assertFileContent(t, filepath.Join(installRoot, "runtime", "current.json"), `{"version":"0.7.4"}`)
 }
 
 func TestInstallerRejectsPayloadTraversalAndChecksumMismatch(t *testing.T) {
@@ -105,6 +111,41 @@ func TestCurrentMetadataIsAlwaysActivatedLast(t *testing.T) {
 	ordered := installationOrder(files)
 	if ordered[len(ordered)-1].Path != "runtime/current.json" {
 		t.Fatalf("active runtime metadata was not last: %#v", ordered)
+	}
+}
+
+func TestInterruptedInstallPreservesActiveMetadataAndUserData(t *testing.T) {
+	payload, manifest := installerFixture(t)
+	base := t.TempDir()
+	installRoot := filepath.Join(base, "Programs", "AkuBrowser")
+	dataRoot := filepath.Join(base, "AkuBrowser", "data")
+	sourceSetup := filepath.Join(base, "download", "AkuBrowserRuntimeSetup.exe")
+	currentPath := filepath.Join(installRoot, "runtime", "current.json")
+	userData := filepath.Join(dataRoot, "aku-browser.db")
+	writeTestFile(t, sourceSetup, []byte("signed-setup-binary"))
+	writeTestFile(t, currentPath, []byte(`{"version":"0.7.3","knownGood":true}`))
+	writeTestFile(t, userData, []byte("durable-user-data"))
+
+	// A file occupying the candidate version directory simulates an interrupted
+	// or otherwise unwritable staging destination before current.json activates.
+	writeTestFile(t, filepath.Join(installRoot, "runtime", "versions", manifest.Version), []byte("blocked"))
+	registry := &memoryRegistry{}
+	installer := Installer{
+		Payload:          payload,
+		Manifest:         manifest,
+		InstallRoot:      installRoot,
+		DataRoot:         dataRoot,
+		SourceExecutable: sourceSetup,
+		Registry:         registry,
+	}
+
+	if err := installer.Install(); err == nil {
+		t.Fatal("interrupted staging unexpectedly completed")
+	}
+	assertFileContent(t, currentPath, `{"version":"0.7.3","knownGood":true}`)
+	assertFileContent(t, userData, "durable-user-data")
+	if registry.nativeManifest != "" || registry.registration.DisplayName != "" {
+		t.Fatalf("failed staging changed registration: %#v", registry)
 	}
 }
 

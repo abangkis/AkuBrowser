@@ -72,6 +72,11 @@ Exit:
 
 ## Stage 5 — Lifecycle acceptance
 
+Implementation: automated acceptance and the production clean-machine evidence
+runner live in `scripts/test-windows-runtime-lifecycle.ps1`; the execution
+boundary and release-gate checklist live in
+`docs/windows-runtime-lifecycle-acceptance.md`.
+
 Deliver automated and clean-machine tests for:
 
 - first install;
