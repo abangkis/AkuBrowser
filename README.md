@@ -34,6 +34,13 @@ checksums, launchers, and acceptance guidance, while keeping application
 runtime code in its component repositories. AkuBrowser has no Node package or
 application runtime of its own.
 
+The staged consumer distribution path publishes the extension under the public
+name **AkuBrowser** while retaining `AkuBridge` as the internal component name.
+Its Native Messaging, companion installer, Store, and signed runtime-update
+gates are defined in
+[`docs/chrome-store-distribution-contract.md`](docs/chrome-store-distribution-contract.md)
+and [`docs/chrome-store-rollout-plan.md`](docs/chrome-store-rollout-plan.md).
+
 | Repository | Responsibility | Runtime |
 | --- | --- | --- |
 | `AkuBrowser` | Product contract, canonical schemas, distribution assembly, integration and artifact checks | PowerShell + POSIX shell release tooling |
