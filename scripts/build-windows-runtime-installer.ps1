@@ -1,0 +1,353 @@
+[CmdletBinding()]
+param(
+    [Parameter(Mandatory = $true)]
+    [string] $ExtensionId,
+    [string] $OutputRoot = "",
+    [string] $C2paToolPath = "",
+    [string] $CertificatePath = "",
+    [string] $CertificatePassword = "",
+    [string] $SigningThumbprint = "",
+    [string] $TimestampUrl = "http://timestamp.digicert.com",
+    [switch] $UnsignedLocalCandidate,
+    [switch] $SkipValidation,
+    [switch] $AllowDirty
+)
+
+$ErrorActionPreference = "Stop"
+$browserRoot = Split-Path -Parent $PSScriptRoot
+$workspaceRoot = Split-Path -Parent $browserRoot
+$bridgeRoot = Join-Path $workspaceRoot "AkuBridge"
+$sidecarRoot = Join-Path $workspaceRoot "AkuSidecar"
+$installerSource = Join-Path $browserRoot "installer\windows"
+$releaseManifestPath = Join-Path $browserRoot "release\release-manifest.json"
+
+function Assert-True([bool] $Condition, [string] $Message) {
+    if (-not $Condition) { throw $Message }
+}
+
+function Read-Json([string] $Path) {
+    return Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
+}
+
+function Write-Utf8NoBom([string] $Path, [string] $Content) {
+    [IO.File]::WriteAllText($Path, $Content, [Text.UTF8Encoding]::new($false))
+}
+
+function Get-RelativePath([string] $BasePath, [string] $Path) {
+    $base = [IO.Path]::GetFullPath($BasePath).TrimEnd([IO.Path]::DirectorySeparatorChar)
+    $baseUri = [Uri]($base + [IO.Path]::DirectorySeparatorChar)
+    $pathUri = [Uri][IO.Path]::GetFullPath($Path)
+    return [Uri]::UnescapeDataString($baseUri.MakeRelativeUri($pathUri).ToString())
+}
+
+function Reset-Path([string] $Path, [string] $AllowedRoot, [switch] $Directory) {
+    $absolutePath = [IO.Path]::GetFullPath($Path)
+    $absoluteRoot = [IO.Path]::GetFullPath($AllowedRoot).TrimEnd([IO.Path]::DirectorySeparatorChar)
+    $prefix = $absoluteRoot + [IO.Path]::DirectorySeparatorChar
+    Assert-True ($absolutePath.StartsWith($prefix, [StringComparison]::OrdinalIgnoreCase)) "Refusing to replace a path outside the installer artifact root: $absolutePath"
+    if (Test-Path -LiteralPath $absolutePath) {
+        Remove-Item -LiteralPath $absolutePath -Recurse -Force
+    }
+    if ($Directory) {
+        New-Item -ItemType Directory -Force -Path $absolutePath | Out-Null
+    }
+}
+
+function Invoke-Git([string] $Repository, [string[]] $Arguments) {
+    $value = & git -C $Repository @Arguments
+    if ($LASTEXITCODE -ne 0) {
+        throw "git $($Arguments -join ' ') failed in $Repository"
+    }
+    return ($value | Out-String).Trim()
+}
+
+function Find-SignTool {
+    $roots = @(
+        "C:\Program Files (x86)\Windows Kits\10\bin",
+        "C:\Program Files\Windows Kits\10\bin"
+    )
+    $candidates = foreach ($root in $roots) {
+        if (Test-Path -LiteralPath $root) {
+            Get-ChildItem -LiteralPath $root -Recurse -Filter "signtool.exe" -File -ErrorAction SilentlyContinue |
+                Where-Object { $_.Directory.Name -eq "x64" }
+        }
+    }
+    $selected = $candidates | Sort-Object FullName -Descending | Select-Object -First 1
+    if ($null -eq $selected) {
+        throw "SignTool was not found in the Windows SDK."
+    }
+    return $selected.FullName
+}
+
+function Sign-Binary([string] $Path, [string] $SignTool) {
+    $arguments = @(
+        "sign",
+        "/fd", "SHA256",
+        "/tr", $TimestampUrl,
+        "/td", "SHA256",
+        "/d", "AkuBrowser Runtime",
+        "/du", "https://github.com/abangkis/AkuBrowser"
+    )
+    if (-not [string]::IsNullOrWhiteSpace($CertificatePath)) {
+        $arguments += @("/f", [IO.Path]::GetFullPath($CertificatePath))
+        if (-not [string]::IsNullOrWhiteSpace($CertificatePassword)) {
+            $arguments += @("/p", $CertificatePassword)
+        }
+    }
+    else {
+        $arguments += @("/sha1", $SigningThumbprint)
+    }
+    $arguments += $Path
+    & $SignTool @arguments | Out-Host
+    if ($LASTEXITCODE -ne 0) {
+        throw "Authenticode signing failed for $([IO.Path]::GetFileName($Path))."
+    }
+    & $SignTool verify /pa /all $Path | Out-Host
+    if ($LASTEXITCODE -ne 0) {
+        throw "Authenticode verification failed for $([IO.Path]::GetFileName($Path))."
+    }
+}
+
+Assert-True ($ExtensionId -match '^[a-p]{32}$') "ExtensionId must be an exact 32-character Chrome extension ID."
+Assert-True (-not ($CertificatePath -and $SigningThumbprint)) "Choose a PFX path or certificate thumbprint, not both."
+if (-not $UnsignedLocalCandidate) {
+    $placeholderIds = @(
+        "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "abcdefghijklmnopabcdefghijklmnop"
+    )
+    Assert-True ($placeholderIds -notcontains $ExtensionId) "Production installer builds reject placeholder extension IDs."
+    Assert-True ($CertificatePath -or $SigningThumbprint) "Production installer builds require an Authenticode signing certificate."
+    Assert-True (-not [string]::IsNullOrWhiteSpace($TimestampUrl)) "Production installer builds require an RFC 3161 timestamp URL."
+}
+if ($CertificatePath) {
+    $CertificatePath = [IO.Path]::GetFullPath($CertificatePath)
+    Assert-True (Test-Path -LiteralPath $CertificatePath -PathType Leaf) "The signing certificate was not found."
+}
+if ([string]::IsNullOrWhiteSpace($CertificatePassword) -and -not [string]::IsNullOrWhiteSpace($env:AKU_WINDOWS_SIGNING_PASSWORD)) {
+    $CertificatePassword = $env:AKU_WINDOWS_SIGNING_PASSWORD
+}
+
+if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
+    $OutputRoot = Join-Path $browserRoot "artifacts\runtime-installer"
+}
+$OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
+New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
+
+if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
+    $C2paToolPath = Join-Path $sidecarRoot "runtime\dev\c2patool.exe"
+}
+$C2paToolPath = [IO.Path]::GetFullPath($C2paToolPath)
+Assert-True (Test-Path -LiteralPath $C2paToolPath -PathType Leaf) "The pinned c2patool binary was not found: $C2paToolPath"
+
+$release = Read-Json $releaseManifestPath
+$bridgePackage = Read-Json (Join-Path $bridgeRoot "package.json")
+$bridgeManifest = Read-Json (Join-Path $bridgeRoot "manifest.json")
+$sidecarDomain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
+Assert-True ($release.distribution.authorityRepository -eq "AkuBrowser") "AkuBrowser is not the distribution authority."
+Assert-True ($release.components.akuBridge.version -eq $bridgePackage.version) "AkuBridge version differs from the release tuple."
+Assert-True ($release.components.akuBridge.chromeVersion -eq $bridgeManifest.version) "AkuBridge Chrome version differs from the release tuple."
+Assert-True ($sidecarDomain -match ('ApplicationVersion\s*=\s*"' + [regex]::Escape($release.components.akuSidecar.version) + '"')) "AkuSidecar version differs from the release tuple."
+
+$c2paSourceHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $C2paToolPath).Hash.ToLowerInvariant()
+Assert-True ($c2paSourceHash -eq $release.components.c2paTool.sha256) "The source c2patool SHA-256 differs from the pinned release manifest."
+$c2paVersion = (& $C2paToolPath --version | Out-String).Trim()
+Assert-True ($LASTEXITCODE -eq 0) "c2patool could not report its version."
+Assert-True ($c2paVersion -eq "c2patool $($release.components.c2paTool.version)") "c2patool version differs from the release tuple."
+
+$repositories = [ordered]@{
+    akuBrowser = $browserRoot
+    akuBridge = $bridgeRoot
+    akuSidecar = $sidecarRoot
+}
+$sourceCommits = [ordered]@{}
+$dirty = @()
+foreach ($entry in $repositories.GetEnumerator()) {
+    $sourceCommits[$entry.Key] = Invoke-Git $entry.Value @("rev-parse", "HEAD")
+    if (-not [string]::IsNullOrWhiteSpace((Invoke-Git $entry.Value @("status", "--porcelain")))) {
+        $dirty += $entry.Key
+    }
+}
+if ($dirty.Count -gt 0 -and -not $AllowDirty) {
+    throw "Runtime installer sources must be clean. Dirty repositories: $($dirty -join ', ')."
+}
+
+if (-not $SkipValidation) {
+    & (Join-Path $PSScriptRoot "check.ps1") -DistributionOnly
+    if ($LASTEXITCODE -ne 0) {
+        throw "Distribution validation failed."
+    }
+    Push-Location (Join-Path $bridgeRoot "native-host")
+    try {
+        & go test -count=1 ./...
+        if ($LASTEXITCODE -ne 0) { throw "Native host tests failed." }
+    }
+    finally { Pop-Location }
+    Push-Location $installerSource
+    try {
+        & go test -count=1 ./...
+        if ($LASTEXITCODE -ne 0) { throw "Windows installer tests failed." }
+    }
+    finally { Pop-Location }
+}
+
+$suffix = if ($UnsignedLocalCandidate) { "-unsigned-local" } else { "" }
+$artifactName = "AkuBrowserRuntimeSetup-$($release.version)$suffix.exe"
+$artifactPath = Join-Path $OutputRoot $artifactName
+$checksumPath = "$artifactPath.sha256"
+$buildRoot = Join-Path $OutputRoot ".runtime-installer-build"
+Reset-Path $buildRoot $OutputRoot -Directory
+Reset-Path $artifactPath $OutputRoot
+Reset-Path $checksumPath $OutputRoot
+
+$payloadRoot = Join-Path $buildRoot "payload"
+$hostPayload = Join-Path $payloadRoot "host"
+$runtimePayload = Join-Path $payloadRoot "runtime\versions\$($release.version)"
+New-Item -ItemType Directory -Force -Path $hostPayload | Out-Null
+New-Item -ItemType Directory -Force -Path $runtimePayload | Out-Null
+
+Get-ChildItem -LiteralPath $installerSource -File |
+    Where-Object { $_.Extension -in @(".go", ".mod", ".sum") } |
+    ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $buildRoot }
+
+$cacheRoot = Join-Path $workspaceRoot ".go-cache"
+$savedEnvironment = @{
+    GOOS = $env:GOOS
+    GOARCH = $env:GOARCH
+    CGO_ENABLED = $env:CGO_ENABLED
+    GOCACHE = $env:GOCACHE
+    GOMODCACHE = $env:GOMODCACHE
+    GOTMPDIR = $env:GOTMPDIR
+}
+try {
+    $env:GOOS = "windows"
+    $env:GOARCH = "amd64"
+    $env:CGO_ENABLED = "0"
+    $env:GOCACHE = Join-Path $cacheRoot "build"
+    $env:GOMODCACHE = Join-Path $cacheRoot "mod"
+    $env:GOTMPDIR = Join-Path $cacheRoot "tmp"
+    foreach ($directory in @($env:GOCACHE, $env:GOMODCACHE, $env:GOTMPDIR)) {
+        New-Item -ItemType Directory -Force -Path $directory | Out-Null
+    }
+
+    Push-Location (Join-Path $bridgeRoot "native-host")
+    try {
+        & go build -trimpath -ldflags "-s -w" -o (Join-Path $hostPayload "AkuBrowserRuntimeHost.exe") .
+        if ($LASTEXITCODE -ne 0) { throw "AkuBrowser Runtime Host build failed." }
+    }
+    finally { Pop-Location }
+
+    Push-Location $sidecarRoot
+    try {
+        & go build -trimpath -ldflags "-s -w" -o (Join-Path $runtimePayload "AkuSidecar.exe") .\cmd\akusidecar
+        if ($LASTEXITCODE -ne 0) { throw "AkuSidecar installer build failed." }
+    }
+    finally { Pop-Location }
+}
+finally {
+    foreach ($name in $savedEnvironment.Keys) {
+        if ($null -eq $savedEnvironment[$name]) {
+            Remove-Item -Path "Env:$name" -ErrorAction SilentlyContinue
+        }
+        else {
+            Set-Item -Path "Env:$name" -Value $savedEnvironment[$name]
+        }
+    }
+}
+
+Copy-Item -LiteralPath $C2paToolPath -Destination (Join-Path $runtimePayload "c2patool.exe")
+$configOutput = Join-Path $runtimePayload "config"
+New-Item -ItemType Directory -Force -Path $configOutput | Out-Null
+$config = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
+$config.database.path = "runtime/aku-browser.db"
+$config.reasoning.executable = ""
+Write-Utf8NoBom (Join-Path $configOutput "sidecar.json") ($config | ConvertTo-Json -Depth 10)
+
+$schemasOutput = Join-Path $runtimePayload "schemas"
+New-Item -ItemType Directory -Force -Path $schemasOutput | Out-Null
+Get-ChildItem -LiteralPath (Join-Path $sidecarRoot "schemas") -Filter "*.schema.json" -File |
+    ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $schemasOutput }
+
+$licenseOutput = Join-Path $runtimePayload "third-party\c2patool"
+New-Item -ItemType Directory -Force -Path $licenseOutput | Out-Null
+Copy-Item -LiteralPath (Join-Path $browserRoot "release\third-party\c2patool\LICENSE-MIT") -Destination $licenseOutput
+Copy-Item -LiteralPath (Join-Path $browserRoot "release\third-party\c2patool\THIRD-PARTY-NOTICE.md") -Destination $licenseOutput
+
+$hostManifest = [ordered]@{
+    name = "com.akubrowser.runtime"
+    description = "AkuBrowser Runtime Host"
+    path = "AkuBrowserRuntimeHost.exe"
+    type = "stdio"
+    allowed_origins = @("chrome-extension://$ExtensionId/")
+}
+Write-Utf8NoBom (Join-Path $hostPayload "com.akubrowser.runtime.json") ($hostManifest | ConvertTo-Json -Depth 5)
+
+$currentOutput = Join-Path $payloadRoot "runtime"
+New-Item -ItemType Directory -Force -Path $currentOutput | Out-Null
+$current = [ordered]@{
+    schemaVersion = 1
+    channel = $release.channel
+    version = $release.version
+    runtimeRevision = $release.components.akuBridge.runtimeRevision
+    bridgeContractVersion = $release.components.akuBridge.contractVersion
+    rollbackVersion = $null
+}
+Write-Utf8NoBom (Join-Path $currentOutput "current.json") ($current | ConvertTo-Json -Depth 5)
+
+$signTool = $null
+if (-not $UnsignedLocalCandidate) {
+    $signTool = Find-SignTool
+    foreach ($binary in @(
+        (Join-Path $hostPayload "AkuBrowserRuntimeHost.exe"),
+        (Join-Path $runtimePayload "AkuSidecar.exe"),
+        (Join-Path $runtimePayload "c2patool.exe")
+    )) {
+        Sign-Binary $binary $signTool
+    }
+}
+
+$payloadFiles = Get-ChildItem -LiteralPath $payloadRoot -Recurse -File |
+    Sort-Object FullName |
+    ForEach-Object {
+        [ordered]@{
+            path = (Get-RelativePath $payloadRoot $_.FullName).Replace("\", "/")
+            size = $_.Length
+            sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant()
+        }
+    }
+$payloadManifest = [ordered]@{
+    schemaVersion = 1
+    product = "AkuBrowser"
+    version = $release.version
+    architecture = "windows-x64"
+    extensionOrigin = "chrome-extension://$ExtensionId/"
+    files = @($payloadFiles)
+}
+Write-Utf8NoBom (Join-Path $payloadRoot "payload-manifest.json") ($payloadManifest | ConvertTo-Json -Depth 8)
+
+Push-Location $buildRoot
+try {
+    & go build -trimpath -ldflags "-s -w -H windowsgui" -o $artifactPath .
+    if ($LASTEXITCODE -ne 0) { throw "AkuBrowser Runtime installer build failed." }
+}
+finally { Pop-Location }
+
+if (-not $UnsignedLocalCandidate) {
+    Sign-Binary $artifactPath $signTool
+}
+
+$artifactHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $artifactPath).Hash.ToLowerInvariant()
+"$artifactHash  $artifactName" | Set-Content -LiteralPath $checksumPath -Encoding ASCII
+Reset-Path $buildRoot $OutputRoot
+
+[ordered]@{
+    status = "ok"
+    version = $release.version
+    extensionOrigin = "chrome-extension://$ExtensionId/"
+    signed = (-not $UnsignedLocalCandidate)
+    candidate = [bool]$UnsignedLocalCandidate
+    artifact = $artifactPath
+    sha256 = $artifactHash
+    bytes = (Get-Item -LiteralPath $artifactPath).Length
+    sourceCommits = $sourceCommits
+    sourceDirty = @($dirty)
+} | ConvertTo-Json -Depth 8

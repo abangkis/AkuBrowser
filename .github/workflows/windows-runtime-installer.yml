@@ -1,0 +1,142 @@
+name: Windows Runtime Installer
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing AkuBrowser release tag that receives the stable installer asset
+        required: true
+        default: v0.7.4
+        type: string
+      extension_id:
+        description: Production Chrome Web Store extension ID
+        required: true
+        type: string
+      source_ref:
+        description: Matching source ref in AkuBrowser, AkuBridge, and AkuSidecar
+        required: true
+        default: main
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-signed-installer:
+    runs-on: windows-2025
+    env:
+      AKU_WINDOWS_SIGNING_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGNING_PFX_PASSWORD }}
+      C2PA_VERSION: "0.26.60"
+      C2PA_SHA256: "90cbcebe30250f8e8c53416d32ed86065dc04a23be86e4a2337f5cd1badfa0b7"
+
+    steps:
+      - name: Check out AkuBrowser
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.source_ref }}
+          path: AkuWorkspace/AkuBrowser
+
+      - name: Check out AkuBridge
+        uses: actions/checkout@v4
+        with:
+          repository: abangkis/AkuBridge
+          ref: ${{ inputs.source_ref }}
+          token: ${{ secrets.AKU_WORKSPACE_READ_TOKEN }}
+          path: AkuWorkspace/AkuBridge
+
+      - name: Check out AkuSidecar
+        uses: actions/checkout@v4
+        with:
+          repository: abangkis/AkuSidecar
+          ref: ${{ inputs.source_ref }}
+          token: ${{ secrets.AKU_WORKSPACE_READ_TOKEN }}
+          path: AkuWorkspace/AkuSidecar
+
+      - name: Restore Authenticode certificate
+        shell: pwsh
+        env:
+          PFX_BASE64: ${{ secrets.WINDOWS_CODE_SIGNING_PFX_BASE64 }}
+        run: |
+          if ([string]::IsNullOrWhiteSpace($env:PFX_BASE64)) {
+            throw "WINDOWS_CODE_SIGNING_PFX_BASE64 is required."
+          }
+          $certificatePath = Join-Path $env:RUNNER_TEMP "akubrowser-code-signing.pfx"
+          [IO.File]::WriteAllBytes(
+            $certificatePath,
+            [Convert]::FromBase64String($env:PFX_BASE64)
+          )
+          "AKU_SIGNING_CERTIFICATE=$certificatePath" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Download pinned c2patool
+        shell: pwsh
+        run: |
+          $archive = Join-Path $env:RUNNER_TEMP "c2patool.zip"
+          $destination = Join-Path $env:RUNNER_TEMP "c2patool"
+          $url = "https://github.com/contentauth/c2pa-rs/releases/download/c2patool-v$env:C2PA_VERSION/c2patool-v$env:C2PA_VERSION-x86_64-pc-windows-msvc.zip"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          Expand-Archive -LiteralPath $archive -DestinationPath $destination
+          $tool = Get-ChildItem -LiteralPath $destination -Recurse -Filter "c2patool.exe" -File |
+            Select-Object -First 1
+          if ($null -eq $tool) {
+            throw "Downloaded c2patool archive contains no Windows executable."
+          }
+          $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $tool.FullName).Hash.ToLowerInvariant()
+          if ($hash -ne $env:C2PA_SHA256) {
+            throw "Downloaded c2patool SHA-256 does not match the pinned release."
+          }
+          "AKU_C2PA_TOOL=$($tool.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Build and sign runtime installer
+        shell: pwsh
+        working-directory: AkuWorkspace/AkuBrowser
+        run: |
+          .\scripts\build-windows-runtime-installer.ps1 `
+            -ExtensionId "${{ inputs.extension_id }}" `
+            -C2paToolPath $env:AKU_C2PA_TOOL `
+            -CertificatePath $env:AKU_SIGNING_CERTIFICATE
+
+      - name: Verify signed artifacts
+        shell: pwsh
+        working-directory: AkuWorkspace/AkuBrowser
+        run: |
+          $installer = Get-ChildItem .\artifacts\runtime-installer\AkuBrowserRuntimeSetup-*.exe |
+            Where-Object { $_.Name -notlike "*unsigned*" } |
+            Select-Object -First 1
+          if ($null -eq $installer) {
+            throw "Signed runtime installer was not produced."
+          }
+          $signature = Get-AuthenticodeSignature -LiteralPath $installer.FullName
+          if ($signature.Status -ne "Valid") {
+            throw "Runtime installer Authenticode signature is not valid: $($signature.Status)"
+          }
+          Copy-Item -LiteralPath $installer.FullName `
+            -Destination (Join-Path $installer.DirectoryName "AkuBrowserRuntimeSetup.exe")
+
+      - name: Upload signed installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: AkuBrowserRuntimeSetup
+          if-no-files-found: error
+          path: |
+            AkuWorkspace/AkuBrowser/artifacts/runtime-installer/AkuBrowserRuntimeSetup.exe
+            AkuWorkspace/AkuBrowser/artifacts/runtime-installer/*.sha256
+
+      - name: Publish stable release asset
+        shell: pwsh
+        working-directory: AkuWorkspace/AkuBrowser
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release view "${{ inputs.release_tag }}" | Out-Null
+          gh release upload "${{ inputs.release_tag }}" `
+            .\artifacts\runtime-installer\AkuBrowserRuntimeSetup.exe `
+            --clobber
+
+      - name: Remove signing certificate
+        if: always()
+        shell: pwsh
+        run: |
+          $certificatePath = Join-Path $env:RUNNER_TEMP "akubrowser-code-signing.pfx"
+          if (Test-Path -LiteralPath $certificatePath) {
+            Remove-Item -LiteralPath $certificatePath -Force
+          }

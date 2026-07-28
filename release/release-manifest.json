@@ -19,6 +19,16 @@
       "launcher": "Start-AkuBrowser.command",
       "dataDirectory": "~/Library/Application Support/AkuBrowser/data"
     },
+    "chromeStore": {
+      "extensionDistribution": "chrome-web-store",
+      "nativeRuntimeInstaller": {
+        "platform": "windows-x64",
+        "format": "signed-user-scoped-exe",
+        "hostName": "com.akubrowser.runtime",
+        "registryScope": "HKCU",
+        "dataDirectory": "%LOCALAPPDATA%\\AkuBrowser\\data"
+      }
+    },
     "localOrigins": [
       "http://127.0.0.1:11122",
       "http://localhost:11122"
