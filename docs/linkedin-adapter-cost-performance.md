@@ -29,6 +29,12 @@
 - **Do not change media or hydration in this slice.** LinkedIn media acquisition
   stays on the existing generic Bridge path, and the configured 18-second
   two-phase hydration budget remains unchanged.
+- **Recover native links without touching the clipboard.** `linkedin-dom-v19`
+  keeps timestamp anchors, direct anchors, and DOM URNs authoritative. If a
+  current LinkedIn card exposes only `Embed this post`, AkuBridge may open that
+  bounded dialog, read a source-owned activity/share/ugcPost URN, and close the
+  dialog again. It never invokes `Copy link to post`, and text-only fallback
+  identity still cannot manufacture a native URL.
 
 ## Observed baseline
 
@@ -106,6 +112,10 @@ without using semantic similarity or broad author-and-text deduplication.
    `continuity_bypass`), and follow-up yield without exposing raw post text or
    adding model usage.
 7. Re-run LinkedIn image, attachment, and hydration acceptance unchanged.
+8. For a card with no direct permalink but an `Embed this post` menu action,
+   verify that the modal URN becomes a canonical `/feed/update/` URL, the modal
+   closes, `presentation.permalinkSource` reports `embed_urn`, and no clipboard
+   permission or operation occurs.
 
 ## Expected effect and limits
 
