@@ -22,9 +22,11 @@ Key features:
 - local retention and reset controls.
 
 AkuBrowser requires a signed Windows companion runtime installed by the user.
-The extension explains and links that installer during setup. The runtime stores
-product data on the user's device. AI features may submit selected content to
-OpenAI through the user's Codex App.
+The extension explains and links that installer during setup. Once installed,
+the local host may retrieve signed runtime updates from the official AkuBrowser
+release and automatically return to the previous version if a candidate fails.
+The runtime stores product data on the user's device. AI features may submit
+selected content to OpenAI through the user's Codex App.
 
 AkuBrowser does not request social passwords or cookies, sell data, use data for
 advertising, or load remotely hosted JavaScript.

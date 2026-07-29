@@ -122,6 +122,11 @@ Exit:
 
 ## Stage 7 — Signed automatic runtime updater
 
+Implementation: the native-host updater, Sidecar idle/shutdown handshake,
+signed release builder, GitHub Actions publication, acceptance runner, and
+operational contract are implemented across AkuBridge, AkuSidecar, and
+`docs/windows-runtime-updater.md`.
+
 Deliver:
 
 - signed release manifest;

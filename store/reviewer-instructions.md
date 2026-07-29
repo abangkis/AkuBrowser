@@ -63,6 +63,10 @@ passwords, cookies, private messages, or all-sites access.
 - Native Messaging targets only `com.akubrowser.runtime`.
 - The fixed GitHub release URL is opened only by a user click; the extension
   does not use the Downloads API or silently execute the installer.
+- After installation, the native host—not extension JavaScript—may retrieve one
+  signed manifest and versioned runtime ZIP from the fixed official AkuBrowser
+  GitHub Releases origin. It verifies the pinned Ed25519 signature, size, and
+  SHA-256 before activation.
 - AI-backed features may communicate with OpenAI through the reviewer's signed-in
   Codex App. This is prominently disclosed before source consent.
 - There is no remotely hosted JavaScript, `eval`, or downloaded command stream.

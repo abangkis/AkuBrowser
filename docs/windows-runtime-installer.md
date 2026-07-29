@@ -70,9 +70,10 @@ encrypted repository secrets:
 
 The workflow downloads the pinned c2patool release, verifies its existing
 SHA-256, signs every native executable, verifies the final Authenticode
-signature, and publishes both a workflow artifact and the stable
-`AkuBrowserRuntimeSetup.exe` asset on an explicitly selected existing GitHub
-release. That stable asset is the target linked by the Store extension.
+signature, pins the Ed25519 runtime-update public key into the native host, and
+publishes the installer plus the signed update manifest and versioned runtime
+ZIP on an explicitly selected existing GitHub release. The stable installer
+asset is the target linked by the Store extension.
 
 ## Install, repair, and uninstall
 

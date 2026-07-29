@@ -38,6 +38,10 @@
 
 - [ ] Reviewer instructions copied to the dashboard.
 - [ ] Signed companion installer stable URL returns the production executable.
+- [ ] Signed runtime manifest and versioned ZIP exist on the matching release.
+- [ ] Installer host pins the public key matching the offline update-signing key.
+- [ ] Prior supported signed release upgrades successfully and rollback evidence
+      has been captured.
 - [ ] Native host contains the exact Store extension ID.
 - [ ] Stage 5 clean-machine evidence is complete.
 - [ ] Submission uses deferred publishing for the first review.

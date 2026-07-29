@@ -23,9 +23,10 @@ the current user's Chrome profile, registry, or AkuBrowser data:
 - uninstall and reinstall with durable data preserved;
 - Store package closure and absence of unpacked native executables.
 
-The failed-candidate test is an authority-isolation acceptance test. Network
-download, signed-manifest verification, candidate health gating, atomic
-activation, and executable rollback remain Stage 7 implementation authority.
+The failed-candidate test remains an authority-isolation acceptance test.
+Network download, signed-manifest verification, candidate health gating,
+atomic activation, and executable rollback are implemented and tested by the
+Stage 7 suite in `scripts/test-windows-runtime-updater.ps1`.
 
 ## Clean Windows machine
 

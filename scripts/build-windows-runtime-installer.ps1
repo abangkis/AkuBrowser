@@ -7,6 +7,8 @@ param(
     [string] $CertificatePath = "",
     [string] $CertificatePassword = "",
     [string] $SigningThumbprint = "",
+    [string] $UpdatePublicKey = "",
+    [string] $UpdateSigningPrivateKeyPath = "",
     [string] $TimestampUrl = "http://timestamp.digicert.com",
     [switch] $UnsignedLocalCandidate,
     [switch] $SkipValidation,
@@ -119,10 +121,25 @@ if (-not $UnsignedLocalCandidate) {
     Assert-True ($ExtensionId -notmatch '^([a-p])\1{31}$') "Production installer builds reject repeated-character placeholder extension IDs."
     Assert-True ($CertificatePath -or $SigningThumbprint) "Production installer builds require an Authenticode signing certificate."
     Assert-True (-not [string]::IsNullOrWhiteSpace($TimestampUrl)) "Production installer builds require an RFC 3161 timestamp URL."
+    Assert-True (-not [string]::IsNullOrWhiteSpace($UpdatePublicKey)) "Production installer builds require the pinned runtime-update public key."
+    Assert-True (-not [string]::IsNullOrWhiteSpace($UpdateSigningPrivateKeyPath)) "Production installer builds require the runtime-update signing key path."
 }
 if ($CertificatePath) {
     $CertificatePath = [IO.Path]::GetFullPath($CertificatePath)
     Assert-True (Test-Path -LiteralPath $CertificatePath -PathType Leaf) "The signing certificate was not found."
+}
+if (-not [string]::IsNullOrWhiteSpace($UpdatePublicKey)) {
+    try {
+        $decodedUpdatePublicKey = [Convert]::FromBase64String($UpdatePublicKey)
+    }
+    catch {
+        throw "UpdatePublicKey must be valid base64."
+    }
+    Assert-True ($decodedUpdatePublicKey.Length -eq 32) "UpdatePublicKey must contain an Ed25519 32-byte public key."
+}
+if (-not [string]::IsNullOrWhiteSpace($UpdateSigningPrivateKeyPath)) {
+    $UpdateSigningPrivateKeyPath = [IO.Path]::GetFullPath($UpdateSigningPrivateKeyPath)
+    Assert-True (Test-Path -LiteralPath $UpdateSigningPrivateKeyPath -PathType Leaf) "The runtime-update signing key was not found."
 }
 if ([string]::IsNullOrWhiteSpace($CertificatePassword) -and -not [string]::IsNullOrWhiteSpace($env:AKU_WINDOWS_SIGNING_PASSWORD)) {
     $CertificatePassword = $env:AKU_WINDOWS_SIGNING_PASSWORD
@@ -232,7 +249,11 @@ try {
 
     Push-Location (Join-Path $bridgeRoot "native-host")
     try {
-        & go build -trimpath -ldflags "-s -w" -o (Join-Path $hostPayload "AkuBrowserRuntimeHost.exe") .
+        $hostLdflags = "-s -w"
+        if (-not [string]::IsNullOrWhiteSpace($UpdatePublicKey)) {
+            $hostLdflags += " -X main.pinnedUpdatePublicKey=$UpdatePublicKey"
+        }
+        & go build -trimpath -ldflags $hostLdflags -o (Join-Path $hostPayload "AkuBrowserRuntimeHost.exe") .
         if ($LASTEXITCODE -ne 0) { throw "AkuBrowser Runtime Host build failed." }
     }
     finally { Pop-Location }
@@ -286,7 +307,7 @@ $currentOutput = Join-Path $payloadRoot "runtime"
 New-Item -ItemType Directory -Force -Path $currentOutput | Out-Null
 $current = [ordered]@{
     schemaVersion = 1
-    channel = $release.channel
+    channel = if ($UnsignedLocalCandidate) { $release.channel } else { "stable" }
     version = $release.version
     runtimeRevision = $release.components.akuBridge.runtimeRevision
     bridgeContractVersion = $release.components.akuBridge.contractVersion
@@ -304,6 +325,63 @@ if (-not $UnsignedLocalCandidate) {
     )) {
         Sign-Binary $binary $signTool
     }
+}
+
+if (-not [string]::IsNullOrWhiteSpace($UpdateSigningPrivateKeyPath)) {
+    $updateArtifactName = "AkuBrowserRuntime-$($release.version)-windows-x64.zip"
+    $updateArtifactPath = Join-Path $OutputRoot $updateArtifactName
+    $updateManifestPath = Join-Path $OutputRoot "AkuBrowserRuntimeUpdate.json"
+    $unsignedUpdateManifestPath = Join-Path $buildRoot "runtime-update-unsigned.json"
+    Reset-Path $updateArtifactPath $OutputRoot
+    Reset-Path $updateManifestPath $OutputRoot
+
+    $runtimeUpdateFiles = Get-ChildItem -LiteralPath $runtimePayload -Recurse -File |
+        Sort-Object FullName |
+        ForEach-Object {
+            [ordered]@{
+                path = (Get-RelativePath $runtimePayload $_.FullName).Replace("\", "/")
+                size = $_.Length
+                sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $_.FullName).Hash.ToLowerInvariant()
+            }
+        }
+    $runtimeUpdatePayloadManifest = [ordered]@{
+        schemaVersion = 1
+        product = "AkuBrowser"
+        version = $release.version
+        architecture = "windows-x64"
+        files = @($runtimeUpdateFiles)
+    }
+    $runtimeUpdatePayloadManifestPath = Join-Path $runtimePayload "payload-manifest.json"
+    Write-Utf8NoBom $runtimeUpdatePayloadManifestPath ($runtimeUpdatePayloadManifest | ConvertTo-Json -Depth 8)
+    Compress-Archive -Path (Join-Path $runtimePayload "*") -DestinationPath $updateArtifactPath -CompressionLevel Optimal
+    Remove-Item -LiteralPath $runtimeUpdatePayloadManifestPath -Force
+
+    $updateArtifactHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $updateArtifactPath).Hash.ToLowerInvariant()
+    $unsignedUpdateManifest = [ordered]@{
+        schemaVersion = 1
+        product = "AkuBrowser"
+        channel = "stable"
+        version = $release.version
+        runtimeRevision = $release.components.akuBridge.runtimeRevision
+        bridgeContractVersion = $release.components.akuBridge.contractVersion
+        publishedAt = [DateTimeOffset]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+        artifact = [ordered]@{
+            url = "https://github.com/abangkis/AkuBrowser/releases/download/v$($release.version)/$updateArtifactName"
+            size = (Get-Item -LiteralPath $updateArtifactPath).Length
+            sha256 = $updateArtifactHash
+        }
+    }
+    Write-Utf8NoBom $unsignedUpdateManifestPath ($unsignedUpdateManifest | ConvertTo-Json -Depth 8)
+    Push-Location $installerSource
+    try {
+        $derivedUpdatePublicKey = (& go run .\cmd\sign-update-manifest `
+            -manifest $unsignedUpdateManifestPath `
+            -private-key $UpdateSigningPrivateKeyPath `
+            -output $updateManifestPath | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0) { throw "Runtime update manifest signing failed." }
+    }
+    finally { Pop-Location }
+    Assert-True ($derivedUpdatePublicKey -eq $UpdatePublicKey) "Runtime-update private key does not match the public key pinned into the native host."
 }
 
 $payloadFiles = Get-ChildItem -LiteralPath $payloadRoot -Recurse -File |

@@ -24,8 +24,10 @@ Fitur utama:
 
 AkuBrowser memerlukan companion runtime Windows bertanda tangan yang dipasang
 oleh pengguna. Extension akan menjelaskan dan menautkan installer tersebut saat
-setup. Runtime menyimpan data produk di perangkat Anda. Fitur AI dapat mengirim
-konten terpilih ke OpenAI melalui Codex App yang Anda gunakan.
+setup. Setelah dipasang, host lokal dapat mengambil update runtime bertanda
+tangan dari rilis resmi AkuBrowser dan otomatis kembali ke versi sebelumnya
+jika kandidat gagal. Runtime menyimpan data produk di perangkat Anda. Fitur AI
+dapat mengirim konten terpilih ke OpenAI melalui Codex App yang Anda gunakan.
 
 AkuBrowser tidak meminta password atau cookie sosial, tidak menjual data, tidak
 memakai data untuk iklan, dan tidak memuat JavaScript jarak jauh.

@@ -80,8 +80,12 @@ When the user runs AI-backed features, the local runtime may submit selected
 content and a bounded task prompt to OpenAI through the user's signed-in Codex
 App/App Server. OpenAI's handling of that data is governed by the terms and
 privacy settings applicable to the user's OpenAI/Codex account. The extension
-does not send captured source data to GitHub; GitHub hosts only project pages
-and the user-initiated companion installer download.
+does not send captured source data to GitHub. GitHub hosts the project pages,
+the user-initiated companion installer, and signed companion runtime updates.
+The installed native host may contact the fixed AkuBrowser GitHub Releases
+location to retrieve a signed update manifest and versioned runtime archive.
+Those requests contain no captured social content, prompts, feedback,
+credentials, or AkuBrowser database data.
 
 AkuBrowser does not sell user data. AkuBrowser does not transfer user data to
 advertising platforms or data brokers. No project contributor reads captured
