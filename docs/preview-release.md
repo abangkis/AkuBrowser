@@ -74,6 +74,13 @@ custom executable paths, and checksum verification.
 
 Windows x64 artifacts are built and smoke-tested with
 `scripts/build-windows-preview.ps1` and `scripts/test-windows-preview.ps1`.
+In the shared Windows development workspace,
+`scripts/prepare-local-release.ps1` is the canonical local release command. It
+keeps artifact construction portable, then separately reconciles the generated
+AkuSidecar development binary and the unpacked AkuBridge heartbeat after the
+artifact passes acceptance. This prevents a release build from leaving a newly
+reloaded extension paired with a stale Supervisor-owned development binary.
+It does not create tags, push repositories, or publish assets.
 macOS artifacts are built on a Mac with `scripts/build-macos-preview.sh` and
 smoke-tested with `scripts/test-macos-preview.sh`. The build pipeline can
 produce native `x64` or `arm64` bundles for focused testing; the published

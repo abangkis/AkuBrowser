@@ -69,7 +69,8 @@ cd ..\AkuSidecar
 
 Open `http://127.0.0.1:11122` (or `http://localhost:11122`). Load
 `..\AkuBridge` as an unpacked Chrome extension once; subsequent extension
-reloads are coordinated through AkuSupervisor.
+reloads use the Sidecar's cooperative `reload_self` contract. AkuSupervisor
+remains only the generic process owner.
 
 The preview package assumes Codex App with App Server is installed and signed
 in locally, and that Chrome is already signed in to every enabled source. AkuBridge
@@ -86,6 +87,20 @@ Build and smoke-test the Windows x64 portable preview from this repository:
 The generated directory, ZIP, and ZIP checksum are written beneath
 `artifacts\`. Use `-AllowDirty` only while developing the pipeline; a publishable
 artifact requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees.
+
+For a local release checkpoint, use the reconciled workflow instead:
+
+```powershell
+.\scripts\prepare-local-release.ps1
+```
+
+It builds and smoke-tests the bundle, waits for Sidecar update readiness,
+atomically rebuilds the Supervisor-owned development executable, verifies the
+new health version, and reloads AkuBridge only when its capability heartbeat is
+not already compatible. `runtime\dev\aku-sidecar.exe.runtime-state.json` records
+the exact development source commit and binary hash. The workflow never tags,
+pushes, or uploads a release. Use `-SkipDevelopmentSync` only when intentionally
+building an isolated artifact without changing the active development runtime.
 
 ## OpenAI Build Week
 
