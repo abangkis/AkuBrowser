@@ -29,18 +29,28 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge product version `0.7.4` / Chrome manifest version `0.7.4.0`;
-- runtime revision `source-adapters-v84`;
-- build id `aku-bridge-0.7.4-source-adapters-v84`; and
+- runtime revision `source-adapters-v85`;
+- build id `aku-bridge-0.7.4-source-adapters-v85`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
 current-process heartbeat is `reconnecting`; any observed mismatch is
 `incompatible`. A session may start only when the current heartbeat is exact.
-The exact v84 capability set includes
+The exact v85 capability set includes
 `mediaEvidenceAdapterVersions.x=x-response-evidence-v2` and the bounded
 `observe_response_media_evidence` and `dispatch_background_commands` actions.
 These declare evidence observation and bounded Sidecar-command dispatch, not
 authority to issue provider requests or take unbounded browser control.
+
+Every heartbeat carries the browser-observed `extensionOrigin`. AkuSidecar
+accepts only exact `chrome-extension://<id>` origins generated from the
+AkuBrowser release authority; it never accepts an extension-origin wildcard.
+Two live allowlisted origins make the Bridge incompatible until the stale
+installation stops heartbeating. `sourceAccess` reports each source's Chrome
+permission, dynamic content-script registration, and effective `ready` state.
+Only sources whose permission and script registration are both ready can enter
+an update. `grantedSources` remains an additive diagnostic projection, not the
+final readiness authority; missing per-source readiness is incompatible.
 
 ## Page relay messages
 

@@ -56,9 +56,13 @@ must never be linked from the Store extension.
 ```powershell
 $env:AKU_WINDOWS_SIGNING_PASSWORD = "<PFX password>"
 .\scripts\build-windows-runtime-installer.ps1 `
-  -ExtensionId "<Chrome Web Store extension ID>" `
   -CertificatePath "C:\secure\akubrowser-code-signing.pfx"
 ```
+
+Production builds read the exact Chrome Web Store extension ID from
+`release/release-manifest.json`; supplying a different ID is rejected. An
+unsigned development candidate may still pass `-ExtensionId` explicitly for
+one exact unpacked-extension origin.
 
 The GitHub Actions workflow
 `.github/workflows/windows-runtime-installer.yml` performs the same build using

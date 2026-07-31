@@ -6,6 +6,15 @@ $browserRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $workspaceRoot = Split-Path $browserRoot -Parent
 $bridgeRoot = Join-Path $workspaceRoot "AkuBridge"
 $manifest = Get-Content (Join-Path $bridgeRoot "manifest.json") -Raw | ConvertFrom-Json
+$release = Get-Content (Join-Path $browserRoot "release\release-manifest.json") -Raw | ConvertFrom-Json
+$sidecarConfig = Get-Content (Join-Path $workspaceRoot "AkuSidecar\config\sidecar.json") -Raw | ConvertFrom-Json
+$storeId = [string]$release.distribution.chromeStore.extensionId
+$storeOrigin = "chrome-extension://$storeId/"
+if ($storeId -notmatch '^[a-p]{32}$') { throw "Release manifest must contain the exact Store extension ID." }
+if ($release.distribution.chromeStore.extensionOrigin -ne $storeOrigin) { throw "Release Store ID and origin differ." }
+if (@($sidecarConfig.bridge.trustedExtensionOrigins).Count -ne 1 -or $sidecarConfig.bridge.trustedExtensionOrigins[0] -ne $storeOrigin) {
+    throw "AkuSidecar production Bridge allowlist differs from the release Store origin."
+}
 
 if ($manifest.manifest_version -ne 3) { throw "Manifest V3 is required." }
 if ($manifest.name -ne "AkuBrowser") { throw "Public manifest name must be AkuBrowser." }

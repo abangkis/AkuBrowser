@@ -1,7 +1,6 @@
 [CmdletBinding()]
 param(
-    [Parameter(Mandatory = $true)]
-    [string] $ExtensionId,
+    [string] $ExtensionId = "",
     [string] $OutputRoot = "",
     [string] $C2paToolPath = "",
     [string] $CertificatePath = "",
@@ -110,9 +109,18 @@ function Sign-Binary([string] $Path, [string] $SignTool) {
     }
 }
 
+$release = Read-Json $releaseManifestPath
+$releaseExtensionId = [string]$release.distribution.chromeStore.extensionId
+$releaseExtensionOrigin = [string]$release.distribution.chromeStore.extensionOrigin
+Assert-True ($releaseExtensionId -match '^[a-p]{32}$') "The release manifest must declare the exact Chrome Web Store extension ID."
+Assert-True ($releaseExtensionOrigin -eq "chrome-extension://$releaseExtensionId/") "The release manifest Chrome extension origin does not match its extension ID."
+if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
+    $ExtensionId = $releaseExtensionId
+}
 Assert-True ($ExtensionId -match '^[a-p]{32}$') "ExtensionId must be an exact 32-character Chrome extension ID."
 Assert-True (-not ($CertificatePath -and $SigningThumbprint)) "Choose a PFX path or certificate thumbprint, not both."
 if (-not $UnsignedLocalCandidate) {
+    Assert-True ($ExtensionId -eq $releaseExtensionId) "Production installers must use the Chrome Web Store extension ID declared by the release manifest."
     $placeholderIds = @(
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "abcdefghijklmnopabcdefghijklmnop"
@@ -157,7 +165,6 @@ if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
 $C2paToolPath = [IO.Path]::GetFullPath($C2paToolPath)
 Assert-True (Test-Path -LiteralPath $C2paToolPath -PathType Leaf) "The pinned c2patool binary was not found: $C2paToolPath"
 
-$release = Read-Json $releaseManifestPath
 $bridgePackage = Read-Json (Join-Path $bridgeRoot "package.json")
 $bridgeManifest = Read-Json (Join-Path $bridgeRoot "manifest.json")
 $sidecarDomain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
@@ -282,6 +289,7 @@ New-Item -ItemType Directory -Force -Path $configOutput | Out-Null
 $config = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $config.database.path = "runtime/aku-browser.db"
 $config.reasoning.executable = ""
+$config.bridge.trustedExtensionOrigins = @("chrome-extension://$ExtensionId/")
 Write-Utf8NoBom (Join-Path $configOutput "sidecar.json") ($config | ConvertTo-Json -Depth 10)
 
 $schemasOutput = Join-Path $runtimePayload "schemas"

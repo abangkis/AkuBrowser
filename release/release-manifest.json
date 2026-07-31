@@ -21,6 +21,8 @@
     },
     "chromeStore": {
       "extensionDistribution": "chrome-web-store",
+      "extensionId": "kpepkhjfebddlghebcaglbmobgihfcip",
+      "extensionOrigin": "chrome-extension://kpepkhjfebddlghebcaglbmobgihfcip/",
       "nativeRuntimeInstaller": {
         "platform": "windows-x64",
         "format": "signed-user-scoped-exe",
@@ -33,7 +35,7 @@
       "http://127.0.0.1:11122",
       "http://localhost:11122"
     ],
-    "akuBridgeInstallation": "manual-unpacked"
+    "akuBridgeInstallation": "chrome-web-store"
   },
   "components": {
     "akuSidecar": {
@@ -43,7 +45,7 @@
     "akuBridge": {
       "version": "0.7.4",
       "chromeVersion": "0.7.4.0",
-      "runtimeRevision": "source-adapters-v84",
+      "runtimeRevision": "source-adapters-v85",
       "contractVersion": "aku-browser.bridge.v2"
     },
     "c2paTool": {
@@ -62,7 +64,7 @@
     "includes": [
       "AkuSidecar",
       "Windows c2patool 0.26.60 for local image provenance verification",
-      "AkuBridge unpacked payload",
+      "AkuBridge Chrome Web Store integration metadata",
       "Windows launcher and release configuration",
       "macOS launcher and release configuration",
       "Release provenance and SHA-256 checksums"
@@ -75,6 +77,6 @@
   "previewPrerequisites": [
     "Codex App with Codex App Server installed and locally signed in",
     "Google Chrome with every enabled source (X, LinkedIn, or Facebook) already signed in",
-    "Manual AkuBridge installation through Chrome Developer mode"
+    "AkuBridge installed from the Chrome Web Store"
   ]
 }

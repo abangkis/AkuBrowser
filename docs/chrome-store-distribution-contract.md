@@ -1,6 +1,6 @@
 # Chrome Store distribution contract
 
-Status: Stage 1 design authority, 28 July 2026.
+Status: implemented distribution authority, 31 July 2026.
 
 ## Decision
 
@@ -62,10 +62,19 @@ revision, and Bridge contract.
 - Loopback endpoints: `http://127.0.0.1:11122` and
   `http://localhost:11122`
 
-The production Chrome extension ID is a release input. The native host manifest
-must list that exact Store origin in `allowed_origins`. Wildcards are forbidden.
-A development origin may be added only as another exact allowlisted ID in a
-development-only host manifest.
+The production Chrome extension ID is declared once in
+`release/release-manifest.json`. Installer builds derive the native-host
+`allowed_origins` entry and the packaged Sidecar Bridge allowlist from that
+authority; a conflicting production input is rejected. Wildcards are
+forbidden. An unsigned development build may accept an explicitly supplied,
+exact unpacked-extension ID, but it does not alter production authority.
+
+AkuSidecar records the browser-supplied extension origin on every heartbeat.
+If two explicitly allowlisted origins remain live at the same time, Bridge
+dispatch stops with guidance to disable the legacy unpacked installation. Each
+source reports permission, dynamic content-script registration, and effective
+readiness independently; partial access is visible and only ready sources may
+enter an update.
 
 ## Installation lifecycle
 

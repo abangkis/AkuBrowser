@@ -8,10 +8,6 @@ on:
         required: true
         default: v0.7.4
         type: string
-      extension_id:
-        description: Production Chrome Web Store extension ID
-        required: true
-        type: string
       source_ref:
         description: Matching source ref in AkuBrowser, AkuBridge, and AkuSidecar
         required: true
@@ -110,7 +106,6 @@ jobs:
             throw "release_tag must exactly match v$($release.version)."
           }
           .\scripts\build-windows-runtime-installer.ps1 `
-            -ExtensionId "${{ inputs.extension_id }}" `
             -C2paToolPath $env:AKU_C2PA_TOOL `
             -CertificatePath $env:AKU_SIGNING_CERTIFICATE `
             -UpdatePublicKey $env:AKU_UPDATE_PUBLIC_KEY `
