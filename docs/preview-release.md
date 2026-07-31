@@ -1,6 +1,6 @@
-# AkuBrowser 0.7.4
+# AkuBrowser 0.7.5
 
-`0.7.4` is the current source-aligned Windows preview. It
+`0.7.5` is the current source-aligned Windows preview. It
 retains the unified packaging boundary established by preview.1 and adds
 durable capture lifecycle reconciliation, retained preference learning,
 bounded Facebook frontier diagnostics, and stronger LinkedIn identity and
@@ -86,13 +86,13 @@ smoke-tested with `scripts/test-macos-preview.sh`. The build pipeline can
 produce native `x64` or `arm64` bundles for focused testing; the published
 `0.7.0-preview.3` asset is `macos-universal` and runs on Intel and Apple
 silicon.
-The `v0.7.4` tag is the source checkpoint for the Windows bundle and future
+The `v0.7.5` tag is the source checkpoint for the Windows bundle and future
 matching macOS bundle. The accepted Windows bundle and its adjacent checksum
 are published from the
-[`v0.7.4` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.4).
+[`v0.7.5` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.5).
 The previously published macOS universal bundle remains available from the
 [`v0.7.0-preview.3` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.0-preview.3)
-until a matching macOS 0.7.4 build completes acceptance.
+until a matching macOS 0.7.5 build completes acceptance.
 
 The automated gates verify the bundle manifest, bundled-file checksums,
 Sidecar health, both supported loopback hostnames, fresh-database defaults, and
@@ -130,6 +130,6 @@ reset.
 [`release/release-manifest.json`](../release/release-manifest.json) is the
 machine-readable release authority. The immutable `v0.7.0-preview.1` tags remain
 the historical compatibility checkpoint and must never be moved. The published
-`v0.7.4` tags identify the current release source checkpoints; each generated
+`v0.7.5` tags identify the current release source checkpoints; each generated
 bundle additionally records its exact AkuBrowser, AkuSidecar, and AkuBridge
 commits and dirty state in `artifact-manifest.json`.

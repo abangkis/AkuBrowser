@@ -28,9 +28,9 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 
 The active pair is exact:
 
-- AkuBridge product version `0.7.4` / Chrome manifest version `0.7.4.0`;
+- AkuBridge product version `0.7.5` / Chrome manifest version `0.7.5.0`;
 - runtime revision `source-adapters-v85`;
-- build id `aku-bridge-0.7.4-source-adapters-v85`; and
+- build id `aku-bridge-0.7.5-source-adapters-v85`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing

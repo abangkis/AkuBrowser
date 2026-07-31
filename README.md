@@ -1,6 +1,6 @@
 # AkuBrowser
 
-Current preview release: **`0.7.4`**. The canonical component tuple,
+Current preview release: **`0.7.5`**. The canonical component tuple,
 bundle boundary, and preview prerequisites are recorded in
 [`release/release-manifest.json`](release/release-manifest.json).
 
@@ -142,9 +142,9 @@ requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees. The artifact
 directory, ZIP, and ZIP checksum are written beneath `artifacts/`. Installation
 and launcher details are in
 [`release/macos/README.md`](release/macos/README.md).
-The `v0.7.4` tag is the source checkpoint for the current bundle. The Windows
+The `v0.7.5` tag is the source checkpoint for the current bundle. The Windows
 ZIP and adjacent checksum are published from the
-[`v0.7.4` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.4).
+[`v0.7.5` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.5).
 
 ## Canonical documentation
 
