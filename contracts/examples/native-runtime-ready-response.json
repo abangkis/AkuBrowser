@@ -5,9 +5,9 @@
   "action": "ensure_runtime",
   "status": "ready",
   "runtime": {
-    "version": "0.7.5",
+    "version": "0.7.6",
     "channel": "preview",
-    "runtimeRevision": "source-adapters-v85",
+    "runtimeRevision": "source-adapters-v86",
     "bridgeContractVersion": "aku-browser.bridge.v2",
     "endpoint": "http://127.0.0.1:11122",
     "instanceEpoch": "epoch-20260728-0001",
@@ -15,7 +15,7 @@
   },
   "update": {
     "phase": "idle",
-    "currentVersion": "0.7.5",
+    "currentVersion": "0.7.6",
     "targetVersion": null,
     "rollbackAvailable": true
   },

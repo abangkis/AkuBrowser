@@ -6,7 +6,7 @@ on:
       release_tag:
         description: Existing AkuBrowser release tag that receives the stable installer asset
         required: true
-        default: v0.7.5
+        default: v0.7.6
         type: string
       source_ref:
         description: Matching source ref in AkuBrowser, AkuBridge, and AkuSidecar

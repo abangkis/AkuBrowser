@@ -21,7 +21,7 @@ tooling and is intentionally excluded from this preview.
   App Server;
 - Google Chrome already signed in to every source you enable (X, LinkedIn, or Facebook);
 - if antivirus protection causes a problem during installation or onboarding,
-  add an exception for the bundled `AkuSidecar.exe` file before trying again.
+  follow the narrow-exception guidance below before trying again.
 
 ## Install and start
 
@@ -58,17 +58,38 @@ when the extracted bundle is replaced.
 
 ## Antivirus warning
 
-Avast or another antivirus may occasionally block or quarantine
-`AkuSidecar.exe`, especially immediately after extracting a new preview build.
-If the launcher cannot find or start that file, open the antivirus quarantine
-or protection history, restore `AkuSidecar.exe` if it was removed, and add an
-exception for that exact file in the extracted AkuBrowser directory. Then run
-`Start-AkuBrowser.ps1` again.
+The current testing installer and native runtime are not code-signed yet.
+Windows Security, Avast, or another antivirus may warn, quarantine, block, or
+sandbox them. Verify that the download came from the official AkuBrowser GitHub
+release before allowing it. Do not disable antivirus protection or exclude your
+Downloads folder.
 
-Keep the exception as narrow as possible: do not disable antivirus protection
-and do not exclude the entire Downloads folder. If you move or extract the
-bundle to a different directory, the antivirus application may require a new
-exception for the new `AkuSidecar.exe` path.
+For the installed runtime, add a narrow exception for
+`%LOCALAPPDATA%\Programs\AkuBrowser\`. For this portable ZIP, restore
+`AkuSidecar.exe` first if it was quarantined, then add an exception for that exact file
+in the extracted AkuBrowser directory. Moving or extracting the
+portable bundle to another directory may require a new exception for the new
+path.
+
+If installation or **Update now** fails with `Access is denied`, the security
+software may have sandboxed AkuSidecar even though the runtime health check
+passed. After adding the exception, stop the running `AkuSidecar.exe`. Installed
+runtime users should return to the extension Setup page and select
+**Check installation** before trying again. Portable users should run
+`Start-AkuBrowser.ps1` again. Do not delete `%USERPROFILE%\.codex` or its SQLite
+files to resolve this error.
+
+When automatic setup or a Windows-security-blocked update fails, AkuBrowser
+offers **Download manual Windows bundle**. The button opens the matching
+versioned `AkuBrowser-<version>-windows-x64.zip` asset on the official GitHub
+release. Verify the adjacent `.sha256` asset, extract the ZIP to a writable
+folder, add an antivirus exception only for the extracted `AkuSidecar.exe` if
+needed, and run `Start-AkuBrowser.ps1`.
+
+The portable bundle is a fallback, not a second concurrent installation. Stop
+the installed or older portable `AkuSidecar.exe` before starting it. It does not
+replace the registered Native Messaging Host and must be started manually again
+after Windows restarts.
 
 The launcher automatically checks `AKU_CODEX_PATH`, `PATH`, managed Codex App
 runtime folders, Windows App aliases, and common npm CLI locations. It accepts a

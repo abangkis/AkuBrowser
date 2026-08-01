@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "product": "AkuBrowser",
-  "version": "0.7.5",
+  "version": "0.7.6",
   "channel": "preview",
   "distribution": {
     "authorityRepository": "AkuBrowser",
@@ -39,13 +39,13 @@
   },
   "components": {
     "akuSidecar": {
-      "version": "0.7.5",
+      "version": "0.7.6",
       "runtime": "go"
     },
     "akuBridge": {
-      "version": "0.7.5",
-      "chromeVersion": "0.7.5.0",
-      "runtimeRevision": "source-adapters-v85",
+      "version": "0.7.6",
+      "chromeVersion": "0.7.6.0",
+      "runtimeRevision": "source-adapters-v86",
       "contractVersion": "aku-browser.bridge.v2"
     },
     "c2paTool": {

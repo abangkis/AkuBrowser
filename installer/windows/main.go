@@ -70,6 +70,15 @@ func runInstaller() int {
 		finish(*quiet, err)
 		return 1
 	}
-	finish(*quiet, nil, fmt.Sprintf("AkuBrowser Runtime %s successfully.", action))
+	finish(*quiet, nil, completionMessage(action))
 	return 0
+}
+
+func completionMessage(action string) string {
+	message := fmt.Sprintf("AkuBrowser Runtime %s successfully.", action)
+	if action == "uninstalled" {
+		return message
+	}
+	return message + "\n\nReturn to Chrome and select Check installation. " +
+		"If an older portable AkuBrowser Runtime is still running, close it first."
 }

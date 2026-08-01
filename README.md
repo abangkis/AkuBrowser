@@ -1,6 +1,6 @@
 # AkuBrowser
 
-Current preview release: **`0.7.5`**. The canonical component tuple,
+Current preview release: **`0.7.6`**. The canonical component tuple,
 bundle boundary, and preview prerequisites are recorded in
 [`release/release-manifest.json`](release/release-manifest.json).
 
@@ -72,10 +72,11 @@ Open `http://127.0.0.1:11122` (or `http://localhost:11122`). Load
 reloads use the Sidecar's cooperative `reload_self` contract. AkuSupervisor
 remains only the generic process owner.
 
-The preview package assumes Codex App with App Server is installed and signed
-in locally, and that Chrome is already signed in to every enabled source. AkuBridge
-is bundled as an unpacked payload and installed manually through Chrome
-Developer mode. See [Preview release](docs/preview-release.md).
+The preview assumes Codex App with App Server is installed and signed in
+locally, and that Chrome is already signed in to every enabled source. Store
+users follow the guided extension Setup and install the user-scoped companion
+runtime; the portable ZIP remains available as a manual fallback and carries
+AkuBridge for Developer-mode testing. See [Preview release](docs/preview-release.md).
 
 Build and smoke-test the Windows x64 portable preview from this repository:
 
@@ -142,9 +143,9 @@ requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees. The artifact
 directory, ZIP, and ZIP checksum are written beneath `artifacts/`. Installation
 and launcher details are in
 [`release/macos/README.md`](release/macos/README.md).
-The `v0.7.5` tag is the source checkpoint for the current bundle. The Windows
+The `v0.7.6` tag is the source checkpoint for the current bundle. The Windows
 ZIP and adjacent checksum are published from the
-[`v0.7.5` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.5).
+[`v0.7.6` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.6).
 
 ## Canonical documentation
 

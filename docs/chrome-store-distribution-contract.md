@@ -93,6 +93,19 @@ enter an update.
 8. The setup page retries `status`, then sends `ensure_runtime`.
 9. When the response is `ready`, the extension opens the loopback AkuBrowser UI.
 
+The Windows security notice remains visible while checking, after readiness,
+and when setup fails. It explains that an unsigned testing build may be warned,
+quarantined, blocked, or sandboxed and never recommends disabling antivirus
+protection.
+
+If automatic setup returns `runtime_failed`, the page may expose one explicit
+**Download manual Windows bundle** fallback. Its URL is derived only from the
+extension's exact product version and the compiled-in official AkuBrowser
+GitHub Releases origin. The fallback ZIP is never downloaded or executed
+silently. It must not run concurrently with an installed or older portable
+Sidecar, does not replace the registered Native Messaging Host, and must be
+started manually after Windows restarts.
+
 The extension never claims that Store installation alone installed native code.
 The installer action remains visible, attributable, and user initiated.
 
@@ -117,6 +130,12 @@ Task, or machine-wide installation is outside protocol v1.
 4. If a compatible runtime is already active, ordinary Bridge operation resumes.
 5. If native runtime work is needed, setup state reports `updating`, `busy`,
    `restart_required`, or a typed failure without weakening capture authority.
+
+If a reasoning run later proves that Windows security sandboxed AkuSidecar even
+though loopback health passed, the loopback UI replaces the raw state-database
+error with bounded recovery guidance and the same matching manual-bundle
+fallback. It does not delete, move, or recommend deleting the user's Codex
+state.
 
 ### Runtime update
 

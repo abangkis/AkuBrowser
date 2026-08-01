@@ -1,10 +1,9 @@
-# AkuBrowser 0.7.5
+# AkuBrowser 0.7.6
 
-`0.7.5` is the current source-aligned Windows preview. It
-retains the unified packaging boundary established by preview.1 and adds
-durable capture lifecycle reconciliation, retained preference learning,
-bounded Facebook frontier diagnostics, and stronger LinkedIn identity and
-permalink recovery. This is the packaged
+`0.7.6` is the current source-aligned Windows preview. It adds a guided,
+platform-aware Chrome extension setup flow, clearer Windows antivirus guidance,
+an explicit manual portable-bundle fallback, and actionable recovery when
+Windows security software blocks AkuSidecar or Codex state access. This is the packaged
 candidate described by the OpenAI Build Week
 [final project story](openai-build-week-submission.md) and
 [implementation evidence](../BUILD_WEEK.md). The first calibration
@@ -16,8 +15,9 @@ AkuBrowser is the distribution authority: it owns portable bundle assembly,
 release provenance, launchers, checksums, and acceptance documentation.
 AkuSidecar and AkuBridge remain the authoritative source-component projects.
 
-The Windows delivery format is a portable x64 ZIP, not an installer. The
-published macOS delivery is one universal portable ZIP containing both x64 and
+Windows has two coordinated delivery paths: the portable x64 ZIP remains the
+manual fallback, while the Chrome Web Store flow uses a user-scoped companion
+runtime installer. The published macOS delivery is one universal portable ZIP containing both x64 and
 arm64 Sidecar slices. Both platform bundles contain the Sidecar
 executable, release configuration, the verified unpacked Bridge payload, and a
 foreground launcher. The packages require no AkuSupervisor process or
@@ -30,8 +30,9 @@ are checked again by artifact acceptance. Windows stores user data under
 
 ## Preview prerequisites
 
-This preview discovers and capability-checks a compatible Codex runtime but
-deliberately defers guided installation and login assistance.
+This preview discovers and capability-checks a compatible Codex runtime. The
+extension setup page links to Codex installation guidance, but the user remains
+responsible for installing Codex App and completing local sign-in.
 Before installation, the tester must have:
 
 - Codex App installed with Codex App Server available, or a compatible Codex
@@ -41,14 +42,14 @@ Before installation, the tester must have:
 - an active Chrome login for every enabled source: X, LinkedIn, and/or Facebook.
 
 AkuBrowser does not collect or manage Codex or social-source credentials.
-Guided missing-app and signed-out recovery remain outside this preview boundary.
+Automated Codex installation and sign-in remain outside this preview boundary.
 If the first check produces no validated calibration candidate, AkuBrowser keeps
 the captured trace in Update Inbox and offers **Update now again** instead
 of presenting a terminal calibration error.
 
-## Manual AkuBridge installation
+## Portable fallback and manual AkuBridge installation
 
-The preview bundle carries AkuBridge as a stable unpacked directory. Chrome on
+The portable preview bundle carries AkuBridge as a stable unpacked directory. Chrome on
 Windows and macOS does not permit an ordinary third-party installer to silently
 install a local extension. The tester must:
 
@@ -86,13 +87,13 @@ smoke-tested with `scripts/test-macos-preview.sh`. The build pipeline can
 produce native `x64` or `arm64` bundles for focused testing; the published
 `0.7.0-preview.3` asset is `macos-universal` and runs on Intel and Apple
 silicon.
-The `v0.7.5` tag is the source checkpoint for the Windows bundle and future
+The `v0.7.6` tag is the source checkpoint for the Windows bundle and future
 matching macOS bundle. The accepted Windows bundle and its adjacent checksum
 are published from the
-[`v0.7.5` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.5).
+[`v0.7.6` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.6).
 The previously published macOS universal bundle remains available from the
 [`v0.7.0-preview.3` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.0-preview.3)
-until a matching macOS 0.7.5 build completes acceptance.
+until a matching macOS 0.7.6 build completes acceptance.
 
 The automated gates verify the bundle manifest, bundled-file checksums,
 Sidecar health, both supported loopback hostnames, fresh-database defaults, and
@@ -100,8 +101,9 @@ the embedded UI. Final acceptance still requires a clean machine on the target
 OS and architecture. See [Windows preview acceptance](windows-preview-acceptance.md)
 and [macOS preview acceptance](macos-preview-acceptance.md).
 
-Future Store, private-test, or enterprise distribution is a separate release
-decision. The preview does not claim automatic extension installation.
+The Chrome Web Store package is built separately from the portable bundle. It
+does not embed or silently execute native code: the user explicitly downloads
+and runs the companion installer, then returns to Setup and checks the runtime.
 
 ## Fresh defaults
 
@@ -130,6 +132,6 @@ reset.
 [`release/release-manifest.json`](../release/release-manifest.json) is the
 machine-readable release authority. The immutable `v0.7.0-preview.1` tags remain
 the historical compatibility checkpoint and must never be moved. The published
-`v0.7.5` tags identify the current release source checkpoints; each generated
+`v0.7.6` tags identify the current release source checkpoints; each generated
 bundle additionally records its exact AkuBrowser, AkuSidecar, and AkuBridge
 commits and dirty state in `artifact-manifest.json`.

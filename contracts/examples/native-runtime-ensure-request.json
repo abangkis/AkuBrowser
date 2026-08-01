@@ -5,8 +5,8 @@
   "action": "ensure_runtime",
   "extension": {
     "product": "AkuBrowser",
-    "productVersion": "0.7.5",
-    "runtimeRevision": "source-adapters-v85",
+    "productVersion": "0.7.6",
+    "runtimeRevision": "source-adapters-v86",
     "bridgeContractVersion": "aku-browser.bridge.v2"
   }
 }

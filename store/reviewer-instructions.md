@@ -15,6 +15,8 @@ by the operating system.
 - Codex App installed and signed in
 - Signed release asset:
   `https://github.com/abangkis/AkuBrowser/releases/latest/download/AkuBrowserRuntimeSetup.exe`
+- Manual fallback asset pattern:
+  `https://github.com/abangkis/AkuBrowser/releases/download/v<version>/AkuBrowser-<version>-windows-x64.zip`
 - Optional: reviewer-controlled accounts already signed in to any source being
   tested (X, LinkedIn, or Facebook)
 
@@ -31,9 +33,11 @@ source.
    permission has been granted.
 4. Review the prominent disclosure, OpenAI/Codex transfer disclosure, privacy
    link, and per-source choices.
-5. Click **Install AkuBrowser Runtime**, run the signed installer, return to the
-   setup page, and click **Periksa lagi**.
-6. Confirm **Buka AkuBrowser** appears only after the local runtime is ready.
+5. Click **Download Windows runtime installer**, run the signed installer,
+   return to the setup page, and click **Check installation**.
+6. Confirm **Open AkuBrowser** appears only after the local runtime is ready.
+7. Confirm the Windows security notice remains visible after the runtime becomes
+   ready and does not instruct the reviewer to disable antivirus protection.
 
 ## Consent and source review
 
@@ -61,8 +65,9 @@ passwords, cookies, private messages, or all-sites access.
 
 - Extension-to-runtime traffic is loopback-only on port 11122.
 - Native Messaging targets only `com.akubrowser.runtime`.
-- The fixed GitHub release URL is opened only by a user click; the extension
-  does not use the Downloads API or silently execute the installer.
+- The fixed GitHub installer URL and matching versioned portable-fallback URL
+  are opened only by a user click; the extension does not use the Downloads API
+  or silently execute either artifact.
 - After installation, the native host—not extension JavaScript—may retrieve one
   signed manifest and versioned runtime ZIP from the fixed official AkuBrowser
   GitHub Releases origin. It verifies the pinned Ed25519 signature, size, and
