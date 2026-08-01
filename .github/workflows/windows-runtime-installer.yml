@@ -37,7 +37,7 @@ jobs:
         with:
           repository: abangkis/AkuBridge
           ref: ${{ inputs.source_ref }}
-          token: ${{ secrets.AKU_WORKSPACE_READ_TOKEN }}
+          token: ${{ secrets.AKU_WORKSPACE_READ_TOKEN || github.token }}
           path: AkuWorkspace/AkuBridge
 
       - name: Check out AkuSidecar
@@ -45,7 +45,7 @@ jobs:
         with:
           repository: abangkis/AkuSidecar
           ref: ${{ inputs.source_ref }}
-          token: ${{ secrets.AKU_WORKSPACE_READ_TOKEN }}
+          token: ${{ secrets.AKU_WORKSPACE_READ_TOKEN || github.token }}
           path: AkuWorkspace/AkuSidecar
 
       - name: Restore Authenticode certificate
