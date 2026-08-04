@@ -73,7 +73,7 @@ function Read-Health {
 function Assert-Ready {
     $health = Read-Health
     Assert-True ($health.status -eq "ok") "AkuBrowser health status is not ok."
-    Assert-True ($health.version -eq "0.7.7") "AkuBrowser runtime version is unexpected."
+    Assert-True ($health.version -eq "0.7.8") "AkuBrowser runtime version is unexpected."
     Assert-True ($health.runtime -eq "go") "AkuBrowser runtime implementation is unexpected."
     Assert-True ($health.bridgeContractVersion -eq "aku-browser.bridge.v2") "AkuBrowser Bridge contract is unexpected."
 }
@@ -83,7 +83,7 @@ function Assert-ObservedState([string] $Expected) {
 }
 
 $acceptance = Get-Content -LiteralPath $acceptancePath -Raw | ConvertFrom-Json
-Assert-True ($acceptance.schemaVersion -eq 1 -and $acceptance.version -eq "0.7.7") "Lifecycle acceptance manifest is incompatible."
+Assert-True ($acceptance.schemaVersion -eq 1 -and $acceptance.version -eq "0.7.8") "Lifecycle acceptance manifest is incompatible."
 
 if ($Scenario -eq "automated") {
     & (Join-Path $browserRoot "scripts\check.ps1")

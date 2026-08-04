@@ -5,7 +5,7 @@
   "action": "execute_shell",
   "extension": {
     "product": "AkuBrowser",
-    "productVersion": "0.7.7",
+    "productVersion": "0.7.8",
     "runtimeRevision": "source-adapters-v86",
     "bridgeContractVersion": "aku-browser.bridge.v2"
   },
