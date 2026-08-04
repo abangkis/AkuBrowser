@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -19,6 +20,21 @@ func TestCompletionMessageExplainsPortableRuntimeHandoff(t *testing.T) {
 	}
 	if strings.Contains(completionMessage("uninstalled"), "select Check runtime") {
 		t.Fatal("uninstall completion message must not ask the user to check the runtime")
+	}
+}
+
+func TestSetupRunsMaintenanceEngineFromFinalInstallDirectory(t *testing.T) {
+	data, err := os.ReadFile("setup.nsi")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := string(data)
+	installedEngine := `$INSTDIR\host\${MAINTENANCE_EXE}`
+	if !strings.Contains(script, `ExecWait '"`+installedEngine) {
+		t.Fatal("setup does not run the maintenance engine from the final installation directory")
+	}
+	if strings.Contains(script, `ExecWait '"$PLUGINSDIR\${MAINTENANCE_EXE}`) {
+		t.Fatal("setup runs the unsigned maintenance engine from the antivirus-sensitive temporary directory")
 	}
 }
 

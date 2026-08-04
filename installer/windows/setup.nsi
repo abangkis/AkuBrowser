@@ -82,8 +82,8 @@ FunctionEnd
 
 Section "AkuBrowser Runtime" InstallSection
   SectionIn RO
-  InitPluginsDir
-  SetOutPath "$PLUGINSDIR"
+  CreateDirectory "$INSTDIR\host"
+  SetOutPath "$INSTDIR\host"
   File /oname=${MAINTENANCE_EXE} "${ENGINE_EXE}"
 
   CreateDirectory "$INSTDIR"
@@ -92,7 +92,7 @@ Section "AkuBrowser Runtime" InstallSection
 
   DetailPrint "Verifying and installing AkuBrowser Runtime ${APP_VERSION}..."
   ClearErrors
-  ExecWait '"$PLUGINSDIR\${MAINTENANCE_EXE}" --install-root "$INSTDIR" --external-uninstaller --quiet' $0
+  ExecWait '"$INSTDIR\host\${MAINTENANCE_EXE}" --install-root "$INSTDIR" --external-uninstaller --quiet' $0
   ${If} ${Errors}
     Delete "$INSTDIR\Uninstall.exe"
     MessageBox MB_ICONSTOP|MB_OK "AkuBrowser Runtime Setup could not start the installation engine. Check Windows Security or antivirus quarantine, then try again."
@@ -117,17 +117,14 @@ Section "AkuBrowser Runtime" InstallSection
 SectionEnd
 
 Section "Uninstall"
-  InitPluginsDir
-  ClearErrors
-  CopyFiles /SILENT "$INSTDIR\host\${MAINTENANCE_EXE}" "$PLUGINSDIR\${MAINTENANCE_EXE}"
-  ${If} ${Errors}
+  IfFileExists "$INSTDIR\host\${MAINTENANCE_EXE}" maintenance_ready 0
     MessageBox MB_ICONSTOP|MB_OK "AkuBrowser Runtime maintenance files are missing. Run the latest Setup again to repair the installation before uninstalling."
     Abort
-  ${EndIf}
+  maintenance_ready:
 
   DetailPrint "Removing AkuBrowser Runtime program files..."
   ClearErrors
-  ExecWait '"$PLUGINSDIR\${MAINTENANCE_EXE}" --uninstall --install-root "$INSTDIR" --external-uninstaller --quiet' $0
+  ExecWait '"$INSTDIR\host\${MAINTENANCE_EXE}" --uninstall --install-root "$INSTDIR" --external-uninstaller --quiet' $0
   ${If} ${Errors}
     MessageBox MB_ICONSTOP|MB_OK "AkuBrowser Runtime uninstallation could not start. Close the runtime and try again."
     Abort

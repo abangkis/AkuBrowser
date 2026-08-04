@@ -46,6 +46,11 @@ NSIS is used only for the Windows UI and uninstall shell; the Go maintenance
 engine remains authoritative for payload verification, atomic activation, and
 Native Messaging Host registration.
 
+The wizard extracts and runs that maintenance engine from the selected final
+program directory, not from `%TEMP%`. This avoids handing an unsigned nested
+executable to antivirus temporary-file sandboxing while retaining the same
+verified embedded payload.
+
 ## Local candidate
 
 An unsigned candidate is deliberately named `*-unsigned-local.exe`:
