@@ -119,11 +119,11 @@ The model-backed profiles are:
 | Process | Default profile |
 | --- | --- |
 | Acquisition planning | Luna High |
-| Candidate evaluation | Luna XHigh |
+| Candidate evaluation | Luna Max |
 | Semantic event resolution | Luna High |
 | AI Deep Detection | Luna High |
 
-Only Candidate Evaluation uses Luna XHigh by default. Existing persisted user
+Only Candidate Evaluation uses Luna Max by default. Existing persisted user
 settings remain authoritative; these values apply to a fresh database or full
 reset.
 

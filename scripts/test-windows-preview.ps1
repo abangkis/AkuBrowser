@@ -230,7 +230,8 @@ try {
     $bootstrap = Invoke-RestMethod -Uri "http://127.0.0.1:$port/api/bootstrap" -TimeoutSec 5
     Assert-True ($bootstrap.settings.loadProfile -eq "standard") "Packaged fresh database does not use Standard 1x."
     Assert-True ($bootstrap.settings.aiDetectionPresentation -eq "drawer") "Packaged fresh database does not default AI Signals to Drawer."
-    Assert-True ($bootstrap.settings.reasoningEvaluationProfile -eq "luna_xhigh") "Packaged fresh database does not default evaluation to Luna XHigh."
+    Assert-True ($bootstrap.settings.autoUpdateDailyTokenBudget -eq 2000000) "Packaged fresh database does not default the daily model budget to 2M tokens."
+    Assert-True ($bootstrap.settings.reasoningEvaluationProfile -eq "luna_max") "Packaged fresh database does not default evaluation to Luna Max."
 
     $ui = Invoke-WebRequest -UseBasicParsing -Uri "http://127.0.0.1:$port/" -TimeoutSec 5
     Assert-True ($ui.StatusCode -eq 200 -and $ui.Content -match "AkuBrowser") "Embedded AkuBrowser UI was not delivered."

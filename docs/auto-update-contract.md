@@ -28,7 +28,7 @@ boundaries allow it.
   never bypasses those scheduler boundaries.
 - Automatic work pauses when the prepared queue is full or its daily allowance
   is exhausted. The selectable daily boundaries are 1M, 2M, 3M, and 5M tokens,
-  with 1M as the default. A protected share is unavailable to automatic work
+  with 2M as the default. A protected share is unavailable to automatic work
   and remains available to an explicit user-visible update.
 
 ## Prepared batches

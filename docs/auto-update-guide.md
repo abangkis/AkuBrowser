@@ -98,7 +98,7 @@ Detection does not spend model tokens. Before an automatic check starts,
 AkuSidecar estimates the next run from recent sessions and verifies that both
 the daily quota and the automatic allowance can contain it.
 
-The selectable daily quotas are 1M, 2M, 3M, and 5M tokens. The default is 1M.
+The selectable daily quotas are 1M, 2M, 3M, and 5M tokens. The default is 2M.
 The user-reserve percentage is removed from the automatic allowance, so
 prepared work cannot consume the entire configured quota. **Update now** uses
 that higher-authority user reserve and publishes its result directly into the
