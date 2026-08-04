@@ -8,6 +8,7 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 //go:embed payload
@@ -19,9 +20,11 @@ func main() {
 
 func runInstaller() int {
 	var (
-		repair    = flag.Bool("repair", false, "repair the current AkuBrowser Runtime installation")
-		uninstall = flag.Bool("uninstall", false, "uninstall AkuBrowser Runtime while preserving user data")
-		quiet     = flag.Bool("quiet", false, "suppress completion UI")
+		repair              = flag.Bool("repair", false, "repair the current AkuBrowser Runtime installation")
+		uninstall           = flag.Bool("uninstall", false, "uninstall AkuBrowser Runtime while preserving user data")
+		quiet               = flag.Bool("quiet", false, "suppress completion UI")
+		installRoot         = flag.String("install-root", "", "absolute AkuBrowser Runtime installation directory")
+		externalUninstaller = flag.Bool("external-uninstaller", false, "let an outer setup wizard own Add or Remove Programs registration")
 	)
 	flag.Parse()
 	if *repair && *uninstall {
@@ -43,18 +46,24 @@ func runInstaller() int {
 		finish(*quiet, errors.New("LOCALAPPDATA is unavailable"))
 		return 2
 	}
+	resolvedInstallRoot, err := resolveInstallRoot(localAppData, *installRoot)
+	if err != nil {
+		finish(*quiet, err)
+		return 2
+	}
 	executable, err := os.Executable()
 	if err != nil {
 		finish(*quiet, err)
 		return 2
 	}
 	installer := Installer{
-		Payload:          payload,
-		Manifest:         manifest,
-		InstallRoot:      defaultInstallRoot(localAppData),
-		DataRoot:         filepath.Join(localAppData, "AkuBrowser", "data"),
-		SourceExecutable: executable,
-		Registry:         WindowsRegistry{},
+		Payload:                     payload,
+		Manifest:                    manifest,
+		InstallRoot:                 resolvedInstallRoot,
+		DataRoot:                    filepath.Join(localAppData, "AkuBrowser", "data"),
+		SourceExecutable:            executable,
+		Registry:                    WindowsRegistry{},
+		SkipUninstallerRegistration: *externalUninstaller,
 	}
 	action := "installed"
 	if *uninstall {
@@ -72,6 +81,16 @@ func runInstaller() int {
 	}
 	finish(*quiet, nil, completionMessage(action))
 	return 0
+}
+
+func resolveInstallRoot(localAppData, requested string) (string, error) {
+	if strings.TrimSpace(requested) == "" {
+		return defaultInstallRoot(localAppData), nil
+	}
+	if !filepath.IsAbs(requested) {
+		return "", errors.New("installation directory must be an absolute Windows path")
+	}
+	return filepath.Clean(requested), nil
 }
 
 func completionMessage(action string) string {

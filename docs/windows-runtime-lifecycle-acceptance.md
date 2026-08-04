@@ -58,7 +58,7 @@ user action:
 3. `sidecar_recovery` after terminating only `AkuSidecar.exe`, then reopening
    AkuBrowser from the extension action.
 4. `extension_update` after a Store update test.
-5. `runtime_repair` after Windows Installed Apps **Modify/Repair**.
+5. `runtime_repair` after rerunning the same Setup over the installed runtime.
 6. `uninstalled` after uninstalling the companion runtime.
 7. `reinstalled` after installing it again.
 

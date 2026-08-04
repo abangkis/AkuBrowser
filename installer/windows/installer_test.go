@@ -70,6 +70,65 @@ func TestInstallRepairAndUninstallPreserveUserData(t *testing.T) {
 	assertFileContent(t, filepath.Join(installRoot, "runtime", "current.json"), `{"version":"0.7.4"}`)
 }
 
+func TestExternalSetupOwnsUninstallerRegistration(t *testing.T) {
+	payload, manifest := installerFixture(t)
+	base := t.TempDir()
+	registry := &memoryRegistry{}
+	installer := Installer{
+		Payload:                     payload,
+		Manifest:                    manifest,
+		InstallRoot:                 filepath.Join(base, "Programs", "AkuBrowser"),
+		DataRoot:                    filepath.Join(base, "AkuBrowser", "data"),
+		SourceExecutable:            filepath.Join(base, "download", "AkuBrowserRuntimeMaintenance.exe"),
+		Registry:                    registry,
+		SkipUninstallerRegistration: true,
+	}
+	writeTestFile(t, installer.SourceExecutable, []byte("maintenance-engine"))
+
+	if err := installer.Install(); err != nil {
+		t.Fatalf("install: %v", err)
+	}
+	if registry.registration.DisplayName != "" {
+		t.Fatalf("engine replaced outer setup registration: %#v", registry.registration)
+	}
+	if err := installer.Uninstall(); err != nil {
+		t.Fatalf("uninstall: %v", err)
+	}
+	if registry.uninstallerRemoved {
+		t.Fatal("engine removed outer setup registration")
+	}
+}
+
+func TestUninstallRemovesUpdatedRuntimeVersionsButPreservesUnownedFiles(t *testing.T) {
+	payload, manifest := installerFixture(t)
+	base := t.TempDir()
+	installRoot := filepath.Join(base, "Programs", "AkuBrowser")
+	installer := Installer{
+		Payload:          payload,
+		Manifest:         manifest,
+		InstallRoot:      installRoot,
+		DataRoot:         filepath.Join(base, "AkuBrowser", "data"),
+		SourceExecutable: filepath.Join(base, "download", "AkuBrowserRuntimeMaintenance.exe"),
+		Registry:         &memoryRegistry{},
+	}
+	writeTestFile(t, installer.SourceExecutable, []byte("maintenance-engine"))
+	if err := installer.Install(); err != nil {
+		t.Fatalf("install: %v", err)
+	}
+	futureRuntime := filepath.Join(installRoot, "runtime", "versions", "0.7.5", "AkuSidecar.exe")
+	unowned := filepath.Join(installRoot, "user-note.txt")
+	writeTestFile(t, futureRuntime, []byte("future-runtime"))
+	writeTestFile(t, unowned, []byte("do-not-remove"))
+
+	if err := installer.Uninstall(); err != nil {
+		t.Fatalf("uninstall: %v", err)
+	}
+	if _, err := os.Stat(futureRuntime); !os.IsNotExist(err) {
+		t.Fatalf("future runtime survived uninstall: %v", err)
+	}
+	assertFileContent(t, unowned, "do-not-remove")
+}
+
 func TestInstallerRejectsPayloadTraversalAndChecksumMismatch(t *testing.T) {
 	payload, manifest := installerFixture(t)
 	manifest.Files[0].Path = "../outside.exe"

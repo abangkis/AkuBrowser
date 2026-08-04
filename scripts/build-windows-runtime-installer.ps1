@@ -9,6 +9,7 @@ param(
     [string] $UpdatePublicKey = "",
     [string] $UpdateSigningPrivateKeyPath = "",
     [string] $TimestampUrl = "http://timestamp.digicert.com",
+    [string] $NsisPath = "",
     [switch] $UnsignedLocalCandidate,
     [switch] $SkipValidation,
     [switch] $AllowDirty
@@ -80,6 +81,28 @@ function Find-SignTool {
     return $selected.FullName
 }
 
+function Find-NsisCompiler([string] $RequestedPath) {
+    $candidates = @()
+    if (-not [string]::IsNullOrWhiteSpace($RequestedPath)) {
+        $candidates += $RequestedPath
+    }
+    $command = Get-Command makensis.exe -ErrorAction SilentlyContinue
+    if ($null -ne $command) {
+        $candidates += $command.Source
+    }
+    $candidates += @(
+        "C:\Program Files (x86)\NSIS\makensis.exe",
+        "C:\Program Files\NSIS\makensis.exe"
+    )
+    $selected = $candidates |
+        Where-Object { -not [string]::IsNullOrWhiteSpace($_) -and (Test-Path -LiteralPath $_ -PathType Leaf) } |
+        Select-Object -First 1
+    if ([string]::IsNullOrWhiteSpace($selected)) {
+        throw "NSIS 3 compiler was not found. Install NSIS or pass -NsisPath."
+    }
+    return [IO.Path]::GetFullPath($selected)
+}
+
 function Sign-Binary([string] $Path, [string] $SignTool) {
     $arguments = @(
         "sign",
@@ -110,6 +133,9 @@ function Sign-Binary([string] $Path, [string] $SignTool) {
 }
 
 $release = Read-Json $releaseManifestPath
+Assert-True ([string]$release.version -match '^\d+\.\d+\.\d+$') "The installer requires a three-part numeric release version."
+$versionQuad = "$($release.version).0"
+$nsisCompiler = Find-NsisCompiler $NsisPath
 $releaseExtensionId = [string]$release.distribution.chromeStore.extensionId
 $releaseExtensionOrigin = [string]$release.distribution.chromeStore.extensionOrigin
 Assert-True ($releaseExtensionId -match '^[a-p]{32}$') "The release manifest must declare the exact Chrome Web Store extension ID."
@@ -220,6 +246,7 @@ $artifactName = "AkuBrowserRuntimeSetup-$($release.version)$suffix.exe"
 $artifactPath = Join-Path $OutputRoot $artifactName
 $checksumPath = "$artifactPath.sha256"
 $buildRoot = Join-Path $OutputRoot ".runtime-installer-build"
+$maintenanceEnginePath = Join-Path $buildRoot "AkuBrowserRuntimeMaintenance.exe"
 Reset-Path $buildRoot $OutputRoot -Directory
 Reset-Path $artifactPath $OutputRoot
 Reset-Path $checksumPath $OutputRoot
@@ -411,12 +438,115 @@ $payloadManifest = [ordered]@{
 }
 Write-Utf8NoBom (Join-Path $payloadRoot "payload-manifest.json") ($payloadManifest | ConvertTo-Json -Depth 8)
 
-Push-Location $buildRoot
-try {
-    & go build -trimpath -ldflags "-s -w -H windowsgui" -o $artifactPath .
-    if ($LASTEXITCODE -ne 0) { throw "AkuBrowser Runtime installer build failed." }
+$savedMaintenanceEnvironment = @{
+    GOOS = $env:GOOS
+    GOARCH = $env:GOARCH
+    CGO_ENABLED = $env:CGO_ENABLED
+    GOCACHE = $env:GOCACHE
+    GOMODCACHE = $env:GOMODCACHE
+    GOTMPDIR = $env:GOTMPDIR
 }
-finally { Pop-Location }
+try {
+    $env:GOOS = "windows"
+    $env:GOARCH = "amd64"
+    $env:CGO_ENABLED = "0"
+    $env:GOCACHE = Join-Path $cacheRoot "build"
+    $env:GOMODCACHE = Join-Path $cacheRoot "mod"
+    $env:GOTMPDIR = Join-Path $cacheRoot "tmp"
+    foreach ($directory in @($env:GOCACHE, $env:GOMODCACHE, $env:GOTMPDIR)) {
+        New-Item -ItemType Directory -Force -Path $directory | Out-Null
+    }
+    Push-Location $buildRoot
+    try {
+        & go build -trimpath -ldflags "-s -w -H windowsgui" -o $maintenanceEnginePath .
+        if ($LASTEXITCODE -ne 0) { throw "AkuBrowser Runtime maintenance engine build failed." }
+    }
+    finally { Pop-Location }
+}
+finally {
+    foreach ($name in $savedMaintenanceEnvironment.Keys) {
+        if ($null -eq $savedMaintenanceEnvironment[$name]) {
+            Remove-Item -Path "Env:$name" -ErrorAction SilentlyContinue
+        }
+        else {
+            Set-Item -Path "Env:$name" -Value $savedMaintenanceEnvironment[$name]
+        }
+    }
+}
+
+if (-not $UnsignedLocalCandidate) {
+    Sign-Binary $maintenanceEnginePath $signTool
+}
+
+$nsisArguments = @(
+    "/V2",
+    "/DAPP_VERSION=$($release.version)",
+    "/DVERSION_QUAD=$versionQuad",
+    "/DENGINE_EXE=$maintenanceEnginePath",
+    "/DOUTPUT_FILE=$artifactPath"
+)
+if ($UnsignedLocalCandidate) {
+    $nsisArguments += "/DUNSIGNED_BUILD=1"
+}
+$savedNsisSigningEnvironment = @{
+    AKU_NSIS_SIGN_TOOL = $env:AKU_NSIS_SIGN_TOOL
+    AKU_NSIS_CERTIFICATE_PATH = $env:AKU_NSIS_CERTIFICATE_PATH
+    AKU_NSIS_CERTIFICATE_PASSWORD = $env:AKU_NSIS_CERTIFICATE_PASSWORD
+    AKU_NSIS_SIGNING_THUMBPRINT = $env:AKU_NSIS_SIGNING_THUMBPRINT
+    AKU_NSIS_TIMESTAMP_URL = $env:AKU_NSIS_TIMESTAMP_URL
+}
+if (-not $UnsignedLocalCandidate) {
+    $nsisSigningScript = Join-Path $buildRoot "sign-nsis-uninstaller.ps1"
+    Write-Utf8NoBom $nsisSigningScript @'
+param([Parameter(Mandatory = $true)][string] $Path)
+$ErrorActionPreference = "Stop"
+$arguments = @(
+    "sign",
+    "/fd", "SHA256",
+    "/tr", $env:AKU_NSIS_TIMESTAMP_URL,
+    "/td", "SHA256",
+    "/d", "AkuBrowser Runtime",
+    "/du", "https://github.com/abangkis/AkuBrowser"
+)
+if (-not [string]::IsNullOrWhiteSpace($env:AKU_NSIS_CERTIFICATE_PATH)) {
+    $arguments += @("/f", $env:AKU_NSIS_CERTIFICATE_PATH)
+    if (-not [string]::IsNullOrWhiteSpace($env:AKU_NSIS_CERTIFICATE_PASSWORD)) {
+        $arguments += @("/p", $env:AKU_NSIS_CERTIFICATE_PASSWORD)
+    }
+}
+else {
+    $arguments += @("/sha1", $env:AKU_NSIS_SIGNING_THUMBPRINT)
+}
+$arguments += $Path
+& $env:AKU_NSIS_SIGN_TOOL @arguments | Out-Host
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+& $env:AKU_NSIS_SIGN_TOOL verify /pa /all $Path | Out-Host
+exit $LASTEXITCODE
+'@
+    $env:AKU_NSIS_SIGN_TOOL = $signTool
+    $env:AKU_NSIS_CERTIFICATE_PATH = $CertificatePath
+    $env:AKU_NSIS_CERTIFICATE_PASSWORD = $CertificatePassword
+    $env:AKU_NSIS_SIGNING_THUMBPRINT = $SigningThumbprint
+    $env:AKU_NSIS_TIMESTAMP_URL = $TimestampUrl
+    $nsisArguments += "/DSIGN_UNINSTALLER_SCRIPT=$nsisSigningScript"
+}
+$nsisArguments += (Join-Path $installerSource "setup.nsi")
+try {
+    & $nsisCompiler @nsisArguments | Out-Host
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $artifactPath -PathType Leaf)) {
+        throw "AkuBrowser Runtime setup wizard build failed."
+    }
+}
+finally {
+    foreach ($name in $savedNsisSigningEnvironment.Keys) {
+        if ($null -eq $savedNsisSigningEnvironment[$name]) {
+            Remove-Item -Path "Env:$name" -ErrorAction SilentlyContinue
+        }
+        else {
+            Set-Item -Path "Env:$name" -Value $savedNsisSigningEnvironment[$name]
+        }
+    }
+}
 
 if (-not $UnsignedLocalCandidate) {
     Sign-Binary $artifactPath $signTool

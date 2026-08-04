@@ -10,13 +10,15 @@ import (
 	"io/fs"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 )
 
 const (
 	nativeHostRegistryPath = `Software\Google\Chrome\NativeMessagingHosts\com.akubrowser.runtime`
 	uninstallRegistryPath  = `Software\Microsoft\Windows\CurrentVersion\Uninstall\AkuBrowserRuntime`
-	installedSetupPath     = `host\AkuBrowserRuntimeSetup.exe`
+	installedSetupPath     = `host\AkuBrowserRuntimeMaintenance.exe`
+	legacySetupPath        = `host\AkuBrowserRuntimeSetup.exe`
 )
 
 type Registry interface {
@@ -36,12 +38,13 @@ type InstallRegistration struct {
 }
 
 type Installer struct {
-	Payload          fs.FS
-	Manifest         PayloadManifest
-	InstallRoot      string
-	DataRoot         string
-	SourceExecutable string
-	Registry         Registry
+	Payload                     fs.FS
+	Manifest                    PayloadManifest
+	InstallRoot                 string
+	DataRoot                    string
+	SourceExecutable            string
+	Registry                    Registry
+	SkipUninstallerRegistration bool
 }
 
 type InstalledManifest struct {
@@ -69,6 +72,12 @@ func (installer Installer) Install() error {
 	if err := copyFileAtomic(installer.SourceExecutable, setupDestination); err != nil {
 		return fmt.Errorf("install repair executable: %w", err)
 	}
+	legacySetup := filepath.Join(installer.InstallRoot, legacySetupPath)
+	if !samePath(installer.SourceExecutable, legacySetup) {
+		if err := removeInstalledFile(legacySetup); err != nil && !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("remove legacy setup executable: %w", err)
+		}
+	}
 	installed := InstalledManifest{
 		SchemaVersion:   1,
 		Product:         "AkuBrowser",
@@ -88,17 +97,19 @@ func (installer Installer) Install() error {
 	if err := installer.Registry.RegisterNativeHost(hostManifest); err != nil {
 		return fmt.Errorf("register native messaging host: %w", err)
 	}
-	quotedSetup := quoteWindowsArgument(setupDestination)
-	registration := InstallRegistration{
-		DisplayName:     "AkuBrowser Runtime",
-		DisplayVersion:  installer.Manifest.Version,
-		Publisher:       "AkuBrowser",
-		InstallLocation: installer.InstallRoot,
-		UninstallString: quotedSetup + " --uninstall",
-		RepairString:    quotedSetup + " --repair",
-	}
-	if err := installer.Registry.RegisterUninstaller(registration); err != nil {
-		return fmt.Errorf("register AkuBrowser Runtime uninstaller: %w", err)
+	if !installer.SkipUninstallerRegistration {
+		quotedSetup := quoteWindowsArgument(setupDestination)
+		registration := InstallRegistration{
+			DisplayName:     "AkuBrowser Runtime",
+			DisplayVersion:  installer.Manifest.Version,
+			Publisher:       "AkuBrowser",
+			InstallLocation: installer.InstallRoot,
+			UninstallString: quotedSetup + " --uninstall",
+			RepairString:    quotedSetup + " --repair",
+		}
+		if err := installer.Registry.RegisterUninstaller(registration); err != nil {
+			return fmt.Errorf("register AkuBrowser Runtime uninstaller: %w", err)
+		}
 	}
 	return nil
 }
@@ -111,14 +122,24 @@ func (installer Installer) Uninstall() error {
 	if err := installer.Registry.RemoveNativeHost(); err != nil {
 		failures = append(failures, fmt.Errorf("remove native messaging registration: %w", err))
 	}
-	if err := installer.Registry.RemoveUninstaller(); err != nil {
-		failures = append(failures, fmt.Errorf("remove uninstall registration: %w", err))
+	if !installer.SkipUninstallerRegistration {
+		if err := installer.Registry.RemoveUninstaller(); err != nil {
+			failures = append(failures, fmt.Errorf("remove uninstall registration: %w", err))
+		}
 	}
-	paths := make([]string, 0, len(installer.Manifest.Files)+2)
-	for _, item := range installer.Manifest.Files {
-		paths = append(paths, filepath.FromSlash(item.Path))
+	paths := make([]string, 0, len(installer.Manifest.Files)+3)
+	if installer.hasOwnedInstallMarker() {
+		for _, relative := range []string{"host", "runtime"} {
+			if err := installer.removeOwnedTree(relative); err != nil {
+				failures = append(failures, err)
+			}
+		}
+	} else {
+		for _, item := range installer.Manifest.Files {
+			paths = append(paths, filepath.FromSlash(item.Path))
+		}
 	}
-	paths = append(paths, installedSetupPath, "install-manifest.json")
+	paths = append(paths, installedSetupPath, legacySetupPath, "install-manifest.json")
 	for _, relative := range paths {
 		target, err := installer.resolveTarget(relative)
 		if err != nil {
@@ -131,6 +152,65 @@ func (installer Installer) Uninstall() error {
 	}
 	removeEmptyDirectories(installer.InstallRoot)
 	return errors.Join(failures...)
+}
+
+func (installer Installer) hasOwnedInstallMarker() bool {
+	data, err := os.ReadFile(filepath.Join(installer.InstallRoot, "install-manifest.json"))
+	if err != nil {
+		return false
+	}
+	var installed InstalledManifest
+	return json.Unmarshal(data, &installed) == nil && installed.SchemaVersion == 1 && installed.Product == "AkuBrowser"
+}
+
+func (installer Installer) removeOwnedTree(relative string) error {
+	root, err := installer.resolveTarget(relative)
+	if err != nil {
+		return err
+	}
+	var files []string
+	var directories []string
+	err = filepath.WalkDir(root, func(path string, entry fs.DirEntry, walkErr error) error {
+		if walkErr != nil {
+			if errors.Is(walkErr, os.ErrNotExist) {
+				return nil
+			}
+			return walkErr
+		}
+		if entry.IsDir() {
+			directories = append(directories, path)
+		} else {
+			files = append(files, path)
+		}
+		return nil
+	})
+	if errors.Is(err, os.ErrNotExist) {
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("enumerate installed %s files: %w", relative, err)
+	}
+	var failures []error
+	for _, path := range files {
+		if err := removeInstalledFile(path); err != nil && !errors.Is(err, os.ErrNotExist) {
+			failures = append(failures, fmt.Errorf("remove installed file %q: %w", filepath.Base(path), err))
+		}
+	}
+	sort.Slice(directories, func(first, second int) bool {
+		return len(directories[first]) > len(directories[second])
+	})
+	for _, directory := range directories {
+		if err := os.Remove(directory); err != nil && !errors.Is(err, os.ErrNotExist) && !errors.Is(err, os.ErrPermission) {
+			failures = append(failures, fmt.Errorf("remove installed directory %q: %w", filepath.Base(directory), err))
+		}
+	}
+	return errors.Join(failures...)
+}
+
+func samePath(first, second string) bool {
+	firstAbsolute, firstErr := filepath.Abs(first)
+	secondAbsolute, secondErr := filepath.Abs(second)
+	return firstErr == nil && secondErr == nil && strings.EqualFold(filepath.Clean(firstAbsolute), filepath.Clean(secondAbsolute))
 }
 
 func (installer Installer) installPayloadFile(item PayloadFile) error {

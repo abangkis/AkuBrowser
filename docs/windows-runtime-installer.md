@@ -4,9 +4,11 @@ Status: Stage 4 implementation, 28 July 2026.
 
 ## Outcome
 
-`AkuBrowserRuntimeSetup.exe` is a self-contained, user-scoped Windows installer.
-It embeds the exact compatible AkuBrowser Runtime payload and requires no
-administrator access.
+`AkuBrowserRuntimeSetup.exe` is a self-contained, user-scoped Windows setup
+wizard. It embeds the exact compatible AkuBrowser Runtime payload, requires no
+administrator access, and presents the normal Windows flow: Welcome, selectable
+installation folder, installation progress, Cancel, and Finish. Windows
+Installed Apps receives a matching graphical uninstaller.
 
 The installer owns:
 
@@ -15,7 +17,7 @@ The installer owns:
 - versioned Sidecar payloads under `runtime\versions\<version>`;
 - `runtime\current.json`;
 - the HKCU Chrome Native Messaging registration;
-- the HKCU Windows uninstall/repair registration.
+- the HKCU Windows uninstall registration.
 
 Product data remains under `%LOCALAPPDATA%\AkuBrowser\data`. Install, repair,
 upgrade, and uninstall never place that directory under the replaceable program
@@ -32,10 +34,17 @@ Every embedded file has a size and SHA-256 entry in
 before writing anything. Runtime files are written through same-directory
 temporary files; `runtime\current.json` is activated last.
 
-The host executable, Sidecar executable, c2patool executable, and final installer
-are Authenticode-signed before release. The signing command uses SHA-256 plus an
-RFC 3161 SHA-256 timestamp. Production builds fail when neither a PFX nor a
+The host executable, Sidecar executable, c2patool executable, internal
+maintenance engine, setup wizard, and generated uninstaller are
+Authenticode-signed before release. The signing command uses SHA-256 plus an RFC
+3161 SHA-256 timestamp. Production builds fail when neither a PFX nor a
 certificate-store thumbprint is supplied.
+
+NSIS 3.12 compiles the outer wizard. The build locates `makensis.exe` from
+`PATH`, its standard installation folders, or the explicit `-NsisPath` value.
+NSIS is used only for the Windows UI and uninstall shell; the Go maintenance
+engine remains authoritative for payload verification, atomic activation, and
+Native Messaging Host registration.
 
 ## Local candidate
 
@@ -79,13 +88,13 @@ publishes the installer plus the signed update manifest and versioned runtime
 ZIP on an explicitly selected existing GitHub release. The stable installer
 asset is the target linked by the Store extension.
 
-## Install, repair, and uninstall
+## Install, update, and uninstall
 
-- Double-click or run without flags to install.
-- Run the installed setup with `--repair` for idempotent repair.
-- Use Windows Installed Apps or `--uninstall` to unregister and remove program
-  files.
-- Add `--quiet` only for managed validation.
+- Double-click Setup, choose the program folder, and select Install.
+- Rerun a newer Setup to update or repair the installed runtime in place.
+- Use Windows Installed Apps to launch the graphical uninstaller.
+- Setup keeps the previous selected program folder, while the extension remains
+  the normal place to check, update, run, and stop the runtime.
 
 Uninstall removes the Chrome Native Messaging and Installed Apps registrations
 first. Locked executable files are scheduled for deletion at reboot. User data
