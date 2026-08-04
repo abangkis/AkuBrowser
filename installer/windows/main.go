@@ -79,6 +79,6 @@ func completionMessage(action string) string {
 	if action == "uninstalled" {
 		return message
 	}
-	return message + "\n\nReturn to Chrome and select Check installation. " +
+	return message + "\n\nReturn to Chrome and select Check runtime in AkuBrowser Setup. " +
 		"If an older portable AkuBrowser Runtime is still running, close it first."
 }

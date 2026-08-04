@@ -74,10 +74,10 @@ path.
 If installation or **Update now** fails with `Access is denied`, the security
 software may have sandboxed AkuSidecar even though the runtime health check
 passed. After adding the exception, stop the running `AkuSidecar.exe`. Installed
-runtime users should return to the extension Setup page and select
-**Check installation** before trying again. Portable users should run
-`Start-AkuBrowser.ps1` again. Do not delete `%USERPROFILE%\.codex` or its SQLite
-files to resolve this error.
+runtime users should return to the extension Setup page and select the available
+**Update runtime**, **Run AkuBrowser**, or **Try again** action. Portable users
+should run `Start-AkuBrowser.ps1` again. Do not delete `%USERPROFILE%\.codex` or
+its SQLite files to resolve this error.
 
 When automatic setup or a Windows-security-blocked update fails, AkuBrowser
 offers **Download manual Windows bundle**. The button opens the matching

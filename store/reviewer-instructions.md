@@ -33,11 +33,17 @@ source.
    permission has been granted.
 4. Review the prominent disclosure, OpenAI/Codex transfer disclosure, privacy
    link, and per-source choices.
-5. Click **Download Windows runtime installer**, run the signed installer,
-   return to the setup page, and click **Check installation**.
-6. Confirm **Open AkuBrowser** appears only after the local runtime is ready.
-7. Confirm the Windows security notice remains visible after the runtime becomes
-   ready and does not instruct the reviewer to disable antivirus protection.
+5. Confirm Setup shows **Not checked** and does not contact the native host until
+   **Check runtime** is clicked. After the check reports **Not installed**, click
+   **Install runtime**, run the signed installer, return to Setup, and click
+   **Check runtime** again.
+6. If the compatible runtime is stopped, click **Run AkuBrowser** and confirm the
+   status changes to **Running** while the action becomes **Stop runtime**.
+   Select **Stop runtime** while idle and confirm the control returns to
+   **Run AkuBrowser**.
+7. Confirm **Open AkuBrowser** appears only after the local runtime is running.
+8. Confirm the Windows security notice is shown for install, update, and failure
+   states and never instructs the reviewer to disable antivirus protection.
 
 ## Consent and source review
 

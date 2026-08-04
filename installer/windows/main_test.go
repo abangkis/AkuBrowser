@@ -8,7 +8,7 @@ import (
 func TestCompletionMessageExplainsPortableRuntimeHandoff(t *testing.T) {
 	message := completionMessage("installed")
 	for _, required := range []string{
-		"Check installation",
+		"select Check runtime",
 		"older portable AkuBrowser Runtime",
 		"close it first",
 	} {
@@ -16,7 +16,7 @@ func TestCompletionMessageExplainsPortableRuntimeHandoff(t *testing.T) {
 			t.Fatalf("completion message is missing %q: %s", required, message)
 		}
 	}
-	if strings.Contains(completionMessage("uninstalled"), "Check installation") {
-		t.Fatal("uninstall completion message must not ask the user to check installation")
+	if strings.Contains(completionMessage("uninstalled"), "select Check runtime") {
+		t.Fatal("uninstall completion message must not ask the user to check the runtime")
 	}
 }
