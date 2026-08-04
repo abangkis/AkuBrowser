@@ -1,9 +1,9 @@
 # AkuBrowser 0.7.7
 
-`0.7.7` is the current source-aligned Windows preview. It adds the bounded Luna
-Max reasoning profile, makes Luna Max the fresh default for Candidate
-Evaluation, and raises the fresh Auto Update daily model budget from 1M to 2M
-tokens while retaining the 25% user reserve. Existing persisted profile and
+`0.7.7` is the current source-aligned Windows preview. It keeps the bounded Luna
+Max reasoning profile as an explicit tuning option, while Luna XHigh is the
+fresh default for Candidate Evaluation, and raises the fresh Auto Update daily
+model budget from 1M to 2M tokens while retaining the 25% user reserve. Existing persisted profile and
 quota settings remain authoritative. This is the packaged
 candidate described by the OpenAI Build Week
 [final project story](openai-build-week-submission.md) and
@@ -122,11 +122,11 @@ The model-backed profiles are:
 | Process | Default profile |
 | --- | --- |
 | Acquisition planning | Luna High |
-| Candidate evaluation | Luna Max |
+| Candidate evaluation | Luna XHigh |
 | Semantic event resolution | Luna High |
 | AI Deep Detection | Luna High |
 
-Only Candidate Evaluation uses Luna Max by default. Existing persisted user
+Only Candidate Evaluation uses Luna XHigh by default. Existing persisted user
 settings remain authoritative; these values apply to a fresh database or full
 reset.
 
