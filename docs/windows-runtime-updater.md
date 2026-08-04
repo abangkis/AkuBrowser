@@ -4,8 +4,12 @@ Status: Stage 7 implementation, 29 July 2026.
 
 ## Outcome
 
-The installed Native Messaging host now reconciles a newer exact extension
-compatibility tuple through a signed runtime update. The extension still sends
+The installed Native Messaging host now reconciles an older installed runtime
+with the current extension through a signed runtime update. Release version,
+runtime build revision, and Bridge contract are evaluated separately: the
+Bridge contract is the usability boundary, while an older release or mismatched
+same-version build becomes an explicit update or repair transition. A newer
+runtime on the same Bridge contract is never downgraded. The extension still sends
 only `ensure_runtime`; it cannot provide a URL, checksum, key, path, command, or
 channel.
 
@@ -54,6 +58,14 @@ deployment path. Only a signed production companion installer writes the
 11. Successful cleanup keeps only the active and one rollback version. A
     bounded JSONL audit records time, versions, phase, and typed error code
     without paths, content, credentials, prompts, or database data.
+
+`status` may report a running contract-compatible runtime together with
+`currentVersion` and `targetVersion`; the runtime remains usable while Setup
+offers **Update runtime**. `shutdown_if_idle` does not require an exact release
+tuple because the installed runtime's private control token proves ownership.
+This exception grants no authority over portable runtimes: a loopback-only
+portable process has no installed-host control token and must be stopped
+manually.
 
 ## Release signing
 

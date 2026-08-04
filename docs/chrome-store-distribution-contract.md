@@ -202,14 +202,18 @@ The request always carries:
 - Bridge runtime revision;
 - Bridge contract version.
 
-The host refuses unknown protocol versions and reports incompatibility rather
-than guessing. `ensure_runtime` succeeds only when all of these hold:
+The host refuses unknown protocol or Bridge contract versions rather than
+guessing. Product release numbers are not themselves a runtime usability
+boundary. An older runtime on the supported Bridge contract may remain usable
+while the host advertises a target update; a newer runtime on that contract is
+not downgraded. A same-version runtime revision mismatch requires repair.
+`ensure_runtime` succeeds only when all of these hold:
 
 1. the Store extension origin is allowlisted;
 2. the installer-owned stable or preview channel is valid;
 3. the native protocol version is supported;
 4. the target runtime supports the requested Bridge contract;
-5. the target runtime supports the requested Bridge runtime revision;
+5. an update candidate carries the requested Bridge runtime revision;
 6. the Sidecar health response reports the expected product version and runtime;
 7. the fixed loopback endpoint is owned by the expected AkuSidecar instance.
 
@@ -219,6 +223,13 @@ state.
 
 No compatibility check may silently downgrade the extension's capture,
 authentication, provenance, or read-only boundaries.
+
+The installed host may use `shutdown_if_idle` across product-version or build
+revision differences because the private instance control token proves that it
+owns the installed Sidecar. Loopback reachability alone is never process-control
+authority. A portable runtime detected only through loopback is reported by
+Setup as unmanaged and must be stopped from its own terminal or extracted
+bundle before the installed runtime is reconciled.
 
 ## Filesystem and registration boundary
 

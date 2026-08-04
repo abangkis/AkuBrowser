@@ -16,7 +16,10 @@ the current user's Chrome profile, registry, or AkuBrowser data:
 - Store first-install missing-host projection;
 - Chrome/PC startup and extension-update action planning;
 - stopped or crashed Sidecar restart and retry;
-- exact compatibility rejection;
+- separation of release updates from Bridge-contract compatibility;
+- no downgrade of a newer contract-compatible runtime;
+- version-tolerant installed-runtime shutdown through the private control token;
+- portable-runtime manual-stop guidance without installed-host authority;
 - interrupted installer staging with the old `current.json` preserved;
 - an unactivated failed-candidate directory having no process authority;
 - idempotent repair;

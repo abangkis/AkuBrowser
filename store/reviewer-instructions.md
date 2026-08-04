@@ -41,6 +41,9 @@ source.
    status changes to **Running** while the action becomes **Stop runtime**.
    Select **Stop runtime** while idle and confirm the control returns to
    **Run AkuBrowser**.
+   If Setup detects a portable runtime instead, confirm it says
+   **Portable runtime running**, instructs the reviewer to stop it manually,
+   and offers **Check after stopping** rather than automatic Stop.
 7. Confirm **Open AkuBrowser** appears only after the local runtime is running.
 8. Confirm the Windows security notice is shown for install, update, and failure
    states and never instructs the reviewer to disable antivirus protection.
