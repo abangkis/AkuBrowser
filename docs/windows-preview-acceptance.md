@@ -82,6 +82,6 @@ capture, or later Timeline composition; returning to Timeline must show current
 progress rather than restarting the check.
 
 Login remediation, installer signing, and automatic Chrome extension
-installation are outside the `0.7.6` acceptance boundary. Codex
+installation are outside the `0.7.7` acceptance boundary. Codex
 discovery is owned by the cross-platform AkuSidecar runtime probe and
 capability-checks App Server.

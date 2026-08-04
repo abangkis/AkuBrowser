@@ -35,7 +35,7 @@ $bridgeCapabilities = Get-Content -LiteralPath (Join-Path $bridgeRoot "bridge-ca
 $sourceCatalog = Get-Content -LiteralPath (Join-Path $bridgeRoot "source-catalog.js") -Raw
 $responseEvidenceAdapter = Get-Content -LiteralPath (Join-Path $bridgeRoot "x-response-evidence-adapter.js") -Raw
 
-Assert-True ($releaseManifest.version -eq "0.7.6") "AkuBrowser release version is unexpected."
+Assert-True ($releaseManifest.version -eq "0.7.7") "AkuBrowser release version is unexpected."
 Assert-True ($lifecycleAcceptance.version -eq $releaseManifest.version) "Lifecycle acceptance version drifted from the release manifest."
 $expectedLifecycleScenarios = @(
     "first_install",
@@ -81,8 +81,8 @@ Assert-True ($sidecarConfig.reasoning.semanticEvent.effort -eq "high") "Semantic
 Assert-True ($sidecarConfig.reasoning.aiDetection.effort -eq "high") "AI Deep Detection must default to Luna High."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $sidecarRoot "package.json"))) "AkuSidecar must not contain a Node package."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $browserRoot "package.json"))) "AkuBrowser must not contain a Node package."
-Assert-True ($domain -match 'ApplicationVersion\s*=\s*"0\.7\.6"') "AkuSidecar version boundary is unexpected."
-Assert-True ($releaseManifest.components.akuSidecar.version -eq "0.7.6") "AkuSidecar release manifest version is unexpected."
+Assert-True ($domain -match 'ApplicationVersion\s*=\s*"0\.7\.7"') "AkuSidecar version boundary is unexpected."
+Assert-True ($releaseManifest.components.akuSidecar.version -eq "0.7.7") "AkuSidecar release manifest version is unexpected."
 Assert-True ($releaseManifest.components.c2paTool.version -eq "0.26.60") "Pinned c2patool version is unexpected."
 Assert-True ($releaseManifest.components.c2paTool.sha256 -eq "90cbcebe30250f8e8c53416d32ed86065dc04a23be86e4a2337f5cd1badfa0b7") "Pinned c2patool SHA-256 is unexpected."
 Assert-True ($releaseManifest.components.c2paTool.workspaceSource -eq "AkuSidecar/runtime/dev/c2patool.exe") "Pinned c2patool workspace source is unexpected."
@@ -137,7 +137,7 @@ finally { Pop-Location }
     release = $releaseManifest.version
     AkuBridge = $bridgePackage.version
     AkuBridgeRuntime = $bridgePackage.akuRuntimeRevision
-    AkuSidecar = "0.7.6"
+    AkuSidecar = "0.7.7"
     provider = $sidecarConfig.reasoning.provider
     preferenceAuthority = $sidecarConfig.preference.mode
     boundedLoadDefault = $sidecarConfig.capture.profile

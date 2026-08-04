@@ -1,9 +1,10 @@
-# AkuBrowser 0.7.6
+# AkuBrowser 0.7.7
 
-`0.7.6` is the current source-aligned Windows preview. It adds a guided,
-platform-aware Chrome extension setup flow, clearer Windows antivirus guidance,
-an explicit manual portable-bundle fallback, and actionable recovery when
-Windows security software blocks AkuSidecar or Codex state access. This is the packaged
+`0.7.7` is the current source-aligned Windows preview. It adds the bounded Luna
+Max reasoning profile, makes Luna Max the fresh default for Candidate
+Evaluation, and raises the fresh Auto Update daily model budget from 1M to 2M
+tokens while retaining the 25% user reserve. Existing persisted profile and
+quota settings remain authoritative. This is the packaged
 candidate described by the OpenAI Build Week
 [final project story](openai-build-week-submission.md) and
 [implementation evidence](../BUILD_WEEK.md). The first calibration
@@ -87,13 +88,13 @@ smoke-tested with `scripts/test-macos-preview.sh`. The build pipeline can
 produce native `x64` or `arm64` bundles for focused testing; the published
 `0.7.0-preview.3` asset is `macos-universal` and runs on Intel and Apple
 silicon.
-The `v0.7.6` tag is the source checkpoint for the Windows bundle and future
+The `v0.7.7` tag is the source checkpoint for the Windows bundle and future
 matching macOS bundle. The accepted Windows bundle and its adjacent checksum
 are published from the
-[`v0.7.6` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.6).
+[`v0.7.7` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.7).
 The previously published macOS universal bundle remains available from the
 [`v0.7.0-preview.3` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.0-preview.3)
-until a matching macOS 0.7.6 build completes acceptance.
+until a matching macOS 0.7.7 build completes acceptance.
 
 The automated gates verify the bundle manifest, bundled-file checksums,
 Sidecar health, both supported loopback hostnames, fresh-database defaults, and
@@ -113,7 +114,9 @@ LinkedIn, and Facebook enabled,
 semantic duplicates collapsed, and AI Signals routed to the visible Drawer.
 AI Detection is enabled by default and can be disabled as one unit, stopping
 both local Fast Detection and asynchronous Deep Detection. Native resurfacing
-uses Smart handling with a seven-day cooldown by default.
+uses Smart handling with a seven-day cooldown by default. Auto Update starts
+with a 2M-token daily model budget and keeps 25% unavailable to background
+preparation for user-visible updates.
 The model-backed profiles are:
 
 | Process | Default profile |
@@ -132,6 +135,6 @@ reset.
 [`release/release-manifest.json`](../release/release-manifest.json) is the
 machine-readable release authority. The immutable `v0.7.0-preview.1` tags remain
 the historical compatibility checkpoint and must never be moved. The published
-`v0.7.6` tags identify the current release source checkpoints; each generated
+`v0.7.7` tags identify the current release source checkpoints; each generated
 bundle additionally records its exact AkuBrowser, AkuSidecar, and AkuBridge
 commits and dirty state in `artifact-manifest.json`.
