@@ -30,26 +30,25 @@ one exact `chrome-extension://<id>/` origin. Wildcards and placeholder IDs are
 rejected for production inputs.
 
 Every embedded file has a size and SHA-256 entry in
-`payload-manifest.json`. The installer verifies the entire embedded payload
-before writing anything. Runtime files are written through same-directory
-temporary files; `runtime\current.json` is activated last.
+`payload-manifest.json`. NSIS enforces its archive CRC before and during direct
+extraction, while the manifest remains packaged as the installed provenance
+record. `runtime\current.json` is extracted last so an interrupted extraction
+cannot activate an incomplete runtime version.
 
-The host executable, Sidecar executable, c2patool executable, internal
-maintenance engine, setup wizard, and generated uninstaller are
-Authenticode-signed before release. The signing command uses SHA-256 plus an RFC
+The host executable, Sidecar executable, c2patool executable, setup wizard, and
+generated uninstaller are Authenticode-signed before release. The signing
+command uses SHA-256 plus an RFC
 3161 SHA-256 timestamp. Production builds fail when neither a PFX nor a
 certificate-store thumbprint is supplied.
 
 NSIS 3.12 compiles the outer wizard. The build locates `makensis.exe` from
 `PATH`, its standard installation folders, or the explicit `-NsisPath` value.
-NSIS is used only for the Windows UI and uninstall shell; the Go maintenance
-engine remains authoritative for payload verification, atomic activation, and
-Native Messaging Host registration.
-
-The wizard extracts and runs that maintenance engine from the selected final
-program directory, not from `%TEMP%`. This avoids handing an unsigned nested
-executable to antivirus temporary-file sandboxing while retaining the same
-verified embedded payload.
+NSIS owns the Windows UI, direct payload extraction, HKCU Native Messaging Host
+registration, and uninstall shell. It does not launch a nested installer or
+maintenance executable. The host, Sidecar, and C2PA executables are extracted
+as inert program files; `runtime\current.json` is written only after all other
+payload files succeed. This avoids the unsigned-child-process pattern that
+antivirus sandboxing can terminate while preserving last-step activation.
 
 ## Local candidate
 

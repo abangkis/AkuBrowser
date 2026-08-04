@@ -9,8 +9,8 @@ Unicode true
 !ifndef VERSION_QUAD
   !error "VERSION_QUAD is required"
 !endif
-!ifndef ENGINE_EXE
-  !error "ENGINE_EXE is required"
+!ifndef PAYLOAD_ROOT
+  !error "PAYLOAD_ROOT is required"
 !endif
 !ifndef OUTPUT_FILE
   !error "OUTPUT_FILE is required"
@@ -22,7 +22,6 @@ Unicode true
 !define PRODUCT_REGISTRY_KEY "Software\AkuBrowser\Runtime"
 !define PRODUCT_UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\AkuBrowserRuntime"
 !define NATIVE_HOST_KEY "Software\Google\Chrome\NativeMessagingHosts\com.akubrowser.runtime"
-!define MAINTENANCE_EXE "AkuBrowserRuntimeMaintenance.exe"
 
 Name "${PRODUCT_NAME} ${APP_VERSION}"
 Caption "${PRODUCT_NAME} Setup"
@@ -82,27 +81,34 @@ FunctionEnd
 
 Section "AkuBrowser Runtime" InstallSection
   SectionIn RO
+  SetOverwrite on
+
   CreateDirectory "$INSTDIR\host"
   SetOutPath "$INSTDIR\host"
-  File /oname=${MAINTENANCE_EXE} "${ENGINE_EXE}"
+  File /r "${PAYLOAD_ROOT}\host\*"
 
-  CreateDirectory "$INSTDIR"
+  CreateDirectory "$INSTDIR\runtime\versions\${APP_VERSION}"
+  SetOutPath "$INSTDIR\runtime\versions\${APP_VERSION}"
+  File /r "${PAYLOAD_ROOT}\runtime\versions\${APP_VERSION}\*"
+
+  SetOutPath "$INSTDIR"
+  File /oname=install-manifest.json "${PAYLOAD_ROOT}\payload-manifest.json"
+
+  ; Activate the new runtime only after every executable and support file was
+  ; extracted successfully. An interrupted install therefore leaves the prior
+  ; current.json authoritative.
+  CreateDirectory "$INSTDIR\runtime"
+  SetOutPath "$INSTDIR\runtime"
+  File /oname=current.json "${PAYLOAD_ROOT}\runtime\current.json"
+
+  ; Remove bootstrap executables left by the earlier nested-engine installer.
+  Delete /REBOOTOK "$INSTDIR\host\AkuBrowserRuntimeMaintenance.exe"
+  Delete /REBOOTOK "$INSTDIR\host\AkuBrowserRuntimeSetup.exe"
+
   SetOutPath "$INSTDIR"
   WriteUninstaller "$INSTDIR\Uninstall.exe"
 
-  DetailPrint "Verifying and installing AkuBrowser Runtime ${APP_VERSION}..."
-  ClearErrors
-  ExecWait '"$INSTDIR\host\${MAINTENANCE_EXE}" --install-root "$INSTDIR" --external-uninstaller --quiet' $0
-  ${If} ${Errors}
-    Delete "$INSTDIR\Uninstall.exe"
-    MessageBox MB_ICONSTOP|MB_OK "AkuBrowser Runtime Setup could not start the installation engine. Check Windows Security or antivirus quarantine, then try again."
-    Abort
-  ${ElseIf} $0 != 0
-    Delete "$INSTDIR\Uninstall.exe"
-    MessageBox MB_ICONSTOP|MB_OK "AkuBrowser Runtime installation failed (exit code $0). Existing runtime data was preserved. Check Windows Security or antivirus quarantine, then run Setup again."
-    Abort
-  ${EndIf}
-
+  WriteRegStr HKCU "${NATIVE_HOST_KEY}" "" "$INSTDIR\host\com.akubrowser.runtime.json"
   WriteRegStr HKCU "${PRODUCT_REGISTRY_KEY}" "InstallLocation" "$INSTDIR"
   WriteRegStr HKCU "${PRODUCT_REGISTRY_KEY}" "Version" "${APP_VERSION}"
   WriteRegStr HKCU "${PRODUCT_UNINSTALL_KEY}" "DisplayName" "${PRODUCT_NAME}"
@@ -117,25 +123,12 @@ Section "AkuBrowser Runtime" InstallSection
 SectionEnd
 
 Section "Uninstall"
-  IfFileExists "$INSTDIR\host\${MAINTENANCE_EXE}" maintenance_ready 0
-    MessageBox MB_ICONSTOP|MB_OK "AkuBrowser Runtime maintenance files are missing. Run the latest Setup again to repair the installation before uninstalling."
-    Abort
-  maintenance_ready:
-
-  DetailPrint "Removing AkuBrowser Runtime program files..."
-  ClearErrors
-  ExecWait '"$INSTDIR\host\${MAINTENANCE_EXE}" --uninstall --install-root "$INSTDIR" --external-uninstaller --quiet' $0
-  ${If} ${Errors}
-    MessageBox MB_ICONSTOP|MB_OK "AkuBrowser Runtime uninstallation could not start. Close the runtime and try again."
-    Abort
-  ${ElseIf} $0 != 0
-    MessageBox MB_ICONSTOP|MB_OK "AkuBrowser Runtime uninstallation failed (exit code $0). Close the runtime and try again."
-    Abort
-  ${EndIf}
-
   DeleteRegKey HKCU "${NATIVE_HOST_KEY}"
   DeleteRegKey HKCU "${PRODUCT_UNINSTALL_KEY}"
   DeleteRegKey HKCU "${PRODUCT_REGISTRY_KEY}"
+  RMDir /r /REBOOTOK "$INSTDIR\host"
+  RMDir /r /REBOOTOK "$INSTDIR\runtime"
+  Delete /REBOOTOK "$INSTDIR\install-manifest.json"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir "$INSTDIR"
 SectionEnd

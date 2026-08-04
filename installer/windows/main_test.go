@@ -23,18 +23,18 @@ func TestCompletionMessageExplainsPortableRuntimeHandoff(t *testing.T) {
 	}
 }
 
-func TestSetupRunsMaintenanceEngineFromFinalInstallDirectory(t *testing.T) {
+func TestSetupDoesNotLaunchNestedUnsignedExecutables(t *testing.T) {
 	data, err := os.ReadFile("setup.nsi")
 	if err != nil {
 		t.Fatal(err)
 	}
 	script := string(data)
-	installedEngine := `$INSTDIR\host\${MAINTENANCE_EXE}`
-	if !strings.Contains(script, `ExecWait '"`+installedEngine) {
-		t.Fatal("setup does not run the maintenance engine from the final installation directory")
+	if strings.Contains(script, "ExecWait") || strings.Contains(script, "MAINTENANCE_EXE") {
+		t.Fatal("setup launches a nested maintenance executable that antivirus can terminate")
 	}
-	if strings.Contains(script, `ExecWait '"$PLUGINSDIR\${MAINTENANCE_EXE}`) {
-		t.Fatal("setup runs the unsigned maintenance engine from the antivirus-sensitive temporary directory")
+	if !strings.Contains(script, `File /r "${PAYLOAD_ROOT}\host\*"`) ||
+		!strings.Contains(script, `File /oname=current.json "${PAYLOAD_ROOT}\runtime\current.json"`) {
+		t.Fatal("setup does not extract the payload directly with current.json activated last")
 	}
 }
 

@@ -246,7 +246,6 @@ $artifactName = "AkuBrowserRuntimeSetup-$($release.version)$suffix.exe"
 $artifactPath = Join-Path $OutputRoot $artifactName
 $checksumPath = "$artifactPath.sha256"
 $buildRoot = Join-Path $OutputRoot ".runtime-installer-build"
-$maintenanceEnginePath = Join-Path $buildRoot "AkuBrowserRuntimeMaintenance.exe"
 Reset-Path $buildRoot $OutputRoot -Directory
 Reset-Path $artifactPath $OutputRoot
 Reset-Path $checksumPath $OutputRoot
@@ -256,10 +255,6 @@ $hostPayload = Join-Path $payloadRoot "host"
 $runtimePayload = Join-Path $payloadRoot "runtime\versions\$($release.version)"
 New-Item -ItemType Directory -Force -Path $hostPayload | Out-Null
 New-Item -ItemType Directory -Force -Path $runtimePayload | Out-Null
-
-Get-ChildItem -LiteralPath $installerSource -File |
-    Where-Object { $_.Extension -in @(".go", ".mod", ".sum") } |
-    ForEach-Object { Copy-Item -LiteralPath $_.FullName -Destination $buildRoot }
 
 $cacheRoot = Join-Path $workspaceRoot ".go-cache"
 $savedEnvironment = @{
@@ -438,51 +433,11 @@ $payloadManifest = [ordered]@{
 }
 Write-Utf8NoBom (Join-Path $payloadRoot "payload-manifest.json") ($payloadManifest | ConvertTo-Json -Depth 8)
 
-$savedMaintenanceEnvironment = @{
-    GOOS = $env:GOOS
-    GOARCH = $env:GOARCH
-    CGO_ENABLED = $env:CGO_ENABLED
-    GOCACHE = $env:GOCACHE
-    GOMODCACHE = $env:GOMODCACHE
-    GOTMPDIR = $env:GOTMPDIR
-}
-try {
-    $env:GOOS = "windows"
-    $env:GOARCH = "amd64"
-    $env:CGO_ENABLED = "0"
-    $env:GOCACHE = Join-Path $cacheRoot "build"
-    $env:GOMODCACHE = Join-Path $cacheRoot "mod"
-    $env:GOTMPDIR = Join-Path $cacheRoot "tmp"
-    foreach ($directory in @($env:GOCACHE, $env:GOMODCACHE, $env:GOTMPDIR)) {
-        New-Item -ItemType Directory -Force -Path $directory | Out-Null
-    }
-    Push-Location $buildRoot
-    try {
-        & go build -trimpath -ldflags "-s -w -H windowsgui" -o $maintenanceEnginePath .
-        if ($LASTEXITCODE -ne 0) { throw "AkuBrowser Runtime maintenance engine build failed." }
-    }
-    finally { Pop-Location }
-}
-finally {
-    foreach ($name in $savedMaintenanceEnvironment.Keys) {
-        if ($null -eq $savedMaintenanceEnvironment[$name]) {
-            Remove-Item -Path "Env:$name" -ErrorAction SilentlyContinue
-        }
-        else {
-            Set-Item -Path "Env:$name" -Value $savedMaintenanceEnvironment[$name]
-        }
-    }
-}
-
-if (-not $UnsignedLocalCandidate) {
-    Sign-Binary $maintenanceEnginePath $signTool
-}
-
 $nsisArguments = @(
     "/V2",
     "/DAPP_VERSION=$($release.version)",
     "/DVERSION_QUAD=$versionQuad",
-    "/DENGINE_EXE=$maintenanceEnginePath",
+    "/DPAYLOAD_ROOT=$payloadRoot",
     "/DOUTPUT_FILE=$artifactPath"
 )
 if ($UnsignedLocalCandidate) {
