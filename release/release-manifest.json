@@ -21,8 +21,8 @@
     },
     "chromeStore": {
       "extensionDistribution": "chrome-web-store",
-      "extensionId": "kpepkhjfebddlghebcaglbmobgihfcip",
-      "extensionOrigin": "chrome-extension://kpepkhjfebddlghebcaglbmobgihfcip/",
+      "extensionId": "phkaipecbhpgopggbfpcejgngbhddnkk",
+      "extensionOrigin": "chrome-extension://phkaipecbhpgopggbfpcejgngbhddnkk/",
       "nativeRuntimeInstaller": {
         "platform": "windows-x64",
         "format": "signed-user-scoped-exe",

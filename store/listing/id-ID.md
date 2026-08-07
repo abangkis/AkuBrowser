@@ -9,9 +9,11 @@ Bangun feed AI pribadi dari X, LinkedIn, dan Facebook yang Anda izinkan.
 AkuBrowser membantu Anda mengubah feed sosial yang padat menjadi timeline AI
 pribadi yang lebih relevan.
 
-Anda memilih sendiri sumber yang boleh dibaca. X, LinkedIn, dan Facebook
-dinonaktifkan secara default dan diminta satu per satu melalui izin Chrome.
-AkuBrowser hanya membaca konten yang dirender pada sumber yang Anda aktifkan.
+Anda memilih sendiri sumber yang boleh dibaca. Halaman setup pada awalnya
+menyarankan X, LinkedIn, dan Facebook, tetapi tidak ada izin domain sosial yang
+diberikan sampai Anda mengonfirmasi pilihan dan menyetujui permintaan izin
+Chrome. AkuBrowser hanya membaca konten yang dirender pada sumber yang Anda
+aktifkan.
 
 Fitur utama:
 
@@ -22,12 +24,14 @@ Fitur utama:
 - menampilkan bukti sumber dan tautan posting asli;
 - memberi kontrol retensi dan reset data lokal.
 
-AkuBrowser memerlukan companion runtime Windows bertanda tangan yang dipasang
-oleh pengguna. Extension akan menjelaskan dan menautkan installer tersebut saat
-setup. Setelah dipasang, host lokal dapat mengambil update runtime bertanda
-tangan dari rilis resmi AkuBrowser dan otomatis kembali ke versi sebelumnya
-jika kandidat gagal. Runtime menyimpan data produk di perangkat Anda. Fitur AI
-dapat mengirim konten terpilih ke OpenAI melalui Codex App yang Anda gunakan.
+AkuBrowser memerlukan companion runtime Windows yang dipasang secara terpisah.
+Early Preview ini menautkan installer unsigned dari rilis GitHub resmi
+AkuBrowser. Windows Security, SmartScreen, atau antivirus dapat memperingatkan,
+menunda, atau mengarantina installer; lanjutkan hanya setelah memverifikasi
+sumber resmi dan SHA-256 yang dipublikasikan. Update runtime preview memakai
+alur installer eksplisit yang sama. Runtime menyimpan data produk di perangkat
+Anda. Fitur AI dapat mengirim konten terpilih ke OpenAI melalui Codex App yang
+Anda gunakan.
 
 AkuBrowser tidak meminta password atau cookie sosial, tidak menjual data, tidak
 memakai data untuk iklan, dan tidak memuat JavaScript jarak jauh.

@@ -1,6 +1,6 @@
 # AkuBrowser Privacy Policy
 
-Last updated: 28 July 2026
+Last updated: 7 August 2026
 
 AkuBrowser's single purpose is to let a user build and personalize a private AI
 feed from the X, LinkedIn, and Facebook sources that the user explicitly
@@ -26,10 +26,11 @@ health information, or private-message access.
 
 ## Consent and source access
 
-Social-source access is optional and disabled by default. Before AkuBrowser
-registers source content scripts, its setup page prominently explains the data
-handled and asks the user to select each source and take an affirmative consent
-action. Chrome then shows its own permission request for the selected domains.
+Social-source access is optional and no social-domain permission is granted by
+default. The setup page initially suggests the supported sources, prominently
+explains the data handled, and requires the user to confirm the selection before
+Chrome shows its own permission request for the selected domains. AkuBrowser
+registers source content scripts only after Chrome grants that permission.
 
 The user may return to the extension's options page and revoke one or all source
 permissions. Revocation unregisters that source's persistent content scripts.
@@ -81,11 +82,11 @@ content and a bounded task prompt to OpenAI through the user's signed-in Codex
 App/App Server. OpenAI's handling of that data is governed by the terms and
 privacy settings applicable to the user's OpenAI/Codex account. The extension
 does not send captured source data to GitHub. GitHub hosts the project pages,
-the user-initiated companion installer, and signed companion runtime updates.
-The installed native host may contact the fixed AkuBrowser GitHub Releases
-location to retrieve a signed update manifest and versioned runtime archive.
-Those requests contain no captured social content, prompts, feedback,
-credentials, or AkuBrowser database data.
+and the user-initiated companion installer. The current Early Preview installer
+is unsigned and is disclosed as such before download. Preview runtime updates
+use the same explicit user-run installer flow from the fixed official
+AkuBrowser GitHub Releases location. Those requests contain no captured social
+content, prompts, feedback, credentials, or AkuBrowser database data.
 
 AkuBrowser does not sell user data. AkuBrowser does not transfer user data to
 advertising platforms or data brokers. No project contributor reads captured

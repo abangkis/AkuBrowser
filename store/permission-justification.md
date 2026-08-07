@@ -28,10 +28,11 @@ required for the product UI, health check, and authenticated Bridge API.
 - `https://www.facebook.com/*`
 - `https://facebook.com/*`
 
-All social hosts are optional, disabled by default, explained in-product, and
-requested only from the setup-page consent button. Each source can be enabled or
-revoked independently. Persistent source scripts are registered only after
-Chrome confirms the matching host grant. Capture fails closed when the grant is
+All social hosts are optional and no host permission is granted by default.
+They are explained in-product and requested only from the setup-page consent
+button after the user confirms the initially suggested sources. Each source can
+be enabled or revoked independently. Persistent source scripts are registered
+only after Chrome confirms the matching host grant. Capture fails closed when the grant is
 absent.
 
 The optional patterns remain exact first-party hosts because Chrome host

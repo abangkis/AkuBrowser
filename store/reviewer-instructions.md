@@ -4,16 +4,17 @@
 
 The Store item is **AkuBrowser**. The repository/internal extension component is
 named AkuBridge. The extension is Manifest V3 and contains all extension logic.
-It requires a separately installed, signed, user-scoped Windows companion named
+It requires a separately installed, user-scoped Windows companion named
 **AkuBrowser Runtime** because Chrome Native Messaging hosts must be registered
-by the operating system.
+by the operating system. The current Early Preview companion is unsigned and is
+disclosed as such before download.
 
 ## Environment
 
 - Windows 11 x64 current-user account
 - Current stable Google Chrome
 - Codex App installed and signed in
-- Signed release asset:
+- Official unsigned Early Preview asset:
   `https://github.com/abangkis/AkuBrowser/releases/latest/download/AkuBrowserRuntimeSetup.exe`
 - Manual fallback asset pattern:
   `https://github.com/abangkis/AkuBrowser/releases/download/v<version>/AkuBrowser-<version>-windows-x64.zip`
@@ -29,13 +30,14 @@ source.
 
 1. Install AkuBrowser from the Chrome Web Store test channel.
 2. Confirm the bundled setup page opens.
-3. Confirm X, LinkedIn, and Facebook are unchecked and no social-domain
-   permission has been granted.
+3. Confirm X, LinkedIn, and Facebook are initially suggested, but no
+   social-domain permission has been granted.
 4. Review the prominent disclosure, OpenAI/Codex transfer disclosure, privacy
    link, and per-source choices.
 5. Confirm Setup shows **Not checked** and does not contact the native host until
    **Check runtime** is clicked. After the check reports **Not installed**, click
-   **Install runtime**, run the signed installer, return to Setup, and click
+   **Install runtime**, run the disclosed unsigned Early Preview installer,
+   return to Setup, and click
    **Check runtime** again.
 6. If the compatible runtime is stopped, click **Run AkuBrowser** and confirm the
    status changes to **Running** while the action becomes **Stop runtime**.
@@ -50,7 +52,7 @@ source.
 
 ## Consent and source review
 
-1. Select only one source and click **Saya setuju & aktifkan**.
+1. Select only one source and click **I agree & enable**.
 2. Confirm Chrome requests only that source's exact domain.
 3. Confirm the setup status lists only that source.
 4. Open the extension options page, uncheck the source, and save.
@@ -65,7 +67,7 @@ passwords, cookies, private messages, or all-sites access.
 1. Close all Chrome windows and reopen Chrome; the registered host should
    reconcile the runtime without a terminal.
 2. End `AkuSidecar.exe`, click the AkuBrowser toolbar action, and confirm the
-   signed native host recovers it.
+   registered native host recovers it.
 3. Use Windows Installed Apps to repair or uninstall AkuBrowser Runtime.
 4. Confirm uninstall makes setup show the install-required state while product
    data remains preserved.
@@ -77,10 +79,9 @@ passwords, cookies, private messages, or all-sites access.
 - The fixed GitHub installer URL and matching versioned portable-fallback URL
   are opened only by a user click; the extension does not use the Downloads API
   or silently execute either artifact.
-- After installation, the native host—not extension JavaScript—may retrieve one
-  signed manifest and versioned runtime ZIP from the fixed official AkuBrowser
-  GitHub Releases origin. It verifies the pinned Ed25519 signature, size, and
-  SHA-256 before activation.
+- The current preview updates the native runtime through an explicit user-run
+  installer from the fixed official AkuBrowser GitHub Releases origin. The
+  extension never downloads or executes the installer silently.
 - AI-backed features may communicate with OpenAI through the reviewer's signed-in
   Codex App. This is prominently disclosed before source consent.
 - There is no remotely hosted JavaScript, `eval`, or downloaded command stream.
@@ -89,7 +90,8 @@ passwords, cookies, private messages, or all-sites access.
 
 Do not submit until:
 
-- the Store item ID is embedded in the signed companion host manifest;
-- the stable installer asset exists and has a valid Authenticode signature;
+- the Store item ID is embedded in the companion host manifest;
+- the stable installer asset exists, its SHA-256 is published, and the unsigned
+  Early Preview disclosure matches the listing and setup page;
 - the clean-machine Stage 5 evidence is complete;
 - the URLs in the listing resolve publicly.

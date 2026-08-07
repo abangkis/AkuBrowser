@@ -58,7 +58,7 @@ foreach ($relative in $requiredFiles) {
 }
 
 $privacy = Get-Content (Join-Path $browserRoot "PRIVACY.md") -Raw
-foreach ($phrase in @("disabled by default", "affirmative consent", "does not sell user data", "Limited Use")) {
+foreach ($phrase in @("no social-domain permission is granted by", "confirm the selection", "does not sell user data", "Limited Use")) {
     if (-not $privacy.Contains($phrase)) { throw "Privacy policy is missing required disclosure: $phrase" }
 }
 $declarations = Get-Content (Join-Path $browserRoot "store\privacy-declarations.json") -Raw | ConvertFrom-Json
