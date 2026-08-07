@@ -35,7 +35,7 @@ $bridgeCapabilities = Get-Content -LiteralPath (Join-Path $bridgeRoot "bridge-ca
 $sourceCatalog = Get-Content -LiteralPath (Join-Path $bridgeRoot "source-catalog.js") -Raw
 $responseEvidenceAdapter = Get-Content -LiteralPath (Join-Path $bridgeRoot "x-response-evidence-adapter.js") -Raw
 
-Assert-True ($releaseManifest.version -eq "0.7.8") "AkuBrowser release version is unexpected."
+Assert-True ($releaseManifest.version -eq "0.7.9") "AkuBrowser release version is unexpected."
 Assert-True ($lifecycleAcceptance.version -eq $releaseManifest.version) "Lifecycle acceptance version drifted from the release manifest."
 $expectedLifecycleScenarios = @(
     "first_install",
@@ -55,10 +55,13 @@ foreach ($scenario in $expectedLifecycleScenarios) {
 }
 Assert-True ($releaseManifest.distribution.authorityRepository -eq "AkuBrowser") "AkuBrowser must remain the distribution authority."
 Assert-True ($releaseManifest.distribution.windows.format -eq "portable-zip") "Windows preview must remain a portable ZIP."
+Assert-True ($releaseManifest.distribution.chromeStore.nativeRuntimeInstallers.'windows-x64'.stableAsset -eq "AkuBrowserRuntimeSetup.exe") "Windows Store installer asset is unexpected."
+Assert-True ($releaseManifest.distribution.chromeStore.nativeRuntimeInstallers.'macos-universal'.stableAsset -eq "AkuBrowserRuntimeSetup.pkg") "macOS Store installer asset is unexpected."
+Assert-True ($releaseManifest.distribution.chromeStore.nativeRuntimeInstallers.'linux-x64'.status -eq "planned-0.7.10") "Linux deployment must remain deferred to 0.7.10."
 Assert-True ($bridgePackage.version -eq $bridgeManifest.version_name) "AkuBridge package and manifest version name differ."
 Assert-True ($bridgePackage.version -eq $releaseManifest.components.akuBridge.version) "AkuBridge product version drifted from the release manifest."
 Assert-True ($bridgeManifest.version -eq $releaseManifest.components.akuBridge.chromeVersion) "AkuBridge Chrome version drifted from the release manifest."
-Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-adapters-v86") "AkuBridge development runtime revision is unexpected."
+Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-adapters-v87") "AkuBridge development runtime revision is unexpected."
 if ($DistributionOnly) {
     Assert-True ($bridgePackage.akuRuntimeRevision -eq $releaseManifest.components.akuBridge.runtimeRevision) "AkuBridge runtime revision drifted from the release manifest."
 }
@@ -81,8 +84,8 @@ Assert-True ($sidecarConfig.reasoning.semanticEvent.effort -eq "high") "Semantic
 Assert-True ($sidecarConfig.reasoning.aiDetection.effort -eq "high") "AI Deep Detection must default to Luna High."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $sidecarRoot "package.json"))) "AkuSidecar must not contain a Node package."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $browserRoot "package.json"))) "AkuBrowser must not contain a Node package."
-Assert-True ($domain -match 'ApplicationVersion\s*=\s*"0\.7\.8"') "AkuSidecar version boundary is unexpected."
-Assert-True ($releaseManifest.components.akuSidecar.version -eq "0.7.8") "AkuSidecar release manifest version is unexpected."
+Assert-True ($domain -match 'ApplicationVersion\s*=\s*"0\.7\.9"') "AkuSidecar version boundary is unexpected."
+Assert-True ($releaseManifest.components.akuSidecar.version -eq "0.7.9") "AkuSidecar release manifest version is unexpected."
 Assert-True ($releaseManifest.components.c2paTool.version -eq "0.26.60") "Pinned c2patool version is unexpected."
 Assert-True ($releaseManifest.components.c2paTool.sha256 -eq "90cbcebe30250f8e8c53416d32ed86065dc04a23be86e4a2337f5cd1badfa0b7") "Pinned c2patool SHA-256 is unexpected."
 Assert-True ($releaseManifest.components.c2paTool.workspaceSource -eq "AkuSidecar/runtime/dev/c2patool.exe") "Pinned c2patool workspace source is unexpected."
@@ -137,7 +140,7 @@ finally { Pop-Location }
     release = $releaseManifest.version
     AkuBridge = $bridgePackage.version
     AkuBridgeRuntime = $bridgePackage.akuRuntimeRevision
-    AkuSidecar = "0.7.8"
+    AkuSidecar = "0.7.9"
     provider = $sidecarConfig.reasoning.provider
     preferenceAuthority = $sidecarConfig.preference.mode
     boundedLoadDefault = $sidecarConfig.capture.profile

@@ -4,20 +4,25 @@
 
 The Store item is **AkuBrowser**. The repository/internal extension component is
 named AkuBridge. The extension is Manifest V3 and contains all extension logic.
-It requires a separately installed, user-scoped Windows companion named
-**AkuBrowser Runtime** because Chrome Native Messaging hosts must be registered
-by the operating system. The current Early Preview companion is unsigned and is
-disclosed as such before download.
+It requires a separately installed, user-scoped Windows or macOS companion
+named **AkuBrowser Runtime** because Chrome Native Messaging hosts must be
+registered by the operating system. Linux is intentionally unavailable in
+0.7.9. The Windows Early Preview signature state and the macOS Developer ID and
+notarization requirements are disclosed before publication.
 
 ## Environment
 
-- Windows 11 x64 current-user account
+- Windows 11 x64 or macOS Intel/Apple-silicon current-user account
 - Current stable Google Chrome
 - Codex App installed and signed in
 - Official unsigned Early Preview asset:
   `https://github.com/abangkis/AkuBrowser/releases/latest/download/AkuBrowserRuntimeSetup.exe`
+- Official signed and notarized macOS asset:
+  `https://github.com/abangkis/AkuBrowser/releases/latest/download/AkuBrowserRuntimeSetup.pkg`
 - Manual fallback asset pattern:
   `https://github.com/abangkis/AkuBrowser/releases/download/v<version>/AkuBrowser-<version>-windows-x64.zip`
+- macOS fallback pattern:
+  `https://github.com/abangkis/AkuBrowser/releases/download/v<version>/AkuBrowser-<version>-macos-universal.zip`
 - Optional: reviewer-controlled accounts already signed in to any source being
   tested (X, LinkedIn, or Facebook)
 
@@ -36,7 +41,7 @@ source.
    link, and per-source choices.
 5. Confirm Setup shows **Not checked** and does not contact the native host until
    **Check runtime** is clicked. After the check reports **Not installed**, click
-   **Install runtime**, run the disclosed unsigned Early Preview installer,
+   **Install runtime**, run the disclosed platform installer,
    return to Setup, and click
    **Check runtime** again.
 6. If the compatible runtime is stopped, click **Run AkuBrowser** and confirm the
@@ -47,8 +52,10 @@ source.
    **Portable runtime running**, instructs the reviewer to stop it manually,
    and offers **Check after stopping** rather than automatic Stop.
 7. Confirm **Open AkuBrowser** appears only after the local runtime is running.
-8. Confirm the Windows security notice is shown for install, update, and failure
-   states and never instructs the reviewer to disable antivirus protection.
+8. On Windows, confirm the security notice is shown for install, update, and
+   failure states and never instructs the reviewer to disable antivirus
+   protection. On macOS, confirm the downloaded package passes Gatekeeper and
+   uses the standard Installer flow.
 
 ## Consent and source review
 
@@ -66,9 +73,10 @@ passwords, cookies, private messages, or all-sites access.
 
 1. Close all Chrome windows and reopen Chrome; the registered host should
    reconcile the runtime without a terminal.
-2. End `AkuSidecar.exe`, click the AkuBrowser toolbar action, and confirm the
+2. End `AkuSidecar.exe` on Windows or `AkuSidecar` on macOS, click the AkuBrowser toolbar action, and confirm the
    registered native host recovers it.
-3. Use Windows Installed Apps to repair or uninstall AkuBrowser Runtime.
+3. Use Windows Installed Apps on Windows, or the packaged macOS uninstall
+   command, to remove AkuBrowser Runtime.
 4. Confirm uninstall makes setup show the install-required state while product
    data remains preserved.
 
@@ -91,7 +99,7 @@ passwords, cookies, private messages, or all-sites access.
 Do not submit until:
 
 - the Store item ID is embedded in the companion host manifest;
-- the stable installer asset exists, its SHA-256 is published, and the unsigned
-  Early Preview disclosure matches the listing and setup page;
+- both stable installer assets exist, their SHA-256 values are published, the
+  Windows disclosure matches Setup, and macOS signing/notarization checks pass;
 - the clean-machine Stage 5 evidence is complete;
 - the URLs in the listing resolve publicly.

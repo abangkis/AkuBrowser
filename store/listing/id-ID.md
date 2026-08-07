@@ -24,14 +24,13 @@ Fitur utama:
 - menampilkan bukti sumber dan tautan posting asli;
 - memberi kontrol retensi dan reset data lokal.
 
-AkuBrowser memerlukan companion runtime Windows yang dipasang secara terpisah.
-Early Preview ini menautkan installer unsigned dari rilis GitHub resmi
-AkuBrowser. Windows Security, SmartScreen, atau antivirus dapat memperingatkan,
-menunda, atau mengarantina installer; lanjutkan hanya setelah memverifikasi
-sumber resmi dan SHA-256 yang dipublikasikan. Update runtime preview memakai
-alur installer eksplisit yang sama. Runtime menyimpan data produk di perangkat
-Anda. Fitur AI dapat mengirim konten terpilih ke OpenAI melalui Codex App yang
-Anda gunakan.
+AkuBrowser memerlukan companion runtime yang dipasang terpisah pada Windows
+atau macOS. Setup hanya menautkan artifact tetap dari rilis GitHub resmi
+AkuBrowser. Installer Early Preview Windows masih dapat memicu peringatan
+Windows Security atau antivirus; paket macOS harus ditandatangani Developer ID
+dan dinotarisasi sebelum dipublikasikan. Instalasi Linux belum tersedia pada
+0.7.9. Runtime menyimpan data produk di perangkat Anda. Fitur AI dapat mengirim
+konten terpilih ke OpenAI melalui Codex App yang Anda gunakan.
 
 AkuBrowser tidak meminta password atau cookie sosial, tidak menjual data, tidak
 memakai data untuk iklan, dan tidak memuat JavaScript jarak jauh.

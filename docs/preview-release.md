@@ -1,6 +1,6 @@
-# AkuBrowser 0.7.8
+# AkuBrowser 0.7.9
 
-`0.7.8` is the current source-aligned Windows preview. It adds an explicit,
+`0.7.9` is the current cross-platform distribution candidate. It retains the explicit,
 user-triggered Codex prerequisite check to Setup, with installation guidance
 when Codex App Server is unavailable and manual sign-in confirmation only after
 a compatible executable is detected. It keeps the bounded Luna
@@ -21,8 +21,9 @@ AkuSidecar and AkuBridge remain the authoritative source-component projects.
 
 Windows has two coordinated delivery paths: the portable x64 ZIP remains the
 manual fallback, while the Chrome Web Store flow uses a user-scoped companion
-runtime installer. The published macOS delivery is one universal portable ZIP containing both x64 and
-arm64 Sidecar slices. Both platform bundles contain the Sidecar
+runtime installer. macOS adds the equivalent Chrome Web Store bootstrap through
+a user-scoped signed and notarized universal `.pkg`; the universal portable ZIP
+remains its manual fallback. Both platform bundles contain the Sidecar
 executable, release configuration, the verified unpacked Bridge payload, and a
 foreground launcher. The packages require no AkuSupervisor process or
 development workspace path. The Windows bundle also carries a pinned
@@ -91,13 +92,10 @@ smoke-tested with `scripts/test-macos-preview.sh`. The build pipeline can
 produce native `x64` or `arm64` bundles for focused testing; the published
 `0.7.0-preview.3` asset is `macos-universal` and runs on Intel and Apple
 silicon.
-The `v0.7.8` tag is the source checkpoint for the Windows bundle and future
-matching macOS bundle. The accepted Windows bundle and its adjacent checksum
-are published from the
-[`v0.7.8` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.8).
-The previously published macOS universal bundle remains available from the
-[`v0.7.0-preview.3` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.0-preview.3)
-until a matching macOS 0.7.8 build completes acceptance.
+The `v0.7.9` tag and release do not exist until signed installers, portable
+artifacts, the Chrome Web Store package, and clean-machine acceptance evidence
+are complete. An `unsigned-local` `.pkg` is structural evidence only and must
+not be published or linked from the Store extension.
 
 The automated gates verify the bundle manifest, bundled-file checksums,
 Sidecar health, both supported loopback hostnames, fresh-database defaults, and
@@ -137,7 +135,7 @@ reset.
 
 [`release/release-manifest.json`](../release/release-manifest.json) is the
 machine-readable release authority. The immutable `v0.7.0-preview.1` tags remain
-the historical compatibility checkpoint and must never be moved. The published
-`v0.7.8` tags identify the current release source checkpoints; each generated
+the historical compatibility checkpoint and must never be moved. The future
+`v0.7.9` tags will identify the release source checkpoints; each generated
 bundle additionally records its exact AkuBrowser, AkuSidecar, and AkuBridge
 commits and dirty state in `artifact-manifest.json`.

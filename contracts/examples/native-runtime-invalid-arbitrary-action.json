@@ -5,8 +5,8 @@
   "action": "execute_shell",
   "extension": {
     "product": "AkuBrowser",
-    "productVersion": "0.7.8",
-    "runtimeRevision": "source-adapters-v86",
+    "productVersion": "0.7.9",
+    "runtimeRevision": "source-adapters-v87",
     "bridgeContractVersion": "aku-browser.bridge.v2"
   },
   "command": "powershell.exe"

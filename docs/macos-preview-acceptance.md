@@ -69,3 +69,26 @@ The preview is a portable ZIP, not a signed or notarized installer. Automatic
 AkuBridge installation, guided Codex installation or login recovery, automatic
 updates, Linux packaging, and a bundled cross-platform Supervisor remain
 outside the `0.7.0-preview.3` acceptance boundary.
+
+## 0.7.9 Chrome Web Store companion gate
+
+The portable checks above remain the fallback boundary. Publishing the 0.7.9
+macOS Store path additionally requires clean Intel and Apple-silicon evidence
+for:
+
+1. first Store install projecting `runtime_install_required`;
+2. the fixed `.pkg` download opening only after a user click;
+3. Developer ID Application and Installer signature validation;
+4. successful notarization and a stapled ticket while offline;
+5. current-user Native Messaging registration with one exact Store origin;
+6. `status`, `ensure_runtime`, `check_codex`, and `shutdown_if_idle` from Chrome;
+7. Chrome restart and macOS restart recovery without a LaunchAgent;
+8. universal host and Sidecar execution on both architectures;
+9. signed `macos-universal` runtime update, idle handoff, activation, rollback,
+   and checksum/signature rejection;
+10. repair and uninstall preserving `~/Library/Application Support/AkuBrowser/data`;
+11. portable-runtime conflict guidance; and
+12. Linux showing an unavailable installer state rather than a broken link.
+
+`scripts/test-macos-runtime-installer.sh` validates package structure and
+architecture locally. It does not replace the two clean-machine install runs.

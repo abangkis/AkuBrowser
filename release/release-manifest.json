@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "product": "AkuBrowser",
-  "version": "0.7.8",
+  "version": "0.7.9",
   "channel": "preview",
   "distribution": {
     "authorityRepository": "AkuBrowser",
@@ -23,12 +23,33 @@
       "extensionDistribution": "chrome-web-store",
       "extensionId": "phkaipecbhpgopggbfpcejgngbhddnkk",
       "extensionOrigin": "chrome-extension://phkaipecbhpgopggbfpcejgngbhddnkk/",
-      "nativeRuntimeInstaller": {
-        "platform": "windows-x64",
-        "format": "signed-user-scoped-exe",
-        "hostName": "com.akubrowser.runtime",
-        "registryScope": "HKCU",
-        "dataDirectory": "%LOCALAPPDATA%\\AkuBrowser\\data"
+      "nativeRuntimeInstallers": {
+        "windows-x64": {
+          "format": "signed-user-scoped-exe",
+          "stableAsset": "AkuBrowserRuntimeSetup.exe",
+          "updateManifest": "AkuBrowserRuntimeUpdate.json",
+          "hostRegistration": "HKCU",
+          "dataDirectory": "%LOCALAPPDATA%\\AkuBrowser\\data"
+        },
+        "macos-universal": {
+          "format": "signed-notarized-user-scoped-pkg",
+          "stableAsset": "AkuBrowserRuntimeSetup.pkg",
+          "updateManifest": "AkuBrowserRuntimeUpdate-macos-universal.json",
+          "hostRegistration": "~/Library/Application Support/Google/Chrome/NativeMessagingHosts",
+          "dataDirectory": "~/Library/Application Support/AkuBrowser/data"
+        },
+        "linux-x64": {
+          "status": "planned-0.7.10",
+          "format": "deb-with-portable-tar-fallback"
+        },
+        "linux-arm64": {
+          "status": "planned-0.7.10",
+          "format": "deb-with-portable-tar-fallback"
+        }
+      },
+      "nativeHost": {
+        "name": "com.akubrowser.runtime",
+        "protocolVersion": 1
       }
     },
     "localOrigins": [
@@ -39,20 +60,36 @@
   },
   "components": {
     "akuSidecar": {
-      "version": "0.7.8",
+      "version": "0.7.9",
       "runtime": "go"
     },
     "akuBridge": {
-      "version": "0.7.8",
-      "chromeVersion": "0.7.8.0",
-      "runtimeRevision": "source-adapters-v86",
+      "version": "0.7.9",
+      "chromeVersion": "0.7.9.0",
+      "runtimeRevision": "source-adapters-v87",
       "contractVersion": "aku-browser.bridge.v2"
     },
     "c2paTool": {
       "version": "0.26.60",
       "sha256": "90cbcebe30250f8e8c53416d32ed86065dc04a23be86e4a2337f5cd1badfa0b7",
+      "platformSha256": {
+        "windows-x64": "90cbcebe30250f8e8c53416d32ed86065dc04a23be86e4a2337f5cd1badfa0b7",
+        "macos-universal": "3fd3d51f90317f4cffe37b44b7e397392d92dc178dce609ba48e0bcee15420a6"
+      },
       "sourcePolicy": "pinned-local-release-binary",
       "workspaceSource": "AkuSidecar/runtime/dev/c2patool.exe",
+      "platformWorkspaceSource": {
+        "windows-x64": "AkuSidecar/runtime/dev/c2patool.exe",
+        "macos-universal": "AkuSidecar/runtime/dev/macos-universal/c2patool"
+      },
+      "upstreamAssets": {
+        "macos-universal": {
+          "url": "https://github.com/contentauth/c2pa-rs/releases/download/c2patool-v0.26.60/c2patool-v0.26.60-universal-apple-darwin.zip",
+          "archiveSha256": "4ca9a8e0937ca28b9090c35e5af1a41c252023799b9bca07f27d974e9ea57beb",
+          "sbomUrl": "https://github.com/contentauth/c2pa-rs/releases/download/c2patool-v0.26.60/c2patool-v0.26.60-universal-apple-darwin-sbom.json",
+          "sbomSha256": "3dc16165d01e9fd2e556e43c577fbaff664bfd8ef8db287cef1563448f254c06"
+        }
+      },
       "license": "MIT OR Apache-2.0",
       "licenseSha256": {
         "mit": "89375a50de90d2dcaa04406086da832ad452ebcaf6ab402ef3d51b8401a67c71",
@@ -63,7 +100,7 @@
   "bundle": {
     "includes": [
       "AkuSidecar",
-      "Windows c2patool 0.26.60 for local image provenance verification",
+      "Platform-native c2patool 0.26.60 for local image provenance verification",
       "AkuBridge Chrome Web Store integration metadata",
       "Windows launcher and release configuration",
       "macOS launcher and release configuration",

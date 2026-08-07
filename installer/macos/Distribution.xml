@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<installer-gui-script minSpecVersion="2">
+  <title>AkuBrowser Runtime</title>
+  <organization>com.akubrowser</organization>
+  <domains enable_anywhere="false" enable_currentUserHome="true" enable_localSystem="false"/>
+  <options customize="never" require-scripts="true" rootVolumeOnly="false"/>
+  <welcome file="welcome.html" mime-type="text/html"/>
+  <conclusion file="conclusion.html" mime-type="text/html"/>
+  <choices-outline>
+    <line choice="runtime"/>
+  </choices-outline>
+  <choice id="runtime" visible="false">
+    <pkg-ref id="com.akubrowser.runtime"/>
+  </choice>
+  <pkg-ref id="com.akubrowser.runtime" version="@VERSION@" onConclusion="none">AkuBrowserRuntime.pkg</pkg-ref>
+</installer-gui-script>

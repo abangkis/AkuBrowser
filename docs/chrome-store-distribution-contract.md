@@ -233,7 +233,7 @@ bundle before the installed runtime is reconciled.
 
 ## Filesystem and registration boundary
 
-The Windows companion installer is user scoped by default:
+The companion installer is user scoped by default. Windows uses:
 
 - stable native host:
   `%LOCALAPPDATA%\Programs\AkuBrowser\host\AkuBrowserRuntimeHost.exe`
@@ -254,6 +254,24 @@ the registered host.
 
 User data is never stored inside a version directory and is never deleted by an
 ordinary install, update, rollback, extension removal, or runtime repair.
+
+macOS uses the equivalent current-user layout:
+
+- stable native host:
+  `~/Library/Application Support/AkuBrowser/host/AkuBrowserRuntimeHost`
+- Native Messaging manifest:
+  `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.akubrowser.runtime.json`
+- versioned payloads:
+  `~/Library/Application Support/AkuBrowser/runtime/versions/<version>/`
+- active-version metadata:
+  `~/Library/Application Support/AkuBrowser/runtime/current.json`
+- product data:
+  `~/Library/Application Support/AkuBrowser/data`
+
+The macOS manifest contains the absolute host path required by Chrome. The
+signed and notarized `.pkg` registers only the exact production extension
+origin. It installs no LaunchAgent because Chrome launches the Native Messaging
+Host on demand.
 
 ## Security invariants
 

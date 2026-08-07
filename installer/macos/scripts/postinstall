@@ -1,0 +1,50 @@
+#!/bin/sh
+set -eu
+
+target_home="$3"
+if [ -z "$target_home" ] || [ "$target_home" = "/" ]; then
+  console_user="$(/usr/bin/stat -f '%Su' /dev/console)"
+  if [ -z "$console_user" ] || [ "$console_user" = "root" ] || [ "$console_user" = "loginwindow" ]; then
+    echo "AkuBrowser Runtime requires an interactive macOS user" >&2
+    exit 1
+  fi
+  target_home="$(/usr/bin/dscl . -read "/Users/$console_user" NFSHomeDirectory | /usr/bin/awk '{print $2}')"
+else
+  console_user="$(/usr/bin/stat -f '%Su' "$target_home")"
+fi
+
+case "$target_home" in
+  /Users/*) ;;
+  *)
+    echo "AkuBrowser Runtime refused an unexpected home target" >&2
+    exit 1
+    ;;
+esac
+
+runtime_root="$target_home/Library/Application Support/AkuBrowser"
+host_path="$runtime_root/host/AkuBrowserRuntimeHost"
+host_manifest="$runtime_root/host/com.akubrowser.runtime.json"
+chrome_manifest_dir="$target_home/Library/Application Support/Google/Chrome/NativeMessagingHosts"
+chrome_manifest="$chrome_manifest_dir/com.akubrowser.runtime.json"
+
+/bin/mkdir -p "$chrome_manifest_dir" "$runtime_root/data"
+/bin/chmod 700 "$runtime_root" "$runtime_root/host" "$runtime_root/runtime" "$runtime_root/data"
+/bin/chmod 755 "$host_path" "$runtime_root/runtime/versions/@VERSION@/AkuSidecar"
+
+/usr/bin/printf '%s\n' \
+  '{' \
+  '  "name": "com.akubrowser.runtime",' \
+  '  "description": "AkuBrowser Runtime Host",' \
+  "  \"path\": \"$host_path\"," \
+  '  "type": "stdio",' \
+  '  "allowed_origins": ["chrome-extension://@EXTENSION_ID@/"]' \
+  '}' > "$host_manifest"
+/bin/cp "$host_manifest" "$chrome_manifest"
+/bin/chmod 600 "$host_manifest" "$chrome_manifest"
+
+if [ -n "$console_user" ]; then
+  /usr/sbin/chown -R "$console_user":staff "$runtime_root"
+  /usr/sbin/chown "$console_user":staff "$chrome_manifest"
+fi
+
+exit 0

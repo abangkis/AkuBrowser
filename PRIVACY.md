@@ -82,10 +82,10 @@ content and a bounded task prompt to OpenAI through the user's signed-in Codex
 App/App Server. OpenAI's handling of that data is governed by the terms and
 privacy settings applicable to the user's OpenAI/Codex account. The extension
 does not send captured source data to GitHub. GitHub hosts the project pages,
-and the user-initiated companion installer. The current Early Preview installer
-is unsigned and is disclosed as such before download. Preview runtime updates
-use the same explicit user-run installer flow from the fixed official
-AkuBrowser GitHub Releases location. Those requests contain no captured social
+and the user-initiated companion installers. The Windows Early Preview signing
+state is disclosed before download. The macOS package must be Developer
+ID-signed and notarized before publication. Installer and signed runtime-update
+requests use fixed official AkuBrowser GitHub Releases locations and contain no captured social
 content, prompts, feedback, credentials, or AkuBrowser database data.
 
 AkuBrowser does not sell user data. AkuBrowser does not transfer user data to

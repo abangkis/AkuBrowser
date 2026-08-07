@@ -22,13 +22,13 @@ Key features:
 - visible source evidence and original-post links;
 - local retention and reset controls.
 
-AkuBrowser requires a separately installed Windows companion runtime. This
-Early Preview links an unsigned installer from the official AkuBrowser GitHub
-release. Windows Security, SmartScreen, or antivirus software may warn, delay,
-or quarantine it; users should continue only after verifying the official
-source and published SHA-256. Preview runtime updates use the same explicit
-installer flow. The runtime stores product data on the user's device. AI
-features may submit selected content to OpenAI through the user's Codex App.
+AkuBrowser requires a separately installed companion runtime on Windows or
+macOS. Setup links only to fixed assets in the official AkuBrowser GitHub
+release. The Windows Early Preview installer may still trigger Windows
+Security or antivirus warnings; the macOS package must be Developer ID-signed
+and notarized before publication. Linux installation is not available in
+0.7.9. The runtime stores product data on the user's device. AI features may
+submit selected content to OpenAI through the user's Codex App.
 
 AkuBrowser does not request social passwords or cookies, sell data, use data for
 advertising, or load remotely hosted JavaScript.

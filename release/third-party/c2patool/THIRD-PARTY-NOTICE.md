@@ -1,7 +1,7 @@
 # c2patool third-party notice
 
-AkuBrowser for Windows bundles `c2patool` 0.26.60 from the Content Authenticity
-Initiative's `contentauth/c2pa-rs` project:
+AkuBrowser for Windows and macOS bundles `c2patool` 0.26.60 from the Content
+Authenticity Initiative's `contentauth/c2pa-rs` project:
 
 <https://github.com/contentauth/c2pa-rs/releases/tag/c2patool-v0.26.60>
 

@@ -17,6 +17,8 @@
 - [ ] At least one current 1280x800 screenshot uploaded.
 - [ ] Homepage, support, and privacy URLs resolve publicly.
 - [ ] Companion-runtime requirement is prominent.
+- [ ] Listing states Windows and macOS support and explicitly defers Linux to
+      0.7.10.
 
 ## Privacy
 
@@ -39,6 +41,8 @@
 - [ ] Reviewer instructions copied to the dashboard.
 - [ ] Official unsigned Early Preview installer stable URL returns the reviewed
       executable and its published SHA-256 matches.
+- [ ] The macOS stable `.pkg` URL returns a universal Developer ID-signed,
+      notarized, stapled package and its published SHA-256 matches.
 - [ ] Listing, setup, and reviewer instructions disclose the unsigned installer
       consistently and never instruct users to disable security software.
 - [ ] Preview updates use the explicit installer flow; no unavailable signed

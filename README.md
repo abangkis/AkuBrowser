@@ -1,6 +1,6 @@
 # AkuBrowser
 
-Current preview release: **`0.7.8`**. The canonical component tuple,
+Current development candidate: **`0.7.9`**. The canonical component tuple,
 bundle boundary, and preview prerequisites are recorded in
 [`release/release-manifest.json`](release/release-manifest.json).
 
@@ -143,9 +143,12 @@ requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees. The artifact
 directory, ZIP, and ZIP checksum are written beneath `artifacts/`. Installation
 and launcher details are in
 [`release/macos/README.md`](release/macos/README.md).
-The `v0.7.8` tag is the source checkpoint for the current bundle. The Windows
-ZIP and adjacent checksum are published from the
-[`v0.7.8` GitHub Release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.7.8).
+Build the Chrome Web Store macOS companion separately with
+`scripts/build-macos-runtime-installer.sh`; validate its payload with
+`scripts/test-macos-runtime-installer.sh`. Production mode requires Developer
+ID Application and Installer identities, notarization, a universal C2PA tool,
+and runtime-update signing keys. No `v0.7.9` tag or release exists until these
+gates and clean-machine acceptance are complete.
 
 ## Canonical documentation
 
