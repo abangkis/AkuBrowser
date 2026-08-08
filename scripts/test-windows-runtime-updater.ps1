@@ -22,15 +22,19 @@ $release = Get-Content (Join-Path $browserRoot "release\release-manifest.json") 
 
 $updaterSource = Get-Content (Join-Path $bridgeRoot "native-host\runtime_updater.go") -Raw
 $manifestSource = Get-Content (Join-Path $bridgeRoot "native-host\update_manifest.go") -Raw
+$platformSource = Get-Content (Join-Path $bridgeRoot "native-host\platform.go") -Raw
 $sidecarServer = Get-Content (Join-Path $sidecarRoot "internal\httpapi\server.go") -Raw
 $builder = Get-Content (Join-Path $browserRoot "scripts\build-windows-runtime-installer.ps1") -Raw
 $workflow = Get-Content (Join-Path $browserRoot ".github\workflows\windows-runtime-installer.yml") -Raw
 
 foreach ($required in @(
     "https://github.com/abangkis/AkuBrowser/releases/latest/download/AkuBrowserRuntimeUpdate.json",
-    "ed25519.Verify",
-    "pinnedUpdatePublicKey"
+    "https://github.com/abangkis/AkuBrowser/releases/latest/download/AkuBrowserRuntimeUpdate-",
+    "platformUpdateManifestURL"
 )) {
+    Assert-True ($platformSource.Contains($required)) "Update manifest URL boundary is missing: $required"
+}
+foreach ($required in @("ed25519.Verify", "pinnedUpdatePublicKey")) {
     Assert-True ($manifestSource.Contains($required)) "Signed manifest boundary is missing: $required"
 }
 foreach ($required in @(
@@ -82,7 +86,8 @@ if (-not $SkipGoTests) {
     stage = 7
     version = $release.version
     channel = "stable"
-    signedManifest = $true
+    signedManifestBoundary = $true
+    installerTrustState = $release.distribution.chromeStore.nativeRuntimeInstallers.'windows-x64'.trustState
     fixedOrigin = $true
     readinessHandshake = $true
     atomicActivation = $true

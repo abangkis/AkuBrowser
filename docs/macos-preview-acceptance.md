@@ -90,8 +90,8 @@ for:
 7. Chrome restart and macOS restart recovery without a LaunchAgent;
 8. universal host and Sidecar execution on both architectures;
 9. versioned installer repair/update, idle handoff, activation, rollback, and
-   checksum rejection; signed automatic runtime updates remain a future stable
-   gate;
+   checksum rejection; signed automatic runtime updates remain future
+   hardening work;
 10. repair and uninstall preserving `~/Library/Application Support/AkuBrowser/data`;
 11. portable-runtime conflict guidance; and
 12. Linux showing an unavailable installer state rather than a broken link.
@@ -99,7 +99,9 @@ for:
 `scripts/test-macos-runtime-installer.sh` validates package structure and
 architecture locally. It does not replace the two clean-machine install runs.
 
-A future stable macOS package must additionally pass Developer ID Application
+Future signed macOS packages should additionally pass Developer ID Application
 and Installer signature validation, notarization, stapling, and offline ticket
-verification. Those stable-only gates do not describe the trust state of
-`v0.7.9-preview1`.
+verification. The current stable `v0.7.9` package intentionally remains
+unsigned and uses the same checksum/Open Anyway disclosure described above.
+Those future hardening gates do not describe the trust state of the immutable
+`v0.7.9-preview1` asset.

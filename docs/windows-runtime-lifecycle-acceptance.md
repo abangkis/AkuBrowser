@@ -34,9 +34,12 @@ Stage 7 suite in `scripts/test-windows-runtime-updater.ps1`.
 ## Clean Windows machine
 
 Use a disposable Windows 11 x64 VM with no existing AkuBrowser installation.
-The VM test requires the real Chrome Web Store extension ID and the production
-Authenticode-signed `AkuBrowserRuntimeSetup.exe`. An unsigned local candidate is
-not accepted.
+The VM test requires the real Chrome Web Store extension ID and the official
+stable `AkuBrowserRuntimeSetup.exe`. For `v0.7.9` this package is intentionally
+unsigned: verify the published SHA-256 and follow the Windows Security/Avast
+warning guidance before opening it. A future signed package must add
+Authenticode verification here; the unsigned local-development candidate is
+not accepted as a substitute for the stable asset.
 
 For every checkpoint, record the state shown on the bundled setup page and run
 the read-only verifier with that state:
@@ -84,6 +87,8 @@ At the end, confirm:
 ## Current execution boundary
 
 Automated acceptance can run before Store submission. Clean-machine execution
-cannot be claimed until the production Store ID and signed installer exist.
-Stage 5 is therefore code-complete when the automated suite passes and this
-runner is ready; its production clean-machine evidence remains a release gate.
+cannot be claimed until the production Store ID and official stable installer
+have been exercised. For `v0.7.9`, record the unsigned trust state, checksum,
+and any SmartScreen/antivirus recovery in the evidence receipt. Stage 5 is
+therefore code-complete when the automated suite passes and this runner is
+ready; its production clean-machine evidence remains a release gate.
