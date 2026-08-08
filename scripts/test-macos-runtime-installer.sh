@@ -5,8 +5,20 @@ die() { echo "error: $*" >&2; exit 1; }
 
 browser_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 release_manifest="$browser_root/release/release-manifest.json"
+bridge_identity_registry="$browser_root/config/bridge-identities.json"
 version="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1],"utf8")).version)' "$release_manifest")"
-extension_id="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1],"utf8")).distribution.chromeStore.extensionId)' "$release_manifest")"
+extension_id="$(node --input-type=module -e '
+  import fs from "node:fs";
+  const [releasePath, registryPath] = process.argv.slice(1);
+  const release = JSON.parse(fs.readFileSync(releasePath, "utf8"));
+  const registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
+  const profile = release.distribution?.chromeStore?.bridgeIdentityProfile;
+  const identity = registry.profiles?.[profile];
+  if (registry.schemaVersion !== 1 || !profile || !identity || identity.distribution !== "chrome-web-store" || !/^[a-p]{32}$/.test(identity.extensionId ?? "")) {
+    throw new Error("release Bridge identity profile is invalid");
+  }
+  console.log(identity.extensionId);
+' "$release_manifest" "$bridge_identity_registry")"
 package_path="${1:-$browser_root/artifacts/AkuBrowserRuntimeSetup-${version}-macos-universal-unsigned-local.pkg}"
 [[ -f "$package_path" ]] || die "installer package is missing: $package_path"
 
