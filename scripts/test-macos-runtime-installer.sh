@@ -63,7 +63,8 @@ pkgutil --check-signature "$package_path" >/dev/null || [[ "$package_path" == *-
 if [[ "$package_path" == *-unsigned.pkg ]]; then
   preview_welcome="$inspect_root/expanded/Resources/welcome.html"
   [[ -f "$preview_welcome" ]] || die "unsigned preview package is missing its welcome disclosure"
-  grep -q 'not Developer ID-signed or notarized' "$preview_welcome" || die "unsigned preview package does not disclose its trust state"
+  grep -q 'this package is not' "$preview_welcome" || die "unsigned preview package does not identify itself as unsigned"
+  grep -q 'Developer ID-signed or notarized' "$preview_welcome" || die "unsigned preview package does not disclose its trust state"
   grep -q 'Open Anyway' "$preview_welcome" || die "unsigned preview package does not provide bounded Gatekeeper guidance"
 fi
 
