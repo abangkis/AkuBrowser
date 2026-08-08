@@ -2,8 +2,9 @@
 
 AkuBrowser owns the macOS distribution boundary across the component
 repositories; AkuSupervisor and AkuSupervisorConformance are not packaged.
-The published `0.7.0-preview.3` target is one `macos-universal` ZIP containing
-both x64 and arm64 Sidecar slices for Intel and Apple-silicon Macs.
+The `v0.7.9-preview1` target contains one `macos-universal` ZIP and one
+explicitly unsigned universal user-scoped `.pkg`, each carrying x64 and arm64
+Sidecar slices for Intel and Apple-silicon Macs.
 
 ## Automated artifact gate
 
@@ -11,7 +12,7 @@ Run on a Mac from the AkuBrowser repository:
 
 ```sh
 ./scripts/build-macos-preview.sh --architecture universal
-./scripts/test-macos-preview.sh --zip artifacts/AkuBrowser-0.7.0-preview.3-macos-universal.zip
+./scripts/test-macos-preview.sh --zip artifacts/AkuBrowser-0.7.9-macos-universal.zip
 ```
 
 Without an explicit target, the builder matches the host architecture. Use
@@ -33,7 +34,7 @@ To test an already extracted bundle or downloaded ZIP:
 
 ```sh
 ./scripts/test-macos-preview.sh --artifact-directory /path/to/extracted-bundle
-./scripts/test-macos-preview.sh --zip /path/to/AkuBrowser-0.7.0-preview.3-macos-universal.zip
+./scripts/test-macos-preview.sh --zip /path/to/AkuBrowser-0.7.9-macos-universal.zip
 ```
 
 ## Clean-machine manual gate
@@ -65,10 +66,11 @@ ZIP checksum has been verified.
 
 ## Acceptance boundary
 
-The preview is a portable ZIP, not a signed or notarized installer. Automatic
-AkuBridge installation, guided Codex installation or login recovery, automatic
-updates, Linux packaging, and a bundled cross-platform Supervisor remain
-outside the `0.7.0-preview.3` acceptance boundary.
+The preview provides a portable ZIP plus an explicitly unsigned and not
+notarized user-scoped `.pkg`. Automatic AkuBridge installation, guided Codex
+installation or login recovery, automatic updates, Linux packaging, and a
+bundled cross-platform Supervisor remain outside the `v0.7.9-preview1`
+acceptance boundary.
 
 ## 0.7.9 Chrome Web Store companion gate
 
@@ -78,17 +80,26 @@ for:
 
 1. first Store install projecting `runtime_install_required`;
 2. the fixed `.pkg` download opening only after a user click;
-3. Developer ID Application and Installer signature validation;
-4. successful notarization and a stapled ticket while offline;
+3. the Installer page and Setup both disclose that this preview package is
+   unsigned and not notarized, identify the official GitHub source, require
+   SHA-256 verification, and never recommend disabling Gatekeeper;
+4. a Gatekeeper-blocked first open can be recovered through the per-app
+   **Privacy & Security > Open Anyway** flow;
 5. current-user Native Messaging registration with one exact Store origin;
 6. `status`, `ensure_runtime`, `check_codex`, and `shutdown_if_idle` from Chrome;
 7. Chrome restart and macOS restart recovery without a LaunchAgent;
 8. universal host and Sidecar execution on both architectures;
-9. signed `macos-universal` runtime update, idle handoff, activation, rollback,
-   and checksum/signature rejection;
+9. versioned installer repair/update, idle handoff, activation, rollback, and
+   checksum rejection; signed automatic runtime updates remain a future stable
+   gate;
 10. repair and uninstall preserving `~/Library/Application Support/AkuBrowser/data`;
 11. portable-runtime conflict guidance; and
 12. Linux showing an unavailable installer state rather than a broken link.
 
 `scripts/test-macos-runtime-installer.sh` validates package structure and
 architecture locally. It does not replace the two clean-machine install runs.
+
+A future stable macOS package must additionally pass Developer ID Application
+and Installer signature validation, notarization, stapling, and offline ticket
+verification. Those stable-only gates do not describe the trust state of
+`v0.7.9-preview1`.

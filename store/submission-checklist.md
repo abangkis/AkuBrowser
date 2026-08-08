@@ -41,12 +41,18 @@
 - [ ] Reviewer instructions copied to the dashboard.
 - [ ] Official unsigned Early Preview installer stable URL returns the reviewed
       executable and its published SHA-256 matches.
-- [ ] The macOS stable `.pkg` URL returns a universal Developer ID-signed,
-      notarized, stapled package and its published SHA-256 matches.
-- [ ] Listing, setup, and reviewer instructions disclose the unsigned installer
-      consistently and never instruct users to disable security software.
+- [ ] The exact macOS Preview 1 `.pkg` URL returns the reviewed universal,
+      explicitly unsigned/not-notarized package and its published SHA-256
+      matches.
+- [ ] Listing, setup, Installer welcome page, and reviewer instructions disclose
+      the unsigned preview consistently, require checksum verification, and
+      never instruct users to disable security software or Gatekeeper.
 - [ ] Preview updates use the explicit installer flow; no unavailable signed
       automatic-update path is claimed.
 - [ ] Native host contains the exact Store extension ID.
 - [ ] Stage 5 clean-machine evidence is complete.
 - [ ] Submission uses deferred publishing for the first review.
+
+Developer ID signing, notarization, and stapling remain mandatory before a
+future stable macOS package is submitted or described as trusted by
+Gatekeeper.

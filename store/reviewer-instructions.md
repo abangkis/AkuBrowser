@@ -7,8 +7,9 @@ named AkuBridge. The extension is Manifest V3 and contains all extension logic.
 It requires a separately installed, user-scoped Windows or macOS companion
 named **AkuBrowser Runtime** because Chrome Native Messaging hosts must be
 registered by the operating system. Linux is intentionally unavailable in
-0.7.9. The Windows Early Preview signature state and the macOS Developer ID and
-notarization requirements are disclosed before publication.
+0.7.9. The Windows Early Preview signature state and the macOS Preview 1
+unsigned/not-notarized trust state are disclosed before installation. A future
+stable macOS package remains subject to Developer ID and notarization gates.
 
 ## Environment
 
@@ -17,8 +18,8 @@ notarization requirements are disclosed before publication.
 - Codex App installed and signed in
 - Official unsigned Early Preview asset:
   `https://github.com/abangkis/AkuBrowser/releases/latest/download/AkuBrowserRuntimeSetup.exe`
-- Official signed and notarized macOS asset:
-  `https://github.com/abangkis/AkuBrowser/releases/latest/download/AkuBrowserRuntimeSetup.pkg`
+- Official macOS Preview 1 asset (unsigned and not notarized):
+  `https://github.com/abangkis/AkuBrowser/releases/download/v0.7.9-preview1/AkuBrowserRuntimeSetup-0.7.9-macos-universal-unsigned.pkg`
 - Manual fallback asset pattern:
   `https://github.com/abangkis/AkuBrowser/releases/download/v<version>/AkuBrowser-<version>-windows-x64.zip`
 - macOS fallback pattern:
@@ -54,8 +55,11 @@ source.
 7. Confirm **Open AkuBrowser** appears only after the local runtime is running.
 8. On Windows, confirm the security notice is shown for install, update, and
    failure states and never instructs the reviewer to disable antivirus
-   protection. On macOS, confirm the downloaded package passes Gatekeeper and
-   uses the standard Installer flow.
+   protection. On macOS, confirm Setup discloses that the package is unsigned
+   and not notarized, points to checksum verification, uses the standard
+   Installer flow, and describes only the per-app **Privacy & Security > Open
+   Anyway** recovery when Gatekeeper blocks the first open. It must never
+   recommend disabling Gatekeeper globally.
 
 ## Consent and source review
 
@@ -99,7 +103,10 @@ passwords, cookies, private messages, or all-sites access.
 Do not submit until:
 
 - the Store item ID is embedded in the companion host manifest;
-- both stable installer assets exist, their SHA-256 values are published, the
-  Windows disclosure matches Setup, and macOS signing/notarization checks pass;
+- both reviewed installer assets exist, their SHA-256 values are published, and
+  the Windows and macOS preview disclosures match Setup and the listing;
 - the clean-machine Stage 5 evidence is complete;
 - the URLs in the listing resolve publicly.
+
+Developer ID signing, notarization, and stapling are blockers for a future
+stable macOS asset, not claims made for `v0.7.9-preview1`.

@@ -9,11 +9,12 @@ extension. It installs a universal Intel and Apple-silicon Native Messaging
 Host and AkuSidecar runtime for the current user. Chrome continues to own the
 extension installation and update lifecycle.
 
-The Store setup flow is deliberately user initiated:
+The Preview 1 setup flow is deliberately user initiated:
 
 1. AkuBrowser Setup checks `com.akubrowser.runtime`.
 2. A missing host exposes **Install runtime**.
-3. The action opens the fixed official `AkuBrowserRuntimeSetup.pkg` asset.
+3. The action opens the versioned official
+   `AkuBrowserRuntimeSetup-0.7.9-macos-universal-unsigned.pkg` prerelease asset.
 4. The user opens the package and completes macOS Installer.
 5. The user returns to Setup and selects **Check runtime**.
 6. Chrome starts the registered host, which reconciles AkuSidecar and returns
@@ -57,8 +58,12 @@ The production pipeline must:
 Production mode fails closed when any signing identity, notarization profile,
 or C2PA input is missing. The universal C2PA binary, upstream archive, and SBOM
 digests are pinned in `release-manifest.json`. The build verifies its SHA-256,
-version, and both architectures before packaging. `--unsigned-local-candidate` produces an explicitly
-named development artifact that must never be linked from the Store package.
+version, and both architectures before packaging. `--unsigned-local-candidate`
+produces an explicitly named development artifact that must never be published.
+`--unsigned-preview-candidate` requires clean source trees, the production Store
+extension ID, and the pinned universal C2PA binary. It emits a public preview
+asset whose Installer welcome page discloses that it is unsigned and not
+notarized. It is not a substitute for the future Developer ID path.
 
 ## Build
 
@@ -69,6 +74,14 @@ Local structural candidate:
   --c2pa-tool ../AkuSidecar/runtime/dev/macos-universal/c2patool \
   --unsigned-local-candidate \
   --allow-dirty
+```
+
+Public unsigned preview:
+
+```sh
+./scripts/build-macos-runtime-installer.sh \
+  --c2pa-tool ../AkuSidecar/runtime/dev/macos-universal/c2patool \
+  --unsigned-preview-candidate
 ```
 
 Production:

@@ -87,7 +87,9 @@ enter an update.
 4. If Chrome reports that the native host is missing, the client projects
    `runtime_install_required`; this state is not a fabricated native response.
 5. The setup page presents one explicit **Install AkuBrowser Runtime** action.
-6. The user downloads and runs the signed user-scoped installer.
+6. The user downloads and runs the disclosed user-scoped installer. The macOS
+   `v0.7.9-preview1` asset is explicitly unsigned and not notarized; a future
+   stable asset must use the production signing path.
 7. The installer places the stable host executable and manifest, then registers
    the host under the current Windows user.
 8. The setup page retries `status`, then sends `ensure_runtime`.
@@ -268,10 +270,13 @@ macOS uses the equivalent current-user layout:
 - product data:
   `~/Library/Application Support/AkuBrowser/data`
 
-The macOS manifest contains the absolute host path required by Chrome. The
-signed and notarized `.pkg` registers only the exact production extension
-origin. It installs no LaunchAgent because Chrome launches the Native Messaging
-Host on demand.
+The macOS manifest contains the absolute host path required by Chrome. Both the
+explicitly unsigned `v0.7.9-preview1` package and a future signed/notarized
+package register only the exact production extension origin. The preview's
+Installer page and Setup disclose its trust state and direct a blocked user to
+the per-app **Privacy & Security > Open Anyway** flow after checksum
+verification; neither recommends disabling Gatekeeper. The package installs no
+LaunchAgent because Chrome launches the Native Messaging Host on demand.
 
 ## Security invariants
 

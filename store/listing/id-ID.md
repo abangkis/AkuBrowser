@@ -27,9 +27,12 @@ Fitur utama:
 AkuBrowser memerlukan companion runtime yang dipasang terpisah pada Windows
 atau macOS. Setup hanya menautkan artifact tetap dari rilis GitHub resmi
 AkuBrowser. Installer Early Preview Windows masih dapat memicu peringatan
-Windows Security atau antivirus; paket macOS harus ditandatangani Developer ID
-dan dinotarisasi sebelum dipublikasikan. Instalasi Linux belum tersedia pada
-0.7.9. Runtime menyimpan data produk di perangkat Anda. Fitur AI dapat mengirim
+Windows Security atau antivirus. Paket macOS `v0.7.9-preview1` tidak
+ditandatangani dan tidak dinotarisasi, sehingga Gatekeeper dapat memblokir saat
+pertama dibuka; Setup meminta pengguna memverifikasi SHA-256 yang dipublikasikan
+dan memakai **Privacy & Security > Open Anyway**, tidak pernah menonaktifkan
+Gatekeeper. Instalasi Linux belum tersedia pada 0.7.9. Runtime menyimpan data
+produk di perangkat Anda. Fitur AI dapat mengirim
 konten terpilih ke OpenAI melalui Codex App yang Anda gunakan.
 
 AkuBrowser tidak meminta password atau cookie sosial, tidak menjual data, tidak

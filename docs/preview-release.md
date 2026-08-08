@@ -21,9 +21,13 @@ AkuSidecar and AkuBridge remain the authoritative source-component projects.
 
 Windows has two coordinated delivery paths: the portable x64 ZIP remains the
 manual fallback, while the Chrome Web Store flow uses a user-scoped companion
-runtime installer. macOS adds the equivalent Chrome Web Store bootstrap through
-a user-scoped signed and notarized universal `.pkg`; the universal portable ZIP
-remains its manual fallback. Both platform bundles contain the Sidecar
+runtime installer. The macOS `v0.7.9-preview1` prerelease adds the equivalent
+Chrome Web Store bootstrap through an explicitly named unsigned and not
+notarized universal `.pkg`; the universal portable ZIP remains its manual
+fallback. The package and release notes disclose the trust state, checksum
+verification, and Apple's per-app **Open Anyway** recovery without instructing
+users to disable Gatekeeper. A Developer ID-signed and notarized package remains
+the future stable path. Both platform bundles contain the Sidecar
 executable, release configuration, the verified unpacked Bridge payload, and a
 foreground launcher. The packages require no AkuSupervisor process or
 development workspace path. The Windows bundle also carries a pinned
@@ -92,10 +96,12 @@ smoke-tested with `scripts/test-macos-preview.sh`. The build pipeline can
 produce native `x64` or `arm64` bundles for focused testing; the published
 `0.7.0-preview.3` asset is `macos-universal` and runs on Intel and Apple
 silicon.
-The `v0.7.9` tag and release do not exist until signed installers, portable
-artifacts, the Chrome Web Store package, and clean-machine acceptance evidence
-are complete. An `unsigned-local` `.pkg` is structural evidence only and must
-not be published or linked from the Store extension.
+`v0.7.9-preview1` is the macOS-only public prerelease. It carries the universal
+portable ZIP and an explicitly named unsigned `.pkg`; it is not marked Latest.
+The macOS setup link for this preview is pinned to that immutable versioned tag.
+An `unsigned-local` `.pkg` remains structural evidence only and must not be
+published. The normal `v0.7.9` release remains gated on aligned Windows 0.7.9
+assets and the final cross-platform release decision.
 
 The automated gates verify the bundle manifest, bundled-file checksums,
 Sidecar health, both supported loopback hostnames, fresh-database defaults, and
@@ -135,7 +141,8 @@ reset.
 
 [`release/release-manifest.json`](../release/release-manifest.json) is the
 machine-readable release authority. The immutable `v0.7.0-preview.1` tags remain
-the historical compatibility checkpoint and must never be moved. The future
-`v0.7.9` tags will identify the release source checkpoints; each generated
-bundle additionally records its exact AkuBrowser, AkuSidecar, and AkuBridge
-commits and dirty state in `artifact-manifest.json`.
+the historical compatibility checkpoint and must never be moved. The
+`v0.7.9-preview1` tag identifies the macOS prerelease source checkpoint; a
+future stable `v0.7.9` tag remains separate. Each generated bundle additionally
+records its exact AkuBrowser, AkuSidecar, and AkuBridge commits and dirty state
+in `artifact-manifest.json`.

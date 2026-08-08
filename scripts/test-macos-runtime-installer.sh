@@ -58,7 +58,14 @@ if (current.bridgeContractVersion !== "aku-browser.bridge.v2") {
 }
 NODE
 
-pkgutil --check-signature "$package_path" >/dev/null || [[ "$package_path" == *-unsigned-local.pkg ]]
+pkgutil --check-signature "$package_path" >/dev/null || [[ "$package_path" == *-unsigned-local.pkg || "$package_path" == *-unsigned.pkg ]]
+
+if [[ "$package_path" == *-unsigned.pkg ]]; then
+  preview_welcome="$inspect_root/expanded/Resources/welcome.html"
+  [[ -f "$preview_welcome" ]] || die "unsigned preview package is missing its welcome disclosure"
+  grep -q 'not Developer ID-signed or notarized' "$preview_welcome" || die "unsigned preview package does not disclose its trust state"
+  grep -q 'Open Anyway' "$preview_welcome" || die "unsigned preview package does not provide bounded Gatekeeper guidance"
+fi
 
 update_artifact="$browser_root/artifacts/AkuBrowserRuntime-${version}-macos-universal.zip"
 update_manifest="$browser_root/artifacts/AkuBrowserRuntimeUpdate-macos-universal.json"

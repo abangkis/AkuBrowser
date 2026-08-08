@@ -145,10 +145,14 @@ and launcher details are in
 [`release/macos/README.md`](release/macos/README.md).
 Build the Chrome Web Store macOS companion separately with
 `scripts/build-macos-runtime-installer.sh`; validate its payload with
-`scripts/test-macos-runtime-installer.sh`. Production mode requires Developer
-ID Application and Installer identities, notarization, a universal C2PA tool,
-and runtime-update signing keys. No `v0.7.9` tag or release exists until these
-gates and clean-machine acceptance are complete.
+`scripts/test-macos-runtime-installer.sh`. The public
+`v0.7.9-preview1` prerelease uses `--unsigned-preview-candidate`, a pinned
+universal C2PA tool, and an explicitly named unsigned package with an Installer
+warning page. It is not marked Latest. Users must verify the adjacent SHA-256
+and use macOS **Privacy & Security > Open Anyway** if Gatekeeper blocks the
+package; they must never disable Gatekeeper globally. Future production mode
+still requires Developer ID Application and Installer identities,
+notarization, and runtime-update signing keys.
 
 ## Canonical documentation
 

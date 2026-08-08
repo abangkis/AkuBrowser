@@ -15,6 +15,7 @@ Options:
   --update-public-key <base64>         Ed25519 update public key pinned into the native host
   --update-signing-private-key <path>  Base64 Ed25519 seed/private key for the macOS update manifest
   --unsigned-local-candidate           Build an explicitly unsigned local candidate
+  --unsigned-preview-candidate         Build the public unsigned macOS preview asset
   --allow-dirty                        Allow dirty source trees for a local candidate
   --skip-validation                    Skip source test suites
   -h, --help                           Show this help
@@ -39,6 +40,7 @@ notary_profile=""
 update_public_key=""
 update_signing_private_key=""
 unsigned_local=0
+unsigned_preview=0
 allow_dirty=0
 skip_validation=0
 
@@ -53,12 +55,16 @@ while [[ $# -gt 0 ]]; do
     --update-public-key) update_public_key="$2"; shift 2 ;;
     --update-signing-private-key) update_signing_private_key="$2"; shift 2 ;;
     --unsigned-local-candidate) unsigned_local=1; shift ;;
+    --unsigned-preview-candidate) unsigned_preview=1; shift ;;
     --allow-dirty) allow_dirty=1; shift ;;
     --skip-validation) skip_validation=1; shift ;;
     -h|--help) usage; exit 0 ;;
     *) die "unknown argument: $1" ;;
   esac
 done
+
+[[ "$unsigned_local" -eq 0 || "$unsigned_preview" -eq 0 ]] || die "choose only one unsigned candidate mode"
+[[ "$unsigned_preview" -eq 0 || "$allow_dirty" -eq 0 ]] || die "public unsigned previews require clean source trees"
 
 for command_name in git go node npm lipo pkgbuild productbuild shasum zip; do require_command "$command_name"; done
 [[ "$(uname -s)" = "Darwin" ]] || die "the macOS runtime installer must be built on macOS"
@@ -70,15 +76,18 @@ expected_c2pa_version="$(node --input-type=module -e 'import fs from "node:fs"; 
 extension_id="${extension_id:-$release_extension_id}"
 [[ "$extension_id" =~ ^[a-p]{32}$ ]] || die "a real 32-character Chrome Web Store extension ID is required"
 if [[ "$unsigned_local" -eq 0 && "$extension_id" != "$release_extension_id" ]]; then
-  die "production installer extension ID must match the release manifest"
+  die "published installer extension ID must match the release manifest"
 fi
-if [[ "$unsigned_local" -eq 0 ]]; then
+if [[ "$unsigned_local" -eq 0 && "$unsigned_preview" -eq 0 ]]; then
   [[ -n "$application_identity" ]] || die "production build requires --application-identity"
   [[ -n "$installer_identity" ]] || die "production build requires --installer-identity"
   [[ -n "$notary_profile" ]] || die "production build requires --notary-profile"
   [[ -n "$c2pa_tool" && -f "$c2pa_tool" ]] || die "production build requires --c2pa-tool"
   [[ -n "$update_public_key" ]] || die "production build requires --update-public-key"
   [[ -n "$update_signing_private_key" && -f "$update_signing_private_key" ]] || die "production build requires --update-signing-private-key"
+fi
+if [[ "$unsigned_preview" -eq 1 ]]; then
+  [[ -n "$c2pa_tool" && -f "$c2pa_tool" ]] || die "public unsigned preview requires --c2pa-tool"
 fi
 if [[ -n "$c2pa_tool" ]]; then
   [[ -f "$c2pa_tool" ]] || die "c2patool input is not a file: $c2pa_tool"
@@ -111,6 +120,7 @@ mkdir -p "$output_root"
 output_root="$(cd "$output_root" && pwd)"
 suffix=""
 [[ "$unsigned_local" -eq 1 ]] && suffix="-unsigned-local"
+[[ "$unsigned_preview" -eq 1 ]] && suffix="-unsigned"
 versioned_package="$output_root/AkuBrowserRuntimeSetup-${version}-macos-universal${suffix}.pkg"
 stable_package="$output_root/AkuBrowserRuntimeSetup${suffix}.pkg"
 build_root="$(mktemp -d "${TMPDIR:-/tmp}/akubrowser-macos-installer.XXXXXX")"
@@ -156,7 +166,7 @@ if [[ -n "$c2pa_tool" ]]; then
 fi
 
 runtime_channel="stable"
-[[ "$unsigned_local" -eq 0 ]] || runtime_channel="preview"
+[[ "$unsigned_local" -eq 0 && "$unsigned_preview" -eq 0 ]] || runtime_channel="preview"
 node --input-type=module - "$runtime_root/current.json" "$version" "$bridge_root/bridge-capabilities.js" "$runtime_channel" <<'NODE'
 import fs from "node:fs";
 const [destination, version, capabilitiesPath, channel] = process.argv.slice(2);
@@ -178,6 +188,9 @@ chmod 755 "$install_root/Uninstall-AkuBrowserRuntime.command"
 sed -e "s/@VERSION@/$version/g" -e "s/@EXTENSION_ID@/$extension_id/g" "$installer_source/scripts/postinstall" > "$scripts_root/postinstall"
 chmod 755 "$scripts_root/postinstall"
 cp "$installer_source/resources/"*.html "$resources_root/"
+if [[ "$unsigned_preview" -eq 1 ]]; then
+  cp "$installer_source/resources/welcome-unsigned-preview.html" "$resources_root/welcome.html"
+fi
 sed "s/@VERSION@/$version/g" "$installer_source/Distribution.xml" > "$distribution_file"
 
 if [[ -n "$application_identity" ]]; then
@@ -266,7 +279,7 @@ fi
 
 shasum -a 256 "$versioned_package" > "$versioned_package.sha256"
 shasum -a 256 "$stable_package" > "$stable_package.sha256"
-pkgutil --check-signature "$versioned_package" || [[ "$unsigned_local" -eq 1 ]]
+pkgutil --check-signature "$versioned_package" || [[ "$unsigned_local" -eq 1 || "$unsigned_preview" -eq 1 ]]
 lipo -archs "$host_root/AkuBrowserRuntimeHost"
 lipo -archs "$version_root/AkuSidecar"
 

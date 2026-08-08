@@ -32,7 +32,10 @@
           "dataDirectory": "%LOCALAPPDATA%\\AkuBrowser\\data"
         },
         "macos-universal": {
-          "format": "signed-notarized-user-scoped-pkg",
+          "status": "early-preview-unsigned",
+          "format": "unsigned-user-scoped-pkg",
+          "previewReleaseTag": "v0.7.9-preview1",
+          "previewAsset": "AkuBrowserRuntimeSetup-0.7.9-macos-universal-unsigned.pkg",
           "stableAsset": "AkuBrowserRuntimeSetup.pkg",
           "updateManifest": "AkuBrowserRuntimeUpdate-macos-universal.json",
           "hostRegistration": "~/Library/Application Support/Google/Chrome/NativeMessagingHosts",

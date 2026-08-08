@@ -25,8 +25,10 @@ Key features:
 AkuBrowser requires a separately installed companion runtime on Windows or
 macOS. Setup links only to fixed assets in the official AkuBrowser GitHub
 release. The Windows Early Preview installer may still trigger Windows
-Security or antivirus warnings; the macOS package must be Developer ID-signed
-and notarized before publication. Linux installation is not available in
+Security or antivirus warnings. The macOS `v0.7.9-preview1` package is unsigned
+and not notarized, so Gatekeeper may block its first open; Setup directs users
+to verify the published SHA-256 and use macOS **Privacy & Security > Open
+Anyway**, never to disable Gatekeeper. Linux installation is not available in
 0.7.9. The runtime stores product data on the user's device. AI features may
 submit selected content to OpenAI through the user's Codex App.
 
