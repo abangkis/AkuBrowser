@@ -277,8 +277,11 @@ if [[ -n "$notary_profile" ]]; then
   cp "$versioned_package" "$stable_package"
 fi
 
-shasum -a 256 "$versioned_package" > "$versioned_package.sha256"
-shasum -a 256 "$stable_package" > "$stable_package.sha256"
+(
+  cd "$output_root"
+  shasum -a 256 "${versioned_package##*/}" > "${versioned_package##*/}.sha256"
+  shasum -a 256 "${stable_package##*/}" > "${stable_package##*/}.sha256"
+)
 pkgutil --check-signature "$versioned_package" || [[ "$unsigned_local" -eq 1 || "$unsigned_preview" -eq 1 ]]
 lipo -archs "$host_root/AkuBrowserRuntimeHost"
 lipo -archs "$version_root/AkuSidecar"
