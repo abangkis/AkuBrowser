@@ -21,6 +21,7 @@
     },
     "chromeStore": {
       "extensionDistribution": "chrome-web-store",
+      "bridgeIdentityProfile": "production",
       "extensionId": "phkaipecbhpgopggbfpcejgngbhddnkk",
       "extensionOrigin": "chrome-extension://phkaipecbhpgopggbfpcejgngbhddnkk/",
       "nativeRuntimeInstallers": {

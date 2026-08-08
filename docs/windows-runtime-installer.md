@@ -25,9 +25,10 @@ root.
 
 ## Trust boundary
 
-The Chrome Web Store extension ID is a mandatory build input. It is written as
-one exact `chrome-extension://<id>/` origin. Wildcards and placeholder IDs are
-rejected for production inputs.
+The build selects a named Bridge identity from
+`config/bridge-identities.json`. Its exact ID is written as one
+`chrome-extension://<id>/` origin. Wildcards, placeholder IDs, and arbitrary
+extension-ID inputs are rejected.
 
 Every embedded file has a size and SHA-256 entry in
 `payload-manifest.json`. NSIS enforces its archive CRC before and during direct
@@ -56,7 +57,7 @@ An unsigned candidate is deliberately named `*-unsigned-local.exe`:
 
 ```powershell
 .\scripts\build-windows-runtime-installer.ps1 `
-  -ExtensionId aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa `
+  -BridgeIdentityProfile development `
   -UnsignedLocalCandidate `
   -AllowDirty
 ```
@@ -72,10 +73,14 @@ $env:AKU_WINDOWS_SIGNING_PASSWORD = "<PFX password>"
   -CertificatePath "C:\secure\akubrowser-code-signing.pfx"
 ```
 
-Production builds read the exact Chrome Web Store extension ID from
-`release/release-manifest.json`; supplying a different ID is rejected. An
-unsigned development candidate may still pass `-ExtensionId` explicitly for
-one exact unpacked-extension origin.
+Production builds read the profile selected by
+`release/release-manifest.json`, then resolve its exact Chrome Web Store ID
+from `config/bridge-identities.json`. Production rejects a different profile.
+An unsigned development candidate may select the declared `development`
+profile, but cannot supply an arbitrary ID. The checked-in Sidecar base
+configuration contains no trusted origin; the installer generates its packaged
+allowlist from the selected registry profile. See
+[Bridge identity contract](bridge-identity-contract.md).
 
 The GitHub Actions workflow
 `.github/workflows/windows-runtime-installer.yml` performs the same build using

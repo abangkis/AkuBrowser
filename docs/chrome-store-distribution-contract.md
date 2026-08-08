@@ -62,12 +62,16 @@ revision, and Bridge contract.
 - Loopback endpoints: `http://127.0.0.1:11122` and
   `http://localhost:11122`
 
-The production Chrome extension ID is declared once in
-`release/release-manifest.json`. Installer builds derive the native-host
-`allowed_origins` entry and the packaged Sidecar Bridge allowlist from that
-authority; a conflicting production input is rejected. Wildcards are
-forbidden. An unsigned development build may accept an explicitly supplied,
-exact unpacked-extension ID, but it does not alter production authority.
+The production Chrome extension ID lives only in
+[`../config/bridge-identities.json`](../config/bridge-identities.json).
+`release/release-manifest.json` selects the `production` profile without
+repeating its value. Installer builds resolve that profile and generate the
+native-host `allowed_origins` entry plus the packaged Sidecar allowlist.
+Wildcards and arbitrary build-time IDs are forbidden. The checked-in Sidecar
+base configuration contains no Bridge identity. Development selects the
+separate `development` profile and projects its exact origin into the active
+Supervisor service arguments. The complete authority and projection rules are
+defined in [Bridge identity contract](bridge-identity-contract.md).
 
 AkuSidecar records the browser-supplied extension origin on every heartbeat.
 If two explicitly allowlisted origins remain live at the same time, Bridge

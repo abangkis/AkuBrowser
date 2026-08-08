@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string] $ExtensionId = "",
+    [string] $BridgeIdentityProfile = "",
     [string] $OutputRoot = "",
     [string] $C2paToolPath = "",
     [string] $CertificatePath = "",
@@ -22,6 +22,7 @@ $bridgeRoot = Join-Path $workspaceRoot "AkuBridge"
 $sidecarRoot = Join-Path $workspaceRoot "AkuSidecar"
 $installerSource = Join-Path $browserRoot "installer\windows"
 $releaseManifestPath = Join-Path $browserRoot "release\release-manifest.json"
+$bridgeIdentityRegistryPath = Join-Path $browserRoot "config\bridge-identities.json"
 
 function Assert-True([bool] $Condition, [string] $Message) {
     if (-not $Condition) { throw $Message }
@@ -133,20 +134,31 @@ function Sign-Binary([string] $Path, [string] $SignTool) {
 }
 
 $release = Read-Json $releaseManifestPath
+$bridgeIdentityRegistry = Read-Json $bridgeIdentityRegistryPath
 Assert-True ([string]$release.version -match '^\d+\.\d+\.\d+$') "The installer requires a three-part numeric release version."
 $versionQuad = "$($release.version).0"
 $nsisCompiler = Find-NsisCompiler $NsisPath
-$releaseExtensionId = [string]$release.distribution.chromeStore.extensionId
-$releaseExtensionOrigin = [string]$release.distribution.chromeStore.extensionOrigin
-Assert-True ($releaseExtensionId -match '^[a-p]{32}$') "The release manifest must declare the exact Chrome Web Store extension ID."
-Assert-True ($releaseExtensionOrigin -eq "chrome-extension://$releaseExtensionId/") "The release manifest Chrome extension origin does not match its extension ID."
-if ([string]::IsNullOrWhiteSpace($ExtensionId)) {
-    $ExtensionId = $releaseExtensionId
+$releaseBridgeIdentityProfile = [string]$release.distribution.chromeStore.bridgeIdentityProfile
+Assert-True ($bridgeIdentityRegistry.schemaVersion -eq 1) "Unsupported Bridge identity registry schema."
+$releaseBridgeIdentityProperty = $bridgeIdentityRegistry.profiles.PSObject.Properties[$releaseBridgeIdentityProfile]
+Assert-True (-not [string]::IsNullOrWhiteSpace($releaseBridgeIdentityProfile) -and $null -ne $releaseBridgeIdentityProperty) "The release manifest must select an existing Bridge identity profile."
+$releaseBridgeIdentity = $releaseBridgeIdentityProperty.Value
+$releaseExtensionId = [string]$releaseBridgeIdentity.extensionId
+Assert-True ($releaseBridgeIdentity.distribution -eq "chrome-web-store") "The production Bridge identity must use Chrome Web Store distribution."
+Assert-True ($releaseExtensionId -match '^[a-p]{32}$') "The production Bridge identity must declare an exact Chrome Web Store extension ID."
+if ([string]::IsNullOrWhiteSpace($BridgeIdentityProfile)) {
+    $BridgeIdentityProfile = $releaseBridgeIdentityProfile
 }
-Assert-True ($ExtensionId -match '^[a-p]{32}$') "ExtensionId must be an exact 32-character Chrome extension ID."
+$selectedBridgeIdentityProperty = $bridgeIdentityRegistry.profiles.PSObject.Properties[$BridgeIdentityProfile]
+Assert-True ($null -ne $selectedBridgeIdentityProperty) "BridgeIdentityProfile must select an identity declared in config/bridge-identities.json."
+$selectedBridgeIdentity = $selectedBridgeIdentityProperty.Value
+$selectedBridgeIdentityDistribution = [string]$selectedBridgeIdentity.distribution
+$ExtensionId = [string]$selectedBridgeIdentity.extensionId
+Assert-True ($ExtensionId -match '^[a-p]{32}$') "The selected Bridge identity must declare an exact 32-character Chrome extension ID."
 Assert-True (-not ($CertificatePath -and $SigningThumbprint)) "Choose a PFX path or certificate thumbprint, not both."
 if (-not $UnsignedLocalCandidate) {
-    Assert-True ($ExtensionId -eq $releaseExtensionId) "Production installers must use the Chrome Web Store extension ID declared by the release manifest."
+    Assert-True ($BridgeIdentityProfile -eq $releaseBridgeIdentityProfile) "Production installers must use the Bridge identity profile selected by the release manifest."
+    Assert-True ($selectedBridgeIdentityDistribution -eq "chrome-web-store") "Production installers must use a Chrome Web Store Bridge identity."
     $placeholderIds = @(
         "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         "abcdefghijklmnopabcdefghijklmnop"
@@ -428,6 +440,9 @@ $payloadManifest = [ordered]@{
     product = "AkuBrowser"
     version = $release.version
     architecture = "windows-x64"
+    bridgeIdentityProfile = $BridgeIdentityProfile
+    bridgeIdentityDistribution = $selectedBridgeIdentityDistribution
+    bridgeIdentityAuthority = "config/bridge-identities.json"
     extensionOrigin = "chrome-extension://$ExtensionId/"
     files = @($payloadFiles)
 }
@@ -514,6 +529,9 @@ Reset-Path $buildRoot $OutputRoot
 [ordered]@{
     status = "ok"
     version = $release.version
+    bridgeIdentityProfile = $BridgeIdentityProfile
+    bridgeIdentityDistribution = $selectedBridgeIdentityDistribution
+    bridgeIdentityAuthority = "config/bridge-identities.json"
     extensionOrigin = "chrome-extension://$ExtensionId/"
     signed = (-not $UnsignedLocalCandidate)
     candidate = [bool]$UnsignedLocalCandidate

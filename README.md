@@ -40,6 +40,9 @@ Its Native Messaging, companion installer, Store, and signed runtime-update
 gates are defined in
 [`docs/chrome-store-distribution-contract.md`](docs/chrome-store-distribution-contract.md)
 and [`docs/chrome-store-rollout-plan.md`](docs/chrome-store-rollout-plan.md).
+Development and production extension IDs are named profiles in one registry;
+their generated runtime projections are defined in
+[`docs/bridge-identity-contract.md`](docs/bridge-identity-contract.md).
 
 | Repository | Responsibility | Runtime |
 | --- | --- | --- |

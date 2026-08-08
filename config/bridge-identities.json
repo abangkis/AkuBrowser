@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "profiles": {
+    "development": {
+      "distribution": "unpacked",
+      "extensionId": "kpepkhjfebddlghebcaglbmobgihfcip"
+    },
+    "production": {
+      "distribution": "chrome-web-store",
+      "extensionId": "phkaipecbhpgopggbfpcejgngbhddnkk"
+    }
+  }
+}
