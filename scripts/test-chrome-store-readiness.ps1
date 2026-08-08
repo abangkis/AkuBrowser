@@ -19,6 +19,10 @@ $storeId = [string]$storeIdentity.extensionId
 $storeOrigin = "chrome-extension://$storeId/"
 if ($storeIdentity.distribution -ne "chrome-web-store") { throw "Production Bridge identity must use Chrome Web Store distribution." }
 if ($storeId -notmatch '^[a-p]{32}$') { throw "Production Bridge identity must contain an exact Store extension ID." }
+if ($null -ne $release.distribution.chromeStore.PSObject.Properties["extensionId"] -or
+    $null -ne $release.distribution.chromeStore.PSObject.Properties["extensionOrigin"]) {
+    throw "Release manifest must select a named Bridge identity without duplicating its ID or origin."
+}
 if (@($sidecarConfig.bridge.trustedExtensionOrigins).Count -ne 0) { throw "AkuSidecar base config must not duplicate a Bridge identity." }
 
 if ($manifest.manifest_version -ne 3) { throw "Manifest V3 is required." }

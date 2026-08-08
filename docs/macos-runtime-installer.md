@@ -40,6 +40,13 @@ Both native-host manifests contain an absolute executable path and the one
 exact production Chrome Web Store origin. Wildcards are forbidden. Ordinary
 install, repair, update, and uninstall preserve `data`.
 
+The release manifest selects a named Bridge identity profile. The installer
+resolves that profile through `config/bridge-identities.json`, which is the
+only checked-in authority for the exact extension ID. Published preview and
+production packages reject any profile other than the release-selected Chrome
+Web Store profile. An unsigned local candidate may instead select another
+declared profile, but cannot accept an arbitrary extension ID.
+
 No LaunchAgent is installed. Chrome starts the Native Messaging Host on demand;
 the host starts AkuSidecar only for a bounded `ensure_runtime` request.
 
@@ -72,6 +79,7 @@ Local structural candidate:
 ```sh
 ./scripts/build-macos-runtime-installer.sh \
   --c2pa-tool ../AkuSidecar/runtime/dev/macos-universal/c2patool \
+  --bridge-identity-profile development \
   --unsigned-local-candidate \
   --allow-dirty
 ```

@@ -1,24 +1,27 @@
-# AkuBrowser macOS Preview
+# AkuBrowser macOS portable bundle
 
-This preview contains the native Go `AkuSidecar` runtime and `AkuBridge` as an
-unpacked Chrome extension. It does not include `AkuSupervisor`.
+This portable bundle contains the native Go `AkuSidecar` runtime and works with
+the published AkuBrowser extension from the Chrome Web Store. It does not
+include `AkuSupervisor`.
+
+The included `AkuBridge` directory is retained for source inspection and
+advanced troubleshooting. Do not load it unpacked alongside the Chrome Web
+Store extension: the production runtime accepts only the published extension's
+exact identity.
 
 ## Prerequisites
 
-- macOS on Intel or Apple silicon; the published `0.7.0-preview.3` universal
-  bundle contains native x64 and arm64 Sidecar slices;
+- macOS on Intel or Apple silicon; the universal bundle contains native x64 and
+  arm64 Sidecar slices;
 - Codex App with App Server available and locally signed in, or a compatible Codex CLI;
 - Google Chrome already signed in to every source you enable (X, LinkedIn, or Facebook).
 
 ## Install and start
 
-1. Extract the ZIP to a writable directory.
-2. Open `chrome://extensions` in Google Chrome.
-3. Enable **Developer mode**.
-4. Choose **Load unpacked**.
-5. Select the bundled `AkuBridge` directory.
-6. Confirm that AkuBridge is enabled.
-7. Start AkuBrowser from Terminal:
+1. Install **AkuBrowser** from the Chrome Web Store:
+   <https://chromewebstore.google.com/detail/akubrowser/phkaipecbhpgopggbfpcejgngbhddnkk>
+2. Extract the ZIP to a writable directory.
+3. Start AkuBrowser from Terminal:
 
    ```sh
    ./Start-AkuBrowser.sh
@@ -27,14 +30,17 @@ unpacked Chrome extension. It does not include `AkuSupervisor`.
    You can also double-click `Start-AkuBrowser.command` in Finder. Keep the
    terminal open while using AkuBrowser; Ctrl+C stops the Sidecar cleanly.
 
-AkuBridge must be installed before starting AkuBrowser. The extension stays at
-the extracted path so Chrome can reload it. User data is stored under
-`~/Library/Application Support/AkuBrowser/data` and survives replacement of the
-extracted bundle.
+Install the Chrome Web Store extension before starting the portable runtime so
+the capture bridge is available when onboarding begins. For local
+unpacked-extension development, use the AkuWorkspace development flow and its
+named `development` Bridge identity rather than this production bundle.
+
+User data is stored under `~/Library/Application Support/AkuBrowser/data` and
+survives replacement of the extracted bundle.
 
 The launcher opens the canonical `http://127.0.0.1:11122` origin. You may also
-use `http://localhost:11122`; reload the unpacked AkuBridge extension and
-refresh the AkuBrowser tab after switching between the two origins.
+use `http://localhost:11122`; refresh the AkuBrowser tab after switching between
+the two origins.
 
 The launcher checks `AKU_CODEX_PATH`, the standard `Codex.app` and
 `ChatGPT.app` locations, the Codex-managed runtime directory, and common CLI

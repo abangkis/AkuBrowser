@@ -12,8 +12,9 @@ candidate described by the OpenAI Build Week
 [final project story](openai-build-week-submission.md) and
 [implementation evidence](../BUILD_WEEK.md). The first calibration
 check builds its semantic index locally without a model-backed cross-author
-comparison; later checks use the full Event Engine. The release contains AkuSidecar and an
-unpacked AkuBridge payload. AkuSupervisor and
+comparison; later checks use the full Event Engine. The release contains
+AkuSidecar and a verified AkuBridge payload for audit and troubleshooting, while
+the published extension is installed from the Chrome Web Store. AkuSupervisor and
 AkuSupervisorConformance remain development tooling and are not shipped.
 AkuBrowser is the distribution authority: it owns portable bundle assembly,
 release provenance, launchers, checksums, and acceptance documentation.
@@ -28,8 +29,10 @@ fallback. The package and release notes disclose the trust state, checksum
 verification, and Apple's per-app **Open Anyway** recovery without instructing
 users to disable Gatekeeper. A Developer ID-signed and notarized package remains
 the future stable path. Both platform bundles contain the Sidecar
-executable, release configuration, the verified unpacked Bridge payload, and a
-foreground launcher. The packages require no AkuSupervisor process or
+executable, release configuration, the verified Bridge payload, and a
+foreground launcher. Stable production bundles project the exact Chrome Web
+Store Bridge identity into Sidecar configuration; the bundled Bridge directory
+is not a second extension installation. The packages require no AkuSupervisor process or
 development workspace path. The Windows bundle also carries a pinned
 `c2patool.exe` so image-only C2PA inspection works without a separate tool
 installation. Its required version and SHA-256 are release-manifest inputs and
@@ -56,23 +59,26 @@ If the first check produces no validated calibration candidate, AkuBrowser keeps
 the captured trace in Update Inbox and offers **Update now again** instead
 of presenting a terminal calibration error.
 
-## Portable fallback and manual AkuBridge installation
+## Portable fallback and Bridge installation
 
-The portable preview bundle carries AkuBridge as a stable unpacked directory. Chrome on
-Windows and macOS does not permit an ordinary third-party installer to silently
-install a local extension. The tester must:
+The stable portable bundle works with AkuBrowser installed from the Chrome Web
+Store. Install the extension first, then start the portable runtime so
+onboarding never begins with only half of the local system available. The
+bundled `AkuBridge` directory remains available for source inspection and
+advanced troubleshooting, but must not be loaded unpacked alongside the Store
+copy: a production runtime accepts only the exact release-selected Store
+identity.
 
-1. open `chrome://extensions`;
-2. enable Developer mode;
-3. choose **Load unpacked**;
-4. select the bundled `AkuBridge` directory; and
-5. confirm that the extension is enabled before starting AkuBrowser.
+Local unpacked-extension work remains a separate AkuWorkspace development
+channel. It projects the named `development` identity into Sidecar rather than
+changing a packaged production artifact. On Windows, run the bundled
+`.\Start-AkuBrowser.ps1` launcher from PowerShell and confirm the Bridge-ready
+status. `Start-AkuBrowser.cmd` remains a convenience fallback and delegates to
+the same PowerShell script.
 
-AkuBridge is deliberately installed first so onboarding never begins with only
-half of the local system available. After the extension is ready, run the
-bundled `.\Start-AkuBrowser.ps1` launcher from PowerShell and confirm the
-Bridge-ready status. `Start-AkuBrowser.cmd` remains a convenience fallback and
-delegates to the same PowerShell script.
+The immutable `v0.7.9-preview1` macOS artifact retains the installation contract
+published with that prerelease. It is not silently reclassified as a stable
+production bundle.
 
 On macOS, run `./Start-AkuBrowser.sh` from Terminal or double-click
 `Start-AkuBrowser.command`; the macOS launcher performs the same Sidecar health

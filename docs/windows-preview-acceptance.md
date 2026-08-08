@@ -15,8 +15,9 @@ Run from AkuBrowser:
 The build gate validates the release tuple, executes Sidecar and Bridge tests,
 builds a stripped Windows x64 Sidecar, verifies the pinned c2patool version and
 SHA-256 before copying it beside the Sidecar, copies only the verified extension
-payload, includes the exact upstream c2patool MIT and Apache-2.0 license texts,
-records source commits, generates per-file SHA-256 checksums, and
+payload, projects exactly the release-selected Chrome Web Store Bridge origin
+from `config/bridge-identities.json`, includes the exact upstream c2patool MIT
+and Apache-2.0 license texts, records source commits, generates per-file SHA-256 checksums, and
 creates the portable ZIP. The smoke gate revalidates every checksum, requires
 every runtime schema, capability-checks the discovered Codex runtime, starts
 the packaged Sidecar with the release App Server provider and a fresh database
@@ -32,7 +33,7 @@ AkuSupervisor:
 2. confirm Codex App is installed and locally signed in, then run
    `Start-AkuBrowser.ps1 -DiagnoseCodex`;
 3. confirm Chrome is signed in to every source that will be enabled (X, LinkedIn, or Facebook);
-4. load the bundled AkuBridge directory through Chrome Developer mode;
+4. install AkuBrowser from the Chrome Web Store and confirm no unpacked copy is enabled;
 5. run `.\Start-AkuBrowser.ps1` from PowerShell (`Start-AkuBrowser.cmd` is the fallback);
 6. complete onboarding and calibration;
 7. run **Update now** with Auto Update either enabled or disabled; also use **Prepare batch now** and **Load latest batch**; inspect captured, evaluated, and selected evidence;
@@ -81,7 +82,8 @@ Update Inbox** and **View Settings**. Moving to either view must not stop pollin
 capture, or later Timeline composition; returning to Timeline must show current
 progress rather than restarting the check.
 
-Login remediation, installer signing, and automatic Chrome extension
-installation are outside the `0.7.9` acceptance boundary. Codex
+Login remediation, installer signing, and silent Chrome extension installation
+are outside the `0.7.9` acceptance boundary; the user installs AkuBrowser from
+the Chrome Web Store. Codex
 discovery is owned by the cross-platform AkuSidecar runtime probe and
 capability-checks App Server.

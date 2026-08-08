@@ -70,7 +70,9 @@ must never be linked from the Store extension.
 ```powershell
 $env:AKU_WINDOWS_SIGNING_PASSWORD = "<PFX password>"
 .\scripts\build-windows-runtime-installer.ps1 `
-  -CertificatePath "C:\secure\akubrowser-code-signing.pfx"
+  -CertificatePath "C:\secure\akubrowser-code-signing.pfx" `
+  -UpdatePublicKey "<base64 Ed25519 public key>" `
+  -UpdateSigningPrivateKeyPath "C:\secure\akubrowser-runtime-update.key"
 ```
 
 Production builds read the profile selected by
@@ -88,7 +90,9 @@ encrypted repository secrets:
 
 - `AKU_WORKSPACE_READ_TOKEN`;
 - `WINDOWS_CODE_SIGNING_PFX_BASE64`;
-- `WINDOWS_CODE_SIGNING_PFX_PASSWORD`.
+- `WINDOWS_CODE_SIGNING_PFX_PASSWORD`;
+- `RUNTIME_UPDATE_PUBLIC_KEY_BASE64`; and
+- `RUNTIME_UPDATE_SIGNING_PRIVATE_KEY_BASE64`.
 
 The workflow downloads the pinned c2patool release, verifies its existing
 SHA-256, signs every native executable, verifies the final Authenticode

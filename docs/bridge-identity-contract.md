@@ -40,16 +40,16 @@ fails closed.
 ## Production projection
 
 `release/release-manifest.json` selects `bridgeIdentityProfile: production`.
-It does not repeat the extension ID. The Windows runtime installer resolves
-that profile through the registry and generates both:
+It does not repeat the extension ID. Windows and macOS release packagers
+resolve that profile through the registry and generate:
 
-- the packaged Sidecar `trustedExtensionOrigins` entry; and
-- the Native Messaging host `allowed_origins` entry.
+- exactly one packaged Sidecar `trustedExtensionOrigins` entry for portable and
+  installed runtimes; and
+- the Native Messaging host `allowed_origins` entry for companion installers.
 
 Production builds reject any profile other than the release-selected Chrome
 Web Store profile. An unsigned local installer may select another declared
-profile with `-BridgeIdentityProfile development`; arbitrary extension IDs are
-not accepted.
+profile such as `development`; arbitrary extension IDs are not accepted.
 
 ## Security invariant
 

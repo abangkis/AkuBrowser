@@ -1,18 +1,23 @@
-# AkuBrowser Windows Preview
+# AkuBrowser Windows portable bundle
 
-This portable preview contains the Go AkuSidecar runtime and AkuBridge as an
-unpacked Chrome extension. It also includes the pinned `c2patool.exe` runtime
-used for local, image-only Content Credentials verification. It does not
-install a Windows service and does not include AkuSupervisor.
+This portable bundle contains the Go AkuSidecar runtime and the pinned
+`c2patool.exe` runtime used for local, image-only Content Credentials
+verification. It works with the published AkuBrowser extension from the Chrome
+Web Store. It does not install a Windows service and does not include
+AkuSupervisor.
 
-## OpenAI Build Week preview
+The included `AkuBridge` directory is retained for source inspection and
+advanced troubleshooting. Do not load it unpacked alongside the Chrome Web
+Store extension: the production runtime accepts only the published extension's
+exact identity.
 
-This is the judge-ready package for the AkuBrowser Build Week story. It
-demonstrates bounded capture from authenticated X, Facebook, and LinkedIn
-feeds; Codex-backed Acquisition Planning, Candidate Evaluation, Semantic Event
-Resolution, and AI Deep Detection; deterministic preference filtering; and a
-finite, source-backed Timeline. AkuSupervisor remains optional development
-tooling and is intentionally excluded from this preview.
+## What it demonstrates
+
+AkuBrowser provides bounded capture from authenticated X, Facebook, and
+LinkedIn feeds; Codex-backed Acquisition Planning, Candidate Evaluation,
+Semantic Event Resolution, and AI Deep Detection; deterministic preference
+filtering; and a finite, source-backed Timeline. AkuSupervisor remains optional
+development tooling and is intentionally excluded from this bundle.
 
 ## Prerequisites
 
@@ -25,27 +30,25 @@ tooling and is intentionally excluded from this preview.
 
 ## Install and start
 
-1. Extract the complete ZIP to a writable directory.
-2. Open `chrome://extensions` in Google Chrome.
-3. Enable **Developer mode**.
-4. Choose **Load unpacked**.
-5. Select the `AkuBridge` directory inside this bundle.
-6. Confirm that AkuBridge is enabled.
-7. Open PowerShell in the extracted directory and run:
+1. Install **AkuBrowser** from the Chrome Web Store:
+   <https://chromewebstore.google.com/detail/akubrowser/phkaipecbhpgopggbfpcejgngbhddnkk>
+2. Extract the complete ZIP to a writable directory.
+3. Open PowerShell in the extracted directory and run:
 
    ```powershell
    .\Start-AkuBrowser.ps1
    ```
 
-8. If running PowerShell scripts is unavailable, use `Start-AkuBrowser.cmd` as
+4. If running PowerShell scripts is unavailable, use `Start-AkuBrowser.cmd` as
    the fallback launcher.
-9. Keep its terminal open while using AkuBrowser.
-10. Press Ctrl+C in that terminal to stop AkuBrowser.
+5. Keep its terminal open while using AkuBrowser.
+6. Press Ctrl+C in that terminal to stop AkuBrowser.
 
-Install AkuBridge before starting AkuBrowser. This ensures the capture bridge is
-available when onboarding begins instead of launching a partially working
-system. The extension must stay at the extracted path; moving or deleting that
-directory will make Chrome unable to reload it.
+Install the Chrome Web Store extension before starting the portable runtime.
+This ensures the capture bridge is available when onboarding begins instead of
+launching a partially working system. For local unpacked-extension development,
+use the AkuWorkspace development flow and its named `development` Bridge
+identity rather than this production bundle.
 
 `Start-AkuBrowser.ps1` is the primary launcher and exposes the diagnostic and
 configuration options documented below. `Start-AkuBrowser.cmd` delegates to the

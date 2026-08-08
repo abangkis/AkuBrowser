@@ -28,6 +28,7 @@ workspace_root="$(cd "$browser_root/.." && pwd)"
 bridge_root="$workspace_root/AkuBridge"
 sidecar_root="$workspace_root/AkuSidecar"
 release_manifest_path="$browser_root/release/release-manifest.json"
+bridge_identity_registry_path="$browser_root/config/bridge-identities.json"
 
 case "$(uname -m)" in
   x86_64) default_architecture="x64" ;;
@@ -80,6 +81,7 @@ for command_name in git go node npm shasum zip; do
 done
 
 [[ -f "$release_manifest_path" ]] || die "release manifest is missing: $release_manifest_path"
+[[ -f "$bridge_identity_registry_path" ]] || die "Bridge identity registry is missing: $bridge_identity_registry_path"
 [[ -d "$bridge_root" ]] || die "AkuBridge checkout is missing: $bridge_root"
 [[ -d "$sidecar_root" ]] || die "AkuSidecar checkout is missing: $sidecar_root"
 
@@ -102,6 +104,7 @@ import path from "node:path";
 const [browserRoot, bridgeRoot, sidecarRoot] = process.argv.slice(2);
 const readJson = (file) => JSON.parse(fs.readFileSync(file, "utf8"));
 const release = readJson(path.join(browserRoot, "release/release-manifest.json"));
+const bridgeIdentityRegistry = readJson(path.join(browserRoot, "config/bridge-identities.json"));
 const bridgePackage = readJson(path.join(bridgeRoot, "package.json"));
 const bridgeManifest = readJson(path.join(bridgeRoot, "manifest.json"));
 const sidecarConfig = readJson(path.join(sidecarRoot, "config/sidecar.json"));
@@ -109,6 +112,20 @@ const domain = fs.readFileSync(path.join(sidecarRoot, "internal/domain/types.go"
 
 const fail = (message) => { throw new Error(message); };
 if (release.distribution?.authorityRepository !== "AkuBrowser") fail("AkuBrowser is not the distribution authority");
+if (bridgeIdentityRegistry.schemaVersion !== 1) fail("unsupported Bridge identity registry schema");
+const bridgeIdentityProfile = release.distribution?.chromeStore?.bridgeIdentityProfile;
+const bridgeIdentity = bridgeIdentityRegistry.profiles?.[bridgeIdentityProfile];
+if (!bridgeIdentityProfile || !bridgeIdentity) fail("the release manifest must select an existing Bridge identity profile");
+if (bridgeIdentity.distribution !== "chrome-web-store") fail("the macOS release must use a Chrome Web Store Bridge identity");
+if (!/^[a-p]{32}$/.test(bridgeIdentity.extensionId ?? "")) {
+  fail("the production Bridge identity must declare an exact Chrome Web Store extension ID");
+}
+if (Object.hasOwn(release.distribution?.chromeStore ?? {}, "extensionId")) {
+  fail("the release manifest must not duplicate the Bridge extension ID");
+}
+if (Object.hasOwn(release.distribution?.chromeStore ?? {}, "extensionOrigin")) {
+  fail("the release manifest must not duplicate the Bridge extension origin");
+}
 const macos = release.distribution?.macos;
 if (macos?.format !== "portable-zip") fail("macOS distribution format must be portable-zip");
 if (macos?.launcher !== "Start-AkuBrowser.command") fail("macOS launcher is not declared");
@@ -201,12 +218,21 @@ case "$architecture" in
 esac
 chmod 755 "$artifact_root/AkuSidecar"
 
-node --input-type=module - "$sidecar_root/config/sidecar.json" "$artifact_root/config/sidecar.json" <<'NODE'
+node --input-type=module - "$sidecar_root/config/sidecar.json" "$artifact_root/config/sidecar.json" "$release_manifest_path" "$bridge_identity_registry_path" <<'NODE'
 import fs from "node:fs";
-const [source, destination] = process.argv.slice(2);
+const [source, destination, releasePath, registryPath] = process.argv.slice(2);
 const config = JSON.parse(fs.readFileSync(source, "utf8"));
+const release = JSON.parse(fs.readFileSync(releasePath, "utf8"));
+const registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
+const profile = release.distribution?.chromeStore?.bridgeIdentityProfile;
+const identity = registry.profiles?.[profile];
+if (!identity || identity.distribution !== "chrome-web-store" || !/^[a-p]{32}$/.test(identity.extensionId ?? "")) {
+  throw new Error("the release-selected Bridge identity is not a valid Chrome Web Store identity");
+}
 config.database.path = "data/aku-sidecar.db";
 config.reasoning.executable = "";
+config.bridge ??= {};
+config.bridge.trustedExtensionOrigins = [`chrome-extension://${identity.extensionId}/`];
 fs.writeFileSync(destination, `${JSON.stringify(config, null, 2)}\n`);
 NODE
 
@@ -240,6 +266,11 @@ import path from "node:path";
 
 const [destination, releasePath, browserRoot, sidecarRoot, bridgeRoot, architecture, verificationPath] = process.argv.slice(2);
 const release = JSON.parse(fs.readFileSync(releasePath, "utf8"));
+const bridgeIdentityRegistry = JSON.parse(fs.readFileSync(path.join(browserRoot, "config/bridge-identities.json"), "utf8"));
+const bridgeIdentityProfile = release.distribution?.chromeStore?.bridgeIdentityProfile;
+const bridgeIdentity = bridgeIdentityRegistry.profiles?.[bridgeIdentityProfile];
+if (!bridgeIdentity) throw new Error("release-selected Bridge identity is missing from the registry");
+const bridgeExtensionOrigin = `chrome-extension://${bridgeIdentity.extensionId}/`;
 const verification = JSON.parse(fs.readFileSync(verificationPath, "utf8"));
 const repositories = { akuBrowser: browserRoot, akuSidecar: sidecarRoot, akuBridge: bridgeRoot };
 const sourceCommits = {};
@@ -260,6 +291,12 @@ const manifest = {
   sourceDirty,
   components: release.components,
   akuBridgeFingerprint: verification.fingerprint,
+  bridgeIdentity: {
+    profile: bridgeIdentityProfile,
+    distribution: bridgeIdentity.distribution,
+    authority: "config/bridge-identities.json",
+    extensionOrigin: bridgeExtensionOrigin,
+  },
 };
 fs.writeFileSync(destination, `${JSON.stringify(manifest, null, 2)}\n`);
 NODE
@@ -299,5 +336,7 @@ console.log(JSON.stringify({
   bridgeFiles,
   sourceCommits: manifest.sourceCommits,
   sourceDirty: manifest.sourceDirty,
+  bridgeIdentityProfile: manifest.bridgeIdentity.profile,
+  bridgeExtensionOrigin: manifest.bridgeIdentity.extensionOrigin,
 }, null, 2));
 NODE

@@ -12,6 +12,7 @@ $workspaceRoot = Split-Path -Parent $browserRoot
 $bridgeRoot = Join-Path $workspaceRoot "AkuBridge"
 $sidecarRoot = Join-Path $workspaceRoot "AkuSidecar"
 $releaseManifestPath = Join-Path $browserRoot "release\release-manifest.json"
+$bridgeIdentityRegistryPath = Join-Path $browserRoot "config\bridge-identities.json"
 if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
     $C2paToolPath = Join-Path $sidecarRoot "runtime\dev\c2patool.exe"
 }
@@ -63,9 +64,22 @@ $OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
 New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
 
 $release = Read-Json $releaseManifestPath
+$bridgeIdentityRegistry = Read-Json $bridgeIdentityRegistryPath
 $bridgePackage = Read-Json (Join-Path $bridgeRoot "package.json")
 $bridgeManifest = Read-Json (Join-Path $bridgeRoot "manifest.json")
 $sidecarDomain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
+
+$bridgeIdentityProfile = [string]$release.distribution.chromeStore.bridgeIdentityProfile
+$bridgeIdentityProperty = $bridgeIdentityRegistry.profiles.PSObject.Properties[$bridgeIdentityProfile]
+Assert-True ($bridgeIdentityRegistry.schemaVersion -eq 1) "Unsupported Bridge identity registry schema."
+Assert-True (-not [string]::IsNullOrWhiteSpace($bridgeIdentityProfile) -and $null -ne $bridgeIdentityProperty) "The release manifest must select an existing Bridge identity profile."
+$bridgeIdentity = $bridgeIdentityProperty.Value
+$bridgeExtensionId = [string]$bridgeIdentity.extensionId
+$bridgeExtensionOrigin = "chrome-extension://$bridgeExtensionId/"
+Assert-True ($bridgeIdentity.distribution -eq "chrome-web-store") "The Windows release must use a Chrome Web Store Bridge identity."
+Assert-True ($bridgeExtensionId -match '^[a-p]{32}$') "The production Bridge identity must declare an exact Chrome Web Store extension ID."
+Assert-True ($null -eq $release.distribution.chromeStore.PSObject.Properties["extensionId"]) "The release manifest must not duplicate the Bridge extension ID."
+Assert-True ($null -eq $release.distribution.chromeStore.PSObject.Properties["extensionOrigin"]) "The release manifest must not duplicate the Bridge extension origin."
 
 Assert-True ($release.distribution.authorityRepository -eq "AkuBrowser") "AkuBrowser is not the declared distribution authority."
 Assert-True ($release.distribution.windows.architecture -eq "x64") "The release manifest does not describe Windows x64."
@@ -175,6 +189,7 @@ New-Item -ItemType Directory -Force -Path $configDirectory | Out-Null
 $packageConfig = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $packageConfig.database.path = "data/aku-sidecar.db"
 $packageConfig.reasoning.executable = ""
+$packageConfig.bridge.trustedExtensionOrigins = @($bridgeExtensionOrigin)
 Write-Utf8NoBom (Join-Path $configDirectory "sidecar.json") ($packageConfig | ConvertTo-Json -Depth 10)
 
 $schemaOutput = Join-Path $artifactRoot "schemas"
@@ -213,6 +228,12 @@ $artifactManifest = [ordered]@{
     sourceDirty = @($dirtyRepositories)
     components = $release.components
     akuBridgeFingerprint = $bridgeVerification.fingerprint
+    bridgeIdentity = [ordered]@{
+        profile = $bridgeIdentityProfile
+        distribution = [string]$bridgeIdentity.distribution
+        authority = "config/bridge-identities.json"
+        extensionOrigin = $bridgeExtensionOrigin
+    }
     bundledTools = [ordered]@{
         c2paTool = [ordered]@{
             version = $release.components.c2paTool.version
@@ -259,4 +280,6 @@ $zipHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $zipPath).Hash.ToLowerIn
     bridgeFiles = @($bridgeVerification.files).Count
     sourceCommits = $sourceCommits
     sourceDirty = @($dirtyRepositories)
+    bridgeIdentityProfile = $bridgeIdentityProfile
+    bridgeExtensionOrigin = $bridgeExtensionOrigin
 } | ConvertTo-Json -Depth 8

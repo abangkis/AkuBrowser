@@ -20,6 +20,7 @@ unzip_bin="$(command -v unzip)"
 
 browser_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 release_manifest_path="$browser_root/release/release-manifest.json"
+bridge_identity_registry_path="$browser_root/config/bridge-identities.json"
 artifact_directory=""
 zip_path=""
 
@@ -93,6 +94,7 @@ artifact_directory="$(cd "$artifact_directory" && pwd)"
 [[ -f "$artifact_directory/config/sidecar.json" ]] || die "bundle is missing config/sidecar.json"
 [[ -x "$artifact_directory/Start-AkuBrowser.sh" ]] || die "bundle is missing executable Start-AkuBrowser.sh"
 [[ -x "$artifact_directory/Start-AkuBrowser.command" ]] || die "bundle is missing executable Start-AkuBrowser.command"
+[[ -f "$artifact_directory/README.md" ]] || die "bundle is missing README.md"
 
 while IFS= read -r line; do
   hash="${line%%  *}"
@@ -107,6 +109,46 @@ done < "$artifact_directory/checksums.sha256"
 
 target="$($node_bin --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).target)' "$artifact_directory/artifact-manifest.json")"
 [[ "$target" == macos-* ]] || die "artifact target is not macOS: $target"
+
+"$node_bin" --input-type=module - "$release_manifest_path" "$bridge_identity_registry_path" "$artifact_directory" <<'NODE'
+import fs from "node:fs";
+
+const [releasePath, registryPath, artifactDirectory] = process.argv.slice(2);
+const release = JSON.parse(fs.readFileSync(releasePath, "utf8"));
+const registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
+const artifactRelease = JSON.parse(fs.readFileSync(`${artifactDirectory}/release-manifest.json`, "utf8"));
+const artifactManifest = JSON.parse(fs.readFileSync(`${artifactDirectory}/artifact-manifest.json`, "utf8"));
+const bridgeManifest = JSON.parse(fs.readFileSync(`${artifactDirectory}/AkuBridge/manifest.json`, "utf8"));
+const packageConfig = JSON.parse(fs.readFileSync(`${artifactDirectory}/config/sidecar.json`, "utf8"));
+const readme = fs.readFileSync(`${artifactDirectory}/README.md`, "utf8");
+const fail = (message) => { throw new Error(message); };
+
+const bridgeIdentityProfile = release.distribution?.chromeStore?.bridgeIdentityProfile;
+const bridgeIdentity = registry.profiles?.[bridgeIdentityProfile];
+if (registry.schemaVersion !== 1 || !bridgeIdentityProfile || !bridgeIdentity) {
+  fail("the release does not select a valid Bridge identity profile");
+}
+if (bridgeIdentity.distribution !== "chrome-web-store") fail("the release Bridge identity is not a Chrome Web Store profile");
+if (!/^[a-p]{32}$/.test(bridgeIdentity.extensionId ?? "")) fail("the release Bridge extension ID is invalid");
+const bridgeExtensionOrigin = `chrome-extension://${bridgeIdentity.extensionId}/`;
+if (artifactRelease.version !== release.version) fail("artifact release version differs from AkuBrowser");
+if (bridgeManifest.version_name !== release.components?.akuBridge?.version) fail("bundled AkuBridge product version differs from the release tuple");
+if (bridgeManifest.version !== release.components?.akuBridge?.chromeVersion) fail("bundled AkuBridge Chrome version differs from the release tuple");
+const trustedOrigins = packageConfig.bridge?.trustedExtensionOrigins ?? [];
+if (trustedOrigins.length !== 1 || trustedOrigins[0] !== bridgeExtensionOrigin) {
+  fail("packaged AkuSidecar does not trust exactly the release-selected Bridge origin");
+}
+if (artifactManifest.bridgeIdentity?.profile !== bridgeIdentityProfile) fail("artifact provenance records the wrong Bridge identity profile");
+if (artifactManifest.bridgeIdentity?.distribution !== bridgeIdentity.distribution) fail("artifact provenance records the wrong Bridge distribution");
+if (artifactManifest.bridgeIdentity?.authority !== "config/bridge-identities.json") fail("artifact provenance does not record the Bridge identity authority");
+if (artifactManifest.bridgeIdentity?.extensionOrigin !== bridgeExtensionOrigin) fail("artifact provenance records the wrong Bridge extension origin");
+const bridgeInstallInstruction = readme.indexOf("Install **AkuBrowser** from the Chrome Web Store");
+const launcherInstruction = readme.indexOf("./Start-AkuBrowser.sh");
+if (bridgeInstallInstruction < 0) fail("bundle README does not explain how to install AkuBrowser from the Chrome Web Store");
+if (launcherInstruction < 0) fail("bundle README does not identify Start-AkuBrowser.sh as the launcher");
+if (bridgeInstallInstruction >= launcherInstruction) fail("bundle README must install the Chrome Web Store extension before starting AkuBrowser");
+if (!readme.includes("Do not load it unpacked")) fail("bundle README does not prevent loading the inspection copy of AkuBridge unpacked");
+NODE
 
 port="$($python_bin -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()')"
 output_log="$tmp_root/sidecar.log"

@@ -7,7 +7,7 @@ Usage: ./scripts/build-macos-runtime-installer.sh [options]
 
 Options:
   --output-root <path>                 Artifact directory (default: artifacts)
-  --extension-id <id>                  Exact Chrome extension ID (defaults to release manifest)
+  --bridge-identity-profile <name>     Named identity from config/bridge-identities.json
   --c2pa-tool <path>                   Universal c2patool binary (required for production)
   --application-identity <identity>    Developer ID Application signing identity
   --installer-identity <identity>      Developer ID Installer signing identity
@@ -30,9 +30,10 @@ workspace_root="$(cd "$browser_root/.." && pwd)"
 bridge_root="$workspace_root/AkuBridge"
 sidecar_root="$workspace_root/AkuSidecar"
 release_manifest="$browser_root/release/release-manifest.json"
+bridge_identity_registry="$browser_root/config/bridge-identities.json"
 installer_source="$browser_root/installer/macos"
 output_root="$browser_root/artifacts"
-extension_id=""
+bridge_identity_profile=""
 c2pa_tool=""
 application_identity=""
 installer_identity=""
@@ -47,7 +48,7 @@ skip_validation=0
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --output-root) output_root="$2"; shift 2 ;;
-    --extension-id) extension_id="$2"; shift 2 ;;
+    --bridge-identity-profile) bridge_identity_profile="$2"; shift 2 ;;
     --c2pa-tool) c2pa_tool="$2"; shift 2 ;;
     --application-identity) application_identity="$2"; shift 2 ;;
     --installer-identity) installer_identity="$2"; shift 2 ;;
@@ -70,13 +71,26 @@ for command_name in git go node npm lipo pkgbuild productbuild shasum zip; do re
 [[ "$(uname -s)" = "Darwin" ]] || die "the macOS runtime installer must be built on macOS"
 
 version="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.version)' "$release_manifest")"
-release_extension_id="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution.chromeStore.extensionId)' "$release_manifest")"
+release_bridge_identity_profile="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution?.chromeStore?.bridgeIdentityProfile ?? "")' "$release_manifest")"
+bridge_identity_schema_version="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.schemaVersion ?? "")' "$bridge_identity_registry")"
+[[ "$bridge_identity_schema_version" = "1" ]] || die "unsupported Bridge identity registry schema"
+[[ -n "$release_bridge_identity_profile" ]] || die "the release manifest must select a Bridge identity profile"
+bridge_identity_profile="${bridge_identity_profile:-$release_bridge_identity_profile}"
+release_bridge_identity_distribution="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); const p=r.profiles?.[process.argv[2]]; if (!p) throw new Error("release Bridge identity profile is not declared in config/bridge-identities.json"); console.log(p.distribution ?? "")' "$bridge_identity_registry" "$release_bridge_identity_profile")"
+release_extension_id="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); const p=r.profiles?.[process.argv[2]]; if (!p) throw new Error("release Bridge identity profile is not declared in config/bridge-identities.json"); console.log(p.extensionId ?? "")' "$bridge_identity_registry" "$release_bridge_identity_profile")"
+bridge_identity_distribution="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); const p=r.profiles?.[process.argv[2]]; if (!p) throw new Error("Bridge identity profile is not declared in config/bridge-identities.json"); console.log(p.distribution ?? "")' "$bridge_identity_registry" "$bridge_identity_profile")"
+extension_id="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); const p=r.profiles?.[process.argv[2]]; if (!p) throw new Error("Bridge identity profile is not declared in config/bridge-identities.json"); console.log(p.extensionId ?? "")' "$bridge_identity_registry" "$bridge_identity_profile")"
 expected_c2pa_sha256="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.components.c2paTool.platformSha256?.["macos-universal"] ?? "")' "$release_manifest")"
 expected_c2pa_version="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.components.c2paTool.version)' "$release_manifest")"
-extension_id="${extension_id:-$release_extension_id}"
-[[ "$extension_id" =~ ^[a-p]{32}$ ]] || die "a real 32-character Chrome Web Store extension ID is required"
-if [[ "$unsigned_local" -eq 0 && "$extension_id" != "$release_extension_id" ]]; then
-  die "published installer extension ID must match the release manifest"
+[[ "$release_bridge_identity_distribution" = "chrome-web-store" ]] || die "the release Bridge identity must use Chrome Web Store distribution"
+[[ "$release_extension_id" =~ ^[a-p]{32}$ ]] || die "the release Bridge identity must declare an exact Chrome Web Store extension ID"
+[[ "$extension_id" =~ ^[a-p]{32}$ ]] || die "the selected Bridge identity must declare an exact 32-character Chrome extension ID"
+if [[ "$unsigned_local" -eq 0 ]]; then
+  [[ "$bridge_identity_profile" = "$release_bridge_identity_profile" ]] || die "published installers must use the Bridge identity profile selected by the release manifest"
+  [[ "$bridge_identity_distribution" = "chrome-web-store" ]] || die "published installers must use a Chrome Web Store Bridge identity"
+  [[ "$extension_id" != "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa" && "$extension_id" != "abcdefghijklmnopabcdefghijklmnop" ]] || die "published installer builds reject placeholder extension IDs"
+  extension_id_tail="${extension_id:1}"
+  [[ -n "${extension_id_tail//${extension_id:0:1}/}" ]] || die "published installer builds reject repeated-character placeholder extension IDs"
 fi
 if [[ "$unsigned_local" -eq 0 && "$unsigned_preview" -eq 0 ]]; then
   [[ -n "$application_identity" ]] || die "production build requires --application-identity"
