@@ -21,13 +21,31 @@ test detail remains in the [Windows](windows-preview-acceptance.md) and
 - [ ] If a release is intentionally unsigned, confirm the manifest, Setup copy,
       listing, installer welcome page, and release notes all say so consistently.
 
-## 3. Accept the candidate
+## 3A. Automated acceptance
 
-- [ ] Pass all automated Windows and macOS build/smoke gates.
-- [ ] Pass clean-machine install, update, restart, stop/start, and uninstall tests.
-- [ ] Verify Chrome Web Store identity, Native Messaging, Codex detection, and one full update run.
-- [ ] Verify antivirus, SmartScreen, or Gatekeeper guidance matches the actual trust state.
-- [ ] Confirm Setup download URLs and fallback instructions target `<version>`.
+- [ ] Pass the automated Windows build, portable smoke, installer, updater, and
+      lifecycle gates.
+- [ ] Pass the automated macOS universal build, portable smoke, and installer
+      structure gates.
+- [ ] Verify checksums, artifact manifests, source commits, Store identity, and
+      declared signing/notarization state.
+- [ ] Confirm Setup download URLs, fallback instructions, and security guidance
+      target `<version>` and match the declared trust state.
+- [ ] Record the commands and machine-readable results used for acceptance.
+
+Completing 3A proves that the candidate is reproducible and structurally valid.
+It does not replace clean-machine acceptance.
+
+## 3B. Clean-machine acceptance
+
+- [ ] Pass Windows clean-machine install, update/repair, Chrome restart, PC
+      restart, stop/start, uninstall, and reinstall tests.
+- [ ] Pass the equivalent macOS clean-machine flow on the supported Intel and
+      Apple-silicon architectures.
+- [ ] Verify the Chrome Web Store identity, Native Messaging, Codex detection,
+      and one full AkuBrowser update run on both platforms.
+- [ ] Verify the actual antivirus, SmartScreen, or Gatekeeper behavior and
+      confirm the user guidance matches it.
 - [ ] Obtain explicit Windows and macOS release acceptance.
 
 ## 4. Stage the stable release
