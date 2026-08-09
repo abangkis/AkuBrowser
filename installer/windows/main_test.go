@@ -38,6 +38,39 @@ func TestSetupDoesNotLaunchNestedUnsignedExecutables(t *testing.T) {
 	}
 }
 
+func TestSetupIsSingleInstanceAndRecordsDurableOutcome(t *testing.T) {
+	data, err := os.ReadFile("setup.nsi")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := string(data)
+	for _, required := range []string{
+		"CreateMutexW",
+		"ERROR_ALREADY_EXISTS",
+		"Setup is already running",
+		"install-result.json",
+		"install.log",
+		`$\"status$\":$\"installing$\"`,
+		`$\"status$\":$\"completed$\"`,
+		`$\"status$\":$\"failed$\"`,
+		"${EXTENSION_ORIGIN}",
+	} {
+		if !strings.Contains(script, required) {
+			t.Fatalf("setup is missing durable single-instance contract %q", required)
+		}
+	}
+}
+
+func TestBuilderPassesResolvedExtensionOriginToSetup(t *testing.T) {
+	data, err := os.ReadFile(filepath.Join("..", "..", "scripts", "build-windows-runtime-installer.ps1"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(data), `"/DEXTENSION_ORIGIN=chrome-extension://$ExtensionId/"`) {
+		t.Fatal("installer builder does not bind the Native Messaging origin into the setup contract")
+	}
+}
+
 func TestResolveInstallRootUsesDefaultOrAbsoluteSelection(t *testing.T) {
 	localAppData := filepath.Join("C:\\", "Users", "Example", "AppData", "Local")
 	defaultRoot, err := resolveInstallRoot(localAppData, "")

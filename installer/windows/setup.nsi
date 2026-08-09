@@ -15,6 +15,9 @@ Unicode true
 !ifndef OUTPUT_FILE
   !error "OUTPUT_FILE is required"
 !endif
+!ifndef EXTENSION_ORIGIN
+  !error "EXTENSION_ORIGIN is required"
+!endif
 
 !define PRODUCT_NAME "AkuBrowser Runtime"
 !define PRODUCT_PUBLISHER "AkuBrowser"
@@ -22,6 +25,11 @@ Unicode true
 !define PRODUCT_REGISTRY_KEY "Software\AkuBrowser\Runtime"
 !define PRODUCT_UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\AkuBrowserRuntime"
 !define NATIVE_HOST_KEY "Software\Google\Chrome\NativeMessagingHosts\com.akubrowser.runtime"
+!define SETUP_MUTEX_NAME "Local\AkuBrowserRuntimeSetup"
+!define ERROR_ALREADY_EXISTS 183
+
+Var SetupMutexHandle
+Var InstallAttemptStarted
 
 Name "${PRODUCT_NAME} ${APP_VERSION}"
 Caption "${PRODUCT_NAME} Setup"
@@ -73,6 +81,68 @@ VIAddVersionKey /LANG=1033 "LegalCopyright" "AkuBrowser contributors"
 
 Function .onInit
   SetShellVarContext current
+  StrCpy $InstallAttemptStarted 0
+  System::Call 'kernel32::CreateMutexW(p0, i0, w "${SETUP_MUTEX_NAME}") p.r0'
+  System::Call 'kernel32::GetLastError() i.r1'
+  StrCpy $SetupMutexHandle $0
+  ${If} $1 = ${ERROR_ALREADY_EXISTS}
+    MessageBox MB_OK|MB_ICONEXCLAMATION "AkuBrowser Runtime Setup is already running. Finish or close the existing setup window before trying again."
+    Abort
+  ${ElseIf} $SetupMutexHandle = 0
+    MessageBox MB_OK|MB_ICONSTOP "AkuBrowser Runtime Setup could not create its single-instance lock. Close other setup windows and try again."
+    Abort
+  ${EndIf}
+FunctionEnd
+
+Function .onGUIEnd
+  ${If} $SetupMutexHandle != 0
+    System::Call 'kernel32::CloseHandle(p $SetupMutexHandle)'
+    StrCpy $SetupMutexHandle 0
+  ${EndIf}
+FunctionEnd
+
+Function RecordInstallStarted
+  CreateDirectory "$INSTDIR"
+  FileOpen $0 "$INSTDIR\install.log" a
+  FileSeek $0 0 END
+  FileWrite $0 "BEGIN version=${APP_VERSION} extensionOrigin=${EXTENSION_ORIGIN}$\r$\n"
+  FileClose $0
+  FileOpen $0 "$INSTDIR\install-result.json" w
+  FileWrite $0 '{$\"schemaVersion$\":1,$\"status$\":$\"installing$\",$\"version$\":$\"${APP_VERSION}$\",$\"extensionOrigin$\":$\"${EXTENSION_ORIGIN}$\"}$\r$\n'
+  FileClose $0
+  StrCpy $InstallAttemptStarted 1
+FunctionEnd
+
+Function RecordInstallCompleted
+  FileOpen $0 "$INSTDIR\install.log" a
+  FileSeek $0 0 END
+  FileWrite $0 "COMPLETED version=${APP_VERSION} extensionOrigin=${EXTENSION_ORIGIN}$\r$\n"
+  FileClose $0
+  FileOpen $0 "$INSTDIR\install-result.json" w
+  FileWrite $0 '{$\"schemaVersion$\":1,$\"status$\":$\"completed$\",$\"version$\":$\"${APP_VERSION}$\",$\"extensionOrigin$\":$\"${EXTENSION_ORIGIN}$\"}$\r$\n'
+  FileClose $0
+FunctionEnd
+
+Function RecordInstallFailed
+  FileOpen $0 "$INSTDIR\install.log" a
+  FileSeek $0 0 END
+  FileWrite $0 "FAILED version=${APP_VERSION} extensionOrigin=${EXTENSION_ORIGIN}$\r$\n"
+  FileClose $0
+  FileOpen $0 "$INSTDIR\install-result.json" w
+  FileWrite $0 '{$\"schemaVersion$\":1,$\"status$\":$\"failed$\",$\"version$\":$\"${APP_VERSION}$\",$\"extensionOrigin$\":$\"${EXTENSION_ORIGIN}$\"}$\r$\n'
+  FileClose $0
+FunctionEnd
+
+Function .onInstSuccess
+  ${If} $InstallAttemptStarted = 1
+    Call RecordInstallCompleted
+  ${EndIf}
+FunctionEnd
+
+Function .onInstFailed
+  ${If} $InstallAttemptStarted = 1
+    Call RecordInstallFailed
+  ${EndIf}
 FunctionEnd
 
 Function un.onInit
@@ -82,6 +152,7 @@ FunctionEnd
 Section "AkuBrowser Runtime" InstallSection
   SectionIn RO
   SetOverwrite on
+  Call RecordInstallStarted
 
   CreateDirectory "$INSTDIR\host"
   SetOutPath "$INSTDIR\host"
@@ -129,6 +200,8 @@ Section "Uninstall"
   RMDir /r /REBOOTOK "$INSTDIR\host"
   RMDir /r /REBOOTOK "$INSTDIR\runtime"
   Delete /REBOOTOK "$INSTDIR\install-manifest.json"
+  Delete /REBOOTOK "$INSTDIR\install-result.json"
+  Delete /REBOOTOK "$INSTDIR\install.log"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir "$INSTDIR"
 SectionEnd

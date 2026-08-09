@@ -467,6 +467,7 @@ $nsisArguments = @(
     "/DAPP_VERSION=$($release.version)",
     "/DVERSION_QUAD=$versionQuad",
     "/DPAYLOAD_ROOT=$payloadRoot",
+    "/DEXTENSION_ORIGIN=chrome-extension://$ExtensionId/",
     "/DOUTPUT_FILE=$artifactPath"
 )
 if ($UnsignedLocalCandidate -or $UnsignedStableCandidate) {
