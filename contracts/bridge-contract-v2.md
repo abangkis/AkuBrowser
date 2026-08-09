@@ -200,7 +200,9 @@ and the poster must not display inline and native-play actions simultaneously.
 If the playback URL is absent or playback fails, the renderer restores the
 previous native-post poster behavior. The renderer's CSP must restrict media
 loading to `video.twimg.com`; source adapters still do not emit executable
-presentation markup.
+presentation markup. An active inline player must pause when it is no longer
+intersecting the viewport and must not resume automatically when it becomes
+visible again.
 
 ## Item-scoped media recapture
 
