@@ -11,6 +11,7 @@ param(
     [string] $TimestampUrl = "http://timestamp.digicert.com",
     [string] $NsisPath = "",
     [switch] $UnsignedLocalCandidate,
+    [switch] $UnsignedStableCandidate,
     [switch] $SkipValidation,
     [switch] $AllowDirty
 )
@@ -136,6 +137,11 @@ function Sign-Binary([string] $Path, [string] $SignTool) {
 $release = Read-Json $releaseManifestPath
 $bridgeIdentityRegistry = Read-Json $bridgeIdentityRegistryPath
 Assert-True ([string]$release.version -match '^\d+\.\d+\.\d+$') "The installer requires a three-part numeric release version."
+Assert-True (-not ($UnsignedLocalCandidate -and $UnsignedStableCandidate)) "Choose only one unsigned installer mode."
+if ($UnsignedStableCandidate) {
+    Assert-True ($release.channel -eq "stable") "Unsigned stable installers require a stable release manifest channel."
+    Assert-True ($release.distribution.chromeStore.nativeRuntimeInstallers.'windows-x64'.trustState -eq "unsigned") "The stable Windows installer trust state must be declared unsigned."
+}
 $versionQuad = "$($release.version).0"
 $nsisCompiler = Find-NsisCompiler $NsisPath
 $releaseBridgeIdentityProfile = [string]$release.distribution.chromeStore.bridgeIdentityProfile
@@ -165,10 +171,12 @@ if (-not $UnsignedLocalCandidate) {
     )
     Assert-True ($placeholderIds -notcontains $ExtensionId) "Production installer builds reject placeholder extension IDs."
     Assert-True ($ExtensionId -notmatch '^([a-p])\1{31}$') "Production installer builds reject repeated-character placeholder extension IDs."
-    Assert-True ($CertificatePath -or $SigningThumbprint) "Production installer builds require an Authenticode signing certificate."
-    Assert-True (-not [string]::IsNullOrWhiteSpace($TimestampUrl)) "Production installer builds require an RFC 3161 timestamp URL."
-    Assert-True (-not [string]::IsNullOrWhiteSpace($UpdatePublicKey)) "Production installer builds require the pinned runtime-update public key."
-    Assert-True (-not [string]::IsNullOrWhiteSpace($UpdateSigningPrivateKeyPath)) "Production installer builds require the runtime-update signing key path."
+    if (-not $UnsignedStableCandidate) {
+        Assert-True ($CertificatePath -or $SigningThumbprint) "Production installer builds require an Authenticode signing certificate."
+        Assert-True (-not [string]::IsNullOrWhiteSpace($TimestampUrl)) "Production installer builds require an RFC 3161 timestamp URL."
+        Assert-True (-not [string]::IsNullOrWhiteSpace($UpdatePublicKey)) "Production installer builds require the pinned runtime-update public key."
+        Assert-True (-not [string]::IsNullOrWhiteSpace($UpdateSigningPrivateKeyPath)) "Production installer builds require the runtime-update signing key path."
+    }
 }
 if ($CertificatePath) {
     $CertificatePath = [IO.Path]::GetFullPath($CertificatePath)
@@ -358,7 +366,7 @@ $current = [ordered]@{
 Write-Utf8NoBom (Join-Path $currentOutput "current.json") ($current | ConvertTo-Json -Depth 5)
 
 $signTool = $null
-if (-not $UnsignedLocalCandidate) {
+if (-not $UnsignedLocalCandidate -and -not $UnsignedStableCandidate) {
     $signTool = Find-SignTool
     foreach ($binary in @(
         (Join-Path $hostPayload "AkuBrowserRuntimeHost.exe"),
@@ -455,7 +463,7 @@ $nsisArguments = @(
     "/DPAYLOAD_ROOT=$payloadRoot",
     "/DOUTPUT_FILE=$artifactPath"
 )
-if ($UnsignedLocalCandidate) {
+if ($UnsignedLocalCandidate -or $UnsignedStableCandidate) {
     $nsisArguments += "/DUNSIGNED_BUILD=1"
 }
 $savedNsisSigningEnvironment = @{
@@ -465,7 +473,7 @@ $savedNsisSigningEnvironment = @{
     AKU_NSIS_SIGNING_THUMBPRINT = $env:AKU_NSIS_SIGNING_THUMBPRINT
     AKU_NSIS_TIMESTAMP_URL = $env:AKU_NSIS_TIMESTAMP_URL
 }
-if (-not $UnsignedLocalCandidate) {
+if (-not $UnsignedLocalCandidate -and -not $UnsignedStableCandidate) {
     $nsisSigningScript = Join-Path $buildRoot "sign-nsis-uninstaller.ps1"
     Write-Utf8NoBom $nsisSigningScript @'
 param([Parameter(Mandatory = $true)][string] $Path)
@@ -518,7 +526,7 @@ finally {
     }
 }
 
-if (-not $UnsignedLocalCandidate) {
+if (-not $UnsignedLocalCandidate -and -not $UnsignedStableCandidate) {
     Sign-Binary $artifactPath $signTool
 }
 
@@ -533,8 +541,9 @@ Reset-Path $buildRoot $OutputRoot
     bridgeIdentityDistribution = $selectedBridgeIdentityDistribution
     bridgeIdentityAuthority = "config/bridge-identities.json"
     extensionOrigin = "chrome-extension://$ExtensionId/"
-    signed = (-not $UnsignedLocalCandidate)
-    candidate = [bool]$UnsignedLocalCandidate
+    signed = (-not $UnsignedLocalCandidate -and -not $UnsignedStableCandidate)
+    candidate = [bool]($UnsignedLocalCandidate -or $UnsignedStableCandidate)
+    releaseChannel = $current.channel
     artifact = $artifactPath
     sha256 = $artifactHash
     bytes = (Get-Item -LiteralPath $artifactPath).Length

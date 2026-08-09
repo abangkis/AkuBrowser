@@ -36,6 +36,7 @@ $sourceCatalog = Get-Content -LiteralPath (Join-Path $bridgeRoot "source-catalog
 $responseEvidenceAdapter = Get-Content -LiteralPath (Join-Path $bridgeRoot "x-response-evidence-adapter.js") -Raw
 
 Assert-True ($releaseManifest.version -eq "0.7.9") "AkuBrowser release version is unexpected."
+Assert-True ($releaseManifest.channel -eq "stable") "AkuBrowser release manifest must declare the stable channel for the stable candidate."
 Assert-True ($lifecycleAcceptance.version -eq $releaseManifest.version) "Lifecycle acceptance version drifted from the release manifest."
 $expectedLifecycleScenarios = @(
     "first_install",
@@ -56,7 +57,9 @@ foreach ($scenario in $expectedLifecycleScenarios) {
 Assert-True ($releaseManifest.distribution.authorityRepository -eq "AkuBrowser") "AkuBrowser must remain the distribution authority."
 Assert-True ($releaseManifest.distribution.windows.format -eq "portable-zip") "Windows preview must remain a portable ZIP."
 Assert-True ($releaseManifest.distribution.chromeStore.nativeRuntimeInstallers.'windows-x64'.stableAsset -eq "AkuBrowserRuntimeSetup.exe") "Windows Store installer asset is unexpected."
+Assert-True ($releaseManifest.distribution.chromeStore.nativeRuntimeInstallers.'windows-x64'.trustState -eq "unsigned") "Windows stable installer trust state is unexpected."
 Assert-True ($releaseManifest.distribution.chromeStore.nativeRuntimeInstallers.'macos-universal'.stableAsset -eq "AkuBrowserRuntimeSetup.pkg") "macOS Store installer asset is unexpected."
+Assert-True ($releaseManifest.distribution.chromeStore.nativeRuntimeInstallers.'macos-universal'.trustState -eq "unsigned") "macOS stable installer trust state is unexpected."
 Assert-True ($releaseManifest.distribution.chromeStore.nativeRuntimeInstallers.'linux-x64'.status -eq "planned-0.7.10") "Linux deployment must remain deferred to 0.7.10."
 Assert-True ($bridgePackage.version -eq $bridgeManifest.version_name) "AkuBridge package and manifest version name differ."
 Assert-True ($bridgePackage.version -eq $releaseManifest.components.akuBridge.version) "AkuBridge product version drifted from the release manifest."

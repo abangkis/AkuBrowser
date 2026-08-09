@@ -22,13 +22,13 @@ AkuSidecar and AkuBridge remain the authoritative source-component projects.
 
 Windows has two coordinated delivery paths: the portable x64 ZIP remains the
 manual fallback, while the Chrome Web Store flow uses a user-scoped companion
-runtime installer. The macOS `v0.7.9-preview1` prerelease adds the equivalent
+runtime installer. The stable `v0.7.9` release provides the equivalent
 Chrome Web Store bootstrap through an explicitly named unsigned and not
 notarized universal `.pkg`; the universal portable ZIP remains its manual
 fallback. The package and release notes disclose the trust state, checksum
 verification, and Apple's per-app **Open Anyway** recovery without instructing
-users to disable Gatekeeper. A Developer ID-signed and notarized package remains
-the future stable path. Both platform bundles contain the Sidecar
+users to disable Gatekeeper. Signed and notarized packages remain future
+hardening work. Both platform bundles contain the Sidecar
 executable, release configuration, the verified Bridge payload, and a
 foreground launcher. Stable production bundles project the exact Chrome Web
 Store Bridge identity into Sidecar configuration; the bundled Bridge directory
@@ -76,9 +76,8 @@ changing a packaged production artifact. On Windows, run the bundled
 status. `Start-AkuBrowser.cmd` remains a convenience fallback and delegates to
 the same PowerShell script.
 
-The immutable `v0.7.9-preview1` macOS artifact retains the installation contract
-published with that prerelease. It is not silently reclassified as a stable
-production bundle.
+The immutable preview tags retain their original installation contracts and are
+not silently reclassified as stable production bundles.
 
 On macOS, run `./Start-AkuBrowser.sh` from Terminal or double-click
 `Start-AkuBrowser.command`; the macOS launcher performs the same Sidecar health
@@ -102,18 +101,17 @@ smoke-tested with `scripts/test-macos-preview.sh`. The build pipeline can
 produce native `x64` or `arm64` bundles for focused testing; the published
 `0.7.0-preview.3` asset is `macos-universal` and runs on Intel and Apple
 silicon.
-`v0.7.9-preview1` is the macOS-only public prerelease. It carries the universal
-portable ZIP and an explicitly named unsigned `.pkg`; it is not marked Latest.
-The macOS setup link for this preview is pinned to that immutable versioned tag.
-An `unsigned-local` `.pkg` remains structural evidence only and must not be
-published. The normal `v0.7.9` release remains gated on aligned Windows 0.7.9
-assets and the final cross-platform release decision.
+The earlier preview tags remain immutable and are not marked Latest. The stable
+`v0.7.9` release is gated on aligned Windows and macOS assets from one source
+tuple; its unsigned installer trust state is an explicit release decision.
 
 The automated gates verify the bundle manifest, bundled-file checksums,
 Sidecar health, both supported loopback hostnames, fresh-database defaults, and
 the embedded UI. Final acceptance still requires a clean machine on the target
 OS and architecture. See [Windows preview acceptance](windows-preview-acceptance.md)
-and [macOS preview acceptance](macos-preview-acceptance.md).
+and [macOS preview acceptance](macos-preview-acceptance.md). Promotion to a
+cross-platform stable release follows the canonical
+[stable release checklist](stable-release-checklist.md).
 
 The Chrome Web Store package is built separately from the portable bundle. It
 does not embed or silently execute native code: the user explicitly downloads
@@ -148,7 +146,7 @@ reset.
 [`release/release-manifest.json`](../release/release-manifest.json) is the
 machine-readable release authority. The immutable `v0.7.0-preview.1` tags remain
 the historical compatibility checkpoint and must never be moved. The
-`v0.7.9-preview1` tag identifies the macOS prerelease source checkpoint; a
-future stable `v0.7.9` tag remains separate. Each generated bundle additionally
+Preview tags identify historical source checkpoints; the stable `v0.7.9` tag
+remains separate. Each generated bundle additionally
 records its exact AkuBrowser, AkuSidecar, and AkuBridge commits and dirty state
 in `artifact-manifest.json`.

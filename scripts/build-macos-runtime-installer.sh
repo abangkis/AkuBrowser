@@ -16,6 +16,7 @@ Options:
   --update-signing-private-key <path>  Base64 Ed25519 seed/private key for the macOS update manifest
   --unsigned-local-candidate           Build an explicitly unsigned local candidate
   --unsigned-preview-candidate         Build the public unsigned macOS preview asset
+  --unsigned-stable-candidate          Build the unsigned stable macOS asset
   --allow-dirty                        Allow dirty source trees for a local candidate
   --skip-validation                    Skip source test suites
   -h, --help                           Show this help
@@ -42,6 +43,7 @@ update_public_key=""
 update_signing_private_key=""
 unsigned_local=0
 unsigned_preview=0
+unsigned_stable=0
 allow_dirty=0
 skip_validation=0
 
@@ -57,6 +59,7 @@ while [[ $# -gt 0 ]]; do
     --update-signing-private-key) update_signing_private_key="$2"; shift 2 ;;
     --unsigned-local-candidate) unsigned_local=1; shift ;;
     --unsigned-preview-candidate) unsigned_preview=1; shift ;;
+    --unsigned-stable-candidate) unsigned_stable=1; shift ;;
     --allow-dirty) allow_dirty=1; shift ;;
     --skip-validation) skip_validation=1; shift ;;
     -h|--help) usage; exit 0 ;;
@@ -64,7 +67,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-[[ "$unsigned_local" -eq 0 || "$unsigned_preview" -eq 0 ]] || die "choose only one unsigned candidate mode"
+[[ $((unsigned_local + unsigned_preview + unsigned_stable)) -le 1 ]] || die "choose only one unsigned candidate mode"
 [[ "$unsigned_preview" -eq 0 || "$allow_dirty" -eq 0 ]] || die "public unsigned previews require clean source trees"
 
 for command_name in git go node npm lipo pkgbuild productbuild shasum zip; do require_command "$command_name"; done
@@ -85,6 +88,10 @@ expected_c2pa_version="$(node --input-type=module -e 'import fs from "node:fs"; 
 [[ "$release_bridge_identity_distribution" = "chrome-web-store" ]] || die "the release Bridge identity must use Chrome Web Store distribution"
 [[ "$release_extension_id" =~ ^[a-p]{32}$ ]] || die "the release Bridge identity must declare an exact Chrome Web Store extension ID"
 [[ "$extension_id" =~ ^[a-p]{32}$ ]] || die "the selected Bridge identity must declare an exact 32-character Chrome extension ID"
+if [[ "$unsigned_stable" -eq 1 ]]; then
+  [[ "$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.channel)' "$release_manifest")" = "stable" ]] || die "unsigned stable installers require a stable release manifest channel"
+  [[ "$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution?.chromeStore?.nativeRuntimeInstallers?.["macos-universal"]?.trustState ?? "")' "$release_manifest")" = "unsigned" ]] || die "the stable macOS installer trust state must be declared unsigned"
+fi
 if [[ "$unsigned_local" -eq 0 ]]; then
   [[ "$bridge_identity_profile" = "$release_bridge_identity_profile" ]] || die "published installers must use the Bridge identity profile selected by the release manifest"
   [[ "$bridge_identity_distribution" = "chrome-web-store" ]] || die "published installers must use a Chrome Web Store Bridge identity"
@@ -92,7 +99,7 @@ if [[ "$unsigned_local" -eq 0 ]]; then
   extension_id_tail="${extension_id:1}"
   [[ -n "${extension_id_tail//${extension_id:0:1}/}" ]] || die "published installer builds reject repeated-character placeholder extension IDs"
 fi
-if [[ "$unsigned_local" -eq 0 && "$unsigned_preview" -eq 0 ]]; then
+if [[ "$unsigned_local" -eq 0 && "$unsigned_preview" -eq 0 && "$unsigned_stable" -eq 0 ]]; then
   [[ -n "$application_identity" ]] || die "production build requires --application-identity"
   [[ -n "$installer_identity" ]] || die "production build requires --installer-identity"
   [[ -n "$notary_profile" ]] || die "production build requires --notary-profile"
@@ -100,14 +107,14 @@ if [[ "$unsigned_local" -eq 0 && "$unsigned_preview" -eq 0 ]]; then
   [[ -n "$update_public_key" ]] || die "production build requires --update-public-key"
   [[ -n "$update_signing_private_key" && -f "$update_signing_private_key" ]] || die "production build requires --update-signing-private-key"
 fi
-if [[ "$unsigned_preview" -eq 1 ]]; then
+if [[ "$unsigned_preview" -eq 1 || "$unsigned_stable" -eq 1 ]]; then
   [[ -n "$c2pa_tool" && -f "$c2pa_tool" ]] || die "public unsigned preview requires --c2pa-tool"
 fi
 if [[ -n "$c2pa_tool" ]]; then
   [[ -f "$c2pa_tool" ]] || die "c2patool input is not a file: $c2pa_tool"
   [[ "$expected_c2pa_sha256" =~ ^[a-f0-9]{64}$ ]] || die "release manifest must pin components.c2paTool.platformSha256.macos-universal"
   actual_c2pa_sha256="$(shasum -a 256 "$c2pa_tool" | awk '{print $1}')"
-  [[ "$actual_c2pa_sha256" = "$expected_c2pa_sha256" ]] || die "macOS c2patool checksum does not match the release manifest"
+[[ "$actual_c2pa_sha256" = "$expected_c2pa_sha256" ]] || die "macOS c2patool checksum does not match the release manifest"
   c2pa_architectures="$(lipo -archs "$c2pa_tool" 2>/dev/null || true)"
   [[ "$c2pa_architectures" == *x86_64* && "$c2pa_architectures" == *arm64* ]] || die "c2patool must be universal (x86_64 and arm64)"
   c2pa_version="$($c2pa_tool --version)"
@@ -205,6 +212,9 @@ cp "$installer_source/resources/"*.html "$resources_root/"
 if [[ "$unsigned_preview" -eq 1 ]]; then
   cp "$installer_source/resources/welcome-unsigned-preview.html" "$resources_root/welcome.html"
 fi
+if [[ "$unsigned_stable" -eq 1 ]]; then
+  cp "$installer_source/resources/welcome-unsigned-stable.html" "$resources_root/welcome.html"
+fi
 sed "s/@VERSION@/$version/g" "$installer_source/Distribution.xml" > "$distribution_file"
 
 if [[ -n "$application_identity" ]]; then
@@ -296,7 +306,7 @@ fi
   shasum -a 256 "${versioned_package##*/}" > "${versioned_package##*/}.sha256"
   shasum -a 256 "${stable_package##*/}" > "${stable_package##*/}.sha256"
 )
-pkgutil --check-signature "$versioned_package" || [[ "$unsigned_local" -eq 1 || "$unsigned_preview" -eq 1 ]]
+pkgutil --check-signature "$versioned_package" || [[ "$unsigned_local" -eq 1 || "$unsigned_preview" -eq 1 || "$unsigned_stable" -eq 1 ]]
 lipo -archs "$host_root/AkuBrowserRuntimeHost"
 lipo -archs "$version_root/AkuSidecar"
 

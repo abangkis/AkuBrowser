@@ -70,14 +70,17 @@ if (current.bridgeContractVersion !== "aku-browser.bridge.v2") {
 }
 NODE
 
-pkgutil --check-signature "$package_path" >/dev/null || [[ "$package_path" == *-unsigned-local.pkg || "$package_path" == *-unsigned.pkg ]]
+unsigned_package=0
+if ! pkgutil --check-signature "$package_path" >/dev/null; then
+  unsigned_package=1
+  [[ "$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution.chromeStore.nativeRuntimeInstallers["macos-universal"].trustState)' "$release_manifest")" = "unsigned" ]] || die "unsigned package is not declared by the release manifest"
+fi
 
-if [[ "$package_path" == *-unsigned.pkg ]]; then
-  preview_welcome="$inspect_root/expanded/Resources/welcome.html"
-  [[ -f "$preview_welcome" ]] || die "unsigned preview package is missing its welcome disclosure"
-  grep -q 'this package is not' "$preview_welcome" || die "unsigned preview package does not identify itself as unsigned"
-  grep -q 'Developer ID-signed or notarized' "$preview_welcome" || die "unsigned preview package does not disclose its trust state"
-  grep -q 'Open Anyway' "$preview_welcome" || die "unsigned preview package does not provide bounded Gatekeeper guidance"
+if [[ "$unsigned_package" -eq 1 ]]; then
+  unsigned_welcome="$inspect_root/expanded/Resources/welcome.html"
+  [[ -f "$unsigned_welcome" ]] || die "unsigned package is missing its welcome disclosure"
+  grep -Eq 'not( |</strong>) .*signed|not Developer ID-signed or notarized' "$unsigned_welcome" || die "unsigned package does not identify its trust state"
+  grep -q 'Open Anyway' "$unsigned_welcome" || die "unsigned package does not provide bounded Gatekeeper guidance"
 fi
 
 update_artifact="$browser_root/artifacts/AkuBrowserRuntime-${version}-macos-universal.zip"

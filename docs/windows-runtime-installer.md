@@ -36,11 +36,12 @@ extraction, while the manifest remains packaged as the installed provenance
 record. `runtime\current.json` is extracted last so an interrupted extraction
 cannot activate an incomplete runtime version.
 
-The host executable, Sidecar executable, c2patool executable, setup wizard, and
-generated uninstaller are Authenticode-signed before release. The signing
-command uses SHA-256 plus an RFC
-3161 SHA-256 timestamp. Production builds fail when neither a PFX nor a
-certificate-store thumbprint is supplied.
+The future signed production path signs the host executable, Sidecar
+executable, c2patool executable, setup wizard, and generated uninstaller with
+Authenticode using SHA-256 plus an RFC 3161 SHA-256 timestamp. The `v0.7.9`
+stable release deliberately uses an unsigned installer; Windows Security,
+SmartScreen, or antivirus may warn or quarantine it. The release manifest and
+Setup page disclose this trust state.
 
 NSIS 3.12 compiles the outer wizard. The build locates `makensis.exe` from
 `PATH`, its standard installation folders, or the explicit `-NsisPath` value.
@@ -53,7 +54,7 @@ antivirus sandboxing can terminate while preserving last-step activation.
 
 ## Local candidate
 
-An unsigned candidate is deliberately named `*-unsigned-local.exe`:
+An unsigned local candidate is deliberately named `*-unsigned-local.exe`:
 
 ```powershell
 .\scripts\build-windows-runtime-installer.ps1 `
@@ -64,6 +65,19 @@ An unsigned candidate is deliberately named `*-unsigned-local.exe`:
 
 This mode validates staging and installer behavior. It is not publishable and
 must never be linked from the Store extension.
+
+The current `v0.7.9` stable unsigned candidate uses the production Store
+identity and the stable runtime channel:
+
+```powershell
+.\scripts\build-windows-runtime-installer.ps1 `
+  -UnsignedStableCandidate
+```
+
+It produces the versioned `AkuBrowserRuntimeSetup-0.7.9.exe`; the stable
+release may publish it as the documented `AkuBrowserRuntimeSetup.exe` alias.
+This is a deliberate unsigned release exception, not evidence of a signed
+publisher identity.
 
 ## Signed production build
 

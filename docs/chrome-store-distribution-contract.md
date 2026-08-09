@@ -91,9 +91,11 @@ enter an update.
 4. If Chrome reports that the native host is missing, the client projects
    `runtime_install_required`; this state is not a fabricated native response.
 5. The setup page presents one explicit **Install AkuBrowser Runtime** action.
-6. The user downloads and runs the disclosed user-scoped installer. The macOS
-   `v0.7.9-preview1` asset is explicitly unsigned and not notarized; a future
-   stable asset must use the production signing path.
+6. The user downloads and runs the disclosed user-scoped installer. The
+   `v0.7.9` Windows and macOS assets are explicitly unsigned and may trigger
+   platform security warnings; the setup copy and release notes disclose this
+   trust state. A future signed release may move to the production signing
+   path.
 7. The installer places the stable host executable and manifest, then registers
    the host under the current Windows user.
 8. The setup page retries `status`, then sends `ensure_runtime`.

@@ -2,7 +2,7 @@
   "schemaVersion": 2,
   "product": "AkuBrowser",
   "version": "0.7.9",
-  "channel": "preview",
+  "channel": "stable",
   "distribution": {
     "authorityRepository": "AkuBrowser",
     "windows": {
@@ -24,17 +24,18 @@
       "bridgeIdentityProfile": "production",
       "nativeRuntimeInstallers": {
         "windows-x64": {
-          "format": "signed-user-scoped-exe",
+          "status": "stable-unsigned",
+          "format": "unsigned-user-scoped-exe",
+          "trustState": "unsigned",
           "stableAsset": "AkuBrowserRuntimeSetup.exe",
           "updateManifest": "AkuBrowserRuntimeUpdate.json",
           "hostRegistration": "HKCU",
           "dataDirectory": "%LOCALAPPDATA%\\AkuBrowser\\data"
         },
         "macos-universal": {
-          "status": "early-preview-unsigned",
+          "status": "stable-unsigned",
           "format": "unsigned-user-scoped-pkg",
-          "previewReleaseTag": "v0.7.9-preview1",
-          "previewAsset": "AkuBrowserRuntimeSetup-0.7.9-macos-universal-unsigned.pkg",
+          "trustState": "unsigned",
           "stableAsset": "AkuBrowserRuntimeSetup.pkg",
           "updateManifest": "AkuBrowserRuntimeUpdate-macos-universal.json",
           "hostRegistration": "~/Library/Application Support/Google/Chrome/NativeMessagingHosts",

@@ -7,19 +7,19 @@ named AkuBridge. The extension is Manifest V3 and contains all extension logic.
 It requires a separately installed, user-scoped Windows or macOS companion
 named **AkuBrowser Runtime** because Chrome Native Messaging hosts must be
 registered by the operating system. Linux is intentionally unavailable in
-0.7.9. The Windows Early Preview signature state and the macOS Preview 1
-unsigned/not-notarized trust state are disclosed before installation. A future
-stable macOS package remains subject to Developer ID and notarization gates.
+0.7.9. The stable Windows and macOS packages are unsigned and not notarized;
+that trust state is disclosed before installation. A future signed release may
+move to the Developer ID and Authenticode production paths.
 
 ## Environment
 
 - Windows 11 x64 or macOS Intel/Apple-silicon current-user account
 - Current stable Google Chrome
 - Codex App installed and signed in
-- Official unsigned Early Preview asset:
+- Official unsigned stable Windows asset:
   `https://github.com/abangkis/AkuBrowser/releases/latest/download/AkuBrowserRuntimeSetup.exe`
-- Official macOS Preview 1 asset (unsigned and not notarized):
-  `https://github.com/abangkis/AkuBrowser/releases/download/v0.7.9-preview1/AkuBrowserRuntimeSetup-0.7.9-macos-universal-unsigned.pkg`
+- Official unsigned stable macOS asset:
+  `https://github.com/abangkis/AkuBrowser/releases/download/v0.7.9/AkuBrowserRuntimeSetup-0.7.9-macos-universal.pkg`
 - Manual fallback asset pattern:
   `https://github.com/abangkis/AkuBrowser/releases/download/v<version>/AkuBrowser-<version>-windows-x64.zip`
 - macOS fallback pattern:
@@ -104,9 +104,9 @@ Do not submit until:
 
 - the Store item ID is embedded in the companion host manifest;
 - both reviewed installer assets exist, their SHA-256 values are published, and
-  the Windows and macOS preview disclosures match Setup and the listing;
+  the Windows and macOS unsigned stable disclosures match Setup and the listing;
 - the clean-machine Stage 5 evidence is complete;
 - the URLs in the listing resolve publicly.
 
-Developer ID signing, notarization, and stapling are blockers for a future
-stable macOS asset, not claims made for `v0.7.9-preview1`.
+Developer ID signing, notarization, and stapling are future hardening work;
+`v0.7.9` must remain explicitly identified as unsigned and not notarized.
