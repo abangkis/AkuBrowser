@@ -192,6 +192,14 @@ grouping change, or capacity cost. If the cache never obtains matching
 evidence, the existing quiet Recapture and explicitly consented foreground job
 remain the terminal fallback.
 
+An accepted video may carry an allowlisted direct MP4 `playbackUrl` with
+`playbackMode=inline`. The shared Sidecar renderer must keep the poster as the
+initial state and assign that URL to a native video element only after an
+explicit user action. Playback never permits autoplay or render-time preload,
+and the canonical X post remains available as the fallback. The renderer's CSP
+must restrict media loading to `video.twimg.com`; source adapters still do not
+emit executable presentation markup.
+
 ## Item-scoped media recapture
 
 Recapture is a separate bounded Bridge task, not an update session. AkuSidecar
