@@ -210,6 +210,13 @@ foreach ($file in $bridgeVerification.files) {
     New-Item -ItemType Directory -Force -Path (Split-Path -Parent $destination) | Out-Null
     Copy-Item -LiteralPath $source -Destination $destination
 }
+$packagedBridgeManifestPath = Join-Path $bridgeOutput "manifest.json"
+$packagedBridgeManifest = Read-Json $packagedBridgeManifestPath
+$packagedBridgeManifest.PSObject.Properties.Remove("key")
+Write-Utf8NoBom $packagedBridgeManifestPath (($packagedBridgeManifest | ConvertTo-Json -Depth 20) + "`n")
+$packagedBridgeVerificationText = & node (Join-Path $PSScriptRoot "fingerprint-extension-directory.mjs") $bridgeOutput
+if ($LASTEXITCODE -ne 0) { throw "Packaged AkuBridge fingerprint failed." }
+$packagedBridgeVerification = ($packagedBridgeVerificationText | Out-String) | ConvertFrom-Json
 
 Copy-Item -LiteralPath $releaseManifestPath -Destination (Join-Path $artifactRoot "release-manifest.json")
 Copy-Item -LiteralPath (Join-Path $browserRoot "release\windows\Start-AkuBrowser.ps1") -Destination $artifactRoot
@@ -227,7 +234,7 @@ $artifactManifest = [ordered]@{
     sourceCommits = $sourceCommits
     sourceDirty = @($dirtyRepositories)
     components = $release.components
-    akuBridgeFingerprint = $bridgeVerification.fingerprint
+    akuBridgeFingerprint = $packagedBridgeVerification.fingerprint
     bridgeIdentity = [ordered]@{
         profile = $bridgeIdentityProfile
         distribution = [string]$bridgeIdentity.distribution
@@ -277,7 +284,7 @@ $zipHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $zipPath).Hash.ToLowerIn
     c2paToolBytes = (Get-Item -LiteralPath $c2paToolOutput).Length
     c2paToolVersion = $release.components.c2paTool.version
     c2paToolSha256 = $c2paToolSha256
-    bridgeFiles = @($bridgeVerification.files).Count
+    bridgeFiles = @($packagedBridgeVerification.files).Count
     sourceCommits = $sourceCommits
     sourceDirty = @($dirtyRepositories)
     bridgeIdentityProfile = $bridgeIdentityProfile

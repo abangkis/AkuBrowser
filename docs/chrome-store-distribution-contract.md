@@ -73,6 +73,11 @@ separate `development` profile and projects its exact origin into the active
 Supervisor service arguments. The complete authority and projection rules are
 defined in [Bridge identity contract](bridge-identity-contract.md).
 
+The checked-in AkuBridge manifest carries a public key only to pin the unpacked
+development identity. Store and production portable packagers remove that key
+from their staged payloads before hashing and packaging; the published identity
+continues to be assigned and managed by the Chrome Web Store.
+
 AkuSidecar records the browser-supplied extension origin on every heartbeat.
 If two explicitly allowlisted origins remain live at the same time, Bridge
 dispatch stops with guidance to disable the legacy unpacked installation. Each

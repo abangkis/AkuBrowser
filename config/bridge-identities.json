@@ -3,7 +3,8 @@
   "profiles": {
     "development": {
       "distribution": "unpacked",
-      "extensionId": "kpepkhjfebddlghebcaglbmobgihfcip"
+      "extensionId": "mfeebfabkhmoaepbcdbbeefpobkedfmp",
+      "identitySource": "AkuBridge/manifest.json#key"
     },
     "production": {
       "distribution": "chrome-web-store",

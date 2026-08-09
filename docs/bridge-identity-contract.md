@@ -17,9 +17,16 @@ An extension ID must be changed in this registry, never in Sidecar source
 configuration, Supervisor service configuration, release scripts, or native
 host manifests.
 
+The unpacked `development` identity is cryptographically pinned by the public
+`key` in `AkuBridge/manifest.json`. Its Chrome extension ID is derived from that
+key and must equal the registry entry. The key is public identity material, not
+a signing secret; no private key is stored or required for Load unpacked.
+
 ## Development projection
 
 `AkuSupervisor\scripts\dev.ps1 akusidecar` selects the `development` profile.
+Because the manifest key pins the ID, Chrome assigns the same development ID
+regardless of the directory used for Load unpacked or the machine running it.
 Before Supervisor starts AkuSidecar, the AkuWorkspace adapter projects the
 registry origin into the active, local Supervisor service arguments as:
 
@@ -50,6 +57,9 @@ resolve that profile through the registry and generate:
 Production builds reject any profile other than the release-selected Chrome
 Web Store profile. An unsigned local installer may select another declared
 profile such as `development`; arbitrary extension IDs are not accepted.
+Production Chrome Web Store and portable packagers remove the development
+`manifest.key` from their staged AkuBridge payload. Production identity remains
+owned exclusively by the Chrome Web Store.
 
 ## Security invariant
 

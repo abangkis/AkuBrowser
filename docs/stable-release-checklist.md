@@ -64,8 +64,9 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
 
 ## 3B. Clean-machine acceptance
 
-- [ ] Use the frozen AkuBridge source through Load unpacked and verify its exact
-      `development` identity from `config/bridge-identities.json`.
+- [ ] Build and use the frozen pre-Store AkuBridge package through Load unpacked;
+      verify its manifest-key-pinned `development` identity from
+      `config/bridge-identities.json` is unchanged across folders and machines.
 - [ ] Use only a matching development-identity staging runtime; never relabel or
       publish it as the production companion installer.
 - [ ] Complete runtime installation, Codex detection and sign-in confirmation,

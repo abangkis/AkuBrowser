@@ -9,6 +9,10 @@ $browserRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $workspaceRoot = Split-Path $browserRoot -Parent
 $bridgeRoot = Join-Path $workspaceRoot "AkuBridge"
 
+function Write-Utf8NoBom([string]$Path, [string]$Content) {
+    [IO.File]::WriteAllText($Path, $Content, [Text.UTF8Encoding]::new($false))
+}
+
 if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
     $OutputDirectory = Join-Path $browserRoot "artifacts\chrome-store"
 }
@@ -45,6 +49,17 @@ foreach ($entry in $verification.files) {
     Copy-Item -LiteralPath $source -Destination $target
 }
 
+# The checked-in manifest key pins the unpacked development identity. It must
+# never enter the Chrome Web Store package, whose identity is Store-managed.
+$stagedManifestPath = Join-Path $stagingRoot "manifest.json"
+$stagedManifest = Get-Content -LiteralPath $stagedManifestPath -Raw | ConvertFrom-Json
+$stagedManifest.PSObject.Properties.Remove("key")
+Write-Utf8NoBom $stagedManifestPath (($stagedManifest | ConvertTo-Json -Depth 20) + "`n")
+
+$packageVerificationJson = node (Join-Path $PSScriptRoot "fingerprint-extension-directory.mjs") $stagingRoot
+if ($LASTEXITCODE -ne 0) { throw "Packaged extension fingerprint failed." }
+$packageVerification = $packageVerificationJson | ConvertFrom-Json
+
 $zipName = "AkuBrowser-$($verification.version)-chrome-web-store.zip"
 $zipPath = Join-Path $OutputDirectory $zipName
 if (Test-Path -LiteralPath $zipPath) { Remove-Item -LiteralPath $zipPath -Force }
@@ -59,7 +74,7 @@ try {
         Sort-Object)
 }
 finally { $archive.Dispose() }
-$expectedFiles = @($verification.files.path | Sort-Object)
+$expectedFiles = @($packageVerification.files.path | Sort-Object)
 if (Compare-Object $expectedFiles $actualFiles) {
     throw "ZIP contents differ from the verified extension closure."
 }
@@ -73,7 +88,9 @@ $receipt = [ordered]@{
     version = $verification.version
     chromeVersion = $verification.chromeVersion
     sha256 = $zipHash
-    extensionFingerprint = $verification.fingerprint
+    extensionFingerprint = $packageVerification.fingerprint
+    sourceFingerprint = $verification.fingerprint
+    developmentKeyRemoved = $true
     fileCount = $expectedFiles.Count
     source = @{
         repository = "AkuBridge"

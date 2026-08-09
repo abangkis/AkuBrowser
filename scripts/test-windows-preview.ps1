@@ -155,6 +155,7 @@ $packageConfig = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "config\
 Assert-True ($artifactRelease.version -eq $release.version) "Artifact release version differs from AkuBrowser."
 Assert-True ($bridgeManifest.version_name -eq $release.components.akuBridge.version) "Bundled AkuBridge product version differs from the release tuple."
 Assert-True ($bridgeManifest.version -eq $release.components.akuBridge.chromeVersion) "Bundled AkuBridge Chrome version differs from the release tuple."
+Assert-True ($null -eq $bridgeManifest.PSObject.Properties["key"]) "Production portable AkuBridge must not contain the unpacked development manifest key."
 Assert-True ($bridgeIdentity.distribution -eq "chrome-web-store") "The release Bridge identity is not a Chrome Web Store profile."
 Assert-True (@($packageConfig.bridge.trustedExtensionOrigins).Count -eq 1 -and $packageConfig.bridge.trustedExtensionOrigins[0] -eq $bridgeExtensionOrigin) "Packaged AkuSidecar does not trust exactly the release-selected Bridge origin."
 Assert-True ($artifactManifest.bridgeIdentity.profile -eq $bridgeIdentityProfile) "Artifact provenance records the wrong Bridge identity profile."

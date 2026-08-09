@@ -28,6 +28,7 @@ function Assert-True([bool]$Condition, [string]$Message) {
 $bridgePackage = Read-Json (Join-Path $bridgeRoot "package.json")
 $bridgeManifest = Read-Json (Join-Path $bridgeRoot "manifest.json")
 $releaseManifest = Read-Json (Join-Path $browserRoot "release\release-manifest.json")
+$bridgeIdentityRegistryPath = Join-Path $browserRoot "config\bridge-identities.json"
 $lifecycleAcceptance = Read-Json (Join-Path $browserRoot "acceptance\windows-runtime-lifecycle.json")
 $sidecarConfig = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $domain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
@@ -64,6 +65,10 @@ Assert-True ($releaseManifest.distribution.chromeStore.nativeRuntimeInstallers.'
 Assert-True ($bridgePackage.version -eq $bridgeManifest.version_name) "AkuBridge package and manifest version name differ."
 Assert-True ($bridgePackage.version -eq $releaseManifest.components.akuBridge.version) "AkuBridge product version drifted from the release manifest."
 Assert-True ($bridgeManifest.version -eq $releaseManifest.components.akuBridge.chromeVersion) "AkuBridge Chrome version drifted from the release manifest."
+$developmentIdentityText = & node (Join-Path $PSScriptRoot "bridge-extension-identity.mjs") $bridgeIdentityRegistryPath (Join-Path $bridgeRoot "manifest.json") "development"
+Assert-True ($LASTEXITCODE -eq 0) "AkuBridge development manifest key does not match the identity registry."
+$developmentIdentity = ($developmentIdentityText | Out-String) | ConvertFrom-Json
+Assert-True ($developmentIdentity.distribution -eq "unpacked" -and $developmentIdentity.derivedExtensionId -eq $developmentIdentity.extensionId) "AkuBridge development identity is not deterministically pinned."
 Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-adapters-v87") "AkuBridge development runtime revision is unexpected."
 if ($DistributionOnly) {
     Assert-True ($bridgePackage.akuRuntimeRevision -eq $releaseManifest.components.akuBridge.runtimeRevision) "AkuBridge runtime revision drifted from the release manifest."

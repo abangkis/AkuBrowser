@@ -17,6 +17,12 @@ if ([string]::IsNullOrWhiteSpace($profileName) -or $null -eq $profileProperty) {
 $storeIdentity = $profileProperty.Value
 $storeId = [string]$storeIdentity.extensionId
 $storeOrigin = "chrome-extension://$storeId/"
+$developmentIdentityText = node (Join-Path $PSScriptRoot "bridge-extension-identity.mjs") $identityRegistryPath (Join-Path $bridgeRoot "manifest.json") "development"
+if ($LASTEXITCODE -ne 0) { throw "Development Bridge identity validation failed." }
+$developmentIdentity = $developmentIdentityText | ConvertFrom-Json
+if ($developmentIdentity.distribution -ne "unpacked" -or $developmentIdentity.derivedExtensionId -ne $developmentIdentity.extensionId) {
+    throw "Development Bridge identity must be pinned by manifest.key."
+}
 if ($storeIdentity.distribution -ne "chrome-web-store") { throw "Production Bridge identity must use Chrome Web Store distribution." }
 if ($storeId -notmatch '^[a-p]{32}$') { throw "Production Bridge identity must contain an exact Store extension ID." }
 if ($null -ne $release.distribution.chromeStore.PSObject.Properties["extensionId"] -or
@@ -98,4 +104,19 @@ foreach ($screenshot in $screenshots) {
 
 & (Join-Path $PSScriptRoot "build-chrome-store-package.ps1") -SkipChecks:$SkipExtensionChecks
 if ($LASTEXITCODE -ne 0) { throw "Chrome Web Store package build failed." }
+$storeOutput = Join-Path $browserRoot "artifacts\chrome-store"
+$storePackage = Join-Path $storeOutput "AkuBrowser-$($manifest.version_name)-chrome-web-store.zip"
+$storeReceipt = Get-Content -LiteralPath (Join-Path $storeOutput "AkuBrowser-$($manifest.version_name)-chrome-web-store.receipt.json") -Raw | ConvertFrom-Json
+if (-not $storeReceipt.developmentKeyRemoved) { throw "Store receipt does not record removal of the development key." }
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$archive = [IO.Compression.ZipFile]::OpenRead($storePackage)
+try {
+    $manifestEntry = $archive.GetEntry("manifest.json")
+    if ($null -eq $manifestEntry) { throw "Store package is missing manifest.json." }
+    $reader = [IO.StreamReader]::new($manifestEntry.Open())
+    try { $storeManifest = $reader.ReadToEnd() | ConvertFrom-Json }
+    finally { $reader.Dispose() }
+}
+finally { $archive.Dispose() }
+if ($null -ne $storeManifest.PSObject.Properties["key"]) { throw "Store package leaked the unpacked development manifest key." }
 Write-Host "Chrome Web Store readiness checks passed."

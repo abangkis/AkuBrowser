@@ -251,7 +251,13 @@ for (const file of verification.files) {
   fs.mkdirSync(path.dirname(destination), { recursive: true });
   fs.copyFileSync(source, destination);
 }
+const manifestPath = path.join(destinationRoot, "manifest.json");
+const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+delete manifest.key;
+fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 NODE
+
+node "$browser_root/scripts/fingerprint-extension-directory.mjs" "$artifact_root/AkuBridge" > "$verification_path"
 
 cp "$release_manifest_path" "$artifact_root/release-manifest.json"
 cp "$browser_root/release/macos/Start-AkuBrowser.sh" "$artifact_root/Start-AkuBrowser.sh"

@@ -161,6 +161,12 @@ $selectedBridgeIdentity = $selectedBridgeIdentityProperty.Value
 $selectedBridgeIdentityDistribution = [string]$selectedBridgeIdentity.distribution
 $ExtensionId = [string]$selectedBridgeIdentity.extensionId
 Assert-True ($ExtensionId -match '^[a-p]{32}$') "The selected Bridge identity must declare an exact 32-character Chrome extension ID."
+if ($selectedBridgeIdentityDistribution -eq "unpacked") {
+    $identityVerificationText = & node (Join-Path $PSScriptRoot "bridge-extension-identity.mjs") $bridgeIdentityRegistryPath (Join-Path $bridgeRoot "manifest.json") $BridgeIdentityProfile
+    Assert-True ($LASTEXITCODE -eq 0) "The unpacked Bridge identity does not match manifest.key."
+    $identityVerification = ($identityVerificationText | Out-String) | ConvertFrom-Json
+    Assert-True ($identityVerification.derivedExtensionId -eq $ExtensionId) "The unpacked Bridge identity derivation is inconsistent."
+}
 Assert-True (-not ($CertificatePath -and $SigningThumbprint)) "Choose a PFX path or certificate thumbprint, not both."
 if (-not $UnsignedLocalCandidate) {
     Assert-True ($BridgeIdentityProfile -eq $releaseBridgeIdentityProfile) "Production installers must use the Bridge identity profile selected by the release manifest."

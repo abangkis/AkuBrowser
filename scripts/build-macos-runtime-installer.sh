@@ -88,6 +88,9 @@ expected_c2pa_version="$(node --input-type=module -e 'import fs from "node:fs"; 
 [[ "$release_bridge_identity_distribution" = "chrome-web-store" ]] || die "the release Bridge identity must use Chrome Web Store distribution"
 [[ "$release_extension_id" =~ ^[a-p]{32}$ ]] || die "the release Bridge identity must declare an exact Chrome Web Store extension ID"
 [[ "$extension_id" =~ ^[a-p]{32}$ ]] || die "the selected Bridge identity must declare an exact 32-character Chrome extension ID"
+if [[ "$bridge_identity_distribution" = "unpacked" ]]; then
+  node "$browser_root/scripts/bridge-extension-identity.mjs" "$bridge_identity_registry" "$bridge_root/manifest.json" "$bridge_identity_profile" >/dev/null || die "the unpacked Bridge identity does not match manifest.key"
+fi
 if [[ "$unsigned_stable" -eq 1 ]]; then
   [[ "$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.channel)' "$release_manifest")" = "stable" ]] || die "unsigned stable installers require a stable release manifest channel"
   [[ "$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution?.chromeStore?.nativeRuntimeInstallers?.["macos-universal"]?.trustState ?? "")' "$release_manifest")" = "unsigned" ]] || die "the stable macOS installer trust state must be declared unsigned"

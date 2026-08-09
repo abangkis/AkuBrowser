@@ -46,8 +46,10 @@ automated 3A acceptance, and this gate does not claim production Store identity.
 1. start from a macOS user account with no AkuBrowser installation or database;
 2. install Codex App/App Server or a compatible Codex CLI and sign in locally;
 3. confirm Chrome is signed in to each source that will be enabled;
-4. load the exact frozen AkuBridge directory through **Load unpacked** and verify
-   its `development` identity from `config/bridge-identities.json`;
+4. use the frozen package from `scripts/build-prestore-bridge-package.ps1`,
+   extract it anywhere, load it through **Load unpacked**, and verify its
+   manifest-key-pinned `development` identity from
+   `config/bridge-identities.json`;
 5. install the matching development-identity staging `.pkg`, then check the
    runtime and Codex prerequisites;
 6. grant only the intended source permissions and complete one full AkuBrowser

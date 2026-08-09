@@ -134,6 +134,7 @@ const bridgeExtensionOrigin = `chrome-extension://${bridgeIdentity.extensionId}/
 if (artifactRelease.version !== release.version) fail("artifact release version differs from AkuBrowser");
 if (bridgeManifest.version_name !== release.components?.akuBridge?.version) fail("bundled AkuBridge product version differs from the release tuple");
 if (bridgeManifest.version !== release.components?.akuBridge?.chromeVersion) fail("bundled AkuBridge Chrome version differs from the release tuple");
+if (Object.hasOwn(bridgeManifest, "key")) fail("production portable AkuBridge contains the unpacked development manifest key");
 const trustedOrigins = packageConfig.bridge?.trustedExtensionOrigins ?? [];
 if (trustedOrigins.length !== 1 || trustedOrigins[0] !== bridgeExtensionOrigin) {
   fail("packaged AkuSidecar does not trust exactly the release-selected Bridge origin");
