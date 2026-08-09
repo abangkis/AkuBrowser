@@ -39,26 +39,21 @@ To test an already extracted bundle or downloaded ZIP:
 
 ## Clean-machine manual gate
 
-Test Intel and Apple-silicon artifacts on matching hardware. Before publishing:
+Test the frozen AkuBridge and runtime integration on matching Intel and
+Apple-silicon hardware before Store publication. The portable ZIP is covered by
+automated 3A acceptance, and this gate does not claim production Store identity.
 
-1. start from a macOS user account with no AkuBrowser database;
-2. confirm Codex App/App Server or a compatible Codex CLI is installed and
-   locally signed in;
+1. start from a macOS user account with no AkuBrowser installation or database;
+2. install Codex App/App Server or a compatible Codex CLI and sign in locally;
 3. confirm Chrome is signed in to each source that will be enabled;
-4. verify the downloaded ZIP against its adjacent `.sha256` file;
-5. extract the ZIP to a writable directory;
-6. install the bundled `AkuBridge` first through `chrome://extensions` using
-   **Developer mode** and **Load unpacked**;
-7. run `./Start-AkuBrowser.sh --diagnose-codex` and confirm a compatible App
-   Server runtime is found;
-8. run `./Start-AkuBrowser.sh`, or double-click `Start-AkuBrowser.command`, and
-   keep the terminal open;
-9. complete onboarding and calibration, run **Update now** directly or load a prepared batch, provide
-   More/Less feedback, and inspect Update Inbox and Settings;
-10. stop AkuBrowser with Ctrl+C and confirm it exits cleanly;
-11. restart the same extracted bundle and confirm state is retained under
-    `~/Library/Application Support/AkuBrowser/data`; and
-12. confirm no AkuSupervisor process or development workspace path is required.
+4. load the exact frozen AkuBridge directory through **Load unpacked** and verify
+   its `development` identity from `config/bridge-identities.json`;
+5. install the matching development-identity staging `.pkg`, then check the
+   runtime and Codex prerequisites;
+6. grant only the intended source permissions and complete one full AkuBrowser
+   update; and
+7. complete the companion lifecycle checks below without a portable ZIP,
+   terminal launcher, AkuSupervisor, or development workspace.
 
 Unsigned preview binaries may trigger Gatekeeper. Do not disable Gatekeeper
 globally. Use the macOS security prompt, or remove quarantine only after the
@@ -74,9 +69,8 @@ acceptance boundary.
 
 ## 0.7.9 Chrome Web Store companion gate
 
-The portable checks above remain the fallback boundary. Publishing the 0.7.9
-macOS Store path additionally requires clean Intel and Apple-silicon evidence
-for:
+The portable ZIP remains an automated fallback boundary. After publication,
+the 0.7.9 macOS Store path requires clean Intel and Apple-silicon evidence for:
 
 1. first Store install projecting `runtime_install_required`;
 2. the fixed `.pkg` download opening only after a user click;

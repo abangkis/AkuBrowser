@@ -48,6 +48,8 @@ not build, automated-acceptance, or clean-machine evidence.
       lifecycle gates.
 - [ ] Pass the automated macOS universal build, portable smoke, and installer
       structure gates.
+- [ ] Treat GitHub portable ZIP/bundle validation as an automated 3A
+      responsibility; do not repeat it as a manual clean-machine flow.
 - [ ] Verify checksums, artifact manifests, source commits, Store identity, and
       declared signing/notarization state.
 - [ ] Confirm Setup download URLs, fallback instructions, and security guidance
@@ -62,14 +64,22 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
 
 ## 3B. Clean-machine acceptance
 
-- [ ] Pass Windows clean-machine install, update/repair, Chrome restart, PC
-      restart, stop/start, uninstall, and reinstall tests.
-- [ ] Pass the equivalent macOS clean-machine flow on the supported Intel and
+- [ ] Use the frozen AkuBridge source through Load unpacked and verify its exact
+      `development` identity from `config/bridge-identities.json`.
+- [ ] Use only a matching development-identity staging runtime; never relabel or
+      publish it as the production companion installer.
+- [ ] Complete runtime installation, Codex detection and sign-in confirmation,
+      source consent, and one full AkuBrowser update.
+- [ ] Pass Windows update/repair, Chrome restart, PC restart, stop/start,
+      uninstall, and reinstall tests.
+- [ ] Pass the equivalent pre-Store macOS flow on the supported Intel and
       Apple-silicon architectures.
-- [ ] Verify the Chrome Web Store identity, Native Messaging, Codex detection,
-      and one full AkuBrowser update run on both platforms.
 - [ ] Verify the actual antivirus, SmartScreen, or Gatekeeper behavior and
       confirm the user guidance matches it.
+- [ ] Do not use the portable AkuBrowser bundle or a terminal launcher as
+      clean-machine acceptance evidence.
+- [ ] Record that 3B validates clean-machine integration, not Chrome Web Store
+      installation, production identity, or Store-managed updates.
 - [ ] Obtain explicit Windows and macOS release acceptance.
 
 ## 4. Stage the stable release
@@ -84,8 +94,13 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
 
 - [ ] Publish the draft as the Latest stable release.
 - [ ] Download the public assets and verify their SHA-256 values again.
-- [ ] Test the public Setup/install path and portable fallback on both platforms.
-- [ ] Confirm the Chrome Web Store package and runtime compatibility contract.
+- [ ] Install the actual Chrome Web Store package on clean Windows and macOS
+      environments with Developer Mode off and no unpacked copy enabled.
+- [ ] Verify the production Store identity, versioned Setup installer URL,
+      Native Messaging, Codex confirmation, source consent, and one full update.
+- [ ] Confirm Store-managed extension updates and the production runtime
+      compatibility contract; reverify the portable fallback through its
+      automated checksums and manifests.
 - [ ] Record known limitations, release URL, final digests, and acceptance evidence.
 - [ ] Keep the previous stable release available for rollback.
 

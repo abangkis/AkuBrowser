@@ -82,6 +82,19 @@ enter an update.
 
 ## Installation lifecycle
 
+### Release URL authority
+
+Setup bootstrap downloads are pinned to the extension's own product version on
+both Windows and macOS. An installed `0.7.9` extension therefore requests only
+the matching `v0.7.9` companion installer; it never bootstraps from
+`releases/latest`. This rule is permanent and the URL is derived from the
+packaged `version_name`, so ordinary releases require no manual URL edit.
+
+The native runtime updater has a different responsibility: discovering a newer
+published stable runtime. Its signed update-manifest endpoint intentionally
+remains under `releases/latest`. Bootstrap selection and update discovery must
+not share one URL policy.
+
 ### Store extension installed
 
 1. Chrome installs the signed Manifest V3 extension.

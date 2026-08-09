@@ -24,23 +24,38 @@ the packaged Sidecar with the release App Server provider and a fresh database
 on a temporary loopback port, and verifies health, bootstrap, and embedded UI
 delivery.
 
-## Manual clean-machine gate
+## Manual pre-Store clean-machine gate
 
-Before publishing a preview artifact, test the extracted ZIP without
-AkuSupervisor:
+This gate validates the frozen AkuBridge and runtime integration before Store
+publication. It does not claim Chrome Web Store installation or production-ID
+acceptance. The GitHub portable ZIP/bundle is covered by the automated artifact
+gate above.
 
-1. start from a machine or Windows account with no AkuBrowser database;
-2. confirm Codex App is installed and locally signed in, then run
-   `Start-AkuBrowser.ps1 -DiagnoseCodex`;
+1. start from a Windows machine or account with no AkuBrowser installation or database;
+2. install Codex App, sign in locally, and confirm it is ready;
 3. confirm Chrome is signed in to every source that will be enabled (X, LinkedIn, or Facebook);
-4. install AkuBrowser from the Chrome Web Store and confirm no unpacked copy is enabled;
-5. run `.\Start-AkuBrowser.ps1` from PowerShell (`Start-AkuBrowser.cmd` is the fallback);
-6. complete onboarding and calibration;
-7. run **Update now** with Auto Update either enabled or disabled; also use **Prepare batch now** and **Load latest batch**; inspect captured, evaluated, and selected evidence;
-8. stop with Ctrl+C, restart, and confirm local state persists;
-9. reset AkuBrowser and confirm onboarding starts from zero without classifying pre-reset native items as resurfaced;
-10. after onboarding is complete, restart or temporarily delay AkuSidecar and refresh the page; the Timeline must remain in a restoring state until bootstrap succeeds and source onboarding must not reappear. Only Full reset may intentionally expose onboarding again;
-11. confirm no AkuSupervisor process or development workspace path is required.
+4. load the exact frozen AkuBridge directory through **Load unpacked** and verify
+   Chrome assigns the `development` ID declared by `config/bridge-identities.json`;
+5. open Setup and confirm it initially detects that the companion runtime is missing;
+6. install the matching staging runtime built with
+   `-BridgeIdentityProfile development -UnsignedLocalCandidate`, record the
+   actual SmartScreen/antivirus behavior, then select **Check runtime**;
+7. select **Check Codex**, confirm Codex is detected, and explicitly confirm that
+   sign-in and prerequisites are complete;
+8. grant only the intended source permissions, open AkuBrowser, complete
+   onboarding and calibration, and run one full **Update now**;
+9. inspect captured, evaluated, and selected evidence, then test Chrome restart,
+   Windows restart, runtime stop/start, installer repair, uninstall, and reinstall;
+10. confirm local data persists where required and that setup exposes recoverable
+    actions for every deliberately interrupted state;
+11. reset AkuBrowser and confirm onboarding starts from zero without classifying
+    pre-reset native items as resurfaced; and
+12. confirm no portable AkuBrowser ZIP, terminal launcher, or AkuSupervisor
+    process is required.
+
+The production Chrome Web Store ID, Store-managed installation/update, and
+versioned public Setup download are verified only after publication in Step 5
+of the stable release checklist.
 
 During the first onboarding check, confirm that the separate learning carousel
 is visible below the sticky progress panel, advances automatically, supports
