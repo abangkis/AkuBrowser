@@ -42,6 +42,44 @@ not build, automated-acceptance, or clean-machine evidence.
 - [ ] If a release is intentionally unsigned, confirm the manifest, Setup copy,
       listing, installer welcome page, and release notes all say so consistently.
 
+### macOS compact execution card
+
+Run only after Windows 3B acceptance. One command verifies the clean frozen tuple,
+uses a fresh output directory, builds both universal artifacts, runs every macOS
+3A gate, verifies checksums/provenance, and prints machine-readable evidence:
+
+```sh
+./scripts/run-macos-stable-gate.sh \
+  --version <version> \
+  --browser-sha <full AkuBrowser SHA> \
+  --bridge-sha <full AkuBridge SHA> \
+  --sidecar-sha <full AkuSidecar SHA>
+```
+
+Stop for explicit macOS 3B authorization after the runner returns `status: ok`.
+
+For pre-Store 3B, keep development staging separate from publishable output:
+
+```sh
+node scripts/bridge-extension-identity.mjs \
+  config/bridge-identities.json ../AkuBridge/manifest.json development
+./scripts/build-macos-runtime-installer.sh \
+  --output-root "artifacts/development-<version>-macos" \
+  --bridge-identity-profile development \
+  --c2pa-tool ../AkuSidecar/runtime/dev/macos-universal/c2patool \
+  --unsigned-local-candidate
+```
+
+Load `../AkuBridge`, install only the matching `*-unsigned-local.pkg`, then check
+runtime, Codex, source login, one full update, restart, repair, and data-preserving
+reinstall. Never upload the development output directory.
+
+After acceptance, upload only the stable runner output plus `release-manifest.json`
+and the pinned C2PA SBOM. Never upload `*-unsigned-local.pkg` or a runtime-update
+pair not created by this pass. Read the draft back and compare every GitHub digest.
+
+The stable output allowlist is the six `assets` entries printed by the runner.
+
 ## 3A. Automated acceptance
 
 - [ ] Pass the automated Windows build, portable smoke, installer, updater, and

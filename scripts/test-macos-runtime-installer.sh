@@ -21,6 +21,7 @@ extension_id="$(node --input-type=module -e '
 ' "$release_manifest" "$bridge_identity_registry")"
 package_path="${1:-$browser_root/artifacts/AkuBrowserRuntimeSetup-${version}-macos-universal-unsigned-local.pkg}"
 [[ -f "$package_path" ]] || die "installer package is missing: $package_path"
+package_directory="$(cd "$(dirname "$package_path")" && pwd)"
 
 inspect_root="$(mktemp -d "${TMPDIR:-/tmp}/akubrowser-pkg-test.XXXXXX")"
 trap 'rm -rf -- "$inspect_root"' EXIT
@@ -83,8 +84,8 @@ if [[ "$unsigned_package" -eq 1 ]]; then
   grep -q 'Open Anyway' "$unsigned_welcome" || die "unsigned package does not provide bounded Gatekeeper guidance"
 fi
 
-update_artifact="$browser_root/artifacts/AkuBrowserRuntime-${version}-macos-universal.zip"
-update_manifest="$browser_root/artifacts/AkuBrowserRuntimeUpdate-macos-universal.json"
+update_artifact="$package_directory/AkuBrowserRuntime-${version}-macos-universal.zip"
+update_manifest="$package_directory/AkuBrowserRuntimeUpdate-macos-universal.json"
 if [[ -f "$update_artifact" || -f "$update_manifest" ]]; then
   [[ -f "$update_artifact" && -f "$update_manifest" ]] || die "macOS update artifact and manifest must be produced together"
   node --input-type=module - "$update_artifact" "$update_manifest" "$version" <<'NODE'
