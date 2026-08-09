@@ -2,6 +2,9 @@ Unicode true
 
 !include "MUI2.nsh"
 !include "LogicLib.nsh"
+!include "StrFunc.nsh"
+
+${StrStr}
 
 !ifndef APP_VERSION
   !error "APP_VERSION is required"
@@ -30,6 +33,7 @@ Unicode true
 
 Var SetupMutexHandle
 Var InstallAttemptStarted
+Var InstallAttemptCompleted
 
 Name "${PRODUCT_NAME} ${APP_VERSION}"
 Caption "${PRODUCT_NAME} Setup"
@@ -82,6 +86,7 @@ VIAddVersionKey /LANG=1033 "LegalCopyright" "AkuBrowser contributors"
 Function .onInit
   SetShellVarContext current
   StrCpy $InstallAttemptStarted 0
+  StrCpy $InstallAttemptCompleted 0
   System::Call 'kernel32::CreateMutexW(p0, i0, w "${SETUP_MUTEX_NAME}") p.r0'
   System::Call 'kernel32::GetLastError() i.r1'
   StrCpy $SetupMutexHandle $0
@@ -92,9 +97,20 @@ Function .onInit
     MessageBox MB_OK|MB_ICONSTOP "AkuBrowser Runtime Setup could not create its single-instance lock. Close other setup windows and try again."
     Abort
   ${EndIf}
+
+  ReadRegStr $2 HKCU "${PRODUCT_REGISTRY_KEY}" "Version"
+  ${If} $2 == "${APP_VERSION}"
+    MessageBox MB_YESNO|MB_ICONQUESTION|MB_DEFBUTTON2 "AkuBrowser Runtime ${APP_VERSION} is already installed.$\r$\n$\r$\nSelect Yes only if you want to repair this installation. Select No to close this duplicate Setup session." /SD IDNO IDYES continue_same_version
+    Abort
+    continue_same_version:
+  ${EndIf}
 FunctionEnd
 
 Function .onGUIEnd
+  ${If} $InstallAttemptStarted = 1
+  ${AndIf} $InstallAttemptCompleted = 0
+    Call RecordInstallFailed
+  ${EndIf}
   ${If} $SetupMutexHandle != 0
     System::Call 'kernel32::CloseHandle(p $SetupMutexHandle)'
     StrCpy $SetupMutexHandle 0
@@ -111,6 +127,7 @@ Function RecordInstallStarted
   FileWrite $0 '{$\"schemaVersion$\":1,$\"status$\":$\"installing$\",$\"version$\":$\"${APP_VERSION}$\",$\"extensionOrigin$\":$\"${EXTENSION_ORIGIN}$\"}$\r$\n'
   FileClose $0
   StrCpy $InstallAttemptStarted 1
+  StrCpy $InstallAttemptCompleted 0
 FunctionEnd
 
 Function RecordInstallCompleted
@@ -121,6 +138,7 @@ Function RecordInstallCompleted
   FileOpen $0 "$INSTDIR\install-result.json" w
   FileWrite $0 '{$\"schemaVersion$\":1,$\"status$\":$\"completed$\",$\"version$\":$\"${APP_VERSION}$\",$\"extensionOrigin$\":$\"${EXTENSION_ORIGIN}$\"}$\r$\n'
   FileClose $0
+  StrCpy $InstallAttemptCompleted 1
 FunctionEnd
 
 Function RecordInstallFailed
@@ -131,6 +149,42 @@ Function RecordInstallFailed
   FileOpen $0 "$INSTDIR\install-result.json" w
   FileWrite $0 '{$\"schemaVersion$\":1,$\"status$\":$\"failed$\",$\"version$\":$\"${APP_VERSION}$\",$\"extensionOrigin$\":$\"${EXTENSION_ORIGIN}$\"}$\r$\n'
   FileClose $0
+  StrCpy $InstallAttemptStarted 0
+FunctionEnd
+
+Function IsRuntimeRunning
+  nsExec::ExecToStack '"$SYSDIR\tasklist.exe" /FI "IMAGENAME eq AkuSidecar.exe" /NH'
+  Pop $0
+  Pop $1
+  ${StrStr} $2 $1 "AkuSidecar.exe"
+  ${If} $2 == ""
+    Push 0
+  ${Else}
+    Push 1
+  ${EndIf}
+FunctionEnd
+
+Function EnsureRuntimeStopped
+  Call IsRuntimeRunning
+  Pop $0
+  ${If} $0 = 0
+    Return
+  ${EndIf}
+
+  MessageBox MB_YESNO|MB_ICONEXCLAMATION|MB_DEFBUTTON2 "AkuBrowser Runtime is currently running as AkuSidecar.exe.$\r$\n$\r$\nSetup must stop it before installing or repairing files. Stop AkuBrowser Runtime now?" /SD IDNO IDYES stop_runtime
+  Abort
+
+  stop_runtime:
+  nsExec::ExecToStack '"$SYSDIR\taskkill.exe" /F /T /IM AkuSidecar.exe'
+  Pop $0
+  Pop $1
+  Sleep 750
+  Call IsRuntimeRunning
+  Pop $0
+  ${If} $0 != 0
+    MessageBox MB_OK|MB_ICONSTOP "AkuBrowser Runtime (AkuSidecar.exe) is still running. Close it manually in Task Manager, then run Setup again."
+    Abort
+  ${EndIf}
 FunctionEnd
 
 Function .onInstSuccess
@@ -152,6 +206,7 @@ FunctionEnd
 Section "AkuBrowser Runtime" InstallSection
   SectionIn RO
   SetOverwrite on
+  Call EnsureRuntimeStopped
   Call RecordInstallStarted
 
   CreateDirectory "$INSTDIR\host"

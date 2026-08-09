@@ -54,10 +54,41 @@ func TestSetupIsSingleInstanceAndRecordsDurableOutcome(t *testing.T) {
 		`$\"status$\":$\"completed$\"`,
 		`$\"status$\":$\"failed$\"`,
 		"${EXTENSION_ORIGIN}",
+		"InstallAttemptCompleted",
+		"AkuBrowser Runtime ${APP_VERSION} is already installed",
+		"Select No to close this duplicate Setup session",
 	} {
 		if !strings.Contains(script, required) {
 			t.Fatalf("setup is missing durable single-instance contract %q", required)
 		}
+	}
+	if strings.Index(script, "RecordInstallFailed") > strings.Index(script, "CloseHandle") {
+		t.Fatal("setup closes its lifetime lock before recording an aborted install")
+	}
+}
+
+func TestSetupStopsRunningSidecarOnlyAfterConfirmation(t *testing.T) {
+	data, err := os.ReadFile("setup.nsi")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := string(data)
+	for _, required := range []string{
+		"tasklist.exe",
+		"IMAGENAME eq AkuSidecar.exe",
+		"Stop AkuBrowser Runtime now?",
+		"MB_DEFBUTTON2",
+		"/SD IDNO",
+		"taskkill.exe",
+		"AkuBrowser Runtime (AkuSidecar.exe) is still running",
+		"Call EnsureRuntimeStopped",
+	} {
+		if !strings.Contains(script, required) {
+			t.Fatalf("setup is missing runtime-stop preflight %q", required)
+		}
+	}
+	if strings.Index(script, "Stop AkuBrowser Runtime now?") > strings.Index(script, "taskkill.exe") {
+		t.Fatal("setup attempts to stop AkuSidecar before asking the user")
 	}
 }
 
