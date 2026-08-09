@@ -5,6 +5,25 @@ Replace `<version>` and record the exact source commits before starting. Platfor
 test detail remains in the [Windows](windows-preview-acceptance.md) and
 [macOS](macos-preview-acceptance.md) acceptance documents.
 
+## Execution order and machine handoff
+
+The release is coordinated from the primary Windows machine, but each platform
+pass must run serially on its target environment:
+
+- [ ] Freeze the source tuple once in Step 1.
+- [ ] On Windows, complete Step 2 for Windows and Step 3A for Windows, then stop.
+- [ ] Run and explicitly accept Windows Step 3B before starting any macOS pass.
+- [ ] Hand the same frozen tuple and Windows evidence to the macOS environment.
+- [ ] On macOS, verify the tuple, complete Step 2 for macOS and Step 3A for macOS,
+      then stop.
+- [ ] Run and explicitly accept macOS Step 3B on Intel and Apple silicon.
+- [ ] Return all artifacts and evidence to the primary Windows machine before
+      continuing to Steps 4 and 5.
+
+Do not advance a platform checkbox from another operating system. A syntax or
+configuration check performed on the wrong host is only a preflight check; it is
+not build, automated-acceptance, or clean-machine evidence.
+
 ## 1. Freeze the release
 
 - [ ] Select one clean AkuBrowser, AkuBridge, and AkuSidecar source tuple.
@@ -12,10 +31,12 @@ test detail remains in the [Windows](windows-preview-acceptance.md) and
 - [ ] Record the three full commit SHAs in the release manifest.
 - [ ] Keep existing preview tags immutable; do not merge preview binaries.
 
-## 2. Build one cross-platform candidate
+## 2. Build the candidate for the current platform pass
 
-- [ ] Build Windows portable ZIP and runtime installer from the frozen tuple.
-- [ ] Build macOS universal ZIP and PKG from the same frozen tuple.
+- [ ] **Windows pass:** build the Windows portable ZIP and runtime installer
+      from the frozen tuple on Windows.
+- [ ] **macOS pass:** after Windows 3B acceptance, build the macOS universal ZIP
+      and PKG from the same frozen tuple on macOS.
 - [ ] Generate checksums, artifact manifests, release manifest, and required SBOMs.
 - [ ] Confirm every artifact is clean, versioned, and declares its signing/notarization state.
 - [ ] If a release is intentionally unsigned, confirm the manifest, Setup copy,
@@ -35,6 +56,9 @@ test detail remains in the [Windows](windows-preview-acceptance.md) and
 
 Completing 3A proves that the candidate is reproducible and structurally valid.
 It does not replace clean-machine acceptance.
+
+**Mandatory stop gate:** after Windows 3A, do not start the macOS pass. Wait for
+explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3B.
 
 ## 3B. Clean-machine acceptance
 
