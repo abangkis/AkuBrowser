@@ -79,7 +79,7 @@ fi
 if [[ "$unsigned_package" -eq 1 ]]; then
   unsigned_welcome="$inspect_root/expanded/Resources/welcome.html"
   [[ -f "$unsigned_welcome" ]] || die "unsigned package is missing its welcome disclosure"
-  grep -Eq 'not( |</strong>) .*signed|not Developer ID-signed or notarized' "$unsigned_welcome" || die "unsigned package does not identify its trust state"
+  tr '\n' ' ' < "$unsigned_welcome" | tr -s '[:space:]' ' ' | grep -Eq 'not( |</strong>) .*signed|not Developer ID-signed or notarized' || die "unsigned package does not identify its trust state"
   grep -q 'Open Anyway' "$unsigned_welcome" || die "unsigned package does not provide bounded Gatekeeper guidance"
 fi
 
