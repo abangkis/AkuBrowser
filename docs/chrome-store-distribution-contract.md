@@ -119,10 +119,19 @@ not share one URL policy.
 8. The setup page retries `status`, then sends `ensure_runtime`.
 9. When the response is `ready`, the extension opens the loopback AkuBrowser UI.
 
-The Windows security notice remains visible while checking, after readiness,
-and when setup fails. It explains that an unsigned testing build may be warned,
-quarantined, blocked, or sandboxed and never recommends disabling antivirus
-protection.
+The Windows security notice is shown before installation, for installer repair
+or failure, and when only the compatible loopback endpoint can be confirmed. It
+explains that an unsigned testing build may be warned, quarantined, blocked, or
+sandboxed and never recommends disabling antivirus protection. It also explains
+that Avast CyberCapture may open an isolated second Setup window. The user
+completes only one Setup flow and selects **No** or **Cancel** if another window
+appears. AkuBrowser never attempts to disable or reconfigure antivirus software.
+
+If the registered native host does not answer but the version-compatible local
+loopback health endpoint does, Setup reports a neutral **Runtime running** state.
+It must not mislabel that process as portable or let a stale installer failure
+override the healthy endpoint. A subsequent **Check native host again** remains
+available for control-path verification.
 
 If automatic setup returns `runtime_failed`, the page may expose one explicit
 **Download manual Windows bundle** fallback. Its URL is derived only from the

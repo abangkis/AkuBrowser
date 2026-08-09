@@ -57,6 +57,9 @@ func TestSetupIsSingleInstanceAndRecordsDurableOutcome(t *testing.T) {
 		"InstallAttemptCompleted",
 		"AkuBrowser Runtime ${APP_VERSION} is already installed",
 		"Select No to close this duplicate Setup session",
+		"Avast CyberCapture may open an isolated second Setup window",
+		"select No or Cancel",
+		"do not run Repair twice",
 	} {
 		if !strings.Contains(script, required) {
 			t.Fatalf("setup is missing durable single-instance contract %q", required)
@@ -76,7 +79,9 @@ func TestSetupStopsRunningSidecarOnlyAfterConfirmation(t *testing.T) {
 	for _, required := range []string{
 		"tasklist.exe",
 		"IMAGENAME eq AkuSidecar.exe",
-		"Stop AkuBrowser Runtime now?",
+		"want Setup to stop AkuBrowser Runtime now",
+		"If another Setup window just completed",
+		"isolated antivirus duplicate",
 		"MB_DEFBUTTON2",
 		"/SD IDNO",
 		"taskkill.exe",
@@ -87,7 +92,7 @@ func TestSetupStopsRunningSidecarOnlyAfterConfirmation(t *testing.T) {
 			t.Fatalf("setup is missing runtime-stop preflight %q", required)
 		}
 	}
-	if strings.Index(script, "Stop AkuBrowser Runtime now?") > strings.Index(script, "taskkill.exe") {
+	if strings.Index(script, "want Setup to stop AkuBrowser Runtime now") > strings.Index(script, "taskkill.exe") {
 		t.Fatal("setup attempts to stop AkuSidecar before asking the user")
 	}
 }

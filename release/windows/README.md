@@ -67,6 +67,14 @@ sandbox them. Verify that the download came from the official AkuBrowser GitHub
 release before allowing it. Do not disable antivirus protection or exclude your
 Downloads folder.
 
+Avast CyberCapture can open an isolated second copy of the unsigned installer,
+including a second Setup window that appears after the first installation has
+finished. Complete only the first Setup window. If another Setup window appears,
+select **No** or **Cancel** and close it; do not run **Repair** twice. Before
+adding an exception, verify the installer against the SHA-256 published beside
+the official release asset. If the duplicate behavior continues, add an Avast
+exception only for that exact verified installer file, not the Downloads folder.
+
 For the installed runtime, add a narrow exception for
 `%LOCALAPPDATA%\Programs\AkuBrowser\`. For this portable ZIP, restore
 `AkuSidecar.exe` first if it was quarantined, then add an exception for that exact file

@@ -62,13 +62,17 @@ VIAddVersionKey /LANG=1033 "LegalCopyright" "AkuBrowser contributors"
 !define MUI_ABORTWARNING
 !define MUI_WELCOMEPAGE_TITLE "Install ${PRODUCT_NAME}"
 !ifdef UNSIGNED_BUILD
-  !define MUI_WELCOMEPAGE_TEXT "This wizard installs AkuSidecar, the Chrome Native Messaging Host, and the C2PA verifier.$\r$\n$\r$\nCodex App is installed separately.$\r$\n$\r$\nTesting notice: this build is not code-signed. Windows Security or antivirus software may warn or quarantine it. Continue only if you downloaded it from the official AkuBrowser GitHub release."
+  !define MUI_WELCOMEPAGE_TEXT "This wizard installs AkuSidecar, the Chrome Native Messaging Host, and the C2PA verifier.$\r$\n$\r$\nCodex App is installed separately.$\r$\n$\r$\nTesting notice: this build is not code-signed. Windows Security or antivirus software may warn, quarantine, or sandbox it. Avast CyberCapture may open an isolated second Setup window, sometimes after the first one finishes. Complete only one Setup window. If another appears, select No or Cancel; do not run Repair twice. Continue only if you downloaded this installer from the official AkuBrowser GitHub release."
 !else
   !define MUI_WELCOMEPAGE_TEXT "This wizard installs AkuSidecar, the Chrome Native Messaging Host, and the C2PA verifier.$\r$\n$\r$\nCodex App is installed separately. Select Next to choose where the AkuBrowser Runtime program files will be installed."
 !endif
 !define MUI_DIRECTORYPAGE_TEXT_TOP "Select the folder for AkuBrowser Runtime program files. Your AkuBrowser database remains in your local application-data folder and is not removed by updates or uninstall."
 !define MUI_FINISHPAGE_TITLE "AkuBrowser Runtime is installed"
-!define MUI_FINISHPAGE_TEXT "Return to Chrome, open AkuBrowser Setup, and select Check runtime. You can later update, run, or stop the runtime from the same page."
+!ifdef UNSIGNED_BUILD
+  !define MUI_FINISHPAGE_TEXT "Return to Chrome, open AkuBrowser Setup, and select Check runtime. If Avast opens another Setup window after this one, select No or Cancel and close it; do not run Repair twice."
+!else
+  !define MUI_FINISHPAGE_TEXT "Return to Chrome, open AkuBrowser Setup, and select Check runtime. You can later update, run, or stop the runtime from the same page."
+!endif
 !define MUI_FINISHPAGE_NOAUTOCLOSE
 
 !insertmacro MUI_PAGE_WELCOME
@@ -171,7 +175,7 @@ Function EnsureRuntimeStopped
     Return
   ${EndIf}
 
-  MessageBox MB_YESNO|MB_ICONEXCLAMATION|MB_DEFBUTTON2 "AkuBrowser Runtime is currently running as AkuSidecar.exe.$\r$\n$\r$\nSetup must stop it before installing or repairing files. Stop AkuBrowser Runtime now?" /SD IDNO IDYES stop_runtime
+  MessageBox MB_YESNO|MB_ICONEXCLAMATION|MB_DEFBUTTON2 "AkuBrowser Runtime is currently running as AkuSidecar.exe.$\r$\n$\r$\nIf another Setup window just completed, this may be an isolated antivirus duplicate. Select No to close this Setup window; do not run Repair twice.$\r$\n$\r$\nOnly select Yes if you intentionally started this installation or repair and want Setup to stop AkuBrowser Runtime now." /SD IDNO IDYES stop_runtime
   Abort
 
   stop_runtime:
