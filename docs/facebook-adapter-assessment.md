@@ -157,14 +157,19 @@ A Home Feed video can expose no stable wrapper permalink while still exposing
 an embedded `/reel/<id>` anchor. Adapter v11 accepts that anchor as the native
 evidence destination for the already-admitted feed post; it does not discover
 or capture the Reels player feed. Poster images beneath `/videos/` or `/reel/`
-are typed as video previews, so the generic Timeline can display an explicit
-video cue even when quiet capture cannot obtain a playback URL or a useful
-poster frame. The native evidence link remains available for direct review.
+are typed as video previews. When the structured-video adapter also provides an
+allowlisted progressive MP4 on `fbcdn.net` or `fbsbx.com`, the generic Timeline
+enables explicit poster-first inline playback. Those signed URLs remain
+ephemeral: an explicit playback failure may queue one background recapture of
+the same native post, and only a different allowlisted MP4 replaces the failed
+URL. Otherwise the native evidence link remains the terminal fallback for
+direct review.
 
 Live Facebook acceptance still requires a signed-in user session and repeated
 captures of ordinary, shared, Page, suggested, sponsored, image, and video
-entries. A live selector or media gap is an adapter defect; it must not be
-worked around by adding source-specific branches to generic orchestration.
+entries, including an expired-video recovery case. A live selector or media
+gap is an adapter defect; it must not be worked around by adding source-specific
+branches to generic orchestration.
 
 Adapter v17 exports bounded candidate-admission diagnostics with each
 snapshot. It distinguishes structural cards from capture-eligible and visible

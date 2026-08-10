@@ -9,22 +9,30 @@ boundaries allow it.
 
 ## Scheduling and authority
 
-- **Adaptive activity** is the default. It catches up after AkuBrowser is
-  opened and only continues while actual pointer, keyboard, touch, wheel, or
-  visible-tab-return activity is recent. Status polling is not user activity.
-- **Fixed background** does not require recent human activity while AkuSidecar
-  is alive and the configured AkuBridge service worker can reach it.
-- Open prepared-queue capacity is refilled on a configurable 3-, 5-, 10-, 15-,
-  or 30-minute cadence, with 5 minutes as the default. Revealing or expiring a
-  prepared batch establishes a new vacancy boundary; a failed or empty
-  automatic attempt establishes the next attempt boundary. Another automatic
-  run cannot begin before the later applicable boundary.
+- **Presence-aware** is the user-facing name for the persisted `adaptive`
+  policy and remains the default. It catches up after a successful, visible
+  AkuBrowser bootstrap explicitly records activity and
+  only continues while visible pointer, keyboard, touch, wheel, tab-return, or
+  active-video playback has been observed within the last 15 minutes. A
+  playing video renews that signal at the same bounded rate as other activity.
+  A read-only bootstrap/status fetch, status polling, and a merely open but
+  unattended tab are not user activity.
+- **Continuous background** is the user-facing name for the persisted `fixed`
+  policy. While AkuSidecar is alive, it evaluates one periodic tick on a
+  configurable 3-, 5-, 10-, 15-, or 30-minute interval, with 5 minutes as the
+  default. Each tick checks compatibility, calibration, active-session, queue,
+  and budget stoppers once. Whether the tick starts work or is skipped, the
+  next evaluation waits for the next configured interval. Revealing or
+  expiring a batch does not trigger an immediate Continuous-background retry.
+- Presence-aware retains its existing activity and open-slot admission
+  boundaries until its separate scheduler design is finalized. Its stored
+  interval is not exposed as a Continuous-background control.
 - User actions and user settings remain authoritative. Update sessions never
   overlap.
 - Settings exposes **Prepare batch now** for an explicit user-triggered
   prepared run. It keeps the same onboarding, Bridge, queue, active-session,
   and token-budget gates, but deliberately bypasses only the scheduler's
-  configured refill delay and adaptive recent-use gates. Resetting the quota alone
+  configured scheduler delay and adaptive recent-use gates. Resetting the quota alone
   never bypasses those scheduler boundaries.
 - Automatic work pauses when the prepared queue is full or its daily allowance
   is exhausted. The selectable daily boundaries are 1M, 2M, 3M, and 5M tokens,
@@ -64,12 +72,14 @@ in a prepared batch can shorten its effective freshness window to 12, 4, or 2
 hours. Expired batches remain represented by their underlying run diagnostics;
 they are not published into the Timeline.
 
-Expiration opens a queue slot but does not count as user activity. Adaptive
-activity leaves that slot empty while the user is inactive and resumes on
-return, preventing unattended freshness churn. Fixed background may refill the
-slot while the user is away. The status contract exposes prepared count,
-configured limit, and available slots so this state is visible rather than
-inferred.
+Expiration opens a queue slot but does not count as user activity.
+Presence-aware mode leaves that slot empty while the user is inactive and
+resumes on return, preventing unattended freshness churn. Continuous
+background will reconsider the slot on its next periodic tick while the user
+is away. The status contract exposes the last activity time, 15-minute
+activity window, last Continuous-background tick, next scheduled tick,
+prepared count, configured limit, and available slots so presence, cadence,
+capacity, and budget remain separate observable gates.
 
 ## Model budget
 
@@ -128,8 +138,8 @@ work can continue after the page closes. After a background observation it
 also performs a short bounded session pump: as soon as one source closes
 Acquisition, Bridge receives an explicit per-source cleanup request and releases
 that source without waiting for the next alarm. The one-minute alarm remains a
-crash/reload fallback rather than the primary cleanup timer. Adaptive activity still requires
-recent human interaction by policy. Invalid or rotated credentials are deleted by AkuBridge
+crash/reload fallback rather than the primary cleanup timer. Presence-aware mode still requires
+recent visible interaction or active playback by policy. Invalid or rotated credentials are deleted by AkuBridge
 after an authenticated rejection and are configured again on the next trusted
 page access. Background and page dispatch both claim the same command, so only
 one can win. AkuBridge persists the active capture lease across bounded

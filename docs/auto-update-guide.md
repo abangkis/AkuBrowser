@@ -20,27 +20,33 @@ alive. It also requires compatible AkuBridge state, completed onboarding and
 first-run calibration, no active update, queue capacity, and
 enough local model budget for the estimated next run.
 
-The scheduler treats the prepared queue as bounded capacity, not as a
-four-hour appointment. When a slot opens because a batch is revealed, expires,
-or a prior automatic check produced no prepared batch, the scheduler waits for
-the configured refill delay before it may try to refill that slot. The setting
-offers 3, 5, 10, 15, and 30 minutes; 5 minutes is the default. If more capacity
-remains after the next check, another refill may start no sooner than that
-delay later. Queue and model-budget boundaries can delay it further.
+The scheduler treats the prepared queue as bounded capacity, not as an endless
+feed. Continuous background exposes an interval of 3, 5, 10, 15, or 30
+minutes; 5 minutes is the default. At each tick it evaluates all stoppers once.
+If the queue is full, the daily or automatic token allowance is insufficient,
+AkuBridge is unavailable, calibration blocks work, or another session is
+active, that tick is skipped and the scheduler waits for the next full
+interval. A newly opened queue slot does not create an immediate retry.
 
-**Adaptive activity** is the default and associates refilling with actual user
-activity. Opening AkuBrowser records one access; later pointer, keyboard,
-touch, wheel, or visible-tab-return activity renews it at a bounded rate.
-Background status polling does not count. After activity is no longer recent,
-the scheduler pauses even when freshness expiration opens a queue slot. When
-the user returns, AkuSidecar catches up under the same refill-delay, capacity,
-and budget rules. This prevents an unattended open page from continually
-replacing batches while its user sleeps.
+**Presence-aware** is the clearer user-facing name for the stored `adaptive`
+policy. It adapts to demand, not to token price or a dynamically changing
+interval. A successful visible bootstrap explicitly records one access; later
+pointer, keyboard, touch, wheel, visible-tab-return, or active-video playback
+renews it at a bounded rate. The activity window is 15 minutes. A read-only
+bootstrap/status fetch and a merely visible but unattended page do not count.
+After activity is no longer recent, the scheduler pauses even when queue slots
+and tokens remain. When the
+user returns, AkuSidecar catches up under the same refill-delay, capacity, and
+budget rules. This prevents an unattended open page from continually replacing
+batches while its user sleeps.
 
-**Fixed background** scheduling does not require recent human activity. While
-AkuSidecar is alive, its bounded scheduler may refill an open slot after each
-configured refill boundary. This is an explicit opt-in for users who prefer prepared
-work while away; queue capacity, freshness, and budget still bound it.
+**Continuous background** is the clearer user-facing name for the stored
+`fixed` policy. While AkuSidecar is alive, its independent periodic cadence
+continues regardless of user presence. The interval appears in Settings only
+when this mode is selected. A tick is an evaluation opportunity rather than a
+guaranteed run: queue capacity, freshness, budget, Bridge readiness,
+calibration, and single-session serialization can skip it, after which the
+next evaluation occurs one configured interval later.
 AkuBridge's service worker can claim pending capture commands even when the
 AkuBrowser page is closed. Neither mode starts a stopped AkuSidecar or bypasses
 queue, budget, or active-session limits.
@@ -49,7 +55,7 @@ Settings also provides **Prepare batch now** when the user wants to
 start prepared work immediately. This explicit action still checks
 onboarding, Bridge readiness, prepared-batch capacity, active sessions, and
 the automatic token allowance. It bypasses only the scheduler's minimum
-configured refill delay and Adaptive recent-use waits; resetting the quota does not
+configured delay and Presence-aware recent-use waits; resetting the quota does not
 itself force a run.
 
 ## Prepared batches and reading continuity
@@ -128,9 +134,9 @@ to 2 hours. An expired unread batch is not published into the Timeline; its
 diagnostic session remains inspectable.
 
 Expiration opens queue capacity, but it does not by itself prove that the user
-is present. Adaptive activity therefore leaves the slot empty while the user
-is inactive and resumes when the user returns. Fixed background may refill it
-while the user is away, within its configured refill and budget boundaries.
+is present. Presence-aware mode therefore leaves the slot empty while the user
+is inactive and resumes when the user returns. Continuous background
+reconsiders it on the next configured periodic tick while the user is away.
 
 ## Capture lease and update policy
 
