@@ -146,6 +146,10 @@ The installer action remains visible, attributable, and user initiated.
 
 ### Chrome or PC restart
 
+This automatic recovery applies to the Chrome Web Store distribution. The
+unpacked development identity suppresses automatic Native Messaging lifecycle
+work so reloading AkuBridge cannot start the installed production runtime.
+
 1. Chrome starts the user's profile and fires `chrome.runtime.onStartup`.
 2. The extension sends one `ensure_runtime` request.
 3. Chrome starts the registered native host.
@@ -157,6 +161,10 @@ The runtime is not required to start before Chrome. A Windows service, Scheduled
 Task, or machine-wide installation is outside protocol v1.
 
 ### Extension update
+
+This flow applies only to the Chrome Web Store distribution. Reloading or
+updating the unpacked development extension performs no automatic
+`ensure_runtime`; `dev.ps1` remains the development runtime authority.
 
 1. Chrome Web Store installs the new extension while it is idle.
 2. `onInstalled` with reason `update` sends `ensure_runtime` with the new exact

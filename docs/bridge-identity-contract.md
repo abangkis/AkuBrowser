@@ -40,6 +40,13 @@ is generated runtime state, not another authority; manual edits are replaced
 the next time `dev.ps1` runs. `-Rebuild` affects the Sidecar binary only and
 does not change identity selection.
 
+The manifest key is also the runtime lifecycle marker. Automatic extension
+reload/update and Chrome-startup events from the unpacked development build do
+not contact the installed Native Messaging host and do not start the installed
+AkuSidecar runtime. Development runtime ownership remains with `dev.ps1`; an
+explicit extension action may still invoke `ensure_runtime` when the developer
+intentionally tests the installed-runtime path.
+
 The checked-in `AkuSidecar/config/sidecar.json` therefore contains no trusted
 extension origin. Starting that base configuration without an explicit origin
 fails closed.
