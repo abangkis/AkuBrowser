@@ -29,6 +29,14 @@ boundaries allow it.
 - Both modes use the same tick-consumption and stopper path. They differ only
   in whether the cadence comes from the activity tier or the configured fixed
   interval. Queue-vacancy events do not bypass either cadence.
+- Every due scheduler tick writes a durable local receipt before admission.
+  The receipt records its mode, cadence tier/minutes, tick and next-tick time,
+  then resolves from `checking` to `started` with the prepared session ID or
+  `skipped` with the exact stopper reason. A crash can therefore leave an
+  inspectable `checking` receipt instead of erasing the attempted boundary.
+  Storage keeps only the newest 32 receipts; status exposes the newest 10 and
+  Settings summarizes the latest one. Manual **Prepare batch now** is not a
+  scheduler tick and creates no scheduler receipt.
 - User actions and user settings remain authoritative. Update sessions never
   overlap.
 - Settings exposes **Prepare batch now** for an explicit user-triggered
@@ -81,7 +89,8 @@ reconsiders it on its next configured tick. The status contract exposes the
 last activity time, 30-minute warm boundary, current cadence tier and minutes,
 last scheduler tick, next scheduled tick, prepared count, configured limit,
 and available slots so presence, cadence, capacity, and budget remain separate
-observable gates.
+observable gates. Full reset clears scheduler receipts and the last-tick
+boundary; learning reset does not.
 
 ## Model budget
 

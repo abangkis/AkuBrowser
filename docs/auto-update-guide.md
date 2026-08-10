@@ -50,12 +50,22 @@ AkuBridge's service worker can claim pending capture commands even when the
 AkuBrowser page is closed. Neither mode starts a stopped AkuSidecar or bypasses
 queue, budget, or active-session limits.
 
+Settings also reports the latest durable scheduler decision. Each due tick is
+first stored as `checking`, then completed as `started` with its prepared
+session identity or `skipped` with the stopper reason. The local history is
+bounded to 32 receipts and the API exposes at most the newest 10, preventing
+diagnostics from growing without limit. If Sidecar exits between those writes,
+the unresolved `checking` state remains useful crash evidence. These receipts
+contain scheduler metadata only, not captured post text or model prompts.
+
 Settings also provides **Prepare batch now** when the user wants to
 start prepared work immediately. This explicit action still checks
 onboarding, Bridge readiness, prepared-batch capacity, active sessions, and
 the automatic token allowance. It bypasses only the scheduler's minimum
 cadence delay; resetting the quota does not
 itself force a run.
+Because this is an explicit user action rather than a due scheduler tick, it
+does not add a scheduler receipt.
 
 ## Prepared batches and reading continuity
 
