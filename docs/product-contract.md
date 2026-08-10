@@ -128,6 +128,15 @@ destinations and thumbnails must use HTTPS. A source card that exposes only an
 insecure target is omitted as presentation evidence without discarding the
 otherwise valid captured post.
 
+Inline playback URLs are treated as ephemeral evidence rather than permanent
+assets. A source may opt into `native_post_recapture`; LinkedIn is the first
+source to do so. After an explicit play attempt fails, AkuBrowser falls back to
+the native-post control and may queue one background recapture bound to that
+Timeline item and its canonical post URL. The replacement is accepted only
+when it contains a different allowlisted progressive playback URL. A failed
+background attempt may offer the existing explicit foreground recapture, and
+native-post access remains the terminal fallback.
+
 AI status, detector detail, and personal AI feedback are one UI family and therefore share the same badge slot at the start of the card toolbar. The badge has a restrained interactive cue rather than competing with the card's primary actions. Clicking it reveals the assessment and presents `Mark as AI-generated`, `Mark as not AI-generated`, and `Unsure · Review more deeply` immediately; object scope and bounded reason remain available in a secondary optional disclosure and default to the social-post text. Both disclosure levels survive routine Timeline polling and rendering. Personal outcomes use distinct semantic tones: AI is amber, not-AI is green, and an unsure review request is blue pending. An explicit AI verdict bypasses the async-detector stability guard and moves an already-seen post into the configured Drawer or Hide presentation immediately; the guard only prevents late detector work from unexpectedly moving content the user is already reading. A clear action replaces the decision hierarchy after personal feedback. The canonical append-only AI Feedback Engine and its deterministic Personal AI Policy are defined in [ai-feedback-contract.md](ai-feedback-contract.md). Detector transitions—neutral, preliminary, confirmed, disputed, corrected, review-requested, or user-overridden—change the badge state without moving the actions elsewhere. The card footer remains reserved for source access, More/Less preference feedback, and semantic-event correction.
 
 ## Unified Timeline

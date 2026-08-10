@@ -130,6 +130,11 @@ without using semantic similarity or broad author-and-text deduplication.
 9. Capture a visible LinkedIn video and verify that an exact poster match is
    promoted from image to video, its progressive MP4 is playable inline, and
    a player without the exact native-ID/player-ID pair remains native-only.
+10. Force the retained playback URL to fail. Verify one background native-post
+    recapture is queued only after the explicit play attempt, the failed URL is
+    rejected if replayed, a different allowlisted progressive URL replaces it,
+    and an unavailable background result preserves native fallback before any
+    separately authorized foreground attempt.
 
 ## Expected effect and limits
 
