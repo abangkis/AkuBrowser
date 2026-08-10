@@ -29,8 +29,8 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge product version `0.7.9` / Chrome manifest version `0.7.9.0`;
-- runtime revision `source-adapters-v87`;
-- build id `aku-bridge-0.7.9-source-adapters-v87`; and
+- runtime revision `source-adapters-v89`;
+- build id `aku-bridge-0.7.9-source-adapters-v89`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -175,6 +175,14 @@ total bytes, traversal nodes, depth, candidates, and media per candidate are
 all capped. If identity, poster, playback URL, or allowlist validation fails,
 the existing native-post fallback remains authoritative.
 
+Structured collection runs in parallel with DOM capture after freshness has
+been established. The collector has a 250 ms hard budget and publishes bounded
+duration/status telemetry. The content runtime holds a short-lived request
+inbox, accepts the media-only result, and applies the generic merge before the
+observation leaves the tab. A timeout, delivery race, or identity mismatch is
+failure-soft and preserves the poster/native-post result; it never delays a
+completed capture to start a durable post-processing job.
+
 ## Passive X media evidence
 
 X media recovery has a passive path before item-scoped Recapture. Live v57
@@ -300,7 +308,7 @@ AkuSupervisor creates a single-flight request at
 claims it through `/next`; AkuBridge accepts the action through `/{id}/accept`
 before calling `chrome.runtime.reload()`.
 
-The action completes only after a new heartbeat announces the exact v60 build.
+The action completes only after a new heartbeat announces the exact expected build.
 Replay is idempotent only for the same request id, actor, and reason. Pending,
 delivery, acceptance, heartbeat, build-mismatch, and expiry failures remain
 explicit. No whole-browser restart or source-tab mutation is implied.
