@@ -26,10 +26,13 @@
   one completed scroll, zero new candidates, and no `has more` signal.
   Ambiguous evidence still uses model planning, and requested follow-up keeps
   the existing continuation-overlap contract.
-- **Do not change media or hydration in this slice.** LinkedIn media acquisition
-  stays on the existing generic Bridge path, and the configured 18-second
-  two-phase hydration budget remains unchanged.
-- **Recover native links without touching the clipboard.** `linkedin-dom-v19`
+- **Resolve video without slowing ordinary cards.** `linkedin-dom-v20` keeps
+  the parallel collector and generic media processor, then adds one source-
+  specific late scan only when a captured LinkedIn card contains a visible
+  video player. The scan is capped at 220 ms; a live run resolved and paired
+  one progressive MP4 in 80.6 ms. Image, attachment, and text cards add no
+  media-discovery wait.
+- **Recover native links without touching the clipboard.** `linkedin-dom-v20`
   keeps timestamp anchors, direct anchors, and DOM URNs authoritative. If a
   current LinkedIn card exposes only `Embed this post`, AkuBridge may open that
   bounded dialog, read a source-owned activity/share/ugcPost URN, and close the
@@ -86,8 +89,16 @@ without using semantic similarity or broad author-and-text deduplication.
 6. Incomplete, degraded, deadline-exhausted, or `has more` capture evidence
    retains the model planner. A requested second round still requires overlap
    with the prior LinkedIn frontier.
-7. The slice adds no snapshot, scroll, hydration delay, media attempt, or
-   foreground permission.
+7. The initial LinkedIn evidence collector remains parallel with batching and
+   bounded by the existing 250 ms inbox wait. A visible video card may add one
+   late structured scan capped at 220 ms; non-video cards add no new wait,
+   hydration attempt, scroll, or foreground permission.
+8. Video pairing requires both the recovered native post identity and the
+   exact Video.js player element ID. The resolver never assigns players by
+   feed order, accepts only progressive `dms.licdn.com/playlist/.../mp4-*`
+   sources, accepts posters only from LinkedIn image paths or exact playlist
+   `thumbnail-*` paths, and rejects HLS, DASH, foreign hosts, and ambiguous
+   matches.
 
 ## Acceptance criteria
 
@@ -116,6 +127,9 @@ without using semantic similarity or broad author-and-text deduplication.
    verify that the modal URN becomes a canonical `/feed/update/` URL, the modal
    closes, `presentation.permalinkSource` reports `embed_urn`, and no clipboard
    permission or operation occurs.
+9. Capture a visible LinkedIn video and verify that an exact poster match is
+   promoted from image to video, its progressive MP4 is playable inline, and
+   a player without the exact native-ID/player-ID pair remains native-only.
 
 ## Expected effect and limits
 
@@ -128,4 +142,5 @@ two reasoning-bearing LinkedIn runs, and had no genuine follow-up round.
 
 The feature should therefore be judged by receipts rather than by the estimate:
 no false identity merges, no lost continuation overlap, fewer no-op planning
-invocations, and unchanged media or hydration success.
+invocations, preserved image and attachment behavior, and bounded inline-video
+recovery only for visible LinkedIn players.
