@@ -150,6 +150,31 @@ HTTPS destination, bounded display metadata, and an optional rendered
 thumbnail. The shared Sidecar renderer owns presentation; source adapters do
 not emit HTML.
 
+## Structured media post processing
+
+Rendered poster discovery, structured playback discovery, and presentation
+remain separate responsibilities. The generic media-post processor owns the
+bounded cache lifecycle and merges a rendered poster with structured evidence
+for the same admitted post. It does not know provider payload fields, post URL
+formats, or CDN paths. Each source adapter retains those policies through a
+source-specific identity mapper, URL sanitizer, and MAIN-world resolver.
+
+This is intentionally a hybrid rather than one universal parser or a complete
+processor duplicated inside every adapter. X keeps its bounded React/response
+resolvers and Facebook uses `facebook-structured-video-v1`; both return the
+same media-only envelope. LinkedIn may add a resolver later without changing
+the shared merge, presentation, single-active-player, or viewport-pause rules.
+
+Facebook structured video resolution parses only bounded
+`script[type="application/json"][data-sjs]` payloads already present in the
+page. It looks for a media object's canonical Facebook identity, poster, and
+`videoDeliveryResponseResult.progressive_urls`, selects an allowlisted HTTPS
+MP4 under `fbcdn.net` or `fbsbx.com`, and emits no raw JSON, post text, account
+state, cookie, or authentication material. Script count, per-script bytes,
+total bytes, traversal nodes, depth, candidates, and media per candidate are
+all capped. If identity, poster, playback URL, or allowlist validation fails,
+the existing native-post fallback remains authoritative.
+
 ## Passive X media evidence
 
 X media recovery has a passive path before item-scoped Recapture. Live v57
@@ -199,8 +224,9 @@ explicit user action. Playback never permits autoplay or render-time preload,
 and the poster must not display inline and native-play actions simultaneously.
 If the playback URL is absent or playback fails, the renderer restores the
 previous native-post poster behavior. The renderer's CSP must restrict media
-loading to `video.twimg.com`; source adapters still do not emit executable
-presentation markup. An active inline player must pause when it is no longer
+loading to each enabled source's exact video CDN allowlist (`video.twimg.com`
+for X and `fbcdn.net`/`fbsbx.com` for Facebook); source adapters still do not
+emit executable presentation markup. An active inline player must pause when it is no longer
 intersecting the viewport and must not resume automatically when it becomes
 visible again.
 
