@@ -21,24 +21,23 @@ first-run calibration, no active update, queue capacity, and
 enough local model budget for the estimated next run.
 
 The scheduler treats the prepared queue as bounded capacity, not as an endless
-feed. Continuous background exposes an interval of 3, 5, 10, 15, or 30
-minutes; 5 minutes is the default. At each tick it evaluates all stoppers once.
+feed. Continuous background exposes an interval of 5, 10, 15, 30, or 60
+minutes; 15 minutes is the default. At each tick it evaluates all stoppers once.
 If the queue is full, the daily or automatic token allowance is insufficient,
 AkuBridge is unavailable, calibration blocks work, or another session is
 active, that tick is skipped and the scheduler waits for the next full
 interval. A newly opened queue slot does not create an immediate retry.
 
 **Presence-aware** is the clearer user-facing name for the stored `adaptive`
-policy. It adapts to demand, not to token price or a dynamically changing
-interval. A successful visible bootstrap explicitly records one access; later
+policy. It adapts cadence to demand, not token price. Explicit activity no more
+than 5 minutes old selects the 5-minute `active` cadence; activity between 5
+and 30 minutes old selects the 15-minute `warm` cadence; older or missing
+activity selects the 60-minute `idle` cadence. A successful visible bootstrap,
 pointer, keyboard, touch, wheel, visible-tab-return, or active-video playback
-renews it at a bounded rate. The activity window is 15 minutes. A read-only
-bootstrap/status fetch and a merely visible but unattended page do not count.
-After activity is no longer recent, the scheduler pauses even when queue slots
-and tokens remain. When the
-user returns, AkuSidecar catches up under the same refill-delay, capacity, and
-budget rules. This prevents an unattended open page from continually replacing
-batches while its user sleeps.
+renews activity at a bounded rate. A read-only bootstrap/status fetch and a
+merely visible but unattended page do not count. Idle scheduling continues
+slowly rather than stopping, while new activity wakes the scheduler and can
+make the next tick due sooner.
 
 **Continuous background** is the clearer user-facing name for the stored
 `fixed` policy. While AkuSidecar is alive, its independent periodic cadence
@@ -55,7 +54,7 @@ Settings also provides **Prepare batch now** when the user wants to
 start prepared work immediately. This explicit action still checks
 onboarding, Bridge readiness, prepared-batch capacity, active sessions, and
 the automatic token allowance. It bypasses only the scheduler's minimum
-configured delay and Presence-aware recent-use waits; resetting the quota does not
+cadence delay; resetting the quota does not
 itself force a run.
 
 ## Prepared batches and reading continuity
@@ -134,9 +133,9 @@ to 2 hours. An expired unread batch is not published into the Timeline; its
 diagnostic session remains inspectable.
 
 Expiration opens queue capacity, but it does not by itself prove that the user
-is present. Presence-aware mode therefore leaves the slot empty while the user
-is inactive and resumes when the user returns. Continuous background
-reconsiders it on the next configured periodic tick while the user is away.
+is present. Presence-aware reconsiders the slot on its current active, warm, or
+idle cadence, while Continuous background uses the next configured periodic
+tick. Neither mode retries immediately merely because capacity opened.
 
 ## Capture lease and update policy
 

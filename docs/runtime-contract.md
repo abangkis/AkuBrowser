@@ -32,11 +32,15 @@ AkuSidecar also owns the optional Auto Update scheduler. It serializes automatic
 and manual sessions through the same engine and persists automatic results as
 hidden prepared batches. AkuBridge and every source adapter keep the same
 bounded capture contract; no adapter owns scheduling or Timeline delivery.
-Continuous background persists its last scheduler tick independently from run
-attempts and queue-vacancy events. Every due tick is recorded before stopper
-admission, so a full queue, exhausted allowance, incompatible Bridge,
-calibration, or active session skips exactly that tick and cannot cause a
-30-second retry loop. Its next tick is derived from the user-selected interval.
+Both scheduler policies persist one shared last-tick boundary independently
+from run attempts and queue-vacancy events. Every due tick is recorded before
+the shared stopper admission path, so a full queue, exhausted allowance,
+incompatible Bridge, calibration, or active session skips exactly that tick
+and cannot cause a 30-second retry loop. Continuous background derives cadence
+from the user-selected 5-, 10-, 15-, 30-, or 60-minute interval. Presence-aware
+derives it from explicit-activity age: active 5 minutes, warm 15 minutes, or
+idle 60 minutes. A new activity event wakes the loop and may make an earlier
+cadence boundary immediately due.
 
 The current inference transport is one managed `codex app-server` stdio process. Acquisition planning, candidate evaluation, semantic event resolution, and AI Deep Detection use separate bounded profiles: Luna `high` is the release default for acquisition, semantic resolution, and AI Deep Detection, while candidate evaluation alone defaults to Luna `xhigh`. Each process can be tuned for its next invocation through the backend-owned bounded catalog: Luna High, Luna XHigh, Luna Max, Terra High, Terra XHigh, or Sol Medium. Settings persists only opaque profile IDs; free-form model strings are rejected. A process reads its stored profile once when that process starts, the active provider resolves it to one concrete model-and-effort pair, and that pair remains fixed for the invocation. Settings is not polled during execution, and a change made during an active update applies only to the next applicable process. The domain adapters depend only on a generic structured-inference boundary and their own schemas, so another provider can replace Codex and publish a different catalog without changing event, AI, selection authority, or UI rendering. Each invocation uses an ephemeral read-only thread; no long-lived model thread owns the event index or an AI assessment history. An explicit model-capacity failure may restart the process and retry the same model once inside the original invocation deadline. Cancellation, timeout, validation failure, and model fallback are never retried implicitly. An unexpected process exit fails the active invocation, discards that transport, and lets the next invocation start a fresh process. App Server callbacks are rejected with a protocol error, and a completed turn without a final structured response is a hard failure rather than an empty result.
 
