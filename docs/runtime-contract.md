@@ -33,14 +33,17 @@ and manual sessions through the same engine and persists automatic results as
 hidden prepared batches. AkuBridge and every source adapter keep the same
 bounded capture contract; no adapter owns scheduling or Timeline delivery.
 Both scheduler policies persist one shared last-tick boundary independently
-from run attempts and queue-vacancy events. Every due tick is recorded before
-the shared stopper admission path, so a full queue, exhausted allowance,
-incompatible Bridge, calibration, or active session skips exactly that tick
-and cannot cause a 30-second retry loop. Continuous background derives cadence
-from the user-selected 5-, 10-, 15-, 30-, or 60-minute interval. Presence-aware
-derives it from explicit-activity age: active 5 minutes, warm 15 minutes, or
-idle 60 minutes. A new activity event wakes the loop and may make an earlier
-cadence boundary immediately due.
+from run attempts and queue-vacancy events. Continuous background records every
+due user-selected 5-, 10-, 15-, 30-, or 60-minute tick before the shared
+stopper path. Adaptive demand records a tick only after recent activity wakes
+the controller, the learned ready-buffer target has a vacancy, the rolling
+30-minute generation allowance and zero-yield supply cooldown permit work, and
+the five-minute minimum refill boundary is due. The target is the recent
+prepared-batch reveal pace divided into a conservative preparation lead,
+clamped from one to the configured queue ceiling. Generic interaction and video
+playback renew demand but only a batch reveal trains pace. Continuous and
+Adaptive then share compatibility, calibration, active-session, hard queue,
+and budget admission.
 
 Scheduler observability uses no schema migration: the newest 32 typed tick
 receipts are stored as bounded JSON in SQLite `meta`, while bootstrap/status

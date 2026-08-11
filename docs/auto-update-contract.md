@@ -9,16 +9,31 @@ boundaries allow it.
 
 ## Scheduling and authority
 
-- **Presence-aware** is the user-facing name for the persisted `adaptive`
-  policy and remains the default. It selects one of three cadences from the
-  last explicit activity: `active` at 5 minutes while activity is at most 5
-  minutes old, `warm` at 15 minutes while activity is at most 30 minutes old,
-  and `idle` at 60 minutes after that or when activity has never been recorded.
-  A successful visible bootstrap, visible pointer, keyboard, touch, wheel,
-  tab-return, or active-video playback renews activity at a bounded rate. A
-  read-only bootstrap/status fetch, status polling, and a merely open but
-  unattended tab are not user activity. Idle slows scheduling; it does not
-  stop it.
+- **Adaptive demand** is the user-facing name for the persisted `adaptive`
+  policy and remains the default. Explicit activity opens a bounded 30-minute
+  demand window, but activity alone does not request a full queue. The
+  controller learns consumption pace from recent prepared-batch reveal
+  intervals and compares it with a conservative preparation lead derived from
+  recent scheduler runs. The desired ready buffer is
+  `ceil(preparation lead / consumption pace)`, clamped between one and the
+  user's configured queue ceiling. Until a usable pace sample exists it starts
+  conservatively with one batch. The MVP uses the median valid interval from
+  at most five reveals in seven days, ignoring gaps over two hours. Preparation
+  lead is the recent five-run 75th percentile plus two minutes, defaults to
+  eight minutes, and is clamped between three and thirty minutes.
+- A successful visible bootstrap, visible pointer, keyboard, touch, wheel,
+  tab-return, or active-video playback renews recent demand at a bounded rate.
+  A read-only bootstrap/status fetch, status polling, and a merely open but
+  unattended tab do not. Only revealing prepared batches trains consumption
+  pace; generic presence and video playback never increase the target by
+  themselves.
+- Adaptive generation is bounded independently from ready inventory. Within a
+  rolling 30-minute window, scheduler-created prepared attempts cannot exceed
+  the configured queue ceiling. Explicit **Prepare batch now** does not consume
+  this scheduler-only allowance. One, two, or three consecutive completed
+  prepared updates with zero retained Timeline items apply a 15-, 30-, or
+  60-minute supply cooldown, preventing fast demand from repeatedly spending
+  tokens against exhausted or duplicate-only sources.
 - **Continuous background** is the user-facing name for the persisted `fixed`
   policy. While AkuSidecar is alive, it evaluates one periodic tick on a
   configurable 5-, 10-, 15-, 30-, or 60-minute interval, with 15 minutes as the
@@ -26,9 +41,13 @@ boundaries allow it.
   and budget stoppers once. Whether the tick starts work or is skipped, the
   next evaluation waits for the next configured interval. Revealing or
   expiring a batch does not trigger an immediate Continuous-background retry.
-- Both modes use the same tick-consumption and stopper path. They differ only
-  in whether the cadence comes from the activity tier or the configured fixed
-  interval. Queue-vacancy events do not bypass either cadence.
+- Both modes use the same onboarding, compatibility, calibration,
+  active-session, hard queue, and model-budget admission path. Continuous
+  background consumes every configured periodic tick. Adaptive demand writes a
+  scheduler tick only when recent demand exists, its learned target has a
+  vacancy, generation allowance and supply permit work, and its five-minute
+  minimum refill boundary is due. Activity and queue-vacancy events wake the
+  controller but do not bypass those boundaries.
 - Every due scheduler tick writes a durable local receipt before admission.
   The receipt records its mode, cadence tier/minutes, tick and next-tick time,
   then resolves from `checking` to `started` with the prepared session ID or
@@ -44,8 +63,10 @@ boundaries allow it.
   and token-budget gates, but deliberately bypasses only the scheduler's
   cadence gate. Resetting the quota alone
   never bypasses those scheduler boundaries.
-- Automatic work pauses when the prepared queue is full or its daily allowance
-  is exhausted. The selectable daily boundaries are 1M, 2M, 3M, and 5M tokens,
+- Automatic work pauses when the Continuous queue is full, the Adaptive target
+  is satisfied, the bounded generation window is exhausted, supply is cooling
+  down, or its daily allowance is exhausted. The selectable daily boundaries
+  are 1M, 2M, 3M, and 5M tokens,
   with 2M as the default. A protected share is unavailable to automatic work
   and remains available to an explicit user-visible update.
 
@@ -83,14 +104,15 @@ hours. Expired batches remain represented by their underlying run diagnostics;
 they are not published into the Timeline.
 
 Expiration opens a queue slot but does not count as user activity.
-Presence-aware reconsiders that slot on its next active, warm, or idle tick;
-new activity can shorten the next due boundary. Continuous background
-reconsiders it on its next configured tick. The status contract exposes the
-last activity time, 30-minute warm boundary, current cadence tier and minutes,
-last scheduler tick, next scheduled tick, prepared count, configured limit,
-and available slots so presence, cadence, capacity, and budget remain separate
-observable gates. Full reset clears scheduler receipts and the last-tick
-boundary; learning reset does not.
+Adaptive demand reconsiders that slot only while recent demand remains and its
+target, generation allowance, supply cooldown, and minimum refill boundary
+permit work. Continuous background reconsiders it on its next configured tick.
+The status contract exposes last activity, learned consumption pace and sample
+count, conservative preparation lead, adaptive target, generated attempts and
+window limit, recent yield and empty streak, supply cooldown, last scheduler
+tick, next eligible check, prepared count, configured hard limit, and available
+slots. Full reset clears scheduler receipts and the last-tick boundary;
+learning reset does not delete durable batch-reveal history.
 
 ## Model budget
 
@@ -150,7 +172,8 @@ also performs a short bounded session pump: as soon as one source closes
 Acquisition, Bridge receives an explicit per-source cleanup request and releases
 that source without waiting for the next alarm. The one-minute alarm remains a
 crash/reload fallback rather than the primary cleanup timer. Visible interaction
-or active playback accelerates Presence-aware cadence but is not required for its idle tick. Invalid or rotated credentials are deleted by AkuBridge
+or active playback renews Adaptive demand but never trains consumption pace;
+batch reveals are the only consumption samples. Invalid or rotated credentials are deleted by AkuBridge
 after an authenticated rejection and are configured again on the next trusted
 page access. Background and page dispatch both claim the same command, so only
 one can win. AkuBridge persists the active capture lease across bounded

@@ -28,16 +28,24 @@ AkuBridge is unavailable, calibration blocks work, or another session is
 active, that tick is skipped and the scheduler waits for the next full
 interval. A newly opened queue slot does not create an immediate retry.
 
-**Presence-aware** is the clearer user-facing name for the stored `adaptive`
-policy. It adapts cadence to demand, not token price. Explicit activity no more
-than 5 minutes old selects the 5-minute `active` cadence; activity between 5
-and 30 minutes old selects the 15-minute `warm` cadence; older or missing
-activity selects the 60-minute `idle` cadence. A successful visible bootstrap,
-pointer, keyboard, touch, wheel, visible-tab-return, or active-video playback
-renews activity at a bounded rate. A read-only bootstrap/status fetch and a
-merely visible but unattended page do not count. Idle scheduling continues
-slowly rather than stopping, while new activity wakes the scheduler and can
-make the next tick due sooner.
+**Adaptive demand** is the user-facing name for the stored `adaptive` policy.
+It learns how quickly prepared batches are actually revealed instead of
+equating every pointer, scroll, or video event with fast consumption. Explicit
+activity opens a 30-minute demand window and wakes the controller. Recent batch
+reveal intervals estimate consumption pace; the last scheduler preparation
+durations establish a conservative lead time. Their ratio selects a target
+between one and the configured queue ceiling. With no usable consumption sample
+the target is one.
+
+The queue ceiling is also a scheduler-generation allowance over a rolling
+30-minute window. This separately bounds throughput: consuming a batch opens an
+inventory slot, but it does not authorize an endless replacement stream.
+Manual **Prepare batch now** remains explicit and does not consume this
+scheduler-only allowance. A completed prepared run with no retained Timeline
+items starts a supply cooldown of 15 minutes; two or three consecutive empty
+runs extend it to 30 or 60 minutes. This prevents duplicate-only or exhausted
+sources from being retried aggressively merely because the user consumes
+quickly.
 
 **Continuous background** is the clearer user-facing name for the stored
 `fixed` policy. While AkuSidecar is alive, its independent periodic cadence
@@ -76,9 +84,11 @@ is **Continue with next batch**. Revealing changes that batch from `prepared`
 to `visible` without rerunning reasoning.
 
 Settings reports queue capacity explicitly as prepared batches, configured
-limit, and open slots. A prepared count of zero therefore does not mean Auto
-Update is disabled; it means all configured slots are currently available for
-refill when scheduling, activity, and budget admission permit it.
+hard limit, Adaptive target, learned pace, rolling generation use, preparation
+lead, and supply cooldown. A prepared count of zero therefore does not mean
+Auto Update is disabled; it means all configured slots are available, while
+recent demand, learned target, generation allowance, supply, and budget still
+decide whether a refill is useful.
 
 AkuBrowser provides two intentional reveal paths. **Load latest batch** in the
 Timeline header reveals one batch, reconstructs the newest-first Timeline,
@@ -143,9 +153,11 @@ to 2 hours. An expired unread batch is not published into the Timeline; its
 diagnostic session remains inspectable.
 
 Expiration opens queue capacity, but it does not by itself prove that the user
-is present. Presence-aware reconsiders the slot on its current active, warm, or
-idle cadence, while Continuous background uses the next configured periodic
-tick. Neither mode retries immediately merely because capacity opened.
+has recent demand. Adaptive demand reconsiders the slot only while its demand
+window, learned target, generation allowance, supply cooldown, and five-minute
+minimum refill boundary permit work. Continuous background uses the next
+configured periodic tick. Neither mode bypasses its remaining boundaries merely
+because capacity opened.
 
 ## Capture lease and update policy
 
