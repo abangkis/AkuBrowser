@@ -22,7 +22,7 @@ func TestRunSignsCanonicalManifestWithoutExposingPrivateKey(t *testing.T) {
 	}
 	unsigned := unsignedManifest{
 		SchemaVersion: 1, Product: "AkuBrowser", Channel: "stable",
-		Version: "0.7.9", RuntimeRevision: "source-adapters-v87",
+		Version: "0.7.9", RuntimeRevision: "source-adapters-v90",
 		BridgeContractVersion: "aku-browser.bridge.v2",
 		PublishedAt:           "2026-07-29T00:00:00Z",
 		Artifact: artifact{

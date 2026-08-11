@@ -69,7 +69,7 @@ $developmentIdentityText = & node (Join-Path $PSScriptRoot "bridge-extension-ide
 Assert-True ($LASTEXITCODE -eq 0) "AkuBridge development manifest key does not match the identity registry."
 $developmentIdentity = ($developmentIdentityText | Out-String) | ConvertFrom-Json
 Assert-True ($developmentIdentity.distribution -eq "unpacked" -and $developmentIdentity.derivedExtensionId -eq $developmentIdentity.extensionId) "AkuBridge development identity is not deterministically pinned."
-Assert-True ($bridgePackage.akuRuntimeRevision -eq "source-adapters-v87") "AkuBridge development runtime revision is unexpected."
+Assert-True ($bridgePackage.akuRuntimeRevision -eq $releaseManifest.components.akuBridge.runtimeRevision) "AkuBridge development runtime revision drifted from the release manifest."
 if ($DistributionOnly) {
     Assert-True ($bridgePackage.akuRuntimeRevision -eq $releaseManifest.components.akuBridge.runtimeRevision) "AkuBridge runtime revision drifted from the release manifest."
 }

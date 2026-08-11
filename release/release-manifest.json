@@ -69,7 +69,7 @@
     "akuBridge": {
       "version": "0.7.9",
       "chromeVersion": "0.7.9.0",
-      "runtimeRevision": "source-adapters-v87",
+      "runtimeRevision": "source-adapters-v90",
       "contractVersion": "aku-browser.bridge.v2"
     },
     "c2paTool": {

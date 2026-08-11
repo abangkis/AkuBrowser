@@ -7,7 +7,7 @@
   "runtime": {
     "version": "0.7.9",
     "channel": "preview",
-    "runtimeRevision": "source-adapters-v87",
+    "runtimeRevision": "source-adapters-v90",
     "bridgeContractVersion": "aku-browser.bridge.v2",
     "endpoint": "http://127.0.0.1:11122",
     "instanceEpoch": "epoch-20260728-0001",
