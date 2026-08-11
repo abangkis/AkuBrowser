@@ -72,6 +72,7 @@ done
 
 for command_name in git go node npm lipo pkgbuild productbuild shasum zip; do require_command "$command_name"; done
 [[ "$(uname -s)" = "Darwin" ]] || die "the macOS runtime installer must be built on macOS"
+node "$browser_root/scripts/check-runtime-identity.mjs" "$workspace_root"
 
 version="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.version)' "$release_manifest")"
 release_bridge_identity_profile="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution?.chromeStore?.bridgeIdentityProfile ?? "")' "$release_manifest")"

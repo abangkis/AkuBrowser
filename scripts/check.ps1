@@ -25,6 +25,11 @@ function Assert-True([bool]$Condition, [string]$Message) {
     if (-not $Condition) { throw $Message }
 }
 
+& node (Join-Path $PSScriptRoot "check-runtime-identity.mjs") $workspaceRoot
+if ($LASTEXITCODE -ne 0) { throw "Runtime identity contract check failed." }
+& node --test --test-isolation=none (Join-Path $PSScriptRoot "check-runtime-identity.test.mjs")
+if ($LASTEXITCODE -ne 0) { throw "Runtime identity contract tests failed." }
+
 $bridgePackage = Read-Json (Join-Path $bridgeRoot "package.json")
 $bridgeManifest = Read-Json (Join-Path $bridgeRoot "manifest.json")
 $releaseManifest = Read-Json (Join-Path $browserRoot "release\release-manifest.json")
@@ -69,10 +74,6 @@ $developmentIdentityText = & node (Join-Path $PSScriptRoot "bridge-extension-ide
 Assert-True ($LASTEXITCODE -eq 0) "AkuBridge development manifest key does not match the identity registry."
 $developmentIdentity = ($developmentIdentityText | Out-String) | ConvertFrom-Json
 Assert-True ($developmentIdentity.distribution -eq "unpacked" -and $developmentIdentity.derivedExtensionId -eq $developmentIdentity.extensionId) "AkuBridge development identity is not deterministically pinned."
-Assert-True ($bridgePackage.akuRuntimeRevision -eq $releaseManifest.components.akuBridge.runtimeRevision) "AkuBridge development runtime revision drifted from the release manifest."
-if ($DistributionOnly) {
-    Assert-True ($bridgePackage.akuRuntimeRevision -eq $releaseManifest.components.akuBridge.runtimeRevision) "AkuBridge runtime revision drifted from the release manifest."
-}
 foreach ($source in @("x", "linkedin", "facebook")) {
     Assert-True ($sourceCatalog -match ('id:\s*"' + [regex]::Escape($source) + '"')) "AkuBridge source catalog is missing $source."
 }

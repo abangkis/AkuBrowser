@@ -36,7 +36,7 @@ The active pair is exact:
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
 current-process heartbeat is `reconnecting`; any observed mismatch is
 `incompatible`. A session may start only when the current heartbeat is exact.
-The exact v85 capability set includes
+The exact current capability set includes
 `mediaEvidenceAdapterVersions.x=x-response-evidence-v2` and the bounded
 `observe_response_media_evidence` and `dispatch_background_commands` actions.
 These declare evidence observation and bounded Sidecar-command dispatch, not

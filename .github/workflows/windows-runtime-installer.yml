@@ -48,6 +48,11 @@ jobs:
           token: ${{ secrets.AKU_WORKSPACE_READ_TOKEN || github.token }}
           path: AkuWorkspace/AkuSidecar
 
+      - name: Verify cross-component runtime identity
+        shell: pwsh
+        working-directory: AkuWorkspace/AkuBrowser
+        run: node .\scripts\check-runtime-identity.mjs ..
+
       - name: Restore Authenticode certificate
         shell: pwsh
         env:

@@ -61,7 +61,7 @@ Run the workspace check from this repository:
 .\scripts\check.ps1
 ```
 
-That command verifies the AkuBrowser, AkuSidecar, and AkuBridge identities and schemas, runs Go tests in AkuSidecar, and runs npm checks inside AkuBridge. It does not read AkuSupervisor configuration or require AkuSupervisor to be present. AkuBrowser itself does not install npm dependencies.
+That command first runs a fail-fast integration identity check across the release manifest and the public Bridge/Sidecar declarations, then verifies schemas, runs Go tests in AkuSidecar, and runs npm checks inside AkuBridge. The identity check is development/release tooling only: AkuBridge and AkuSidecar do not import one another or read sibling repositories at runtime. It does not read AkuSupervisor configuration or require AkuSupervisor to be present. AkuBrowser itself does not install npm dependencies.
 
 For normal local operation, build AkuSidecar and let AkuSupervisor own its lifecycle:
 

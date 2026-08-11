@@ -227,3 +227,13 @@ cd ..\AkuBrowser
 ```
 
 The check verifies AkuBrowser, AkuSidecar, and AkuBridge schema/version boundaries, runs `go test -p 1 ./...` in AkuSidecar, and runs `npm run check` only inside AkuBridge. It neither reads AkuSupervisor configuration nor requires the AkuSupervisor repository. Supervisor-specific validation belongs to AkuSupervisor itself. No command may push changes; repository push remains an explicit user-approved step.
+
+Before those test suites, `scripts/check-runtime-identity.mjs` treats the
+AkuBrowser release manifest as the integration authority and compares its
+version, runtime revision, build ID, and Bridge contract with the public
+declarations in AkuBridge and AkuSidecar. Windows and macOS preview/installer
+builders run the same check even when their optional test suites are skipped,
+so identity drift fails before artifact mutation, signing, or runtime
+replacement. This is a source-workspace and release-time dependency only.
+Standalone AkuBridge and AkuSidecar builds, tests, and running processes do not
+read this verifier, the release manifest, or sibling repositories.

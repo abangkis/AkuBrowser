@@ -24,6 +24,8 @@ $sidecarRoot = Join-Path $workspaceRoot "AkuSidecar"
 $installerSource = Join-Path $browserRoot "installer\windows"
 $releaseManifestPath = Join-Path $browserRoot "release\release-manifest.json"
 $bridgeIdentityRegistryPath = Join-Path $browserRoot "config\bridge-identities.json"
+& node (Join-Path $PSScriptRoot "check-runtime-identity.mjs") $workspaceRoot
+if ($LASTEXITCODE -ne 0) { throw "Runtime identity contract check failed before Windows installer build." }
 
 function Assert-True([bool] $Condition, [string] $Message) {
     if (-not $Condition) { throw $Message }

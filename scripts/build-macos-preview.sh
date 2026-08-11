@@ -84,6 +84,7 @@ done
 [[ -f "$bridge_identity_registry_path" ]] || die "Bridge identity registry is missing: $bridge_identity_registry_path"
 [[ -d "$bridge_root" ]] || die "AkuBridge checkout is missing: $bridge_root"
 [[ -d "$sidecar_root" ]] || die "AkuSidecar checkout is missing: $sidecar_root"
+node "$browser_root/scripts/check-runtime-identity.mjs" "$workspace_root"
 
 if [[ "$skip_validation" -eq 0 ]]; then
   (
