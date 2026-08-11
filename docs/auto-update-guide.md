@@ -41,11 +41,14 @@ The queue ceiling is also a scheduler-generation allowance over a rolling
 30-minute window. This separately bounds throughput: consuming a batch opens an
 inventory slot, but it does not authorize an endless replacement stream.
 Manual **Prepare batch now** remains explicit and does not consume this
-scheduler-only allowance. A completed prepared run with no retained Timeline
-items starts a supply cooldown of 15 minutes; two or three consecutive empty
-runs extend it to 30 or 60 minutes. This prevents duplicate-only or exhausted
-sources from being retried aggressively merely because the user consumes
-quickly.
+scheduler-only allowance. Adaptive classifies completed user and scheduler
+sessions by their actual result: any retained item is productive, all sources
+must complete normally before a zero-item session counts as valid-empty, and a
+failed source is technical. Only consecutive valid-empty outcomes start a
+supply cooldown of 15 minutes, extending to 30 or 60 minutes. Technical
+failures use a separate 5/15/30-minute retry cooldown. A productive manual
+update clears a stale supply cooldown, but never increases scheduler
+generation allowance.
 
 **Continuous background** is the clearer user-facing name for the stored
 `fixed` policy. While AkuSidecar is alive, its independent periodic cadence
@@ -85,7 +88,8 @@ to `visible` without rerunning reasoning.
 
 Settings reports queue capacity explicitly as prepared batches, configured
 hard limit, Adaptive target, learned pace, rolling generation use, preparation
-lead, and supply cooldown. A prepared count of zero therefore does not mean
+lead, last outcome with completed/failed source counts, and supply or technical
+cooldown. A prepared count of zero therefore does not mean
 Auto Update is disabled; it means all configured slots are available, while
 recent demand, learned target, generation allowance, supply, and budget still
 decide whether a refill is useful.
@@ -141,6 +145,15 @@ a new local allowance baseline at the current counters. It preserves every
 invocation record and continues to show actual usage for the day. It does not
 reset an external Codex limit or reduce billing; it only authorizes AkuBrowser
 to spend more tokens automatically during that local day.
+
+An external Codex account usage limit is a different stopper. AkuSidecar
+recognizes explicit usage-exhaustion errors, but does not confuse them with a
+temporary model-capacity or short rate-throttle failure. It records a durable
+`usage_limit_paused` state, fails remaining unstarted source lanes in the
+current batch, and admits no further scheduler tick or manual prepared batch.
+The Timeline explains the pause and Settings shows **Confirm Codex usage
+restored**. This pause never expires on a timer or at local midnight; only that
+explicit user confirmation clears it and wakes the scheduler.
 
 ## Freshness and urgency
 

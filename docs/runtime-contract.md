@@ -54,6 +54,20 @@ boundary are one transaction. The engine then completes that receipt as
 and cadence boundary. Manual prepared work bypasses cadence and does not enter
 this scheduler-only history.
 
+An explicit Codex account usage-limit error is persisted independently from
+the scheduler clock. While present it gates admission before the next tick
+receipt, survives restart and local-day rollover, and is exposed as
+`usage_limit_paused`. AkuSidecar does not infer recovery from time; the user
+must confirm restored usage through the typed restore endpoint before the
+scheduler wake signal is accepted again.
+
+Adaptive supply state is derived from terminal `scheduler` and `user` update
+sessions, not only from prepared-batch rows. Retained items make the outcome
+productive; zero retained items are supply-empty only when every source run
+completed normally; any failed source is a technical outcome and uses a
+separate bounded retry cooldown. Scheduler generation allowance remains
+isolated from these user-session supply signals.
+
 The current inference transport is one managed `codex app-server` stdio process. Acquisition planning, candidate evaluation, semantic event resolution, and AI Deep Detection use separate bounded profiles: Luna `high` is the release default for acquisition, semantic resolution, and AI Deep Detection, while candidate evaluation alone defaults to Luna `xhigh`. Each process can be tuned for its next invocation through the backend-owned bounded catalog: Luna High, Luna XHigh, Luna Max, Terra High, Terra XHigh, or Sol Medium. Settings persists only opaque profile IDs; free-form model strings are rejected. A process reads its stored profile once when that process starts, the active provider resolves it to one concrete model-and-effort pair, and that pair remains fixed for the invocation. Settings is not polled during execution, and a change made during an active update applies only to the next applicable process. The domain adapters depend only on a generic structured-inference boundary and their own schemas, so another provider can replace Codex and publish a different catalog without changing event, AI, selection authority, or UI rendering. Each invocation uses an ephemeral read-only thread; no long-lived model thread owns the event index or an AI assessment history. An explicit model-capacity failure may restart the process and retry the same model once inside the original invocation deadline. Cancellation, timeout, validation failure, and model fallback are never retried implicitly. An unexpected process exit fails the active invocation, discards that transport, and lets the next invocation start a fresh process. App Server callbacks are rejected with a protocol error, and a completed turn without a final structured response is a hard failure rather than an empty result.
 
 The Event Engine runs only after every source run is terminal and before global composition. Go performs bounded retrieval over normalized event summaries rather than raw source text. URL, platform, and generic-language tokens cannot trigger resolution. If no retained event reaches the historical overlap gate and no current pair shares a strong event/topic anchor, Go creates separate local event threads without an App Server call. Otherwise it sends at most the configured 5, 10, or 15 historical event aliases, opaque current-candidate aliases, bounded evaluated summaries, and at most a 600-character evidence excerpt per candidate. The model never receives stable event, evidence, Timeline, session, or run IDs. Trigger reason, strongest overlap, retained-event count, model usage, resolver status, and active user split/merge counts are durable Inbox diagnostics. A resolver failure degrades safely: current reports remain unique and session finalization continues. In `show_all` mode the Event Engine is not invoked.

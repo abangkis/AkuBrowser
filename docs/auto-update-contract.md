@@ -30,10 +30,15 @@ boundaries allow it.
 - Adaptive generation is bounded independently from ready inventory. Within a
   rolling 30-minute window, scheduler-created prepared attempts cannot exceed
   the configured queue ceiling. Explicit **Prepare batch now** does not consume
-  this scheduler-only allowance. One, two, or three consecutive completed
-  prepared updates with zero retained Timeline items apply a 15-, 30-, or
-  60-minute supply cooldown, preventing fast demand from repeatedly spending
-  tokens against exhausted or duplicate-only sources.
+  this scheduler-only allowance. Supply evidence is classified across both
+  scheduler and user update sessions: a session with retained items is
+  `productive`, an all-source successful session with no retained items is
+  `valid_empty`, and any failed source is `technical_failure` (a cancelled
+  session is `interrupted`). Only consecutive `valid_empty` outcomes apply a
+  15-, 30-, or 60-minute supply cooldown. A timeout, model-capacity failure,
+  Bridge failure, or other failed source never increments that supply streak.
+  A productive user update clears an older supply cooldown, while the
+  scheduler generation allowance remains scheduler-only.
 - **Continuous background** is the user-facing name for the persisted `fixed`
   policy. While AkuSidecar is alive, it evaluates one periodic tick on a
   configurable 5-, 10-, 15-, 30-, or 60-minute interval, with 15 minutes as the
@@ -69,6 +74,17 @@ boundaries allow it.
   are 1M, 2M, 3M, and 5M tokens,
   with 2M as the default. A protected share is unavailable to automatic work
   and remains available to an explicit user-visible update.
+- Consecutive technical outcomes use a separate short retry cooldown of 5, 15,
+  or 30 minutes. This prevents a transient provider or capture problem from
+  being mistaken for exhausted content while still avoiding an immediate
+  retry storm.
+- An explicit account-level Codex usage-limit failure persists a
+  `usage_limit_paused` stopper. It is evaluated before a scheduler receipt is
+  created, so polling and wakeups cannot spend repeated failed checks. Pending
+  source lanes in the affected session fail without additional reasoning.
+  Model-capacity and short transient rate-throttle errors do not create this
+  stopper. It has no time-based reset: only the user action **Confirm Codex
+  usage restored** clears it and wakes the scheduler.
 
 ## Prepared batches
 
@@ -109,9 +125,10 @@ target, generation allowance, supply cooldown, and minimum refill boundary
 permit work. Continuous background reconsiders it on its next configured tick.
 The status contract exposes last activity, learned consumption pace and sample
 count, conservative preparation lead, adaptive target, generated attempts and
-window limit, recent yield and empty streak, supply cooldown, last scheduler
-tick, next eligible check, prepared count, configured hard limit, and available
-slots. Full reset clears scheduler receipts and the last-tick boundary;
+window limit, the last adaptive outcome and source completion/failure counts,
+recent prepared yield and empty streak, supply or technical cooldown, last
+scheduler tick, next eligible check, prepared count, configured hard limit,
+and available slots. Full reset clears scheduler receipts and the last-tick boundary;
 learning reset does not delete durable batch-reveal history.
 
 ## Model budget
@@ -153,9 +170,9 @@ The scheduler uses `scheduler/prepared/automatic`. **Prepare batch now** uses
 `onboarding/visible/user`. **Update now** always uses `user/visible/user`.
 There is no separate manual pipeline.
 
-The Timeline exposes `paused` and `budget_paused` without requiring a visit to
-Settings. Settings remains the control surface for changing or resetting the
-quota.
+The Timeline exposes `paused`, `budget_paused`, and `usage_limit_paused`
+without requiring a visit to Settings. Settings remains the control surface
+for changing or resetting the quota and confirming restored external usage.
 
 ## Lifecycle
 
