@@ -48,6 +48,16 @@ automatic one-for-one refill loop when recent generation is already intense or
 fresh yield is weak. Manual updates remain available through their existing
 hard safety and budget checks.
 
+Adaptive also evaluates a small **content runway** inside that batch target.
+Each desired batch needs at least three retained posts, capped by the configured
+per-session item limit. Consequently, one prepared batch containing only one
+post no longer counts as a ready buffer: Adaptive may make one of its already
+bounded supplemental attempts before the reader returns. It never exceeds the
+hard queue ceiling or rolling generation allowance. Once a batch is revealed,
+Adaptive observes a 90-second reading grace before it may start a refill, so
+opening the batch does not immediately compete with the start of reading.
+These two rules do not apply to Continuous background or explicit updates.
+
 The queue ceiling is also a scheduler-generation allowance over a rolling
 30-minute window. This separately bounds throughput: consuming a batch opens an
 inventory slot, but it does not authorize an endless replacement stream.
@@ -98,11 +108,12 @@ diagnostics are already visible in Update Inbox. The default finish-line action
 is **Continue with next batch**. Revealing changes that batch from `prepared`
 to `visible` without rerunning reasoning.
 
-Settings reports queue capacity explicitly as prepared batches, configured
-hard limit, learned and pressure-adjusted Adaptive target, learned pace,
-rolling generation use, replenishment pressure and spacing, preparation lead,
-last outcome with completed/failed source counts, and supply or technical
-cooldown. A prepared count of zero therefore does not mean
+Settings reports queue capacity explicitly as prepared batches, retained-item
+runway and target, configured hard limit, learned and pressure-adjusted
+Adaptive target, learned pace, rolling generation use, replenishment pressure
+and spacing, preparation lead, post-reveal reading grace, last outcome with
+completed/failed source counts, and supply or technical cooldown. A prepared
+count of zero therefore does not mean
 Auto Update is disabled; it means all configured slots are available, while
 recent demand, effective target, pressure, generation allowance, supply, and
 budget still decide whether a refill is useful.

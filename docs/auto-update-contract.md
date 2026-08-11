@@ -34,6 +34,17 @@ boundaries allow it.
   minutes. Spacing is measured from the latest completed manual or scheduler
   update. It never disables explicit user updates and never exceeds the queue,
   budget, usage-limit, supply, technical, or rolling-generation stoppers.
+- Adaptive readiness is intentionally stricter than a raw batch count. Each
+  pressure-adjusted target batch contributes a minimum three-item content
+  runway, capped by the configured per-session item limit. A one-item batch
+  therefore leaves Adaptive eligible for a bounded supplemental attempt while
+  demand, spacing, allowance, supply, budget, and queue capacity still permit
+  it. Reaching the hard queue ceiling always stops supplementation, even when
+  retained yield is thin. Revealing a batch starts a 90-second reading grace;
+  the reveal still records demand and wakes the controller, but Adaptive cannot
+  begin a refill inside that quiet window. Both rules belong only to the
+  `adaptive` policy. Continuous background and explicit updates retain their
+  existing admission behavior.
 - A successful visible bootstrap, visible pointer, keyboard, touch, wheel,
   tab-return, or active-video playback renews recent demand at a bounded rate.
   A read-only bootstrap/status fetch, status polling, and a merely open but
@@ -65,9 +76,10 @@ boundaries allow it.
   active-session, hard queue, and model-budget admission path. Continuous
   background consumes every configured periodic tick. Adaptive demand writes a
   scheduler tick only when recent demand exists, its pressure-adjusted target
-  has a vacancy, generation allowance, pressure spacing, and supply permit
-  work, and its five-minute minimum refill boundary is due. Activity and
-  queue-vacancy events wake the controller but do not bypass those boundaries.
+  has a content-runway vacancy, generation allowance, pressure spacing, and
+  supply permit work, its post-reveal reading grace has elapsed, and its
+  five-minute minimum refill boundary is due. Activity and queue-vacancy events
+  wake the controller but do not bypass those boundaries.
 - Every due scheduler tick writes a durable local receipt before admission.
   The receipt records its mode, cadence tier/minutes, tick and next-tick time,
   then resolves from `checking` to `started` with the prepared session ID or
@@ -142,9 +154,10 @@ The status contract exposes last activity, learned consumption pace and sample
 count, conservative preparation lead, adaptive target, generated attempts and
 window limit, the last adaptive outcome and source completion/failure counts,
 recent prepared yield and empty streak, supply or technical cooldown, last
-scheduler tick, next eligible check, prepared count, configured hard limit,
-and available slots. Full reset clears scheduler receipts and the last-tick boundary;
-learning reset does not delete durable batch-reveal history.
+scheduler tick, next eligible check, prepared count and item runway, reading
+grace, configured hard limit, and available slots. Full reset clears scheduler
+receipts and the last-tick boundary; learning reset does not delete durable
+batch-reveal history.
 
 ## Model budget
 
