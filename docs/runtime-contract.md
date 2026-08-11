@@ -36,14 +36,17 @@ Both scheduler policies persist one shared last-tick boundary independently
 from run attempts and queue-vacancy events. Continuous background records every
 due user-selected 5-, 10-, 15-, 30-, or 60-minute tick before the shared
 stopper path. Adaptive demand records a tick only after recent activity wakes
-the controller, the learned ready-buffer target has a vacancy, the rolling
-30-minute generation allowance and zero-yield supply cooldown permit work, and
-the five-minute minimum refill boundary is due. The target is the recent
-prepared-batch reveal pace divided into a conservative preparation lead,
-clamped from one to the configured queue ceiling. Generic interaction and video
-playback renew demand but only a batch reveal trains pace. Continuous and
-Adaptive then share compatibility, calibration, active-session, hard queue,
-and budget admission.
+the controller, the pressure-adjusted ready-buffer target has a vacancy, the
+rolling 30-minute generation allowance, replenishment spacing, and zero-yield
+supply cooldown permit work, and the five-minute minimum refill boundary is
+due. The learned target is the recent prepared-batch reveal pace divided into a
+conservative preparation lead, clamped from one to the configured queue
+ceiling. A decaying 60-minute pressure score can lower it to one and add up to
+15 minutes after the latest completed update before another refill. Generic
+interaction and video playback renew demand but only a batch reveal trains
+pace. Manual and scheduler outcomes both inform pressure, while only scheduler
+attempts consume rolling allowance. Continuous and Adaptive then share
+compatibility, calibration, active-session, hard queue, and budget admission.
 
 Scheduler observability uses no schema migration: the newest 32 typed tick
 receipts are stored as bounded JSON in SQLite `meta`, while bootstrap/status

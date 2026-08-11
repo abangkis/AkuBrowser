@@ -37,11 +37,23 @@ durations establish a conservative lead time. Their ratio selects a target
 between one and the configured queue ceiling. With no usable consumption sample
 the target is one.
 
+Adaptive also watches **replenishment pressure**. This is not a quota and does
+not require a presence-session reset. It is a 0-100 decaying signal built from
+batch reveals, completed manual and automatic updates, and recent retained-item
+yield during the last hour. Contributions lose half their weight every 30
+minutes. When pressure rises, Adaptive first spaces the next refill by 5, 10,
+or 15 minutes; at high pressure it also lowers the effective ready target to
+one batch. This lets a fast reader keep getting prepared work while avoiding an
+automatic one-for-one refill loop when recent generation is already intense or
+fresh yield is weak. Manual updates remain available through their existing
+hard safety and budget checks.
+
 The queue ceiling is also a scheduler-generation allowance over a rolling
 30-minute window. This separately bounds throughput: consuming a batch opens an
 inventory slot, but it does not authorize an endless replacement stream.
 Manual **Prepare batch now** remains explicit and does not consume this
-scheduler-only allowance. Adaptive classifies completed user and scheduler
+scheduler-only allowance, although its result contributes to pressure because
+it is real recent supply. Adaptive classifies completed user and scheduler
 sessions by their actual result: any retained item is productive, all sources
 must complete normally before a zero-item session counts as valid-empty, and a
 failed source is technical. Only consecutive valid-empty outcomes start a
@@ -87,12 +99,13 @@ is **Continue with next batch**. Revealing changes that batch from `prepared`
 to `visible` without rerunning reasoning.
 
 Settings reports queue capacity explicitly as prepared batches, configured
-hard limit, Adaptive target, learned pace, rolling generation use, preparation
-lead, last outcome with completed/failed source counts, and supply or technical
+hard limit, learned and pressure-adjusted Adaptive target, learned pace,
+rolling generation use, replenishment pressure and spacing, preparation lead,
+last outcome with completed/failed source counts, and supply or technical
 cooldown. A prepared count of zero therefore does not mean
 Auto Update is disabled; it means all configured slots are available, while
-recent demand, learned target, generation allowance, supply, and budget still
-decide whether a refill is useful.
+recent demand, effective target, pressure, generation allowance, supply, and
+budget still decide whether a refill is useful.
 
 AkuBrowser provides two intentional reveal paths. **Load latest batch** in the
 Timeline header reveals one batch, reconstructs the newest-first Timeline,

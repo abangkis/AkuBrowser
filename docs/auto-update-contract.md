@@ -21,6 +21,19 @@ boundaries allow it.
   at most five reveals in seven days, ignoring gaps over two hours. Preparation
   lead is the recent five-run 75th percentile plus two minutes, defaults to
   eight minutes, and is clamped between three and thirty minutes.
+- Adaptive demand then applies **replenishment pressure** beneath that learned
+  target. The score combines prepared-batch reveals, recently completed manual
+  and scheduler updates, and their retained-item yield over the last 60
+  minutes. Every contribution decays with a 30-minute half-life, so pressure
+  falls without a session reset or mandatory pause. Fast reveals and repeated
+  updates raise pressure; weak yield raises it further, while a healthy
+  five-or-more-item yield contributes a small credit. The score is clamped to
+  0-100 and maps to four soft policies: low keeps the learned target with no
+  added spacing; moderate keeps it with five minutes; high lowers the effective
+  target to one with ten minutes; elevated keeps target one with fifteen
+  minutes. Spacing is measured from the latest completed manual or scheduler
+  update. It never disables explicit user updates and never exceeds the queue,
+  budget, usage-limit, supply, technical, or rolling-generation stoppers.
 - A successful visible bootstrap, visible pointer, keyboard, touch, wheel,
   tab-return, or active-video playback renews recent demand at a bounded rate.
   A read-only bootstrap/status fetch, status polling, and a merely open but
@@ -38,7 +51,9 @@ boundaries allow it.
   15-, 30-, or 60-minute supply cooldown. A timeout, model-capacity failure,
   Bridge failure, or other failed source never increments that supply streak.
   A productive user update clears an older supply cooldown, while the
-  scheduler generation allowance remains scheduler-only.
+  scheduler generation allowance remains scheduler-only. Manual outcomes do,
+  however, inform replenishment pressure because they add real content supply
+  even though they do not consume scheduler allowance.
 - **Continuous background** is the user-facing name for the persisted `fixed`
   policy. While AkuSidecar is alive, it evaluates one periodic tick on a
   configurable 5-, 10-, 15-, 30-, or 60-minute interval, with 15 minutes as the
@@ -49,10 +64,10 @@ boundaries allow it.
 - Both modes use the same onboarding, compatibility, calibration,
   active-session, hard queue, and model-budget admission path. Continuous
   background consumes every configured periodic tick. Adaptive demand writes a
-  scheduler tick only when recent demand exists, its learned target has a
-  vacancy, generation allowance and supply permit work, and its five-minute
-  minimum refill boundary is due. Activity and queue-vacancy events wake the
-  controller but do not bypass those boundaries.
+  scheduler tick only when recent demand exists, its pressure-adjusted target
+  has a vacancy, generation allowance, pressure spacing, and supply permit
+  work, and its five-minute minimum refill boundary is due. Activity and
+  queue-vacancy events wake the controller but do not bypass those boundaries.
 - Every due scheduler tick writes a durable local receipt before admission.
   The receipt records its mode, cadence tier/minutes, tick and next-tick time,
   then resolves from `checking` to `started` with the prepared session ID or
