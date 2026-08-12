@@ -33,7 +33,7 @@ gate above.
 
 1. start from a Windows machine or account with no AkuBrowser installation or database;
 2. install Codex App, sign in locally, and confirm it is ready;
-3. confirm Chrome is signed in to every source that will be enabled (X, LinkedIn, or Facebook);
+3. confirm Chrome is signed in to every source that will be enabled (X, LinkedIn, Facebook, or Instagram);
 4. build the frozen package with `scripts/build-prestore-bridge-package.ps1`,
    extract it anywhere, load that directory through **Load unpacked**, and
    verify Chrome assigns the manifest-key-pinned `development` ID declared by

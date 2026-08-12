@@ -4,7 +4,7 @@ Current development candidate: **`0.7.9`**. The canonical component tuple,
 bundle boundary, and preview prerequisites are recorded in
 [`release/release-manifest.json`](release/release-manifest.json).
 
-AkuBrowser turns bounded samples from the user's chosen social feeds into one finite, source-backed Timeline. The current source registry supports X, LinkedIn, and Facebook. It is designed for people who want to keep up without surrendering their attention to another infinite feed.
+AkuBrowser turns bounded samples from the user's chosen social feeds into one finite, source-backed Timeline. The current source registry supports X, LinkedIn, Facebook, and opt-in Instagram. It is designed for people who want to keep up without surrendering their attention to another infinite feed.
 
 Its cross-author semantic Event Engine treats the underlying event—not the number of posts about it—as the unit of attention. When different authors or sources report the same specific occurrence, AkuBrowser can collapse the repetition while preserving the reports for inspection and correction. The user reads the change once instead of paying the same attention cost again for every account that repeated it.
 

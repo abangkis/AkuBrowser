@@ -14,7 +14,7 @@ exact identity.
 - macOS on Intel or Apple silicon; the universal bundle contains native x64 and
   arm64 Sidecar slices;
 - Codex App with App Server available and locally signed in, or a compatible Codex CLI;
-- Google Chrome already signed in to every source you enable (X, LinkedIn, or Facebook).
+- Google Chrome already signed in to every source you enable (X, LinkedIn, Facebook, or Instagram).
 
 ## Install and start
 

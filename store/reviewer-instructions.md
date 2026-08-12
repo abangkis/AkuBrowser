@@ -25,7 +25,7 @@ move to the Developer ID and Authenticode production paths.
 - macOS fallback pattern:
   `https://github.com/abangkis/AkuBrowser/releases/download/v<version>/AkuBrowser-<version>-macos-universal.zip`
 - Optional: reviewer-controlled accounts already signed in to any source being
-  tested (X, LinkedIn, or Facebook)
+  tested (X, LinkedIn, Facebook, or Instagram)
 
 No social credentials are supplied by or collected by AkuBrowser. The setup,
 permission, runtime lifecycle, and local UI can be reviewed without enabling a
@@ -36,8 +36,9 @@ source.
 
 1. Install AkuBrowser from the Chrome Web Store test channel.
 2. Confirm the bundled setup page opens.
-3. Confirm X, LinkedIn, and Facebook are initially suggested, but no
-   social-domain permission has been granted.
+3. Confirm X, LinkedIn, and Facebook are initially suggested, Instagram is
+   available as an unchecked opt-in source, and no social-domain permission
+   has been granted.
 4. Review the prominent disclosure, OpenAI/Codex transfer disclosure, privacy
    link, and per-source choices.
 5. Confirm Setup shows **Not checked** and does not contact the native host until

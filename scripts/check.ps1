@@ -74,7 +74,7 @@ $developmentIdentityText = & node (Join-Path $PSScriptRoot "bridge-extension-ide
 Assert-True ($LASTEXITCODE -eq 0) "AkuBridge development manifest key does not match the identity registry."
 $developmentIdentity = ($developmentIdentityText | Out-String) | ConvertFrom-Json
 Assert-True ($developmentIdentity.distribution -eq "unpacked" -and $developmentIdentity.derivedExtensionId -eq $developmentIdentity.extensionId) "AkuBridge development identity is not deterministically pinned."
-foreach ($source in @("x", "linkedin", "facebook")) {
+foreach ($source in @("x", "linkedin", "facebook", "instagram")) {
     Assert-True ($sourceCatalog -match ('id:\s*"' + [regex]::Escape($source) + '"')) "AkuBridge source catalog is missing $source."
 }
 Assert-True ($sourceCatalog -match 'mediaEvidenceAdapterVersion:\s*"x-response-evidence-v2"') "AkuBridge X media-evidence adapter boundary is unexpected."

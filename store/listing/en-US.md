@@ -2,14 +2,14 @@
 
 ## Short description
 
-Build a private AI feed from the X, LinkedIn, and Facebook sources you enable.
+Build a private AI feed from the X, LinkedIn, Facebook, and Instagram sources you enable.
 
 ## Description
 
 AkuBrowser turns busy social feeds into a more relevant, private AI timeline.
 
 You choose each source AkuBrowser may read. The setup page initially suggests
-X, LinkedIn, and Facebook, but no social-domain permission is granted until you
+X, LinkedIn, Facebook, and Instagram, but no social-domain permission is granted until you
 explicitly confirm the selection and approve Chrome's permission request.
 AkuBrowser reads only rendered content on enabled sources.
 

@@ -34,7 +34,7 @@ if (@($sidecarConfig.bridge.trustedExtensionOrigins).Count -ne 0) { throw "AkuSi
 if ($manifest.manifest_version -ne 3) { throw "Manifest V3 is required." }
 if ($manifest.name -ne "AkuBrowser") { throw "Public manifest name must be AkuBrowser." }
 if ($manifest.permissions -contains "tabs") { throw "The unused tabs permission must stay absent." }
-if ($manifest.optional_host_permissions.Count -ne 4) { throw "Expected four independently revocable source origins." }
+if ($manifest.optional_host_permissions.Count -ne 6) { throw "Expected six independently revocable source origins." }
 if ($manifest.content_scripts.Count -ne 1) { throw "Social scripts must not be statically registered." }
 
 function Read-PngDimensions([string]$Path) {

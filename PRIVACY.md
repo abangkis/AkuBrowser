@@ -3,7 +3,7 @@
 Last updated: 7 August 2026
 
 AkuBrowser's single purpose is to let a user build and personalize a private AI
-feed from the X, LinkedIn, and Facebook sources that the user explicitly
+feed from the X, LinkedIn, Facebook, and Instagram sources that the user explicitly
 enables. The public Chrome extension is named **AkuBrowser**; its internal
 extension component is called AkuBridge.
 

@@ -69,7 +69,7 @@
     "akuBridge": {
       "version": "0.7.9",
       "chromeVersion": "0.7.9.0",
-      "runtimeRevision": "source-adapters-v90",
+      "runtimeRevision": "source-adapters-v91",
       "contractVersion": "aku-browser.bridge.v2"
     },
     "c2paTool": {
@@ -116,7 +116,7 @@
   },
   "previewPrerequisites": [
     "Codex App with Codex App Server installed and locally signed in",
-    "Google Chrome with every enabled source (X, LinkedIn, or Facebook) already signed in",
+    "Google Chrome with every enabled source (X, LinkedIn, Facebook, or Instagram) already signed in",
     "AkuBridge installed from the Chrome Web Store"
   ]
 }

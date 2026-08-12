@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "singlePurpose": "Build and personalize a private AI feed from the X, LinkedIn, and Facebook sources explicitly enabled by the user.",
+  "singlePurpose": "Build and personalize a private AI feed from the X, LinkedIn, Facebook, and Instagram sources explicitly enabled by the user.",
   "dataCategories": {
     "personallyIdentifiableInformation": true,
     "healthInformation": false,

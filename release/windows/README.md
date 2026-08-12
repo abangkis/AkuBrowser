@@ -24,7 +24,7 @@ development tooling and is intentionally excluded from this bundle.
 - Windows 10 or newer on x64 hardware;
 - Codex App installed and locally signed in, or a Codex CLI build that includes
   App Server;
-- Google Chrome already signed in to every source you enable (X, LinkedIn, or Facebook);
+- Google Chrome already signed in to every source you enable (X, LinkedIn, Facebook, or Instagram);
 - if antivirus protection causes a problem during installation or onboarding,
   follow the narrow-exception guidance below before trying again.
 

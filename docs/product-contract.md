@@ -19,7 +19,7 @@ Social engagement is useful for discovery, but it is indirect behavioral inferen
 
 ## First-run experience
 
-1. The user chooses among the registered X, LinkedIn, and Facebook sources.
+1. The user chooses among the registered X, LinkedIn, Facebook, and opt-in Instagram sources.
 2. AkuBrowser performs one bounded capture to obtain real candidates.
 3. Before the Timeline opens, the user calibrates a source-balanced sample with More, Neutral, Less, or a capture issue.
 4. The local profile becomes active when repeated directional evidence is sufficient.
