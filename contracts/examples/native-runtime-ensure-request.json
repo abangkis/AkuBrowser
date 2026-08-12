@@ -6,7 +6,7 @@
   "extension": {
     "product": "AkuBrowser",
     "productVersion": "0.7.9",
-    "runtimeRevision": "source-adapters-v91",
+    "runtimeRevision": "source-adapters-v92",
     "bridgeContractVersion": "aku-browser.bridge.v2",
     "bridgeProtocol": {
       "name": "aku-browser.bridge",
