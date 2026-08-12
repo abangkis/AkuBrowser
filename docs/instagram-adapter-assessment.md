@@ -14,10 +14,10 @@ labels and adjacent rendered counts.
 
 The initial adapter admits only articles with a same-origin native permalink.
 This intentionally rejects observed sponsored cards that had no native post
-identity. Instagram is registered as an unchecked opt-in source, so existing
-profiles and new default sessions retain the established X, LinkedIn, and
-Facebook workload until the user explicitly enables Instagram and grants its
-revocable host permission.
+identity. Instagram is registered as a preselected source, consistent with X,
+LinkedIn, and Facebook in both extension setup and new Sidecar profiles. Chrome
+host authority remains revocable and is granted only after the user confirms
+the selected sources.
 
 ## Media boundary
 
