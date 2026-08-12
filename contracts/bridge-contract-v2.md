@@ -29,15 +29,16 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge product version `0.7.9` / Chrome manifest version `0.7.9.0`;
-- runtime revision `source-adapters-v92`;
-- build id `aku-bridge-0.7.9-source-adapters-v92`; and
+- runtime revision `source-adapters-v93`;
+- build id `aku-bridge-0.7.9-source-adapters-v93`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
 current-process heartbeat is `reconnecting`; any observed mismatch is
 `incompatible`. A session may start only when the current heartbeat is exact.
 The exact current capability set includes
-`mediaEvidenceAdapterVersions.x=x-response-evidence-v2` and the bounded
+`mediaEvidenceAdapterVersions.x=x-response-evidence-v2`,
+`mediaEvidenceAdapterVersions.instagram=instagram-structured-video-v1`, and the bounded
 `observe_response_media_evidence` and `dispatch_background_commands` actions.
 These declare evidence observation and bounded Sidecar-command dispatch, not
 authority to issue provider requests or take unbounded browser control.
@@ -161,9 +162,9 @@ source-specific identity mapper, URL sanitizer, and MAIN-world resolver.
 
 This is intentionally a hybrid rather than one universal parser or a complete
 processor duplicated inside every adapter. X keeps its bounded React/response
-resolvers and Facebook uses `facebook-structured-video-v1`; both return the
-same media-only envelope. LinkedIn may add a resolver later without changing
-the shared merge, presentation, single-active-player, or viewport-pause rules.
+resolvers; LinkedIn, Facebook, and Instagram use provider-specific structured
+resolvers. All return the same media-only envelope without changing the shared
+merge, presentation, single-active-player, or viewport-pause rules.
 
 Facebook structured video resolution parses only bounded
 `script[type="application/json"][data-sjs]` payloads already present in the
@@ -174,6 +175,14 @@ state, cookie, or authentication material. Script count, per-script bytes,
 total bytes, traversal nodes, depth, candidates, and media per candidate are
 all capped. If identity, poster, playback URL, or allowlist validation fails,
 the existing native-post fallback remains authoritative.
+
+Instagram structured video resolution parses only bounded rendered
+`script[type="application/json"]` payloads containing `video_versions`. It maps
+the post shortcode to allowlisted HTTPS poster and progressive MP4 URLs under
+`fbcdn.net` or `cdninstagram.com`. `/p/`, `/reel/`, and `/tv/` identities are
+normalized to the same shortcode for exact post matching. Signed playback URL
+failure uses the existing native-post recapture path; resolver failure leaves
+the native-post fallback authoritative.
 
 Structured collection runs in parallel with DOM capture after freshness has
 been established. The collector has a 250 ms hard budget and publishes bounded

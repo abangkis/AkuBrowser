@@ -9,7 +9,7 @@ import { verifyRuntimeIdentity } from "./check-runtime-identity.mjs";
 const identity = {
   version: "0.7.9",
   chromeVersion: "0.7.9.0",
-  revision: "source-adapters-v92",
+  revision: "source-adapters-v93",
   contract: "aku-browser.bridge.v2",
   bridgeID: "aku-bridge-chrome-mv3-v0",
 };
@@ -101,7 +101,7 @@ test("fails before build when Sidecar expects a different Bridge revision", asyn
 
   await assert.rejects(
     verifyRuntimeIdentity(root),
-    /AkuSidecar ExpectedBridgeRevision: found "source-adapters-v89", expected "source-adapters-v92"/,
+    /AkuSidecar ExpectedBridgeRevision: found "source-adapters-v89", expected "source-adapters-v93"/,
   );
 });
 
