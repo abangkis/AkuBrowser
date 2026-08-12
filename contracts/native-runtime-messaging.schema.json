@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://akubrowser.local/contracts/native-runtime-messaging.schema.json",
-  "title": "AkuBrowser Native Runtime Messaging v1",
-  "description": "Bounded request/response protocol between the Chrome Web Store extension and the registered AkuBrowser native runtime host.",
+  "title": "AkuBrowser Native Runtime Messaging v2",
+  "description": "Current bounded capability-negotiated protocol between AkuBridge and the registered AkuBrowser native runtime host. The frozen v1 migration shape is a separate contract.",
   "oneOf": [
     { "$ref": "#/$defs/request" },
     { "$ref": "#/$defs/response" }
@@ -10,7 +10,7 @@
   "$defs": {
     "protocolVersion": {
       "type": "integer",
-      "const": 1
+      "const": 2
     },
     "requestId": {
       "type": "string",
@@ -35,7 +35,9 @@
       "enum": [
         "status",
         "ensure_runtime",
-        "shutdown_if_idle"
+        "shutdown_if_idle",
+        "check_codex",
+        "reconcile_runtime"
       ]
     },
     "extensionIdentity": {
@@ -54,13 +56,52 @@
         "bridgeContractVersion": {
           "type": "string",
           "const": "aku-browser.bridge.v2"
+        },
+        "bridgeProtocol": {
+          "$ref": "#/$defs/bridgeProtocol"
+        },
+        "capabilities": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 80,
+            "pattern": "^[a-z][a-z0-9._-]{1,79}$"
+          },
+          "allOf": [
+            { "contains": { "const": "authority.read_only_bounded" } },
+            { "contains": { "const": "capture.bounded" } }
+          ]
         }
       },
       "required": [
         "product",
         "productVersion",
         "runtimeRevision",
-        "bridgeContractVersion"
+        "bridgeContractVersion",
+        "bridgeProtocol",
+        "capabilities"
+      ],
+      "additionalProperties": false
+    },
+    "bridgeProtocol": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": "string",
+          "const": "aku-browser.bridge"
+        },
+        "version": {
+          "type": "integer",
+          "const": 2
+        }
+      },
+      "required": [
+        "name",
+        "version"
       ],
       "additionalProperties": false
     },
@@ -179,6 +220,19 @@
         },
         "rollbackAvailable": {
           "type": "boolean"
+        },
+        "urgency": {
+          "type": "string",
+          "enum": [
+            "routine",
+            "recommended",
+            "required",
+            "security"
+          ]
+        },
+        "deadline": {
+          "type": "string",
+          "format": "date-time"
         }
       },
       "required": [
@@ -187,7 +241,22 @@
         "targetVersion",
         "rollbackAvailable"
       ],
-      "additionalProperties": false
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "required": ["deadline"]
+          },
+          "then": {
+            "required": ["urgency"],
+            "properties": {
+              "urgency": {
+                "enum": ["required", "security"]
+              }
+            }
+          }
+        }
+      ]
     },
     "errorState": {
       "type": "object",
@@ -207,7 +276,10 @@
             "checksum_invalid",
             "candidate_health_failed",
             "rollback_failed",
-            "internal_error"
+            "internal_error",
+            "codex_not_found",
+            "codex_check_failed",
+            "host_upgrade_required"
           ]
         },
         "message": {
@@ -226,6 +298,7 @@
             "restart_chrome",
             "reinstall_runtime",
             "contact_support",
+            "install_codex",
             "none"
           ]
         }
@@ -279,6 +352,9 @@
             { "$ref": "#/$defs/errorState" },
             { "type": "null" }
           ]
+        },
+        "codex": {
+          "$ref": "#/$defs/codexState"
         }
       },
       "required": [
@@ -291,6 +367,39 @@
         "update",
         "error"
       ],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "action": { "const": "check_codex" }
+            },
+            "required": ["action"]
+          },
+          "then": {
+            "required": ["codex"]
+          },
+          "else": {
+            "not": {
+              "required": ["codex"]
+            }
+          }
+        }
+      ]
+    },
+    "codexState": {
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "string",
+          "enum": [
+            "available",
+            "not_found",
+            "error"
+          ]
+        }
+      },
+      "required": ["status"],
       "additionalProperties": false
     }
   }

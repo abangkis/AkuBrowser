@@ -32,11 +32,11 @@ async function createFixture() {
         runtimeRevision: identity.revision,
         contractVersion: identity.contract,
       },
-      akuSidecar: { version: identity.version },
+      akuSidecar: { version: identity.version, runtimeRevision: identity.revision },
     },
   }));
   await writeFile(root, "AkuBrowser/contracts/bridge-contract-v2.md", `runtime revision \`${identity.revision}\`\nbuild id \`${buildID}\``);
-  for (const file of ["native-runtime-ensure-request.json", "native-runtime-invalid-arbitrary-action.json"]) {
+  for (const file of ["native-runtime-ensure-request.json", "native-runtime-invalid-arbitrary-action.json", "native-runtime-v1-ensure-request.json"]) {
     await writeFile(root, `AkuBrowser/contracts/examples/${file}`, JSON.stringify({ extension: {
       productVersion: identity.version,
       runtimeRevision: identity.revision,
@@ -48,12 +48,18 @@ async function createFixture() {
     runtimeRevision: identity.revision,
     bridgeContractVersion: identity.contract,
   } }));
+  await writeFile(root, "AkuBrowser/contracts/examples/native-runtime-v1-ready-response.json", JSON.stringify({ runtime: {
+    version: identity.version,
+    runtimeRevision: identity.revision,
+    bridgeContractVersion: identity.contract,
+  } }));
   await writeFile(root, "AkuBridge/package.json", JSON.stringify({ version: identity.version, akuRuntimeRevision: identity.revision }));
   await writeFile(root, "AkuBridge/manifest.json", JSON.stringify({ version: identity.chromeVersion, version_name: identity.version }));
   await writeFile(root, "AkuBridge/bridge-capabilities.js", [
     `export const BRIDGE_RUNTIME_REVISION = "${identity.revision}";`,
     `export const BRIDGE_ID = "${identity.bridgeID}";`,
     `export const BRIDGE_CONTRACT_VERSION = "${identity.contract}";`,
+    `export const SIDECAR_BOOTSTRAP_VERSION = "${identity.version}";`,
     "const capability = { buildId: `aku-bridge-${extensionVersion}-${BRIDGE_RUNTIME_REVISION}` };",
   ].join("\n"));
   await writeFile(root, "AkuBridge/content-script.js", `const runtimeRevision = "${identity.revision}";`);
@@ -96,5 +102,22 @@ test("fails before build when Sidecar expects a different Bridge revision", asyn
   await assert.rejects(
     verifyRuntimeIdentity(root),
     /AkuSidecar ExpectedBridgeRevision: found "source-adapters-v89", expected "source-adapters-v91"/,
+  );
+});
+
+test("fails before packaging when Bridge pins a different Sidecar bootstrap version", async (t) => {
+  const root = await createFixture();
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  const capabilitiesPath = path.join(root, "AkuBridge", "bridge-capabilities.js");
+  const capabilities = await fs.readFile(capabilitiesPath, "utf8");
+  await fs.writeFile(
+    capabilitiesPath,
+    capabilities.replace('SIDECAR_BOOTSTRAP_VERSION = "0.7.9"', 'SIDECAR_BOOTSTRAP_VERSION = "0.8.0"'),
+    "utf8",
+  );
+
+  await assert.rejects(
+    verifyRuntimeIdentity(root),
+    /AkuBridge Sidecar bootstrap version: found "0.8.0", expected "0.7.9"/,
   );
 });

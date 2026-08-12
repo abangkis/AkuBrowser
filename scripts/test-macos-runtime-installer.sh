@@ -7,6 +7,8 @@ browser_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 release_manifest="$browser_root/release/release-manifest.json"
 bridge_identity_registry="$browser_root/config/bridge-identities.json"
 version="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1],"utf8")).version)' "$release_manifest")"
+sidecar_version="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1],"utf8")).components.akuSidecar.version)' "$release_manifest")"
+emit_legacy_v1="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.version === r.components?.akuBridge?.version && r.version === r.components?.akuSidecar?.version && r.components?.akuBridge?.runtimeRevision === r.components?.akuSidecar?.runtimeRevision ? "1" : "0")' "$release_manifest")"
 extension_id="$(node --input-type=module -e '
   import fs from "node:fs";
   const [releasePath, registryPath] = process.argv.slice(1);
@@ -19,7 +21,7 @@ extension_id="$(node --input-type=module -e '
   }
   console.log(identity.extensionId);
 ' "$release_manifest" "$bridge_identity_registry")"
-package_path="${1:-$browser_root/artifacts/AkuBrowserRuntimeSetup-${version}-macos-universal-unsigned-local.pkg}"
+package_path="${1:-$browser_root/artifacts/AkuBrowserRuntimeSetup-${sidecar_version}-macos-universal-unsigned-local.pkg}"
 [[ -f "$package_path" ]] || die "installer package is missing: $package_path"
 package_directory="$(cd "$(dirname "$package_path")" && pwd)"
 
@@ -32,8 +34,8 @@ component="$inspect_root/expanded/AkuBrowserRuntime.pkg"
 payload="$component/Payload/Library/Application Support/AkuBrowser"
 postinstall="$component/Scripts/postinstall"
 host="$payload/host/AkuBrowserRuntimeHost"
-sidecar="$payload/runtime/versions/$version/AkuSidecar"
-c2pa_tool="$payload/runtime/versions/$version/c2patool"
+sidecar="$payload/runtime/versions/$sidecar_version/AkuSidecar"
+c2pa_tool="$payload/runtime/versions/$sidecar_version/c2patool"
 current="$payload/runtime/current.json"
 
 for required in "$distribution" "$postinstall" "$host" "$sidecar" "$current" "$payload/Uninstall-AkuBrowserRuntime.command"; do
@@ -41,7 +43,7 @@ for required in "$distribution" "$postinstall" "$host" "$sidecar" "$current" "$p
 done
 grep -q 'enable_currentUserHome="true"' "$distribution" || die "package is not current-user scoped"
 grep -q 'enable_localSystem="false"' "$distribution" || die "package unexpectedly permits system installation"
-grep -q "runtime/versions/$version/AkuSidecar" "$postinstall" || die "postinstall version drifted"
+grep -q "runtime/versions/$sidecar_version/AkuSidecar" "$postinstall" || die "postinstall version drifted"
 grep -q "chrome-extension://$extension_id/" "$postinstall" || die "production extension origin is missing"
 grep -q 'Google/Chrome/NativeMessagingHosts' "$postinstall" || die "Chrome Native Messaging registration is missing"
 
@@ -59,7 +61,7 @@ if [[ -f "$c2pa_tool" ]]; then
   [[ "$("$c2pa_tool" --version)" = "c2patool $expected_c2pa_version" ]] || die "packaged c2patool version differs from the release manifest"
 fi
 
-node --input-type=module - "$current" "$version" <<'NODE'
+node --input-type=module - "$current" "$sidecar_version" <<'NODE'
 import fs from "node:fs";
 const [file, version] = process.argv.slice(2);
 const current = JSON.parse(fs.readFileSync(file, "utf8"));
@@ -84,28 +86,45 @@ if [[ "$unsigned_package" -eq 1 ]]; then
   grep -q 'Open Anyway' "$unsigned_welcome" || die "unsigned package does not provide bounded Gatekeeper guidance"
 fi
 
-update_artifact="$package_directory/AkuBrowserRuntime-${version}-macos-universal.zip"
-update_manifest="$package_directory/AkuBrowserRuntimeUpdate-macos-universal.json"
-if [[ -f "$update_artifact" || -f "$update_manifest" ]]; then
-  [[ -f "$update_artifact" && -f "$update_manifest" ]] || die "macOS update artifact and manifest must be produced together"
-  node --input-type=module - "$update_artifact" "$update_manifest" "$version" <<'NODE'
+sidecar_update_artifact="$package_directory/AkuSidecar-${sidecar_version}-macos-universal.zip"
+sidecar_update_manifest="$package_directory/AkuSidecarUpdate-macos-universal.json"
+legacy_update_artifact="$package_directory/AkuBrowserRuntime-${version}-macos-universal.zip"
+legacy_update_manifest="$package_directory/AkuBrowserRuntimeUpdate-macos-universal.json"
+if [[ -f "$sidecar_update_artifact" || -f "$sidecar_update_manifest" || -f "$legacy_update_artifact" || -f "$legacy_update_manifest" ]]; then
+  [[ -f "$sidecar_update_artifact" && -f "$sidecar_update_manifest" ]] || die "AkuSidecar v2 update artifact and manifest must be produced together"
+  if [[ "$emit_legacy_v1" -eq 1 ]]; then
+    [[ -f "$legacy_update_artifact" && -f "$legacy_update_manifest" ]] || die "aligned releases must retain the legacy v1 update feed during transition"
+  else
+    [[ ! -f "$legacy_update_artifact" && ! -f "$legacy_update_manifest" ]] || die "independent component releases must not emit an invalid legacy v1 feed"
+  fi
+  node --input-type=module - "$sidecar_update_artifact" "$sidecar_update_manifest" "$legacy_update_artifact" "$legacy_update_manifest" "$sidecar_version" "$version" "$emit_legacy_v1" <<'NODE'
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-const [artifactPath, manifestPath, version] = process.argv.slice(2);
-const artifact = fs.readFileSync(artifactPath);
-const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-const expectedName = `AkuBrowserRuntime-${version}-macos-universal.zip`;
-if (manifest.schemaVersion !== 1 || manifest.product !== "AkuBrowser" || manifest.channel !== "stable") throw new Error("update manifest identity is invalid");
-if (manifest.version !== version || !manifest.artifact.url.endsWith(`/v${version}/${expectedName}`)) throw new Error("update artifact URL is invalid");
-if (manifest.artifact.size !== artifact.length || manifest.artifact.sha256 !== crypto.createHash("sha256").update(artifact).digest("hex")) throw new Error("update artifact digest is invalid");
-if (manifest.signature?.algorithm !== "ed25519" || manifest.signature?.keyId !== "aku-runtime-stable-v1" || manifest.signature?.value?.length !== 88) throw new Error("update signature metadata is invalid");
+const [sidecarArtifactPath, sidecarManifestPath, legacyArtifactPath, legacyManifestPath, sidecarVersion, releaseVersion, emitLegacyV1] = process.argv.slice(2);
+const verifyArtifact = (artifactPath, manifest) => {
+  const artifact = fs.readFileSync(artifactPath);
+  if (manifest.artifact.size !== artifact.length || manifest.artifact.sha256 !== crypto.createHash("sha256").update(artifact).digest("hex")) throw new Error("update artifact digest is invalid");
+  if (manifest.signature?.algorithm !== "ed25519" || manifest.signature?.keyId !== "aku-runtime-stable-v1" || manifest.signature?.value?.length !== 88) throw new Error("update signature metadata is invalid");
+};
+const sidecarManifest = JSON.parse(fs.readFileSync(sidecarManifestPath, "utf8"));
+const expectedSidecarName = `AkuSidecar-${sidecarVersion}-macos-universal.zip`;
+if (sidecarManifest.schemaVersion !== 2 || sidecarManifest.product !== "AkuSidecar" || sidecarManifest.channel !== "stable") throw new Error("AkuSidecar update manifest identity is invalid");
+if (sidecarManifest.sidecarVersion !== sidecarVersion || sidecarManifest.artifact.platform !== "macos-universal" || !sidecarManifest.artifact.url.endsWith(`/v${sidecarVersion}/${expectedSidecarName}`)) throw new Error("AkuSidecar update artifact URL is invalid");
+if (sidecarManifest.bridgeCompatibility?.protocol !== "aku-browser.bridge" || sidecarManifest.databaseCompatibility?.maxSchemaVersion < sidecarManifest.databaseCompatibility?.minSchemaVersion) throw new Error("AkuSidecar compatibility metadata is invalid");
+verifyArtifact(sidecarArtifactPath, sidecarManifest);
+if (emitLegacyV1 === "1") {
+  const legacyManifest = JSON.parse(fs.readFileSync(legacyManifestPath, "utf8"));
+  const expectedLegacyName = `AkuBrowserRuntime-${releaseVersion}-macos-universal.zip`;
+  if (legacyManifest.schemaVersion !== 1 || legacyManifest.product !== "AkuBrowser" || legacyManifest.version !== releaseVersion || !legacyManifest.artifact.url.endsWith(`/v${releaseVersion}/${expectedLegacyName}`)) throw new Error("legacy update manifest is invalid");
+  verifyArtifact(legacyArtifactPath, legacyManifest);
+}
 NODE
   mkdir -p "$inspect_root/update"
-  ditto -x -k "$update_artifact" "$inspect_root/update"
+  ditto -x -k "$sidecar_update_artifact" "$inspect_root/update"
   lipo -archs "$inspect_root/update/AkuSidecar" | grep -q x86_64 || die "update Sidecar lacks x86_64"
   lipo -archs "$inspect_root/update/AkuSidecar" | grep -q arm64 || die "update Sidecar lacks arm64"
-  node --input-type=module - "$inspect_root/update" "$version" <<'NODE'
+  node --input-type=module - "$inspect_root/update" "$sidecar_version" <<'NODE'
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";

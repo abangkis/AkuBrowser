@@ -44,14 +44,20 @@ Development and production extension IDs are named profiles in one registry;
 their generated runtime projections are defined in
 [`docs/bridge-identity-contract.md`](docs/bridge-identity-contract.md).
 
+The end-user deployment has exactly two independently updated products:
+AkuBridge from the Chrome Web Store and AkuSidecar from the signed platform
+feed. The Native Messaging host is an internal helper shipped inside the
+AkuSidecar installer, not a third deployable. AkuSupervisor remains optional
+development tooling and is never required or shipped to Store users.
+
 | Repository | Responsibility | Runtime |
 | --- | --- | --- |
 | `AkuBrowser` | Product contract, canonical schemas, distribution assembly, integration and artifact checks | PowerShell + POSIX shell release tooling |
 | `AkuBridge` | Read-only bounded Chrome capture | Browser JavaScript / Node test tooling |
 | `AkuSidecar` | UI, sessions, SQLite, reasoning, selection, personalization | Go |
-| `AkuSupervisor` | Visible development process ownership, health, logs, cooperative Bridge reload, and read-only MCP inspection | Rust |
+| `AkuSupervisor` | Optional development-only process ownership; excluded from end-user deployment | Rust |
 
-Only AkuBridge uses npm, because it is the Chrome extension. AkuSidecar is fully Go. AkuSupervisor starts the Sidecar executable directly.
+Only AkuBridge uses npm, because it is the Chrome extension. AkuSidecar is fully Go. In development AkuSupervisor may start Sidecar; production installation and update do not depend on Supervisor.
 
 ## Development
 

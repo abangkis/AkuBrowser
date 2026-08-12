@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "kind": "request",
   "requestId": "request-20260728-invalid",
   "action": "execute_shell",
@@ -7,7 +7,15 @@
     "product": "AkuBrowser",
     "productVersion": "0.7.9",
     "runtimeRevision": "source-adapters-v91",
-    "bridgeContractVersion": "aku-browser.bridge.v2"
+    "bridgeContractVersion": "aku-browser.bridge.v2",
+    "bridgeProtocol": {
+      "name": "aku-browser.bridge",
+      "version": 2
+    },
+    "capabilities": [
+      "authority.read_only_bounded",
+      "capture.bounded"
+    ]
   },
   "command": "powershell.exe"
 }

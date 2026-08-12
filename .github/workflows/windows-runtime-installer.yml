@@ -6,13 +6,25 @@ on:
       release_tag:
         description: Existing AkuBrowser release tag that receives the stable installer asset
         required: true
-        default: v0.7.8
+        default: v0.7.9
         type: string
-      source_ref:
-        description: Matching source ref in AkuBrowser, AkuBridge, and AkuSidecar
+      browser_ref:
+        description: Frozen 40-character AkuBrowser commit SHA
         required: true
-        default: main
         type: string
+      bridge_ref:
+        description: Frozen 40-character AkuBridge commit SHA
+        required: true
+        type: string
+      sidecar_ref:
+        description: Frozen 40-character AkuSidecar commit SHA
+        required: true
+        type: string
+      promote_latest:
+        description: Promote only after the matching macOS installer, feed, and archive are already attached
+        required: true
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -29,14 +41,14 @@ jobs:
       - name: Check out AkuBrowser
         uses: actions/checkout@v4
         with:
-          ref: ${{ inputs.source_ref }}
+          ref: ${{ inputs.browser_ref }}
           path: AkuWorkspace/AkuBrowser
 
       - name: Check out AkuBridge
         uses: actions/checkout@v4
         with:
           repository: abangkis/AkuBridge
-          ref: ${{ inputs.source_ref }}
+          ref: ${{ inputs.bridge_ref }}
           token: ${{ secrets.AKU_WORKSPACE_READ_TOKEN || github.token }}
           path: AkuWorkspace/AkuBridge
 
@@ -44,9 +56,35 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: abangkis/AkuSidecar
-          ref: ${{ inputs.source_ref }}
+          ref: ${{ inputs.sidecar_ref }}
           token: ${{ secrets.AKU_WORKSPACE_READ_TOKEN || github.token }}
           path: AkuWorkspace/AkuSidecar
+
+      - name: Verify frozen source commits
+        shell: pwsh
+        env:
+          BROWSER_REF: ${{ inputs.browser_ref }}
+          BRIDGE_REF: ${{ inputs.bridge_ref }}
+          SIDECAR_REF: ${{ inputs.sidecar_ref }}
+        run: |
+          $expected = [ordered]@{
+            AkuBrowser = $env:BROWSER_REF
+            AkuBridge = $env:BRIDGE_REF
+            AkuSidecar = $env:SIDECAR_REF
+          }
+          $resolved = [ordered]@{}
+          foreach ($repository in $expected.Keys) {
+            if ([string]$expected[$repository] -cnotmatch '^[0-9a-f]{40}$') {
+              throw "$repository ref must be one exact lowercase 40-character commit SHA."
+            }
+            $actual = (git -C "AkuWorkspace/$repository" rev-parse HEAD | Out-String).Trim().ToLowerInvariant()
+            if ($LASTEXITCODE -ne 0 -or $actual -ne $expected[$repository]) {
+              throw "$repository resolved to $actual instead of frozen SHA $($expected[$repository])."
+            }
+            $resolved[$repository] = $actual
+          }
+          $resolved | ConvertTo-Json | Out-File -LiteralPath (Join-Path $env:RUNNER_TEMP "aku-release-source-shas.json") -Encoding utf8
+          $resolved | ConvertTo-Json
 
       - name: Verify cross-component runtime identity
         shell: pwsh
@@ -115,10 +153,15 @@ jobs:
       - name: Build and sign runtime installer
         shell: pwsh
         working-directory: AkuWorkspace/AkuBrowser
+        env:
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           $release = Get-Content .\release\release-manifest.json -Raw | ConvertFrom-Json
-          if ("${{ inputs.release_tag }}" -ne "v$($release.version)") {
-            throw "release_tag must exactly match v$($release.version)."
+          if ($env:RELEASE_TAG -cnotmatch '^v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$') {
+            throw "release_tag must be one stable v<major>.<minor>.<patch> tag."
+          }
+          if ($env:RELEASE_TAG -ne "v$($release.components.akuSidecar.version)") {
+            throw "release_tag must exactly match v$($release.components.akuSidecar.version) for an AkuSidecar release."
           }
           .\scripts\build-windows-runtime-installer.ps1 `
             -C2paToolPath $env:AKU_C2PA_TOOL `
@@ -143,6 +186,13 @@ jobs:
           }
           Copy-Item -LiteralPath $installer.FullName `
             -Destination (Join-Path $installer.DirectoryName "AkuBrowserRuntimeSetup.exe")
+          $versionedChecksum = "$($installer.FullName).sha256"
+          if (-not (Test-Path -LiteralPath $versionedChecksum -PathType Leaf)) {
+            throw "Versioned runtime installer checksum was not produced."
+          }
+          $stableChecksum = Join-Path $installer.DirectoryName "AkuBrowserRuntimeSetup.exe.sha256"
+          $stableHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $installer.FullName).Hash.ToLowerInvariant()
+          "$stableHash  AkuBrowserRuntimeSetup.exe" | Set-Content -LiteralPath $stableChecksum -Encoding ASCII
 
       - name: Upload signed installer
         uses: actions/upload-artifact@v4
@@ -151,7 +201,10 @@ jobs:
           if-no-files-found: error
           path: |
             AkuWorkspace/AkuBrowser/artifacts/runtime-installer/AkuBrowserRuntimeSetup.exe
+            AkuWorkspace/AkuBrowser/artifacts/runtime-installer/AkuBrowserRuntimeSetup-*.exe
             AkuWorkspace/AkuBrowser/artifacts/runtime-installer/*.sha256
+            AkuWorkspace/AkuBrowser/artifacts/runtime-installer/AkuSidecar-*-windows-x64.zip
+            AkuWorkspace/AkuBrowser/artifacts/runtime-installer/AkuSidecarUpdate.json
             AkuWorkspace/AkuBrowser/artifacts/runtime-installer/AkuBrowserRuntime-*-windows-x64.zip
             AkuWorkspace/AkuBrowser/artifacts/runtime-installer/AkuBrowserRuntimeUpdate.json
 
@@ -160,15 +213,134 @@ jobs:
         working-directory: AkuWorkspace/AkuBrowser
         env:
           GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
         run: |
           $release = Get-Content .\release\release-manifest.json -Raw | ConvertFrom-Json
           $runtimeZip = ".\artifacts\runtime-installer\AkuBrowserRuntime-$($release.version)-windows-x64.zip"
-          gh release view "${{ inputs.release_tag }}" | Out-Null
-          gh release upload "${{ inputs.release_tag }}" `
-            .\artifacts\runtime-installer\AkuBrowserRuntimeSetup.exe `
-            $runtimeZip `
-            .\artifacts\runtime-installer\AkuBrowserRuntimeUpdate.json `
-            --clobber
+          $sidecarZip = ".\artifacts\runtime-installer\AkuSidecar-$($release.components.akuSidecar.version)-windows-x64.zip"
+          $sidecarZipChecksum = "$sidecarZip.sha256"
+          $versionedInstaller = ".\artifacts\runtime-installer\AkuBrowserRuntimeSetup-$($release.components.akuSidecar.version).exe"
+          $assets = @(
+            ".\artifacts\runtime-installer\AkuBrowserRuntimeSetup.exe",
+            ".\artifacts\runtime-installer\AkuBrowserRuntimeSetup.exe.sha256",
+            $versionedInstaller,
+            "$versionedInstaller.sha256",
+            $sidecarZip,
+            $sidecarZipChecksum,
+            ".\artifacts\runtime-installer\AkuSidecarUpdate.json"
+          )
+          if (Test-Path -LiteralPath $runtimeZip) {
+            $assets += $runtimeZip
+            $assets += ".\artifacts\runtime-installer\AkuBrowserRuntimeUpdate.json"
+          }
+          if ($env:RELEASE_TAG -cnotmatch '^v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$') {
+            throw "release_tag must be one stable v<major>.<minor>.<patch> tag."
+          }
+          gh release view $env:RELEASE_TAG | Out-Null
+          gh release upload $env:RELEASE_TAG @assets --clobber
+
+      - name: Promote fully assembled cross-platform release
+        if: ${{ inputs.promote_latest }}
+        shell: pwsh
+        working-directory: AkuWorkspace/AkuBrowser
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          $release = Get-Content .\release\release-manifest.json -Raw | ConvertFrom-Json
+          $sidecarVersion = [string]$release.components.akuSidecar.version
+          $legacyFeedNames = @(
+            "AkuBrowserRuntimeUpdate.json",
+            "AkuBrowserRuntimeUpdate-macos-universal.json"
+          )
+          $legacyTupleIsAligned = (
+            [string]$release.version -eq [string]$release.components.akuBridge.version -and
+            [string]$release.version -eq [string]$release.components.akuSidecar.version -and
+            [string]$release.components.akuBridge.runtimeRevision -eq [string]$release.components.akuSidecar.runtimeRevision
+          )
+          if ($env:RELEASE_TAG -cnotmatch '^v(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)$') {
+            throw "release_tag must be one stable v<major>.<minor>.<patch> tag."
+          }
+          $releaseView = gh release view $env:RELEASE_TAG --json assets | ConvertFrom-Json
+          $assetNames = @($releaseView.assets | ForEach-Object { [string]$_.name })
+          $carryForward = Join-Path $env:RUNNER_TEMP "legacy-runtime-feed-carry-forward"
+          if (-not $legacyTupleIsAligned) {
+            New-Item -ItemType Directory -Force -Path $carryForward | Out-Null
+            $previousLatest = gh release view --json tagName | ConvertFrom-Json
+            if ([string]::IsNullOrWhiteSpace([string]$previousLatest.tagName) -or
+                [string]$previousLatest.tagName -eq $env:RELEASE_TAG) {
+              throw "A distinct previous Latest release is required to carry forward frozen v1 feeds."
+            }
+            foreach ($feedName in $legacyFeedNames) {
+              gh release download $previousLatest.tagName --pattern $feedName --dir $carryForward --clobber
+            }
+            $legacyAssets = @($legacyFeedNames | ForEach-Object { Join-Path $carryForward $_ })
+            gh release upload $env:RELEASE_TAG @legacyAssets --clobber
+            $releaseView = gh release view $env:RELEASE_TAG --json assets | ConvertFrom-Json
+            $assetNames = @($releaseView.assets | ForEach-Object { [string]$_.name })
+          }
+          $verifiedLegacy = Join-Path $env:RUNNER_TEMP "legacy-runtime-feed-verified"
+          New-Item -ItemType Directory -Force -Path $verifiedLegacy | Out-Null
+          foreach ($feedName in $legacyFeedNames) {
+            gh release download $env:RELEASE_TAG --pattern $feedName --dir $verifiedLegacy --clobber
+            $feedPath = Join-Path $verifiedLegacy $feedName
+            go -C .\installer\windows run .\cmd\sign-update-manifest `
+              -verify-signed $feedPath `
+              -public-key $env:AKU_UPDATE_PUBLIC_KEY
+            if ($LASTEXITCODE -ne 0) {
+              throw "Legacy feed signature verification failed: $feedName"
+            }
+            $legacy = Get-Content -LiteralPath $feedPath -Raw | ConvertFrom-Json
+            if ($legacy.schemaVersion -ne 1 -or $legacy.product -ne "AkuBrowser" -or
+                $legacy.channel -ne "stable" -or $legacy.signature.algorithm -ne "ed25519" -or
+                $legacy.signature.keyId -ne "aku-runtime-stable-v1" -or
+                $legacy.signature.value -notmatch '^[A-Za-z0-9+/]{86}==$') {
+              throw "Legacy feed is not the frozen signed v1 shape: $feedName"
+            }
+            $expectedPlatform = if ($feedName -eq "AkuBrowserRuntimeUpdate.json") { "windows-x64" } else { "macos-universal" }
+            $artifactMatch = [regex]::Match(
+              [string]$legacy.artifact.url,
+              "^https://github.com/abangkis/AkuBrowser/releases/download/(?<tag>v[^/]+)/(?<asset>AkuBrowserRuntime-[^/]+-$expectedPlatform\.zip)$"
+            )
+            if (-not $artifactMatch.Success) {
+              throw "Legacy feed artifact URL is not pinned to an immutable platform release: $feedName"
+            }
+            $artifactRelease = gh release view $artifactMatch.Groups['tag'].Value --json assets | ConvertFrom-Json
+            $artifactNames = @($artifactRelease.assets | ForEach-Object { [string]$_.name })
+            if ($artifactNames -notcontains $artifactMatch.Groups['asset'].Value) {
+              throw "Legacy feed references a missing immutable archive: $feedName"
+            }
+            $sourcePath = Join-Path $carryForward $feedName
+            if (Test-Path -LiteralPath $sourcePath) {
+              $sourceHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $sourcePath).Hash
+              $targetHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $feedPath).Hash
+              if ($sourceHash -ne $targetHash) {
+                throw "Carried legacy feed changed bytes during upload: $feedName"
+              }
+            }
+          }
+          $requiredAssets = @(
+            "AkuBrowserRuntimeSetup.exe",
+            "AkuBrowserRuntimeSetup-$sidecarVersion.exe",
+            "AkuBrowserRuntimeSetup-$sidecarVersion.exe.sha256",
+            "AkuSidecar-$sidecarVersion-windows-x64.zip",
+            "AkuSidecar-$sidecarVersion-windows-x64.zip.sha256",
+            "AkuSidecarUpdate.json",
+            "AkuBrowserRuntimeSetup.pkg",
+            "AkuBrowserRuntimeSetup-$sidecarVersion-macos-universal.pkg",
+            "AkuBrowserRuntimeSetup-$sidecarVersion-macos-universal.pkg.sha256",
+            "AkuSidecar-$sidecarVersion-macos-universal.zip",
+            "AkuSidecar-$sidecarVersion-macos-universal.zip.sha256",
+            "AkuSidecarUpdate-macos-universal.json",
+            "AkuBrowserRuntimeUpdate.json",
+            "AkuBrowserRuntimeUpdate-macos-universal.json"
+          )
+          foreach ($requiredAsset in $requiredAssets) {
+            if ($assetNames -notcontains $requiredAsset) {
+              throw "Cannot promote Latest before the cross-platform asset is attached: $requiredAsset"
+            }
+          }
+          gh release edit $env:RELEASE_TAG --draft=false --prerelease=false --latest
 
       - name: Remove signing certificate
         if: always()

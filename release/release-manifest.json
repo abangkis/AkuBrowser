@@ -28,7 +28,8 @@
           "format": "unsigned-user-scoped-exe",
           "trustState": "unsigned",
           "stableAsset": "AkuBrowserRuntimeSetup.exe",
-          "updateManifest": "AkuBrowserRuntimeUpdate.json",
+          "updateManifest": "AkuSidecarUpdate.json",
+          "legacyUpdateManifestV1": "AkuBrowserRuntimeUpdate.json",
           "hostRegistration": "HKCU",
           "dataDirectory": "%LOCALAPPDATA%\\AkuBrowser\\data"
         },
@@ -37,7 +38,8 @@
           "format": "unsigned-user-scoped-pkg",
           "trustState": "unsigned",
           "stableAsset": "AkuBrowserRuntimeSetup.pkg",
-          "updateManifest": "AkuBrowserRuntimeUpdate-macos-universal.json",
+          "updateManifest": "AkuSidecarUpdate-macos-universal.json",
+          "legacyUpdateManifestV1": "AkuBrowserRuntimeUpdate-macos-universal.json",
           "hostRegistration": "~/Library/Application Support/Google/Chrome/NativeMessagingHosts",
           "dataDirectory": "~/Library/Application Support/AkuBrowser/data"
         },
@@ -52,7 +54,10 @@
       },
       "nativeHost": {
         "name": "com.akubrowser.runtime",
-        "protocolVersion": 1
+        "role": "internal-update-and-launch-helper",
+        "version": "0.7.9",
+        "protocolVersion": 2,
+        "minimumProtocolVersion": 1
       }
     },
     "localOrigins": [
@@ -64,7 +69,47 @@
   "components": {
     "akuSidecar": {
       "version": "0.7.9",
-      "runtime": "go"
+      "runtime": "go",
+      "runtimeRevision": "source-adapters-v91",
+      "update": {
+        "minHostVersion": "0.7.9",
+        "bridgeCompatibility": {
+          "protocol": "aku-browser.bridge",
+          "minVersion": 2,
+          "maxVersion": 2,
+          "requiredCapabilities": [
+            "probe_readiness",
+            "probe_freshness",
+            "recover_source_freshness",
+            "collect_visible",
+            "dispatch_background_commands",
+            "detect_pending_content",
+            "report_adapter_health",
+            "report_capture_quality",
+            "acquire_missing_media",
+            "recapture_missing_media",
+            "cache_passive_media_evidence",
+            "lookup_passive_media_evidence",
+            "observe_response_media_evidence",
+            "extract_source_semantics",
+            "report_frontier",
+            "manage_source_tab_lifecycle",
+            "manage_capture_window",
+            "release_capture_surface",
+            "preserve_working_tab",
+            "report_source_events",
+            "reload_self",
+            "authority.read_only_bounded",
+            "capture.bounded"
+          ]
+        },
+        "databaseCompatibility": {
+          "minSchemaVersion": 7,
+          "maxSchemaVersion": 7,
+          "rollbackSafe": true
+        },
+        "urgency": "routine"
+      }
     },
     "akuBridge": {
       "version": "0.7.9",
@@ -101,6 +146,13 @@
     }
   },
   "bundle": {
+    "deployables": [
+      "AkuBridge (Chrome Web Store extension)",
+      "AkuSidecar (platform installer and signed update archive)"
+    ],
+    "internalHelpers": [
+      "Native Messaging Host for AkuSidecar launch and update handoff"
+    ],
     "includes": [
       "AkuSidecar",
       "Platform-native c2patool 0.26.60 for local image provenance verification",

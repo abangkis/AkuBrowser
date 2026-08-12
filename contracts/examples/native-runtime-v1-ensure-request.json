@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "kind": "request",
+  "requestId": "request-20260728-v1-0001",
+  "action": "ensure_runtime",
+  "extension": {
+    "product": "AkuBrowser",
+    "productVersion": "0.7.9",
+    "runtimeRevision": "source-adapters-v91",
+    "bridgeContractVersion": "aku-browser.bridge.v2"
+  }
+}

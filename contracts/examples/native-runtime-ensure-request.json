@@ -1,5 +1,5 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "kind": "request",
   "requestId": "request-20260728-0001",
   "action": "ensure_runtime",
@@ -7,6 +7,19 @@
     "product": "AkuBrowser",
     "productVersion": "0.7.9",
     "runtimeRevision": "source-adapters-v91",
-    "bridgeContractVersion": "aku-browser.bridge.v2"
+    "bridgeContractVersion": "aku-browser.bridge.v2",
+    "bridgeProtocol": {
+      "name": "aku-browser.bridge",
+      "version": 2
+    },
+    "capabilities": [
+      "status",
+      "ensure_runtime",
+      "shutdown_if_idle",
+      "check_codex",
+      "reconcile_runtime",
+      "authority.read_only_bounded",
+      "capture.bounded"
+    ]
   }
 }

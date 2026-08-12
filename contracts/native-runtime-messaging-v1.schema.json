@@ -1,0 +1,148 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://akubrowser.local/contracts/native-runtime-messaging-v1.schema.json",
+  "title": "AkuBrowser Native Runtime Messaging v1 (frozen)",
+  "description": "Frozen strict migration protocol for deployed native hosts. Never add v2 negotiation or update-policy fields to this schema.",
+  "oneOf": [
+    { "$ref": "#/$defs/request" },
+    { "$ref": "#/$defs/response" }
+  ],
+  "$defs": {
+    "protocolVersion": { "type": "integer", "const": 1 },
+    "requestId": {
+      "type": "string",
+      "minLength": 16,
+      "maxLength": 80,
+      "pattern": "^[A-Za-z0-9._-]+$"
+    },
+    "version": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 64,
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "runtimeRevision": {
+      "type": "string",
+      "minLength": 3,
+      "maxLength": 80,
+      "pattern": "^[a-z0-9][a-z0-9._-]*$"
+    },
+    "action": {
+      "type": "string",
+      "enum": ["status", "ensure_runtime", "shutdown_if_idle", "check_codex"]
+    },
+    "extensionIdentity": {
+      "type": "object",
+      "properties": {
+        "product": { "type": "string", "const": "AkuBrowser" },
+        "productVersion": { "$ref": "#/$defs/version" },
+        "runtimeRevision": { "$ref": "#/$defs/runtimeRevision" },
+        "bridgeContractVersion": { "type": "string", "const": "aku-browser.bridge.v2" }
+      },
+      "required": ["product", "productVersion", "runtimeRevision", "bridgeContractVersion"],
+      "additionalProperties": false
+    },
+    "request": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": { "$ref": "#/$defs/protocolVersion" },
+        "kind": { "type": "string", "const": "request" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "action": { "$ref": "#/$defs/action" },
+        "extension": { "$ref": "#/$defs/extensionIdentity" }
+      },
+      "required": ["schemaVersion", "kind", "requestId", "action", "extension"],
+      "additionalProperties": false
+    },
+    "runtimeState": {
+      "type": "object",
+      "properties": {
+        "version": { "$ref": "#/$defs/version" },
+        "channel": { "type": "string", "enum": ["stable", "preview"] },
+        "runtimeRevision": { "$ref": "#/$defs/runtimeRevision" },
+        "bridgeContractVersion": { "type": "string", "const": "aku-browser.bridge.v2" },
+        "endpoint": {
+          "type": "string",
+          "enum": ["http://127.0.0.1:11122", "http://localhost:11122"]
+        },
+        "instanceEpoch": {
+          "type": "string",
+          "minLength": 8,
+          "maxLength": 128,
+          "pattern": "^[A-Za-z0-9._:-]+$"
+        },
+        "processState": {
+          "type": "string",
+          "enum": ["stopped", "starting", "ready", "stopping", "failed"]
+        }
+      },
+      "required": ["version", "channel", "runtimeRevision", "bridgeContractVersion", "endpoint", "instanceEpoch", "processState"],
+      "additionalProperties": false
+    },
+    "updateState": {
+      "type": "object",
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": ["idle", "checking", "downloading", "verifying", "staging", "waiting_for_idle", "swapping", "health_check", "rolling_back"]
+        },
+        "currentVersion": { "oneOf": [{ "$ref": "#/$defs/version" }, { "type": "null" }] },
+        "targetVersion": { "oneOf": [{ "$ref": "#/$defs/version" }, { "type": "null" }] },
+        "rollbackAvailable": { "type": "boolean" }
+      },
+      "required": ["phase", "currentVersion", "targetVersion", "rollbackAvailable"],
+      "additionalProperties": false
+    },
+    "errorState": {
+      "type": "object",
+      "properties": {
+        "code": {
+          "type": "string",
+          "enum": ["invalid_request", "unauthorized_extension", "protocol_incompatible", "runtime_incompatible", "runtime_busy", "runtime_start_failed", "update_check_failed", "download_failed", "signature_invalid", "checksum_invalid", "candidate_health_failed", "rollback_failed", "internal_error", "codex_not_found", "codex_check_failed"]
+        },
+        "message": { "type": "string", "minLength": 1, "maxLength": 300 },
+        "retryable": { "type": "boolean" },
+        "remediation": {
+          "type": "string",
+          "enum": ["retry", "wait", "restart_chrome", "reinstall_runtime", "contact_support", "install_codex", "none"]
+        }
+      },
+      "required": ["code", "message", "retryable", "remediation"],
+      "additionalProperties": false
+    },
+    "codexState": {
+      "type": "object",
+      "properties": {
+        "status": { "type": "string", "enum": ["available", "not_found", "error"] }
+      },
+      "required": ["status"],
+      "additionalProperties": false
+    },
+    "response": {
+      "type": "object",
+      "properties": {
+        "schemaVersion": { "$ref": "#/$defs/protocolVersion" },
+        "kind": { "type": "string", "const": "response" },
+        "requestId": { "$ref": "#/$defs/requestId" },
+        "action": { "$ref": "#/$defs/action" },
+        "status": {
+          "type": "string",
+          "enum": ["ready", "updating", "restart_required", "busy", "incompatible", "error"]
+        },
+        "runtime": { "oneOf": [{ "$ref": "#/$defs/runtimeState" }, { "type": "null" }] },
+        "update": { "$ref": "#/$defs/updateState" },
+        "error": { "oneOf": [{ "$ref": "#/$defs/errorState" }, { "type": "null" }] },
+        "codex": { "$ref": "#/$defs/codexState" }
+      },
+      "required": ["schemaVersion", "kind", "requestId", "action", "status", "runtime", "update", "error"],
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": { "properties": { "action": { "const": "check_codex" } }, "required": ["action"] },
+          "then": { "required": ["codex"] },
+          "else": { "not": { "required": ["codex"] } }
+        }
+      ]
+    }
+  }
+}

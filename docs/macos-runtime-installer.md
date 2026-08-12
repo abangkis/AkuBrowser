@@ -13,8 +13,9 @@ The setup flow is deliberately user initiated:
 
 1. AkuBrowser Setup checks `com.akubrowser.runtime`.
 2. A missing host exposes **Install runtime**.
-3. The action opens the versioned official
-   `AkuBrowserRuntimeSetup-<version>-macos-universal.pkg` release asset.
+3. Ordinary first install and repair open the versioned installer pinned to the
+   explicit Sidecar bootstrap version packaged into Bridge. Legacy-host refresh
+   uses that same compatible package; Setup never selects native code from Latest.
 4. The user opens the package and completes macOS Installer.
 5. The user returns to Setup and selects **Check runtime**.
 6. Chrome starts the registered host, which reconciles AkuSidecar and returns
@@ -32,7 +33,7 @@ The package targets the current-user home installation domain:
 - Chrome registration:
   `~/Library/Application Support/Google/Chrome/NativeMessagingHosts/com.akubrowser.runtime.json`;
 - versioned runtime:
-  `~/Library/Application Support/AkuBrowser/runtime/versions/<version>/`;
+  `~/Library/Application Support/AkuBrowser/runtime/versions/<sidecarVersion>/`;
 - active metadata: `~/Library/Application Support/AkuBrowser/runtime/current.json`;
 - durable product data: `~/Library/Application Support/AkuBrowser/data`.
 
@@ -49,6 +50,28 @@ declared profile, but cannot accept an arbitrary extension ID.
 
 No LaunchAgent is installed. Chrome starts the Native Messaging Host on demand;
 the host starts AkuSidecar only for a bounded `ensure_runtime` request.
+
+AkuBridge and AkuSidecar are the only deployed products and may advance at
+different versions. The package includes the Native Messaging host only as an
+internal launch/update helper; AkuSupervisor is not installed. Current hosts
+read `AkuSidecarUpdate-macos-universal.json`, whose schema-v2 artifact is
+`AkuSidecar-<sidecarVersion>-macos-universal.zip`. During migration an aligned
+Bridge/Sidecar release also publishes the frozen v1 pair
+`AkuBrowserRuntimeUpdate-macos-universal.json` and
+`AkuBrowserRuntime-<releaseVersion>-macos-universal.zip` for older strict hosts.
+An independent component release omits v1 rather than publishing an invalid
+legacy tuple during its build. Before that release becomes Latest, promotion
+copies the frozen signed v1 feed alias byte-for-byte from the previous Latest.
+Its artifact URL remains pinned to the old immutable tag, whose referenced
+archive is verified to exist and therefore does not need to be duplicated.
+
+The publishable package is
+`AkuBrowserRuntimeSetup-<sidecarVersion>-macos-universal.pkg`, with
+`AkuBrowserRuntimeSetup.pkg` as its stable bootstrap alias. A stable gate must
+also produce the signed schema-v2 feed and Sidecar archive in the same output.
+The release must not become GitHub Latest until the matching Windows and macOS
+aliases, v2 feeds, Sidecar archives, and verified current-or-carried v1 feed
+aliases are all attached.
 
 ## Build trust
 
@@ -98,6 +121,8 @@ Stable unsigned `v0.7.9` candidate:
 ```sh
 ./scripts/build-macos-runtime-installer.sh \
   --c2pa-tool ../AkuSidecar/runtime/dev/macos-universal/c2patool \
+  --update-public-key "$AKU_UPDATE_PUBLIC_KEY" \
+  --update-signing-private-key /secure/path/runtime-update-signing-key.txt \
   --unsigned-stable-candidate
 ```
 

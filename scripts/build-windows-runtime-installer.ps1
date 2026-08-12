@@ -139,12 +139,21 @@ function Sign-Binary([string] $Path, [string] $SignTool) {
 $release = Read-Json $releaseManifestPath
 $bridgeIdentityRegistry = Read-Json $bridgeIdentityRegistryPath
 Assert-True ([string]$release.version -match '^\d+\.\d+\.\d+$') "The installer requires a three-part numeric release version."
+$sidecarVersion = [string]$release.components.akuSidecar.version
+Assert-True ($sidecarVersion -match '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') "AkuSidecar version is invalid."
+$nativeHostVersion = [string]$release.distribution.chromeStore.nativeHost.version
+Assert-True ($nativeHostVersion -match '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') "Native runtime host version is invalid."
+$hostVersionCheckArguments = @((Join-Path $PSScriptRoot "check-native-host-min-version.mjs"), $releaseManifestPath)
+if (-not $UnsignedLocalCandidate) { $hostVersionCheckArguments += "--stable" }
+& node @hostVersionCheckArguments
+if ($LASTEXITCODE -ne 0) { throw "Packaged Native Host does not satisfy the AkuSidecar minimum host version." }
 Assert-True (-not ($UnsignedLocalCandidate -and $UnsignedStableCandidate)) "Choose only one unsigned installer mode."
 if ($UnsignedStableCandidate) {
     Assert-True ($release.channel -eq "stable") "Unsigned stable installers require a stable release manifest channel."
     Assert-True ($release.distribution.chromeStore.nativeRuntimeInstallers.'windows-x64'.trustState -eq "unsigned") "The stable Windows installer trust state must be declared unsigned."
 }
-$versionQuad = "$($release.version).0"
+$sidecarCoreVersion = ($sidecarVersion -split '-', 2)[0]
+$versionQuad = "$sidecarCoreVersion.0"
 $nsisCompiler = Find-NsisCompiler $NsisPath
 $releaseBridgeIdentityProfile = [string]$release.distribution.chromeStore.bridgeIdentityProfile
 Assert-True ($bridgeIdentityRegistry.schemaVersion -eq 1) "Unsupported Bridge identity registry schema."
@@ -270,7 +279,7 @@ if (-not $SkipValidation) {
 }
 
 $suffix = if ($UnsignedLocalCandidate) { "-unsigned-local" } else { "" }
-$artifactName = "AkuBrowserRuntimeSetup-$($release.version)$suffix.exe"
+$artifactName = "AkuBrowserRuntimeSetup-$sidecarVersion$suffix.exe"
 $artifactPath = Join-Path $OutputRoot $artifactName
 $checksumPath = "$artifactPath.sha256"
 $buildRoot = Join-Path $OutputRoot ".runtime-installer-build"
@@ -280,7 +289,7 @@ Reset-Path $checksumPath $OutputRoot
 
 $payloadRoot = Join-Path $buildRoot "payload"
 $hostPayload = Join-Path $payloadRoot "host"
-$runtimePayload = Join-Path $payloadRoot "runtime\versions\$($release.version)"
+$runtimePayload = Join-Path $payloadRoot "runtime\versions\$sidecarVersion"
 New-Item -ItemType Directory -Force -Path $hostPayload | Out-Null
 New-Item -ItemType Directory -Force -Path $runtimePayload | Out-Null
 
@@ -306,7 +315,7 @@ try {
 
     Push-Location (Join-Path $bridgeRoot "native-host")
     try {
-        $hostLdflags = "-s -w"
+        $hostLdflags = "-s -w -X main.runtimeHostVersion=$nativeHostVersion"
         if (-not [string]::IsNullOrWhiteSpace($UpdatePublicKey)) {
             $hostLdflags += " -X main.pinnedUpdatePublicKey=$UpdatePublicKey"
         }
@@ -366,8 +375,8 @@ New-Item -ItemType Directory -Force -Path $currentOutput | Out-Null
 $current = [ordered]@{
     schemaVersion = 1
     channel = if ($UnsignedLocalCandidate) { $release.channel } else { "stable" }
-    version = $release.version
-    runtimeRevision = $release.components.akuBridge.runtimeRevision
+    version = $sidecarVersion
+    runtimeRevision = $release.components.akuSidecar.runtimeRevision
     bridgeContractVersion = $release.components.akuBridge.contractVersion
     rollbackVersion = $null
 }
@@ -386,12 +395,29 @@ if (-not $UnsignedLocalCandidate -and -not $UnsignedStableCandidate) {
 }
 
 if (-not [string]::IsNullOrWhiteSpace($UpdateSigningPrivateKeyPath)) {
-    $updateArtifactName = "AkuBrowserRuntime-$($release.version)-windows-x64.zip"
-    $updateArtifactPath = Join-Path $OutputRoot $updateArtifactName
-    $updateManifestPath = Join-Path $OutputRoot "AkuBrowserRuntimeUpdate.json"
-    $unsignedUpdateManifestPath = Join-Path $buildRoot "runtime-update-unsigned.json"
-    Reset-Path $updateArtifactPath $OutputRoot
-    Reset-Path $updateManifestPath $OutputRoot
+    $sidecarRuntimeRevision = [string]$release.components.akuSidecar.runtimeRevision
+    $sidecarUpdate = $release.components.akuSidecar.update
+    Assert-True ($sidecarVersion -match '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') "AkuSidecar update version is invalid."
+    Assert-True (-not [string]::IsNullOrWhiteSpace($sidecarRuntimeRevision)) "AkuSidecar runtime revision is required."
+    Assert-True (-not [string]::IsNullOrWhiteSpace([string]$sidecarUpdate.minHostVersion)) "AkuSidecar minimum host version is required."
+    Assert-True ($sidecarUpdate.bridgeCompatibility.protocol -eq "aku-browser.bridge") "AkuSidecar Bridge protocol identity is invalid."
+    $emitLegacyV1 = (
+        $sidecarVersion -eq [string]$release.version -and
+        [string]$release.components.akuBridge.version -eq [string]$release.version -and
+        $sidecarRuntimeRevision -eq [string]$release.components.akuBridge.runtimeRevision
+    )
+
+    $sidecarUpdateArtifactName = "AkuSidecar-$sidecarVersion-windows-x64.zip"
+    $legacyUpdateArtifactName = "AkuBrowserRuntime-$($release.version)-windows-x64.zip"
+    $sidecarUpdateArtifactPath = Join-Path $OutputRoot $sidecarUpdateArtifactName
+    $legacyUpdateArtifactPath = Join-Path $OutputRoot $legacyUpdateArtifactName
+    $sidecarUpdateManifestPath = Join-Path $OutputRoot "AkuSidecarUpdate.json"
+    $legacyUpdateManifestPath = Join-Path $OutputRoot "AkuBrowserRuntimeUpdate.json"
+    $unsignedSidecarUpdateManifestPath = Join-Path $buildRoot "sidecar-update-v2-unsigned.json"
+    $unsignedLegacyUpdateManifestPath = Join-Path $buildRoot "runtime-update-v1-unsigned.json"
+    foreach ($path in @($sidecarUpdateArtifactPath, $legacyUpdateArtifactPath, $sidecarUpdateManifestPath, $legacyUpdateManifestPath)) {
+        Reset-Path $path $OutputRoot
+    }
 
     $runtimeUpdateFiles = Get-ChildItem -LiteralPath $runtimePayload -Recurse -File |
         Sort-Object FullName |
@@ -405,41 +431,90 @@ if (-not [string]::IsNullOrWhiteSpace($UpdateSigningPrivateKeyPath)) {
     $runtimeUpdatePayloadManifest = [ordered]@{
         schemaVersion = 1
         product = "AkuBrowser"
-        version = $release.version
+        version = $sidecarVersion
         architecture = "windows-x64"
         files = @($runtimeUpdateFiles)
     }
     $runtimeUpdatePayloadManifestPath = Join-Path $runtimePayload "payload-manifest.json"
     Write-Utf8NoBom $runtimeUpdatePayloadManifestPath ($runtimeUpdatePayloadManifest | ConvertTo-Json -Depth 8)
-    Compress-Archive -Path (Join-Path $runtimePayload "*") -DestinationPath $updateArtifactPath -CompressionLevel Optimal
+    Compress-Archive -Path (Join-Path $runtimePayload "*") -DestinationPath $sidecarUpdateArtifactPath -CompressionLevel Optimal
     Remove-Item -LiteralPath $runtimeUpdatePayloadManifestPath -Force
+    if ($emitLegacyV1) {
+        Copy-Item -LiteralPath $sidecarUpdateArtifactPath -Destination $legacyUpdateArtifactPath
+    }
 
-    $updateArtifactHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $updateArtifactPath).Hash.ToLowerInvariant()
-    $unsignedUpdateManifest = [ordered]@{
-        schemaVersion = 1
-        product = "AkuBrowser"
+    $publishedAt = [DateTimeOffset]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+    $sidecarUpdateArtifactHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $sidecarUpdateArtifactPath).Hash.ToLowerInvariant()
+    $unsignedSidecarUpdateManifest = [ordered]@{
+        schemaVersion = 2
+        product = "AkuSidecar"
         channel = "stable"
-        version = $release.version
-        runtimeRevision = $release.components.akuBridge.runtimeRevision
-        bridgeContractVersion = $release.components.akuBridge.contractVersion
-        publishedAt = [DateTimeOffset]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
+        sidecarVersion = $sidecarVersion
+        runtimeRevision = $sidecarRuntimeRevision
+        minHostVersion = [string]$sidecarUpdate.minHostVersion
+        bridgeCompatibility = [ordered]@{
+            protocol = [string]$sidecarUpdate.bridgeCompatibility.protocol
+            minVersion = [int]$sidecarUpdate.bridgeCompatibility.minVersion
+            maxVersion = [int]$sidecarUpdate.bridgeCompatibility.maxVersion
+            requiredCapabilities = @($sidecarUpdate.bridgeCompatibility.requiredCapabilities)
+        }
+        databaseCompatibility = [ordered]@{
+            minSchemaVersion = [int]$sidecarUpdate.databaseCompatibility.minSchemaVersion
+            maxSchemaVersion = [int]$sidecarUpdate.databaseCompatibility.maxSchemaVersion
+            rollbackSafe = [bool]$sidecarUpdate.databaseCompatibility.rollbackSafe
+        }
+        publishedAt = $publishedAt
+        urgency = [string]$sidecarUpdate.urgency
         artifact = [ordered]@{
-            url = "https://github.com/abangkis/AkuBrowser/releases/download/v$($release.version)/$updateArtifactName"
-            size = (Get-Item -LiteralPath $updateArtifactPath).Length
-            sha256 = $updateArtifactHash
+            platform = "windows-x64"
+            url = "https://github.com/abangkis/AkuBrowser/releases/download/v$sidecarVersion/$sidecarUpdateArtifactName"
+            size = (Get-Item -LiteralPath $sidecarUpdateArtifactPath).Length
+            sha256 = $sidecarUpdateArtifactHash
         }
     }
-    Write-Utf8NoBom $unsignedUpdateManifestPath ($unsignedUpdateManifest | ConvertTo-Json -Depth 8)
+    if ($null -ne $sidecarUpdate.deadline -and -not [string]::IsNullOrWhiteSpace([string]$sidecarUpdate.deadline)) {
+        $unsignedSidecarUpdateManifest["deadline"] = [string]$sidecarUpdate.deadline
+    }
+    Write-Utf8NoBom $unsignedSidecarUpdateManifestPath ($unsignedSidecarUpdateManifest | ConvertTo-Json -Depth 10)
+
+    if ($emitLegacyV1) {
+        $legacyUpdateArtifactHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $legacyUpdateArtifactPath).Hash.ToLowerInvariant()
+        $unsignedLegacyUpdateManifest = [ordered]@{
+            schemaVersion = 1
+            product = "AkuBrowser"
+            channel = "stable"
+            version = $release.version
+            runtimeRevision = $release.components.akuBridge.runtimeRevision
+            bridgeContractVersion = $release.components.akuBridge.contractVersion
+            publishedAt = $publishedAt
+            artifact = [ordered]@{
+                url = "https://github.com/abangkis/AkuBrowser/releases/download/v$($release.version)/$legacyUpdateArtifactName"
+                size = (Get-Item -LiteralPath $legacyUpdateArtifactPath).Length
+                sha256 = $legacyUpdateArtifactHash
+            }
+        }
+        Write-Utf8NoBom $unsignedLegacyUpdateManifestPath ($unsignedLegacyUpdateManifest | ConvertTo-Json -Depth 8)
+    }
     Push-Location $installerSource
     try {
-        $derivedUpdatePublicKey = (& go run .\cmd\sign-update-manifest `
-            -manifest $unsignedUpdateManifestPath `
+        $derivedSidecarUpdatePublicKey = (& go run .\cmd\sign-update-manifest `
+            -manifest $unsignedSidecarUpdateManifestPath `
             -private-key $UpdateSigningPrivateKeyPath `
-            -output $updateManifestPath | Out-String).Trim()
-        if ($LASTEXITCODE -ne 0) { throw "Runtime update manifest signing failed." }
+            -output $sidecarUpdateManifestPath | Out-String).Trim()
+        if ($LASTEXITCODE -ne 0) { throw "AkuSidecar v2 update manifest signing failed." }
+        if ($emitLegacyV1) {
+            $derivedLegacyUpdatePublicKey = (& go run .\cmd\sign-update-manifest `
+                -manifest $unsignedLegacyUpdateManifestPath `
+                -private-key $UpdateSigningPrivateKeyPath `
+                -output $legacyUpdateManifestPath | Out-String).Trim()
+            if ($LASTEXITCODE -ne 0) { throw "Legacy v1 update manifest signing failed." }
+        }
     }
     finally { Pop-Location }
-    Assert-True ($derivedUpdatePublicKey -eq $UpdatePublicKey) "Runtime-update private key does not match the public key pinned into the native host."
+    Assert-True ($derivedSidecarUpdatePublicKey -eq $UpdatePublicKey) "Runtime-update private key does not match the public key pinned into the native host."
+    if ($emitLegacyV1) {
+        Assert-True ($derivedLegacyUpdatePublicKey -eq $UpdatePublicKey) "Legacy runtime-update private key does not match the public key pinned into the native host."
+    }
 }
 
 $payloadFiles = Get-ChildItem -LiteralPath $payloadRoot -Recurse -File |
@@ -454,7 +529,7 @@ $payloadFiles = Get-ChildItem -LiteralPath $payloadRoot -Recurse -File |
 $payloadManifest = [ordered]@{
     schemaVersion = 1
     product = "AkuBrowser"
-    version = $release.version
+    version = $sidecarVersion
     architecture = "windows-x64"
     bridgeIdentityProfile = $BridgeIdentityProfile
     bridgeIdentityDistribution = $selectedBridgeIdentityDistribution
@@ -466,7 +541,7 @@ Write-Utf8NoBom (Join-Path $payloadRoot "payload-manifest.json") ($payloadManife
 
 $nsisArguments = @(
     "/V2",
-    "/DAPP_VERSION=$($release.version)",
+    "/DAPP_VERSION=$sidecarVersion",
     "/DVERSION_QUAD=$versionQuad",
     "/DPAYLOAD_ROOT=$payloadRoot",
     "/DEXTENSION_ORIGIN=chrome-extension://$ExtensionId/",
@@ -545,7 +620,7 @@ Reset-Path $buildRoot $OutputRoot
 
 [ordered]@{
     status = "ok"
-    version = $release.version
+    version = $sidecarVersion
     bridgeIdentityProfile = $BridgeIdentityProfile
     bridgeIdentityDistribution = $selectedBridgeIdentityDistribution
     bridgeIdentityAuthority = "config/bridge-identities.json"

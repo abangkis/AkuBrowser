@@ -1,22 +1,23 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://akubrowser.local/contracts/runtime-update-manifest.schema.json",
-  "title": "AkuBrowser signed platform runtime update manifest",
+  "title": "AkuSidecar signed platform update manifest",
+  "description": "Current independent AkuSidecar update contract. Legacy native hosts use runtime-update-manifest-v1.schema.json and a separately signed compatibility feed.",
   "type": "object",
   "properties": {
     "schemaVersion": {
       "type": "integer",
-      "const": 1
+      "const": 2
     },
     "product": {
       "type": "string",
-      "const": "AkuBrowser"
+      "const": "AkuSidecar"
     },
     "channel": {
       "type": "string",
       "const": "stable"
     },
-    "version": {
+    "sidecarVersion": {
       "type": "string",
       "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
     },
@@ -24,9 +25,58 @@
       "type": "string",
       "pattern": "^[a-z0-9][a-z0-9._-]{2,79}$"
     },
-    "bridgeContractVersion": {
+    "minHostVersion": {
       "type": "string",
-      "const": "aku-browser.bridge.v2"
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "bridgeCompatibility": {
+      "type": "object",
+      "properties": {
+        "protocol": {
+          "type": "string",
+          "const": "aku-browser.bridge"
+        },
+        "minVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "requiredCapabilities": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9._-]{1,63}$"
+          },
+          "minItems": 1,
+          "maxItems": 64,
+          "uniqueItems": true
+        }
+      },
+      "required": ["protocol", "minVersion", "maxVersion", "requiredCapabilities"],
+      "additionalProperties": false
+    },
+    "databaseCompatibility": {
+      "type": "object",
+      "properties": {
+        "minSchemaVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "maxSchemaVersion": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "rollbackSafe": {
+          "type": "boolean",
+          "const": true,
+          "description": "The previous Sidecar binary can safely reopen this schema range after an activation rollback."
+        }
+      },
+      "required": ["minSchemaVersion", "maxSchemaVersion", "rollbackSafe"],
+      "additionalProperties": false
     },
     "publishedAt": {
       "type": "string",
@@ -35,9 +85,13 @@
     "artifact": {
       "type": "object",
       "properties": {
+        "platform": {
+          "type": "string",
+          "enum": ["windows-x64", "macos-universal", "linux-x64", "linux-arm64"]
+        },
         "url": {
           "type": "string",
-          "pattern": "^https://github\\.com/abangkis/AkuBrowser/releases/download/v[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?/AkuBrowserRuntime-[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?-(windows-x64|macos-universal|linux-x64|linux-arm64)\\.zip$"
+          "pattern": "^https://github\\.com/abangkis/AkuBrowser/releases/download/v[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?/AkuSidecar-[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?-(windows-x64|macos-universal|linux-x64|linux-arm64)\\.zip$"
         },
         "size": {
           "type": "integer",
@@ -49,8 +103,17 @@
           "pattern": "^[a-f0-9]{64}$"
         }
       },
-      "required": ["url", "size", "sha256"],
+      "required": ["platform", "url", "size", "sha256"],
       "additionalProperties": false
+    },
+    "urgency": {
+      "type": "string",
+      "enum": ["routine", "recommended", "required", "security"]
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Allowed only for required or security updates and must not precede publishedAt; ordering is enforced by the signer and host verifier."
     },
     "signature": {
       "type": "object",
@@ -77,12 +140,29 @@
     "schemaVersion",
     "product",
     "channel",
-    "version",
+    "sidecarVersion",
     "runtimeRevision",
-    "bridgeContractVersion",
+    "minHostVersion",
+    "bridgeCompatibility",
+    "databaseCompatibility",
     "publishedAt",
     "artifact",
     "signature"
   ],
-  "additionalProperties": false
+  "additionalProperties": false,
+  "allOf": [
+    {
+      "if": {
+        "required": ["deadline"]
+      },
+      "then": {
+        "required": ["urgency"],
+        "properties": {
+          "urgency": {
+            "enum": ["required", "security"]
+          }
+        }
+      }
+    }
+  ]
 }

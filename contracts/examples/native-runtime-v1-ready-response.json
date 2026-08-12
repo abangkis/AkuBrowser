@@ -1,7 +1,7 @@
 {
-  "schemaVersion": 2,
+  "schemaVersion": 1,
   "kind": "response",
-  "requestId": "request-20260728-0001",
+  "requestId": "request-20260728-v1-0001",
   "action": "ensure_runtime",
   "status": "ready",
   "runtime": {
@@ -10,15 +10,14 @@
     "runtimeRevision": "source-adapters-v91",
     "bridgeContractVersion": "aku-browser.bridge.v2",
     "endpoint": "http://127.0.0.1:11122",
-    "instanceEpoch": "epoch-20260728-0001",
+    "instanceEpoch": "epoch-20260728-v1-0001",
     "processState": "ready"
   },
   "update": {
     "phase": "idle",
     "currentVersion": "0.7.9",
     "targetVersion": null,
-    "rollbackAvailable": true,
-    "urgency": "routine"
+    "rollbackAvailable": true
   },
   "error": null
 }

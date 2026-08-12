@@ -58,6 +58,7 @@ export async function verifyRuntimeIdentity(workspaceRoot) {
     runtimeRevision: release.components?.akuBridge?.runtimeRevision,
     contractVersion: release.components?.akuBridge?.contractVersion,
     sidecarVersion: release.components?.akuSidecar?.version,
+    sidecarRuntimeRevision: release.components?.akuSidecar?.runtimeRevision,
   };
   canonical.buildId = `aku-bridge-${canonical.productVersion}-${canonical.runtimeRevision}`;
 
@@ -74,8 +75,15 @@ export async function verifyRuntimeIdentity(workspaceRoot) {
   const capabilityRevision = capture(bridgeCapabilities, /BRIDGE_RUNTIME_REVISION\s*=\s*"([^"]+)"/, "AkuBridge capability revision", mismatches);
   const capabilityContract = capture(bridgeCapabilities, /BRIDGE_CONTRACT_VERSION\s*=\s*"([^"]+)"/, "AkuBridge capability contract", mismatches);
   const capabilityBridgeID = capture(bridgeCapabilities, /BRIDGE_ID\s*=\s*"([^"]+)"/, "AkuBridge capability ID", mismatches);
+  const sidecarBootstrapVersion = capture(
+    bridgeCapabilities,
+    /SIDECAR_BOOTSTRAP_VERSION\s*=\s*"([^"]+)"/,
+    "AkuBridge Sidecar bootstrap version",
+    mismatches,
+  );
   compare("AkuBridge capability revision", capabilityRevision, canonical.runtimeRevision, mismatches);
   compare("AkuBridge capability contract", capabilityContract, canonical.contractVersion, mismatches);
+  compare("AkuBridge Sidecar bootstrap version", sidecarBootstrapVersion, canonical.sidecarVersion, mismatches);
   requireText(
     "AkuBridge capability build ID",
     bridgeCapabilities,
@@ -131,15 +139,21 @@ export async function verifyRuntimeIdentity(workspaceRoot) {
   requireText("AkuBridge README", bridgeReadme, `runtime **\`${canonical.runtimeRevision}\`**`, mismatches);
   requireText("AkuSidecar README", sidecarReadme, `AkuBridge \`${canonical.productVersion}\` / \`${canonical.runtimeRevision}\``, mismatches);
 
-  for (const [file, selector] of [
-    ["native-runtime-ensure-request.json", (value) => value.extension],
-    ["native-runtime-invalid-arbitrary-action.json", (value) => value.extension],
-    ["native-runtime-ready-response.json", (value) => value.runtime],
+  for (const file of [
+    "native-runtime-ensure-request.json",
+    "native-runtime-invalid-arbitrary-action.json",
+    "native-runtime-v1-ensure-request.json",
   ]) {
-    const example = selector(await readJson(path.join(browserRoot, "contracts", "examples", file)));
-    compare(`${file} product version`, example.productVersion ?? example.version, canonical.productVersion, mismatches);
+    const example = (await readJson(path.join(browserRoot, "contracts", "examples", file))).extension;
+    compare(`${file} product version`, example.productVersion, canonical.productVersion, mismatches);
     compare(`${file} runtime revision`, example.runtimeRevision, canonical.runtimeRevision, mismatches);
     compare(`${file} Bridge contract`, example.bridgeContractVersion, canonical.contractVersion, mismatches);
+  }
+  for (const file of ["native-runtime-ready-response.json", "native-runtime-v1-ready-response.json"]) {
+    const runtime = (await readJson(path.join(browserRoot, "contracts", "examples", file))).runtime;
+    compare(`${file} Sidecar version`, runtime.version, canonical.sidecarVersion, mismatches);
+    compare(`${file} Sidecar runtime revision`, runtime.runtimeRevision, canonical.sidecarRuntimeRevision, mismatches);
+    compare(`${file} Bridge contract`, runtime.bridgeContractVersion, canonical.contractVersion, mismatches);
   }
 
   if (mismatches.length > 0) {

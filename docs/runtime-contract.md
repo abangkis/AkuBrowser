@@ -9,6 +9,11 @@ Status: canonical implementation boundary, 27 July 2026.
 - AkuSupervisor is the visible Rust lifecycle owner. It starts and stops the Sidecar executable; AkuSidecar has no watcher or hidden replacement process.
 - AkuBrowser owns this product contract, the active schemas, and the cross-repository PowerShell check. It has no package runtime.
 
+The production deployment consists only of AkuBridge and AkuSidecar. The
+Native Messaging host is an internal helper packaged with AkuSidecar for launch
+and safe binary handoff; AkuSupervisor is development tooling and is not part
+of installation or automatic update.
+
 ## Runtime flow
 
 ```text
@@ -237,3 +242,9 @@ so identity drift fails before artifact mutation, signing, or runtime
 replacement. This is a source-workspace and release-time dependency only.
 Standalone AkuBridge and AkuSidecar builds, tests, and running processes do not
 read this verifier, the release manifest, or sibling repositories.
+
+Native Messaging protocol v1 remains a bounded migration lane. Bridge may
+fall back once so the current runtime remains usable, but it records that the
+internal update host needs a one-time installer refresh. Candidate probe v1
+retains its exact legacy shape; host v2 explicitly requests probe schema 2 to
+verify the database compatibility boundary before activation.

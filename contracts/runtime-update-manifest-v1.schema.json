@@ -1,0 +1,100 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://akubrowser.local/contracts/runtime-update-manifest-v1.schema.json",
+  "title": "Legacy AkuBrowser signed platform runtime update manifest",
+  "description": "Frozen transition contract for installed native hosts that reject unknown fields. New hosts use runtime-update-manifest.schema.json (v2).",
+  "type": "object",
+  "properties": {
+    "schemaVersion": {
+      "type": "integer",
+      "const": 1
+    },
+    "product": {
+      "type": "string",
+      "const": "AkuBrowser"
+    },
+    "channel": {
+      "type": "string",
+      "const": "stable"
+    },
+    "version": {
+      "$ref": "#/$defs/version"
+    },
+    "runtimeRevision": {
+      "$ref": "#/$defs/runtimeRevision"
+    },
+    "bridgeContractVersion": {
+      "type": "string",
+      "const": "aku-browser.bridge.v2"
+    },
+    "publishedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "artifact": {
+      "type": "object",
+      "properties": {
+        "url": {
+          "type": "string",
+          "pattern": "^https://github\\.com/abangkis/AkuBrowser/releases/download/v[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?/AkuBrowserRuntime-[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?-(windows-x64|macos-universal|linux-x64|linux-arm64)\\.zip$"
+        },
+        "size": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 536870912
+        },
+        "sha256": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$"
+        }
+      },
+      "required": ["url", "size", "sha256"],
+      "additionalProperties": false
+    },
+    "signature": {
+      "$ref": "#/$defs/signature"
+    }
+  },
+  "required": [
+    "schemaVersion",
+    "product",
+    "channel",
+    "version",
+    "runtimeRevision",
+    "bridgeContractVersion",
+    "publishedAt",
+    "artifact",
+    "signature"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "version": {
+      "type": "string",
+      "pattern": "^[0-9]+\\.[0-9]+\\.[0-9]+(?:-[0-9A-Za-z.-]+)?$"
+    },
+    "runtimeRevision": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9._-]{2,79}$"
+    },
+    "signature": {
+      "type": "object",
+      "properties": {
+        "algorithm": {
+          "type": "string",
+          "const": "ed25519"
+        },
+        "keyId": {
+          "type": "string",
+          "const": "aku-runtime-stable-v1"
+        },
+        "value": {
+          "type": "string",
+          "minLength": 88,
+          "maxLength": 88
+        }
+      },
+      "required": ["algorithm", "keyId", "value"],
+      "additionalProperties": false
+    }
+  }
+}

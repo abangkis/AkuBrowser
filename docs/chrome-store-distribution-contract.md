@@ -10,10 +10,10 @@ internal extension component and repository name. Existing Bridge IDs,
 change merely because the public display name changes.
 
 Chrome Web Store distribution owns installation and updates of the Manifest V3
-extension. A separate user-scoped **AkuBrowser Runtime Host** owns native runtime
-bootstrap. Chrome cannot create the Windows Native Messaging registration from
-the Store package, so first installation has one explicit companion-installer
-step.
+extension. The user installs AkuSidecar once through its platform companion
+installer because Chrome cannot create Native Messaging registration. The
+installer includes a small **AkuBrowser Runtime Host** for bootstrap and update
+handoff; that host is internal machinery, not a third deployed product.
 
 The portable GitHub ZIP remains a supported technical-user and recovery path.
 It is not removed by the Store distribution path.
@@ -42,14 +42,15 @@ The design depends on these official Chrome boundaries:
 | --- | --- | --- |
 | Chrome extension | AkuBrowser | Chrome Web Store |
 | Extension implementation | AkuBridge | `AkuBridge` repository |
-| Native bootstrap | AkuBrowser Runtime Host | Signed companion installer |
-| Application runtime | AkuSidecar | Signed runtime release manifest |
+| Native bootstrap/update helper | AkuBrowser Runtime Host | Internal to the AkuSidecar installer |
+| Native application | AkuSidecar | Signed AkuSidecar release manifest |
 | Image provenance tool | c2patool | Pinned runtime release manifest |
 | Product UI and local data | AkuBrowser via AkuSidecar | Loopback runtime and SQLite |
 
-`AkuBrowser` remains the distribution authority. It defines the compatible
-tuple, release channel, signed native payload, Store extension version, runtime
-revision, and Bridge contract.
+`AkuBrowser` remains the distribution authority. AkuBridge and AkuSidecar have
+independent versions. Their handshake and the signed Sidecar feed define the
+compatible Bridge protocol/capabilities instead of requiring equal product
+versions. AkuSupervisor is outside this end-user distribution boundary.
 
 ## Fixed identities
 
@@ -57,7 +58,7 @@ revision, and Bridge contract.
 - Internal extension component: `AkuBridge`
 - Native Messaging host: `com.akubrowser.runtime`
 - Native protocol schema: `native-runtime-messaging.schema.json`
-- Native protocol version: `1`
+- Native protocol version: `2` (with one exact v1 migration fallback)
 - Bridge contract: `aku-browser.bridge.v2`
 - Loopback endpoints: `http://127.0.0.1:11122` and
   `http://localhost:11122`
@@ -89,16 +90,21 @@ enter an update.
 
 ### Release URL authority
 
-Setup bootstrap downloads are pinned to the extension's own product version on
-both Windows and macOS. An installed `0.7.9` extension therefore requests only
-the matching `v0.7.9` companion installer; it never bootstraps from
-`releases/latest`. This rule is permanent and the URL is derived from the
-packaged `version_name`, so ordinary releases require no manual URL edit.
+Ordinary first install, missing-host recovery, and repair stay pinned to an
+explicit Sidecar bootstrap version packaged into the Store Bridge. The release
+gate requires that value to equal `release.components.akuSidecar.version`; it is
+not inferred from the independently versioned Bridge. Legacy-host refresh uses
+the same compatible pinned installer; Setup never resolves native code through
+GitHub Latest.
 
 The native runtime updater has a different responsibility: discovering a newer
 published stable runtime. Its signed update-manifest endpoint intentionally
 remains under `releases/latest`. Bootstrap selection and update discovery must
-not share one URL policy.
+not share one URL policy. Latest promotion is allowed only after both platform
+aliases, signed v2 feeds, Sidecar archives, and the two frozen signed v1 feed
+aliases are attached. An independent release carries those v1 aliases
+byte-for-byte from previous Latest; their URLs remain pinned to its immutable
+legacy archives rather than being regenerated against the independent tuple.
 
 ### Store extension installed
 
@@ -135,8 +141,8 @@ available for control-path verification.
 
 If automatic setup returns `runtime_failed`, the page may expose one explicit
 **Download manual Windows bundle** fallback. Its URL is derived only from the
-extension's exact product version and the compiled-in official AkuBrowser
-GitHub Releases origin. The fallback ZIP is never downloaded or executed
+Bridge-packaged Sidecar bootstrap version and the compiled-in official
+AkuBrowser GitHub Releases origin. The fallback ZIP is never downloaded or executed
 silently. It must not run concurrently with an installed or older portable
 Sidecar, does not replace the registered Native Messaging Host, and must be
 started manually after Windows restarts.
@@ -158,7 +164,7 @@ work so reloading AkuBridge cannot start the installed production runtime.
    loopback health check.
 
 The runtime is not required to start before Chrome. A Windows service, Scheduled
-Task, or machine-wide installation is outside protocol v1.
+Task, or machine-wide installation is outside the v2 lifecycle protocol.
 
 ### Extension update
 
@@ -167,8 +173,9 @@ updating the unpacked development extension performs no automatic
 `ensure_runtime`; `dev.ps1` remains the development runtime authority.
 
 1. Chrome Web Store installs the new extension while it is idle.
-2. `onInstalled` with reason `update` sends `ensure_runtime` with the new exact
-   extension identity.
+2. `onInstalled` with reason `update` sends the v2 `reconcile_runtime` request
+   with Bridge protocol/capabilities; this starts or verifies the installed
+   compatible Sidecar without forcing an update-feed check.
 3. Capture dispatch remains paused until the host reports a compatible runtime.
 4. If a compatible runtime is already active, ordinary Bridge operation resumes.
 5. If native runtime work is needed, setup state reports `updating`, `busy`,
@@ -205,8 +212,10 @@ extension service-worker lifetime to the native process and may delay Store
 updates.
 
 Each call contains exactly one request and receives at most one response. The
-normative JSON shape is
+current v2 normative JSON shape is
 [`../contracts/native-runtime-messaging.schema.json`](../contracts/native-runtime-messaging.schema.json).
+The exact migration fallback remains separately frozen in
+[`../contracts/native-runtime-messaging-v1.schema.json`](../contracts/native-runtime-messaging-v1.schema.json).
 Accepted request/response examples and one required rejection case live under
 [`../contracts/examples/`](../contracts/examples/).
 
@@ -214,7 +223,10 @@ Supported actions are deliberately small:
 
 - `status`: inspect installed runtime and update state;
 - `ensure_runtime`: start or reconcile a compatible runtime;
+- `reconcile_runtime`: start/reconcile the installed Sidecar without consulting
+  the update feed (v2 only, used for quiet startup recovery);
 - `shutdown_if_idle`: request shutdown only when the runtime proves it is idle.
+- `check_codex`: inspect bounded local Codex availability without exposing credentials.
 
 There is no arbitrary shell, process, filesystem, registry, URL, installer, or
 script action. The extension opens the fixed loopback UI itself after
@@ -243,21 +255,30 @@ The request always carries:
 
 - AkuBrowser extension product version;
 - Bridge runtime revision;
-- Bridge contract version.
+- Bridge protocol major/minor;
+- a bounded capability list.
 
-The host refuses unknown protocol or Bridge contract versions rather than
-guessing. Product release numbers are not themselves a runtime usability
-boundary. An older runtime on the supported Bridge contract may remain usable
-while the host advertises a target update; a newer runtime on that contract is
-not downgraded. A same-version runtime revision mismatch requires repair.
+The v2 host refuses unsupported protocol ranges or missing required capabilities
+rather than guessing. Product release numbers and build revisions are diagnostic
+metadata, not an exact-tuple usability boundary. A compatible older runtime may
+remain usable while the host advertises a target update; a compatible newer
+runtime is not downgraded. During migration the Bridge retries once with the
+frozen v1 request shape; a valid v1 response keeps the runtime usable and offers
+one explicit installer refresh for the internal host.
+If a signed v2 feed requires a newer host, the bounded
+`host_upgrade_required` response preserves the authenticated Sidecar version in
+`update.targetVersion`. Setup accepts only the exact versioned companion
+installer for that target; ordinary bootstrap and repair remain pinned to the
+static compatible Sidecar version packaged into Bridge.
 `ensure_runtime` succeeds only when all of these hold:
 
 1. the Store extension origin is allowlisted;
 2. the installer-owned stable or preview channel is valid;
 3. the native protocol version is supported;
-4. the target runtime supports the requested Bridge contract;
-5. an update candidate carries the requested Bridge runtime revision;
-6. the Sidecar health response reports the expected product version and runtime;
+4. the target runtime supports the requested Bridge protocol and capabilities;
+5. an update candidate satisfies the signed protocol, capability, host, and
+   database compatibility ranges;
+6. the Sidecar health response reports the expected candidate identity and runtime;
 7. the fixed loopback endpoint is owned by the expected AkuSidecar instance.
 
 The release channel is never accepted from the extension request. It is fixed

@@ -1,7 +1,8 @@
 # Stable release checklist
 
 This is the source of truth for publishing every stable AkuBrowser release.
-Replace `<version>` and record the exact source commits before starting. Platform-specific
+Replace `<release-version>` and `<sidecar-version>` independently and record the
+exact source commits before starting. Platform-specific
 test detail remains in the [Windows](windows-preview-acceptance.md) and
 [macOS](macos-preview-acceptance.md) acceptance documents.
 
@@ -27,8 +28,13 @@ not build, automated-acceptance, or clean-machine evidence.
 ## 1. Freeze the release
 
 - [ ] Select one clean AkuBrowser, AkuBridge, and AkuSidecar source tuple.
-- [ ] Confirm versions and release contracts all equal `<version>`.
+- [ ] Confirm `release.version` equals `<release-version>` and
+      `components.akuSidecar.version` equals `<sidecar-version>`; Bridge and
+      Sidecar versions need not be equal when their compatibility contract overlaps.
 - [ ] Record the three full commit SHAs in the release manifest.
+- [ ] Dispatch the stable workflow with separate `browser_ref`, `bridge_ref`,
+      and `sidecar_ref` values. Each must be the recorded lowercase 40-character
+      commit SHA; the workflow reads back and asserts every checkout's `HEAD`.
 - [ ] Keep existing preview tags immutable; do not merge preview binaries.
 
 ## 2. Build the candidate for the current platform pass
@@ -50,10 +56,13 @@ uses a fresh output directory, builds both universal artifacts, runs every macOS
 
 ```sh
 ./scripts/run-macos-stable-gate.sh \
-  --version <version> \
+  --release-version <release-version> \
+  --sidecar-version <sidecar-version> \
   --browser-sha <full AkuBrowser SHA> \
   --bridge-sha <full AkuBridge SHA> \
-  --sidecar-sha <full AkuSidecar SHA>
+  --sidecar-sha <full AkuSidecar SHA> \
+  --update-public-key "$AKU_UPDATE_PUBLIC_KEY" \
+  --update-signing-private-key /secure/path/runtime-update-signing-key.txt
 ```
 
 Stop for explicit macOS 3B authorization after the runner returns `status: ok`.
@@ -64,7 +73,7 @@ For pre-Store 3B, keep development staging separate from publishable output:
 node scripts/bridge-extension-identity.mjs \
   config/bridge-identities.json ../AkuBridge/manifest.json development
 ./scripts/build-macos-runtime-installer.sh \
-  --output-root "artifacts/development-<version>-macos" \
+  --output-root "artifacts/development-<sidecar-version>-macos" \
   --bridge-identity-profile development \
   --c2pa-tool ../AkuSidecar/runtime/dev/macos-universal/c2patool \
   --unsigned-local-candidate
@@ -78,7 +87,13 @@ After acceptance, upload only the stable runner output plus `release-manifest.js
 and the pinned C2PA SBOM. Never upload `*-unsigned-local.pkg` or a runtime-update
 pair not created by this pass. Read the draft back and compare every GitHub digest.
 
-The stable output allowlist is the six `assets` entries printed by the runner.
+The stable output allowlist is exactly the `assets` array printed by the runner.
+It always includes the Sidecar-versioned PKG, stable PKG alias, schema-v2 macOS
+feed, and Sidecar ZIP/checksum. It includes the frozen v1 pair only for an
+aligned transitional release. For an independent release, the later promotion
+gate carries the frozen signed v1 feed aliases from the previous Latest without
+regenerating them or copying their archives; their URLs stay pinned to the old
+immutable tag.
 
 ## 3A. Automated acceptance
 
@@ -91,7 +106,9 @@ The stable output allowlist is the six `assets` entries printed by the runner.
 - [ ] Verify checksums, artifact manifests, source commits, Store identity, and
       declared signing/notarization state.
 - [ ] Confirm Setup download URLs, fallback instructions, and security guidance
-      target `<version>` and match the declared trust state.
+      keep ordinary bootstrap pinned to the Bridge-packaged Sidecar bootstrap
+      version, which must equal `<sidecar-version>`; no Setup lane may resolve
+      native code through GitHub Latest.
 - [ ] Record the commands and machine-readable results used for acceptance.
 
 Completing 3A proves that the candidate is reproducible and structurally valid.
@@ -123,15 +140,24 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
 
 ## 4. Stage the stable release
 
-- [ ] Create annotated `v<version>` tags at the frozen commits in all three repositories.
-- [ ] Push the three tags without moving or replacing any existing tag.
+- [ ] Create the annotated `v<sidecar-version>` release tag at the frozen
+      AkuBrowser authority and AkuSidecar commits. Tag AkuBridge only when the
+      Store component itself advances; never relabel an unchanged Bridge version.
+- [ ] Push only the selected immutable tags without moving or replacing an existing tag.
 - [ ] Create a draft GitHub release with `prerelease=false`.
 - [ ] Upload all Windows and macOS artifacts, checksums, manifests, and SBOMs.
 - [ ] Verify GitHub asset names, sizes, digests, source commits, and release notes.
 
 ## 5. Publish and verify
 
-- [ ] Publish the draft as the Latest stable release.
+- [ ] Confirm the Windows and macOS stable installer aliases, Sidecar archives,
+      and schema-v2 feeds are all attached to `v<sidecar-version>`.
+- [ ] Confirm both schema-v1 feed aliases are attached. For an independent
+      release, verify they are byte-identical to previous Latest, their Ed25519
+      signatures are valid, and their pinned legacy archives still exist.
+- [ ] Publish the draft as the Latest stable release. The Windows workflow leaves
+      `promote_latest` false by default and refuses promotion while any required
+      cross-platform asset is absent.
 - [ ] Download the public assets and verify their SHA-256 values again.
 - [ ] Install the actual Chrome Web Store package on clean Windows and macOS
       environments with Developer Mode off and no unpacked copy enabled.

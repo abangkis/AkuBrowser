@@ -75,6 +75,14 @@ for command_name in git go node npm lipo pkgbuild productbuild shasum zip; do re
 node "$browser_root/scripts/check-runtime-identity.mjs" "$workspace_root"
 
 version="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.version)' "$release_manifest")"
+sidecar_version="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.components?.akuSidecar?.version ?? "")' "$release_manifest")"
+native_host_version="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution?.chromeStore?.nativeHost?.version ?? "")' "$release_manifest")"
+[[ "$sidecar_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || die "AkuSidecar version is invalid"
+[[ "$native_host_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]] || die "native runtime host version is invalid"
+host_version_check_args=("$release_manifest")
+[[ "$unsigned_local" -eq 1 || "$unsigned_preview" -eq 1 ]] || host_version_check_args+=(--stable)
+node "$browser_root/scripts/check-native-host-min-version.mjs" "${host_version_check_args[@]}" || die "packaged Native Host does not satisfy the AkuSidecar minimum host version"
+emit_legacy_v1="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.version === r.components?.akuBridge?.version && r.version === r.components?.akuSidecar?.version && r.components?.akuBridge?.runtimeRevision === r.components?.akuSidecar?.runtimeRevision ? "1" : "0")' "$release_manifest")"
 release_bridge_identity_profile="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution?.chromeStore?.bridgeIdentityProfile ?? "")' "$release_manifest")"
 bridge_identity_schema_version="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.schemaVersion ?? "")' "$bridge_identity_registry")"
 [[ "$bridge_identity_schema_version" = "1" ]] || die "unsupported Bridge identity registry schema"
@@ -95,6 +103,8 @@ fi
 if [[ "$unsigned_stable" -eq 1 ]]; then
   [[ "$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.channel)' "$release_manifest")" = "stable" ]] || die "unsigned stable installers require a stable release manifest channel"
   [[ "$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution?.chromeStore?.nativeRuntimeInstallers?.["macos-universal"]?.trustState ?? "")' "$release_manifest")" = "unsigned" ]] || die "the stable macOS installer trust state must be declared unsigned"
+  [[ -n "$update_public_key" ]] || die "unsigned stable installers require --update-public-key"
+  [[ -n "$update_signing_private_key" && -f "$update_signing_private_key" ]] || die "unsigned stable installers require --update-signing-private-key"
 fi
 if [[ "$unsigned_local" -eq 0 ]]; then
   [[ "$bridge_identity_profile" = "$release_bridge_identity_profile" ]] || die "published installers must use the Bridge identity profile selected by the release manifest"
@@ -146,7 +156,7 @@ output_root="$(cd "$output_root" && pwd)"
 suffix=""
 [[ "$unsigned_local" -eq 1 ]] && suffix="-unsigned-local"
 [[ "$unsigned_preview" -eq 1 ]] && suffix="-unsigned"
-versioned_package="$output_root/AkuBrowserRuntimeSetup-${version}-macos-universal${suffix}.pkg"
+versioned_package="$output_root/AkuBrowserRuntimeSetup-${sidecar_version}-macos-universal${suffix}.pkg"
 stable_package="$output_root/AkuBrowserRuntimeSetup${suffix}.pkg"
 build_root="$(mktemp -d "${TMPDIR:-/tmp}/akubrowser-macos-installer.XXXXXX")"
 trap 'rm -rf -- "$build_root"' EXIT
@@ -158,7 +168,7 @@ resources_root="$build_root/resources"
 install_root="$payload_root/Library/Application Support/AkuBrowser"
 host_root="$install_root/host"
 runtime_root="$install_root/runtime"
-version_root="$runtime_root/versions/$version"
+version_root="$runtime_root/versions/$sidecar_version"
 
 mkdir -p "$host_root" "$version_root/config" "$version_root/schemas" "$install_root/data" "$scripts_root" "$resources_root"
 
@@ -170,7 +180,7 @@ build_universal_go() {
   chmod 755 "$output"
 }
 
-host_ldflags="-s -w"
+host_ldflags="-s -w -X main.runtimeHostVersion=$native_host_version"
 [[ -z "$update_public_key" ]] || host_ldflags="$host_ldflags -X main.pinnedUpdatePublicKey=$update_public_key"
 build_universal_go "$bridge_root/native-host" . "$host_root/AkuBrowserRuntimeHost" "$host_ldflags"
 build_universal_go "$sidecar_root" ./cmd/akusidecar "$version_root/AkuSidecar" "-s -w"
@@ -192,25 +202,25 @@ fi
 
 runtime_channel="stable"
 [[ "$unsigned_local" -eq 0 && "$unsigned_preview" -eq 0 ]] || runtime_channel="preview"
-node --input-type=module - "$runtime_root/current.json" "$version" "$bridge_root/bridge-capabilities.js" "$runtime_channel" <<'NODE'
+node --input-type=module - "$runtime_root/current.json" "$sidecar_version" "$release_manifest" "$runtime_channel" <<'NODE'
 import fs from "node:fs";
-const [destination, version, capabilitiesPath, channel] = process.argv.slice(2);
-const source = fs.readFileSync(capabilitiesPath, "utf8");
-const revision = source.match(/BRIDGE_RUNTIME_REVISION\s*=\s*["']([^"']+)/)?.[1];
-if (!revision) throw new Error("Bridge runtime revision is unavailable");
+const [destination, sidecarVersion, releasePath, channel] = process.argv.slice(2);
+const release = JSON.parse(fs.readFileSync(releasePath, "utf8"));
+const revision = release.components?.akuSidecar?.runtimeRevision;
+if (!revision) throw new Error("AkuSidecar runtime revision is unavailable");
 fs.writeFileSync(destination, `${JSON.stringify({
   schemaVersion: 1,
   channel,
-  version,
+  version: sidecarVersion,
   runtimeRevision: revision,
-  bridgeContractVersion: "aku-browser.bridge.v2",
+  bridgeContractVersion: release.components.akuBridge.contractVersion,
   rollbackVersion: null,
 }, null, 2)}\n`);
 NODE
 
 cp "$installer_source/Uninstall-AkuBrowserRuntime.command" "$install_root/Uninstall-AkuBrowserRuntime.command"
 chmod 755 "$install_root/Uninstall-AkuBrowserRuntime.command"
-sed -e "s/@VERSION@/$version/g" -e "s/@EXTENSION_ID@/$extension_id/g" "$installer_source/scripts/postinstall" > "$scripts_root/postinstall"
+sed -e "s/@VERSION@/$sidecar_version/g" -e "s/@EXTENSION_ID@/$extension_id/g" "$installer_source/scripts/postinstall" > "$scripts_root/postinstall"
 chmod 755 "$scripts_root/postinstall"
 cp "$installer_source/resources/"*.html "$resources_root/"
 if [[ "$unsigned_preview" -eq 1 ]]; then
@@ -219,7 +229,7 @@ fi
 if [[ "$unsigned_stable" -eq 1 ]]; then
   cp "$installer_source/resources/welcome-unsigned-stable.html" "$resources_root/welcome.html"
 fi
-sed "s/@VERSION@/$version/g" "$installer_source/Distribution.xml" > "$distribution_file"
+sed "s/@VERSION@/$sidecar_version/g" "$installer_source/Distribution.xml" > "$distribution_file"
 
 if [[ -n "$application_identity" ]]; then
   codesign --force --options runtime --timestamp --sign "$application_identity" "$host_root/AkuBrowserRuntimeHost"
@@ -229,13 +239,16 @@ fi
 
 if [[ -n "$update_signing_private_key" ]]; then
   update_payload="$build_root/update-payload"
-  update_artifact="$output_root/AkuBrowserRuntime-${version}-macos-universal.zip"
-  update_manifest="$output_root/AkuBrowserRuntimeUpdate-macos-universal.json"
-  unsigned_update_manifest="$build_root/runtime-update-unsigned.json"
-  rm -f -- "$update_artifact" "$update_artifact.sha256" "$update_manifest"
+  sidecar_update_artifact="$output_root/AkuSidecar-${sidecar_version}-macos-universal.zip"
+  legacy_update_artifact="$output_root/AkuBrowserRuntime-${version}-macos-universal.zip"
+  sidecar_update_manifest="$output_root/AkuSidecarUpdate-macos-universal.json"
+  legacy_update_manifest="$output_root/AkuBrowserRuntimeUpdate-macos-universal.json"
+  unsigned_sidecar_update_manifest="$build_root/sidecar-update-v2-unsigned.json"
+  unsigned_legacy_update_manifest="$build_root/runtime-update-v1-unsigned.json"
+  rm -f -- "$sidecar_update_artifact" "$sidecar_update_artifact.sha256" "$legacy_update_artifact" "$legacy_update_artifact.sha256" "$sidecar_update_manifest" "$legacy_update_manifest"
   mkdir -p "$update_payload"
   cp -R "$version_root/". "$update_payload/"
-  node --input-type=module - "$update_payload" "$version" <<'NODE'
+  node --input-type=module - "$update_payload" "$sidecar_version" <<'NODE'
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
@@ -265,35 +278,72 @@ fs.writeFileSync(path.join(root, "payload-manifest.json"), `${JSON.stringify({
   files,
 }, null, 2)}\n`);
 NODE
-  (cd "$update_payload" && zip -q -r "$update_artifact" .)
-  node --input-type=module - "$unsigned_update_manifest" "$update_artifact" "$version" "$release_manifest" <<'NODE'
+  (cd "$update_payload" && zip -q -r "$sidecar_update_artifact" .)
+  [[ "$emit_legacy_v1" -eq 0 ]] || cp "$sidecar_update_artifact" "$legacy_update_artifact"
+  node --input-type=module - "$unsigned_sidecar_update_manifest" "$sidecar_update_artifact" "$sidecar_version" "$release_manifest" <<'NODE'
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-const [destination, artifactPath, version, releasePath] = process.argv.slice(2);
+const [destination, artifactPath, sidecarVersion, releasePath] = process.argv.slice(2);
+const release = JSON.parse(fs.readFileSync(releasePath, "utf8"));
+const update = release.components.akuSidecar.update;
+const data = fs.readFileSync(artifactPath);
+const publishedAt = new Date().toISOString().replace(/\.\d{3}Z$/, "Z");
+fs.writeFileSync(destination, `${JSON.stringify({
+  schemaVersion: 2,
+  product: "AkuSidecar",
+  channel: "stable",
+  sidecarVersion,
+  runtimeRevision: release.components.akuSidecar.runtimeRevision,
+  minHostVersion: update.minHostVersion,
+  bridgeCompatibility: update.bridgeCompatibility,
+  databaseCompatibility: update.databaseCompatibility,
+  publishedAt,
+  urgency: update.urgency,
+  ...(update.deadline ? { deadline: update.deadline } : {}),
+  artifact: {
+    platform: "macos-universal",
+    url: `https://github.com/abangkis/AkuBrowser/releases/download/v${sidecarVersion}/${path.basename(artifactPath)}`,
+    size: data.length,
+    sha256: crypto.createHash("sha256").update(data).digest("hex"),
+  },
+}, null, 2)}\n`);
+NODE
+  if [[ "$emit_legacy_v1" -eq 1 ]]; then
+    node --input-type=module - "$unsigned_legacy_update_manifest" "$legacy_update_artifact" "$version" "$release_manifest" <<'NODE'
+import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+const [destination, artifactPath, releaseVersion, releasePath] = process.argv.slice(2);
 const release = JSON.parse(fs.readFileSync(releasePath, "utf8"));
 const data = fs.readFileSync(artifactPath);
 fs.writeFileSync(destination, `${JSON.stringify({
   schemaVersion: 1,
   product: "AkuBrowser",
   channel: "stable",
-  version,
+  version: releaseVersion,
   runtimeRevision: release.components.akuBridge.runtimeRevision,
   bridgeContractVersion: release.components.akuBridge.contractVersion,
   publishedAt: new Date().toISOString().replace(/\.\d{3}Z$/, "Z"),
   artifact: {
-    url: `https://github.com/abangkis/AkuBrowser/releases/download/v${version}/${path.basename(artifactPath)}`,
+    url: `https://github.com/abangkis/AkuBrowser/releases/download/v${releaseVersion}/${path.basename(artifactPath)}`,
     size: data.length,
     sha256: crypto.createHash("sha256").update(data).digest("hex"),
   },
 }, null, 2)}\n`);
 NODE
-  derived_update_public_key="$(cd "$browser_root/installer/windows" && GOCACHE="$go_cache" GOMODCACHE="$go_mod_cache" go run -buildvcs=false ./cmd/sign-update-manifest -manifest "$unsigned_update_manifest" -private-key "$update_signing_private_key" -output "$update_manifest")"
-  [[ "$derived_update_public_key" = "$update_public_key" ]] || die "runtime-update private key does not match the public key pinned into the native host"
-  shasum -a 256 "$update_artifact" > "$update_artifact.sha256"
+  fi
+  derived_sidecar_update_public_key="$(cd "$browser_root/installer/windows" && GOCACHE="$go_cache" GOMODCACHE="$go_mod_cache" go run -buildvcs=false ./cmd/sign-update-manifest -manifest "$unsigned_sidecar_update_manifest" -private-key "$update_signing_private_key" -output "$sidecar_update_manifest")"
+  [[ "$derived_sidecar_update_public_key" = "$update_public_key" ]] || die "runtime-update private key does not match the public key pinned into the native host"
+  if [[ "$emit_legacy_v1" -eq 1 ]]; then
+    derived_legacy_update_public_key="$(cd "$browser_root/installer/windows" && GOCACHE="$go_cache" GOMODCACHE="$go_mod_cache" go run -buildvcs=false ./cmd/sign-update-manifest -manifest "$unsigned_legacy_update_manifest" -private-key "$update_signing_private_key" -output "$legacy_update_manifest")"
+    [[ "$derived_legacy_update_public_key" = "$update_public_key" ]] || die "legacy runtime-update private key does not match the public key pinned into the native host"
+  fi
+  shasum -a 256 "$sidecar_update_artifact" > "$sidecar_update_artifact.sha256"
+  [[ "$emit_legacy_v1" -eq 0 ]] || shasum -a 256 "$legacy_update_artifact" > "$legacy_update_artifact.sha256"
 fi
 
-pkgbuild --root "$payload_root" --scripts "$scripts_root" --identifier com.akubrowser.runtime --version "$version" --install-location / "$component_package"
+pkgbuild --root "$payload_root" --scripts "$scripts_root" --identifier com.akubrowser.runtime --version "$sidecar_version" --install-location / "$component_package"
 product_args=(--distribution "$distribution_file" --package-path "$build_root" --resources "$resources_root")
 [[ -z "$installer_identity" ]] || product_args+=(--sign "$installer_identity")
 productbuild "${product_args[@]}" "$versioned_package"
