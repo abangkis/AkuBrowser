@@ -96,6 +96,13 @@ foreach ($required in @(
 )) {
     Assert-True ($windowsStableGate.Contains($required)) "Windows stable gate does not enforce the unified release-kit boundary: $required"
 }
+foreach ($required in @(
+    'Assert-RenderedReleaseText',
+    'Contains(''$('')',
+    'Generated release text contains a control character'
+)) {
+    Assert-True ($windowsStableGate.Contains($required)) "Windows stable gate does not validate rendered release documentation: $required"
+}
 Assert-True ($builder.Contains('"$sidecarUpdateArtifactPath.sha256"')) "Windows builder must emit a Sidecar update archive checksum."
 Assert-True ($builder.Contains('"$legacyUpdateArtifactPath.sha256"')) "Windows builder must emit a legacy runtime archive checksum when aligned."
 foreach ($required in @(

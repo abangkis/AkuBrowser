@@ -27,6 +27,10 @@ not build, automated-acceptance, or clean-machine evidence.
 
 ## 1. Freeze the release
 
+- [ ] Finish and commit every release-script, checklist, manifest, version, URL,
+      identity, and user-facing installer/setup change before selecting the tuple.
+      A release-process fix after freeze invalidates the candidate even when the
+      product payload itself did not change.
 - [ ] Select one clean AkuBrowser, AkuBridge, and AkuSidecar source tuple.
 - [ ] Confirm `release.version` equals `<release-version>` and
       `components.akuSidecar.version` equals `<sidecar-version>`; Bridge and
@@ -51,6 +55,21 @@ not build, automated-acceptance, or clean-machine evidence.
 
 ### Windows compact execution card
 
+On the primary Windows release machine, the canonical protected runtime-update
+key custody directory is `D:\data\keys\AkuBrowser`:
+
+- `runtime-update-stable-v1.json` contains the key ID and public key metadata;
+- `runtime-update-stable-v1.seed.dpapi` contains the Ed25519 seed protected with
+  Windows DPAPI for the current user.
+
+Before the gate, confirm both files exist, the metadata says
+`aku-runtime-stable-v1` / `Ed25519`, DPAPI unprotection succeeds as the release
+user, the seed and public key are each 32 bytes, and their derived public keys
+match. Never pass the `.dpapi` file directly to the gate. Unprotect it only into
+an explicitly named temporary plaintext file, pass that file to
+`-UpdateSigningPrivateKeyPath`, then overwrite and delete it in a `finally`
+block. Never print, commit, upload, or retain either key as plaintext.
+
 Run once from AkuBrowser on the primary Windows machine:
 
 ```powershell
@@ -74,6 +93,21 @@ The runner must return `status: ok` and create exactly two lanes:
 The root `release-kit.json` is the authoritative asset allowlist and records
 the frozen tuple, identities, hashes, and signing state. Do not assemble a
 release by copying files between old artifact directories.
+
+After the runner returns, perform release-kit QA before 3B:
+
+- [ ] Confirm there is one final `stable-<sidecar-version>-windows/` directory
+      and no `.building` directory or separate installer/portable rebuild roots.
+- [ ] Confirm every `publishAssets` and `acceptanceAssets` entry exists and its
+      recorded byte count and SHA-256 match the file.
+- [ ] Read the generated root and acceptance READMEs. They must contain literal
+      filenames, literal extension IDs, and the literal `publish/` and
+      `acceptance/` lane names; reject `$(` fragments, control characters, or
+      unresolved template expressions.
+- [ ] Confirm the plaintext temporary signing-key file no longer exists.
+- [ ] Do not hand-edit a generated kit. Fix and commit the generator, choose a
+      new frozen AkuBrowser SHA, delete or archive the invalid candidate, and
+      rerun the complete Windows gate.
 
 ### macOS compact execution card
 

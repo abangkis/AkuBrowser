@@ -64,6 +64,15 @@ function Assert-ExactLane([string] $LaneRoot, [string[]] $ExpectedNames) {
     Assert-True (($actual -join "`n") -ceq ($expected -join "`n")) "Release lane differs from its allowlist. Expected: $($expected -join ', '). Actual: $($actual -join ', ')."
 }
 
+function Assert-RenderedReleaseText([string] $Path) {
+    $content = Get-Content -LiteralPath $Path -Raw
+    Assert-True (-not $content.Contains('$(')) "Generated release text contains an unresolved PowerShell expression: $Path"
+    foreach ($character in $content.ToCharArray()) {
+        $codePoint = [int][char]$character
+        Assert-True ($codePoint -eq 9 -or $codePoint -eq 10 -or $codePoint -eq 13 -or $codePoint -ge 32) "Generated release text contains a control character: $Path"
+    }
+}
+
 Assert-True ($IsWindows -or $env:OS -eq "Windows_NT") "Run this stable gate on Windows."
 Assert-True ($ReleaseVersion -match '^\d+\.\d+\.\d+$') "ReleaseVersion must be a stable semantic version."
 Assert-True ($SidecarVersion -match '^\d+\.\d+\.\d+$') "SidecarVersion must be a stable semantic version."
@@ -240,6 +249,7 @@ This folder is local test evidence only. Never upload any file from this folder 
 The publishable production identity is ``$($productionIdentity.extensionId)``; it is intentionally not used by this pre-Store kit.
 "@
 Write-Utf8NoBom (Join-Path $acceptanceRoot "README.md") $acceptanceReadme
+Assert-RenderedReleaseText (Join-Path $acceptanceRoot "README.md")
 $acceptanceNames += "README.md"
 
 Assert-ExactLane $publishRoot $publishNames
@@ -258,6 +268,7 @@ The portable ZIP under ``publish/`` is validated by automated Step 3A. It is not
 After Windows 3B is accepted, preserve this kit unchanged, hand the same frozen source tuple to macOS, and continue the stable release checklist.
 "@
 Write-Utf8NoBom (Join-Path $OutputRoot "README.md") $kitReadme
+Assert-RenderedReleaseText (Join-Path $OutputRoot "README.md")
 
 $publishAssets = @($publishNames | ForEach-Object { Get-AssetRecord $OutputRoot (Join-Path $publishRoot $_) })
 $acceptanceAssets = @($acceptanceNames | ForEach-Object { Get-AssetRecord $OutputRoot (Join-Path $acceptanceRoot $_) })
