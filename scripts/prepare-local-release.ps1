@@ -34,11 +34,24 @@ function Get-BridgeHealth {
     }
 }
 
-function Wait-CompatibleBridge([int] $TimeoutSeconds = 15) {
+function Test-BridgeMatchesRelease($Status) {
+    if ($null -eq $Status -or -not $Status.bridge.compatible) {
+        return $false
+    }
+    $actual = $Status.bridge.actual
+    $expected = $release.components.akuBridge
+    $expectedBuildId = "aku-bridge-$($expected.version)-$($expected.runtimeRevision)"
+    return [string]$actual.extensionVersion -eq [string]$expected.version `
+        -and [string]$actual.runtimeRevision -eq [string]$expected.runtimeRevision `
+        -and [string]$actual.buildId -eq $expectedBuildId `
+        -and [string]$actual.contractVersion -eq [string]$expected.contractVersion
+}
+
+function Wait-ReleaseBridge([int] $TimeoutSeconds = 15) {
     $deadline = [DateTime]::UtcNow.AddSeconds($TimeoutSeconds)
     do {
         $status = Get-BridgeHealth
-        if ($null -ne $status -and $status.bridge.compatible) {
+        if (Test-BridgeMatchesRelease $status) {
             return $status
         }
         Start-Sleep -Milliseconds 500
@@ -50,8 +63,8 @@ function Invoke-CooperativeBridgeReload([int] $TimeoutSeconds = 45) {
     # A Sidecar replacement rotates the process epoch and Bridge token. Give
     # the already-installed extension a bounded chance to re-bootstrap and
     # publish its normal heartbeat before asking it to reload itself.
-    $status = Wait-CompatibleBridge
-    if ($null -ne $status -and $status.bridge.compatible) {
+    $status = Wait-ReleaseBridge
+    if (Test-BridgeMatchesRelease $status) {
         Write-Host '[release] AkuBridge already matches the rebuilt development runtime.' -ForegroundColor Green
         return $status.bridge
     }
@@ -91,15 +104,15 @@ function Invoke-CooperativeBridgeReload([int] $TimeoutSeconds = 45) {
             -TimeoutSec 3
         if ($action.action.status -eq 'completed') {
             $health = Get-BridgeHealth
-            if ($null -eq $health -or -not $health.bridge.compatible) {
-                throw 'AkuBridge reload completed without a compatible Bridge heartbeat.'
+            if (-not (Test-BridgeMatchesRelease $health)) {
+                throw 'AkuBridge reload completed without the exact development release heartbeat.'
             }
             Write-Host '[release] AkuBridge cooperative reload completed.' -ForegroundColor Green
             return $health.bridge
         }
         if ($action.action.status -eq 'failed') {
-            $recovered = Wait-CompatibleBridge -TimeoutSeconds 3
-            if ($null -ne $recovered -and $recovered.bridge.compatible) {
+            $recovered = Wait-ReleaseBridge -TimeoutSeconds 3
+            if (Test-BridgeMatchesRelease $recovered) {
                 Write-Host '[release] AkuBridge recovered through its normal heartbeat while reload was pending.' -ForegroundColor Green
                 return $recovered.bridge
             }

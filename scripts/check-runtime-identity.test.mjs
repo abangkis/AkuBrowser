@@ -9,7 +9,7 @@ import { verifyRuntimeIdentity } from "./check-runtime-identity.mjs";
 const identity = {
   version: "0.7.9",
   chromeVersion: "0.7.9.0",
-  revision: "source-adapters-v93",
+  revision: "source-adapters-v98",
   contract: "aku-browser.bridge.v2",
   bridgeID: "aku-bridge-chrome-mv3-v0",
 };
@@ -101,7 +101,7 @@ test("fails before build when Sidecar expects a different Bridge revision", asyn
 
   await assert.rejects(
     verifyRuntimeIdentity(root),
-    /AkuSidecar ExpectedBridgeRevision: found "source-adapters-v89", expected "source-adapters-v93"/,
+    /AkuSidecar ExpectedBridgeRevision: found "source-adapters-v89", expected "source-adapters-v98"/,
   );
 });
 
@@ -120,4 +120,17 @@ test("fails before packaging when Bridge pins a different Sidecar bootstrap vers
     verifyRuntimeIdentity(root),
     /AkuBridge Sidecar bootstrap version: found "0.8.0", expected "0.7.9"/,
   );
+});
+
+test("local release reconciliation requires the exact Bridge release identity", async () => {
+  const script = await fs.readFile(
+    new URL("./prepare-local-release.ps1", import.meta.url),
+    "utf8",
+  );
+  assert.match(script, /function Test-BridgeMatchesRelease/);
+  assert.match(script, /actual\.runtimeRevision/);
+  assert.match(script, /actual\.buildId/);
+  assert.match(script, /actual\.contractVersion/);
+  assert.match(script, /Wait-ReleaseBridge/);
+  assert.doesNotMatch(script, /Wait-CompatibleBridge/);
 });
