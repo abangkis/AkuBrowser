@@ -7,9 +7,9 @@ import test from "node:test";
 import { verifyRuntimeIdentity } from "./check-runtime-identity.mjs";
 
 const identity = {
-  version: "0.7.9",
-  chromeVersion: "0.7.9.0",
-  revision: "source-adapters-v99",
+  version: "0.8.0",
+  chromeVersion: "0.8.0.0",
+  revision: "source-adapters-v100",
   contract: "aku-browser.bridge.v2",
   bridgeID: "aku-bridge-chrome-mv3-v0",
 };
@@ -101,7 +101,7 @@ test("fails before build when Sidecar expects a different Bridge revision", asyn
 
   await assert.rejects(
     verifyRuntimeIdentity(root),
-    /AkuSidecar ExpectedBridgeRevision: found "source-adapters-v89", expected "source-adapters-v99"/,
+    /AkuSidecar ExpectedBridgeRevision: found "source-adapters-v89", expected "source-adapters-v100"/,
   );
 });
 
@@ -112,13 +112,13 @@ test("fails before packaging when Bridge pins a different Sidecar bootstrap vers
   const capabilities = await fs.readFile(capabilitiesPath, "utf8");
   await fs.writeFile(
     capabilitiesPath,
-    capabilities.replace('SIDECAR_BOOTSTRAP_VERSION = "0.7.9"', 'SIDECAR_BOOTSTRAP_VERSION = "0.8.0"'),
+    capabilities.replace('SIDECAR_BOOTSTRAP_VERSION = "0.8.0"', 'SIDECAR_BOOTSTRAP_VERSION = "0.8.1"'),
     "utf8",
   );
 
   await assert.rejects(
     verifyRuntimeIdentity(root),
-    /AkuBridge Sidecar bootstrap version: found "0.8.0", expected "0.7.9"/,
+    /AkuBridge Sidecar bootstrap version: found "0.8.1", expected "0.8.0"/,
   );
 });
 

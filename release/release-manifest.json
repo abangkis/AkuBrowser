@@ -1,7 +1,7 @@
 {
   "schemaVersion": 2,
   "product": "AkuBrowser",
-  "version": "0.7.9",
+  "version": "0.8.0",
   "channel": "stable",
   "distribution": {
     "authorityRepository": "AkuBrowser",
@@ -55,7 +55,7 @@
       "nativeHost": {
         "name": "com.akubrowser.runtime",
         "role": "internal-update-and-launch-helper",
-        "version": "0.7.9",
+        "version": "0.8.0",
         "protocolVersion": 2,
         "minimumProtocolVersion": 1
       }
@@ -68,9 +68,9 @@
   },
   "components": {
     "akuSidecar": {
-      "version": "0.7.9",
+      "version": "0.8.0",
       "runtime": "go",
-      "runtimeRevision": "source-adapters-v99",
+      "runtimeRevision": "source-adapters-v100",
       "update": {
         "minHostVersion": "0.7.9",
         "bridgeCompatibility": {
@@ -112,9 +112,9 @@
       }
     },
     "akuBridge": {
-      "version": "0.7.9",
-      "chromeVersion": "0.7.9.0",
-      "runtimeRevision": "source-adapters-v99",
+      "version": "0.8.0",
+      "chromeVersion": "0.8.0.0",
+      "runtimeRevision": "source-adapters-v100",
       "contractVersion": "aku-browser.bridge.v2"
     },
     "c2paTool": {

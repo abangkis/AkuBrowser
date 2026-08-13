@@ -6,7 +6,7 @@ on:
       release_tag:
         description: Existing AkuBrowser release tag that receives the stable installer asset
         required: true
-        default: v0.7.9
+        default: v0.8.0
         type: string
       browser_ref:
         description: Frozen 40-character AkuBrowser commit SHA
