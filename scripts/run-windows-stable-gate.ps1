@@ -229,15 +229,15 @@ $acceptanceReadme = @"
 
 This folder is local test evidence only. Never upload any file from this folder to GitHub or the Chrome Web Store.
 
-1. Extract `AkuBridge-$($release.components.akuBridge.version)-prestore-unpacked.zip`.
+1. Extract ``AkuBridge-$($release.components.akuBridge.version)-prestore-unpacked.zip``.
 2. In Chrome, enable Developer mode and Load unpacked from the extracted folder.
-3. Verify extension ID `$($developmentIdentity.extensionId)`.
+3. Verify extension ID ``$($developmentIdentity.extensionId)``.
 4. Open Setup. It must offer the local installer and must not open a future GitHub release URL.
-5. Run `AkuBrowserRuntimeSetup-$SidecarVersion-unsigned-local.exe` from this folder.
+5. Run ``AkuBrowserRuntimeSetup-$SidecarVersion-unsigned-local.exe`` from this folder.
 6. Return to Setup, select Check runtime, check Codex, grant intended sources, and complete one Update now.
-7. Complete restart, repair, uninstall, reinstall, and data-preservation checks from `docs/windows-preview-acceptance.md`.
+7. Complete restart, repair, uninstall, reinstall, and data-preservation checks from ``docs/windows-preview-acceptance.md``.
 
-The publishable production identity is `$($productionIdentity.extensionId)`; it is intentionally not used by this pre-Store kit.
+The publishable production identity is ``$($productionIdentity.extensionId)``; it is intentionally not used by this pre-Store kit.
 "@
 Write-Utf8NoBom (Join-Path $acceptanceRoot "README.md") $acceptanceReadme
 $acceptanceNames += "README.md"
@@ -250,10 +250,10 @@ $kitReadme = @"
 
 This is one release kit with two intentionally separate identity lanes:
 
-- `publish/`: production Chrome Web Store identity. These are the only files eligible for GitHub release upload.
-- `acceptance/`: manifest-key-pinned development identity. Use only for clean-machine Step 3B and never upload it.
+- ``publish/``: production Chrome Web Store identity. These are the only files eligible for GitHub release upload.
+- ``acceptance/``: manifest-key-pinned development identity. Use only for clean-machine Step 3B and never upload it.
 
-The portable ZIP under `publish/` is validated by automated Step 3A. It is not the Load unpacked package and is not manual Step 3B evidence.
+The portable ZIP under ``publish/`` is validated by automated Step 3A. It is not the Load unpacked package and is not manual Step 3B evidence.
 
 After Windows 3B is accepted, preserve this kit unchanged, hand the same frozen source tuple to macOS, and continue the stable release checklist.
 "@
