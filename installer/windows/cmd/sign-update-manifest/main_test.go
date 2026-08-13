@@ -61,7 +61,7 @@ func TestVerifySignedRejectsChangedLegacyManifest(t *testing.T) {
 func TestRunSignsIndependentSidecarV2Manifest(t *testing.T) {
 	unsigned := unsignedManifestV2{
 		SchemaVersion: 2, Product: "AkuSidecar", Channel: "stable",
-		SidecarVersion: "0.8.1", RuntimeRevision: "source-adapters-v98",
+		SidecarVersion: "0.8.1", RuntimeRevision: "source-adapters-v99",
 		MinHostVersion: "0.7.9",
 		BridgeCompatibility: bridgeCompatibility{
 			Protocol: "aku-browser.bridge", MinVersion: 2, MaxVersion: 3,
@@ -106,7 +106,7 @@ func TestRunRejectsUnknownFieldsForBothSchemas(t *testing.T) {
 func TestRunRejectsUnsafeV2CompatibilityRanges(t *testing.T) {
 	unsigned := unsignedManifestV2{
 		SchemaVersion: 2, Product: "AkuSidecar", Channel: "stable",
-		SidecarVersion: "0.8.1", RuntimeRevision: "source-adapters-v98", MinHostVersion: "0.7.9",
+		SidecarVersion: "0.8.1", RuntimeRevision: "source-adapters-v99", MinHostVersion: "0.7.9",
 		BridgeCompatibility:   bridgeCompatibility{Protocol: "aku-browser.bridge", MinVersion: 3, MaxVersion: 2, RequiredCapabilities: []string{}},
 		DatabaseCompatibility: databaseCompatibility{MinSchemaVersion: 8, MaxSchemaVersion: 7, RollbackSafe: false},
 		PublishedAt:           "2026-08-12T00:00:00Z",
@@ -146,7 +146,7 @@ func TestRunRejectsDeadlineBeforePublication(t *testing.T) {
 func validV2Manifest() unsignedManifestV2 {
 	return unsignedManifestV2{
 		SchemaVersion: 2, Product: "AkuSidecar", Channel: "stable",
-		SidecarVersion: "0.8.1", RuntimeRevision: "source-adapters-v98", MinHostVersion: "0.7.9",
+		SidecarVersion: "0.8.1", RuntimeRevision: "source-adapters-v99", MinHostVersion: "0.7.9",
 		BridgeCompatibility: bridgeCompatibility{
 			Protocol: "aku-browser.bridge", MinVersion: 2, MaxVersion: 2,
 			RequiredCapabilities: []string{"authority.read_only_bounded", "capture.bounded"},
