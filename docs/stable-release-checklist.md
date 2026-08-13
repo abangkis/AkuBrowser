@@ -62,13 +62,15 @@ key custody directory is `D:\data\keys\AkuBrowser`:
 - `runtime-update-stable-v1.seed.dpapi` contains the Ed25519 seed protected with
   Windows DPAPI for the current user.
 
-Before the gate, confirm both files exist, the metadata says
-`aku-runtime-stable-v1` / `Ed25519`, DPAPI unprotection succeeds as the release
-user, the seed and public key are each 32 bytes, and their derived public keys
-match. Never pass the `.dpapi` file directly to the gate. Unprotect it only into
-an explicitly named temporary plaintext file, pass that file to
-`-UpdateSigningPrivateKeyPath`, then overwrite and delete it in a `finally`
-block. Never print, commit, upload, or retain either key as plaintext.
+The DPAPI payload uses the fixed non-secret entropy string
+`AkuBrowser runtime update stable v1`. Before the gate, confirm both files
+exist, the metadata says `aku-runtime-stable-v1` / `Ed25519`, DPAPI unprotection
+with that entropy succeeds as the release user, the seed and public key are each
+32 bytes, and their derived public keys match. Never pass the `.dpapi` file
+directly to the gate. Unprotect it only into an explicitly named temporary
+plaintext file, pass that file to `-UpdateSigningPrivateKeyPath`, then overwrite
+and delete it in a `finally` block. Never print, commit, upload, or retain either
+key as plaintext.
 
 Run once from AkuBrowser on the primary Windows machine:
 
