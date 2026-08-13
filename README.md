@@ -1,8 +1,17 @@
 # AkuBrowser
 
-Current development candidate: **`0.7.9`**. The canonical component tuple,
+Current release: **`0.7.9`**. The canonical component tuple,
 bundle boundary, and preview prerequisites are recorded in
 [`release/release-manifest.json`](release/release-manifest.json).
+
+> ### Install AkuBrowser from the Chrome Web Store
+>
+> [**Add AkuBrowser to Chrome →**](https://chromewebstore.google.com/detail/akubrowser/phkaipecbhpgopggbfpcejgngbhddnkk)
+>
+> The Chrome Web Store extension is the supported production installation for
+> AkuBrowser. After installing it, use the guided **Setup** flow to install or
+> update the local AkuSidecar companion runtime. The manual Windows/macOS
+> bundles remain available as a fallback for testing and recovery.
 
 AkuBrowser turns bounded samples from the user's chosen social feeds into one finite, source-backed Timeline. The current source registry supports X, LinkedIn, Facebook, and opt-in Instagram. It is designed for people who want to keep up without surrendering their attention to another infinite feed.
 
