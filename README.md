@@ -13,6 +13,19 @@ bundle boundary, and preview prerequisites are recorded in
 > update the local AkuSidecar companion runtime. The manual Windows/macOS
 > bundles remain available as a fallback for testing and recovery.
 
+## Latest release downloads
+
+The stable GitHub release is [AkuBrowser 0.7.9](https://github.com/abangkis/AkuBrowser/releases/latest).
+Use the platform installer aliases below so future stable releases can update
+these links without another README change:
+
+- [Windows runtime installer](https://github.com/abangkis/AkuBrowser/releases/latest/download/AkuBrowserRuntimeSetup.exe)
+- [macOS runtime installer](https://github.com/abangkis/AkuBrowser/releases/latest/download/AkuBrowserRuntimeSetup.pkg)
+- [All release assets and checksums](https://github.com/abangkis/AkuBrowser/releases/latest)
+
+The portable Windows and macOS bundles remain versioned assets on the release
+page. Verify the adjacent SHA-256 file before using a manual fallback.
+
 AkuBrowser turns bounded samples from the user's chosen social feeds into one finite, source-backed Timeline. The current source registry supports X, LinkedIn, Facebook, and opt-in Instagram. It is designed for people who want to keep up without surrendering their attention to another infinite feed.
 
 Its cross-author semantic Event Engine treats the underlying event—not the number of posts about it—as the unit of attention. When different authors or sources report the same specific occurrence, AkuBrowser can collapse the repetition while preserving the reports for inspection and correction. The user reads the change once instead of paying the same attention cost again for every account that repeated it.
