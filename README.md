@@ -106,8 +106,9 @@ remains only the generic process owner.
 The preview assumes Codex App with App Server is installed and signed in
 locally, and that Chrome is already signed in to every enabled source. Store
 users follow the guided extension Setup and install the user-scoped companion
-runtime; the portable ZIP remains available as a manual fallback and carries
-AkuBridge for Developer-mode testing. See [Preview release](docs/preview-release.md).
+runtime; the portable ZIP remains available as a manual fallback. Its bundled
+production Bridge is not the Load unpacked package for clean-machine acceptance.
+See [Preview release](docs/preview-release.md).
 
 Build and smoke-test the Windows x64 portable preview from this repository:
 
@@ -119,6 +120,13 @@ Build and smoke-test the Windows x64 portable preview from this repository:
 The generated directory, ZIP, and ZIP checksum are written beneath
 `artifacts\`. Use `-AllowDirty` only while developing the pipeline; a publishable
 artifact requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees.
+
+For a frozen stable candidate, do not run the portable and installer builders
+into separate folders. Use `scripts/run-windows-stable-gate.ps1`; it creates one
+release kit with a GitHub-uploadable `publish/` lane and a local-only
+`acceptance/` lane containing the matching unpacked Bridge and runtime installer.
+The exact command and handoff gates are in the
+[stable release checklist](docs/stable-release-checklist.md).
 
 For a local release checkpoint, use the reconciled workflow instead:
 

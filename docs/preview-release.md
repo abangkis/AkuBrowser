@@ -89,6 +89,9 @@ custom executable paths, and checksum verification.
 
 Windows x64 artifacts are built and smoke-tested with
 `scripts/build-windows-preview.ps1` and `scripts/test-windows-preview.ps1`.
+Those commands are component-level developer tools. A frozen stable release
+must instead use `scripts/run-windows-stable-gate.ps1`, which produces one
+release kit with separate `publish/` and local-only `acceptance/` allowlists.
 In the shared Windows development workspace,
 `scripts/prepare-local-release.ps1` is the canonical local release command. It
 keeps artifact construction portable, then separately reconciles the generated

@@ -415,7 +415,14 @@ if (-not [string]::IsNullOrWhiteSpace($UpdateSigningPrivateKeyPath)) {
     $legacyUpdateManifestPath = Join-Path $OutputRoot "AkuBrowserRuntimeUpdate.json"
     $unsignedSidecarUpdateManifestPath = Join-Path $buildRoot "sidecar-update-v2-unsigned.json"
     $unsignedLegacyUpdateManifestPath = Join-Path $buildRoot "runtime-update-v1-unsigned.json"
-    foreach ($path in @($sidecarUpdateArtifactPath, $legacyUpdateArtifactPath, $sidecarUpdateManifestPath, $legacyUpdateManifestPath)) {
+    foreach ($path in @(
+        $sidecarUpdateArtifactPath,
+        "$sidecarUpdateArtifactPath.sha256",
+        $legacyUpdateArtifactPath,
+        "$legacyUpdateArtifactPath.sha256",
+        $sidecarUpdateManifestPath,
+        $legacyUpdateManifestPath
+    )) {
         Reset-Path $path $OutputRoot
     }
 
@@ -438,13 +445,15 @@ if (-not [string]::IsNullOrWhiteSpace($UpdateSigningPrivateKeyPath)) {
     $runtimeUpdatePayloadManifestPath = Join-Path $runtimePayload "payload-manifest.json"
     Write-Utf8NoBom $runtimeUpdatePayloadManifestPath ($runtimeUpdatePayloadManifest | ConvertTo-Json -Depth 8)
     Compress-Archive -Path (Join-Path $runtimePayload "*") -DestinationPath $sidecarUpdateArtifactPath -CompressionLevel Optimal
+    $sidecarUpdateArtifactHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $sidecarUpdateArtifactPath).Hash.ToLowerInvariant()
+    "$sidecarUpdateArtifactHash  $sidecarUpdateArtifactName" | Set-Content -LiteralPath "$sidecarUpdateArtifactPath.sha256" -Encoding ASCII
     Remove-Item -LiteralPath $runtimeUpdatePayloadManifestPath -Force
     if ($emitLegacyV1) {
         Copy-Item -LiteralPath $sidecarUpdateArtifactPath -Destination $legacyUpdateArtifactPath
+        "$sidecarUpdateArtifactHash  $legacyUpdateArtifactName" | Set-Content -LiteralPath "$legacyUpdateArtifactPath.sha256" -Encoding ASCII
     }
 
     $publishedAt = [DateTimeOffset]::UtcNow.ToString("yyyy-MM-ddTHH:mm:ssZ")
-    $sidecarUpdateArtifactHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $sidecarUpdateArtifactPath).Hash.ToLowerInvariant()
     $unsignedSidecarUpdateManifest = [ordered]@{
         schemaVersion = 2
         product = "AkuSidecar"

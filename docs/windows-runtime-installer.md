@@ -66,18 +66,25 @@ An unsigned local candidate is deliberately named `*-unsigned-local.exe`:
 This mode validates staging and installer behavior. It is not publishable and
 must never be linked from the Store extension.
 
-The current `v0.7.9` stable unsigned candidate uses the production Store
-identity and the stable runtime channel:
+The stable unsigned candidate uses the production Store identity and the stable
+runtime channel. Do not build it as a standalone release folder; use the unified
+Windows stable gate documented in `docs/stable-release-checklist.md`:
 
 ```powershell
-.\scripts\build-windows-runtime-installer.ps1 `
-  -UnsignedStableCandidate
+.\scripts\run-windows-stable-gate.ps1 `
+  -ReleaseVersion <release-version> `
+  -SidecarVersion <sidecar-version> `
+  -BrowserSha <full-AkuBrowser-SHA> `
+  -BridgeSha <full-AkuBridge-SHA> `
+  -SidecarSha <full-AkuSidecar-SHA> `
+  -UpdatePublicKey $env:AKU_UPDATE_PUBLIC_KEY `
+  -UpdateSigningPrivateKeyPath <secure-key-path>
 ```
 
-It produces the versioned `AkuBrowserRuntimeSetup-0.7.9.exe`; the stable
-release may publish it as the documented `AkuBrowserRuntimeSetup.exe` alias.
-This is a deliberate unsigned release exception, not evidence of a signed
-publisher identity.
+The `publish/` lane contains the versioned installer and documented stable
+alias. The `acceptance/` lane contains a differently named development-identity
+installer plus the exact unpacked Bridge for Step 3B. This is a deliberate
+unsigned release exception, not evidence of a signed publisher identity.
 
 ## Signed production build
 

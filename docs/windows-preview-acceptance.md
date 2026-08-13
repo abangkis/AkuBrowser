@@ -5,11 +5,18 @@ repositories; AkuSupervisor and AkuSupervisorConformance are not packaged.
 
 ## Automated artifact gate
 
-Run from AkuBrowser:
+Run the complete Windows gate from AkuBrowser. It builds and validates both the
+production publish lane and the separate pre-Store acceptance lane:
 
 ```powershell
-.\scripts\build-windows-preview.ps1
-.\scripts\test-windows-preview.ps1
+.\scripts\run-windows-stable-gate.ps1 `
+  -ReleaseVersion <release-version> `
+  -SidecarVersion <sidecar-version> `
+  -BrowserSha <full-AkuBrowser-SHA> `
+  -BridgeSha <full-AkuBridge-SHA> `
+  -SidecarSha <full-AkuSidecar-SHA> `
+  -UpdatePublicKey $env:AKU_UPDATE_PUBLIC_KEY `
+  -UpdateSigningPrivateKeyPath <secure-key-path>
 ```
 
 The build gate validates the release tuple, executes Sidecar and Bridge tests,
@@ -34,13 +41,13 @@ gate above.
 1. start from a Windows machine or account with no AkuBrowser installation or database;
 2. install Codex App, sign in locally, and confirm it is ready;
 3. confirm Chrome is signed in to every source that will be enabled (X, LinkedIn, Facebook, or Instagram);
-4. build the frozen package with `scripts/build-prestore-bridge-package.ps1`,
-   extract it anywhere, load that directory through **Load unpacked**, and
+4. copy the runner's complete `acceptance/` folder to the clean machine, extract
+   its `AkuBridge-*-prestore-unpacked.zip`, load that directory through **Load unpacked**, and
    verify Chrome assigns the manifest-key-pinned `development` ID declared by
    `config/bridge-identities.json`;
-5. open Setup and confirm it initially detects that the companion runtime is missing;
-6. install the matching staging runtime built with
-   `-BridgeIdentityProfile development -UnsignedLocalCandidate`, record the
+5. open Setup and confirm it detects that the companion runtime is missing,
+   names the local `*-unsigned-local.exe`, and does not open a future GitHub release URL;
+6. run that matching installer from the same `acceptance/` folder, record the
    actual SmartScreen/antivirus behavior, then select **Check runtime**;
 7. select **Check Codex**, confirm Codex is detected, and explicitly confirm that
    sign-in and prerequisites are complete;
@@ -54,6 +61,11 @@ gate above.
     pre-reset native items as resurfaced; and
 12. confirm no portable AkuBrowser ZIP, terminal launcher, or AkuSupervisor
     process is required.
+
+Never mix the two lanes. `publish/` uses the production Store identity and is
+the only GitHub-uploadable directory. `acceptance/` uses the unpacked development
+identity and exists only for Step 3B. The root `release-kit.json` records both
+allowlists and their hashes.
 
 The production Chrome Web Store ID, Store-managed installation/update, and
 versioned public Setup download are verified only after publication in Step 5

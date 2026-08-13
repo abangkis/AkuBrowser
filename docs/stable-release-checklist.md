@@ -39,14 +39,41 @@ not build, automated-acceptance, or clean-machine evidence.
 
 ## 2. Build the candidate for the current platform pass
 
-- [ ] **Windows pass:** build the Windows portable ZIP and runtime installer
-      from the frozen tuple on Windows.
+- [ ] **Windows pass:** run the Windows stable gate once. It must create one
+      release-kit root containing `publish/` and `acceptance/`, never separate
+      top-level build folders that must be combined manually.
 - [ ] **macOS pass:** after Windows 3B acceptance, build the macOS universal ZIP
       and PKG from the same frozen tuple on macOS.
 - [ ] Generate checksums, artifact manifests, release manifest, and required SBOMs.
 - [ ] Confirm every artifact is clean, versioned, and declares its signing/notarization state.
 - [ ] If a release is intentionally unsigned, confirm the manifest, Setup copy,
       listing, installer welcome page, and release notes all say so consistently.
+
+### Windows compact execution card
+
+Run once from AkuBrowser on the primary Windows machine:
+
+```powershell
+.\scripts\run-windows-stable-gate.ps1 `
+  -ReleaseVersion <release-version> `
+  -SidecarVersion <sidecar-version> `
+  -BrowserSha <full-AkuBrowser-SHA> `
+  -BridgeSha <full-AkuBridge-SHA> `
+  -SidecarSha <full-AkuSidecar-SHA> `
+  -UpdatePublicKey $env:AKU_UPDATE_PUBLIC_KEY `
+  -UpdateSigningPrivateKeyPath <secure-key-path>
+```
+
+The runner must return `status: ok` and create exactly two lanes:
+
+- `publish/` uses the production Chrome Web Store identity and is the only
+  GitHub-uploadable asset directory;
+- `acceptance/` contains the matching manifest-key-pinned unpacked Bridge and
+  unsigned local runtime installer for Step 3B only. Never upload this lane.
+
+The root `release-kit.json` is the authoritative asset allowlist and records
+the frozen tuple, identities, hashes, and signing state. Do not assemble a
+release by copying files between old artifact directories.
 
 ### macOS compact execution card
 
@@ -119,11 +146,15 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
 
 ## 3B. Clean-machine acceptance
 
-- [ ] Build and use the frozen pre-Store AkuBridge package through Load unpacked;
-      verify its manifest-key-pinned `development` identity from
+- [ ] Copy the complete `acceptance/` lane from the single Windows or macOS
+      release kit to the clean machine; do not fetch a not-yet-published GitHub URL.
+- [ ] Extract and Load unpacked the frozen pre-Store AkuBridge package; verify
+      its manifest-key-pinned `development` identity from
       `config/bridge-identities.json` is unchanged across folders and machines.
-- [ ] Use only a matching development-identity staging runtime; never relabel or
-      publish it as the production companion installer.
+- [ ] Confirm Setup names the local acceptance installer and does not open the
+      future `v<sidecar-version>` GitHub release URL.
+- [ ] Use only the matching development-identity local runtime from the same
+      `acceptance/` lane; never relabel or publish it as the production installer.
 - [ ] Complete runtime installation, Codex detection and sign-in confirmation,
       source consent, and one full AkuBrowser update.
 - [ ] Pass Windows update/repair, Chrome restart, PC restart, stop/start,
@@ -136,6 +167,8 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
       clean-machine acceptance evidence.
 - [ ] Record that 3B validates clean-machine integration, not Chrome Web Store
       installation, production identity, or Store-managed updates.
+- [ ] Preserve `release-kit.json` and the completed 3B evidence; upload only the
+      files listed under its `publishAssets`, never `acceptanceAssets`.
 - [ ] Obtain explicit Windows and macOS release acceptance.
 
 ## 4. Stage the stable release

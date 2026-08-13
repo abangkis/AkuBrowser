@@ -26,6 +26,7 @@ $platformSource = Get-Content (Join-Path $bridgeRoot "native-host\platform.go") 
 $sidecarServer = Get-Content (Join-Path $sidecarRoot "internal\httpapi\server.go") -Raw
 $builder = Get-Content (Join-Path $browserRoot "scripts\build-windows-runtime-installer.ps1") -Raw
 $macBuilder = Get-Content (Join-Path $browserRoot "scripts\build-macos-runtime-installer.sh") -Raw
+$windowsStableGate = Get-Content (Join-Path $browserRoot "scripts\run-windows-stable-gate.ps1") -Raw
 $macStableGate = Get-Content (Join-Path $browserRoot "scripts\run-macos-stable-gate.sh") -Raw
 $workflow = Get-Content (Join-Path $browserRoot ".github\workflows\windows-runtime-installer.yml") -Raw
 $distributionContract = Get-Content (Join-Path $browserRoot "docs\chrome-store-distribution-contract.md") -Raw
@@ -77,6 +78,27 @@ Assert-True ($builder.Contains('/DAPP_VERSION=$sidecarVersion')) "Windows instal
 Assert-True ($macBuilder.Contains('--version "$sidecar_version"')) "macOS installer identity must follow the independently versioned Sidecar."
 Assert-True ($macBuilder.Contains('unsigned stable installers require --update-signing-private-key')) "Public stable macOS builds must not omit the signed Sidecar feed."
 foreach ($required in @(
+    'ReleaseVersion',
+    'SidecarVersion',
+    'BrowserSha',
+    'BridgeSha',
+    'SidecarSha',
+    'publish',
+    'acceptance',
+    'release-kit.json',
+    'build-prestore-bridge-package.ps1',
+    'BridgeIdentityProfile = "development"',
+    'UnsignedLocalCandidate = $true',
+    'UnsignedStableCandidate = $true',
+    'AkuBrowserRuntimeSetup-$SidecarVersion-unsigned-local.exe',
+    'publishAssets',
+    'acceptanceAssets'
+)) {
+    Assert-True ($windowsStableGate.Contains($required)) "Windows stable gate does not enforce the unified release-kit boundary: $required"
+}
+Assert-True ($builder.Contains('"$sidecarUpdateArtifactPath.sha256"')) "Windows builder must emit a Sidecar update archive checksum."
+Assert-True ($builder.Contains('"$legacyUpdateArtifactPath.sha256"')) "Windows builder must emit a legacy runtime archive checksum when aligned."
+foreach ($required in @(
     '--release-version <version>',
     '--sidecar-version <version>',
     '--update-signing-private-key <path>',
@@ -113,6 +135,7 @@ foreach ($required in @(
     'AkuBrowserRuntimeSetup-$sidecarVersion-macos-universal.pkg.sha256',
     'AkuSidecar-$sidecarVersion-macos-universal.zip.sha256',
     '$versionedInstaller',
+    '$runtimeZip.sha256',
     'AkuBrowserRuntimeSetup-*.exe',
     'AkuSidecarUpdate-macos-universal.json',
     '$legacyTupleIsAligned',
