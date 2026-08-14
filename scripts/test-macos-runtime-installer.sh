@@ -136,6 +136,17 @@ for (const item of manifest.files) {
   if (data.length !== item.size || crypto.createHash("sha256").update(data).digest("hex") !== item.sha256) throw new Error(`runtime payload drifted: ${item.path}`);
 }
 NODE
+  verify_checksum() {
+    local checksum="$1"
+    local expected_checksum actual_checksum
+    [[ -f "$checksum" ]] || die "update checksum is missing: $checksum"
+    [[ "$(awk '{print $2}' "$checksum")" = "$(basename "${checksum%.sha256}")" ]] || die "update checksum must use a portable basename: $checksum"
+    expected_checksum="$(awk '{print $1}' "$checksum")"
+    actual_checksum="$(shasum -a 256 "${checksum%.sha256}" | awk '{print $1}')"
+    [[ "$expected_checksum" = "$actual_checksum" ]] || die "update checksum does not match artifact: $checksum"
+  }
+  verify_checksum "$sidecar_update_artifact.sha256"
+  [[ "$emit_legacy_v1" -eq 0 ]] || verify_checksum "$legacy_update_artifact.sha256"
 fi
 
 sidecar_unsigned_manifest="$package_directory/AkuSidecarUpdate-macos-universal.unsigned.json"

@@ -339,8 +339,11 @@ fs.writeFileSync(destination, `${JSON.stringify({
 }, null, 2)}\n`);
 NODE
   fi
-  shasum -a 256 "$sidecar_update_artifact" > "$sidecar_update_artifact.sha256"
-  [[ "$emit_legacy_v1" -eq 0 ]] || shasum -a 256 "$legacy_update_artifact" > "$legacy_update_artifact.sha256"
+  (
+    cd "$output_root"
+    shasum -a 256 "$(basename "$sidecar_update_artifact")" > "$(basename "$sidecar_update_artifact").sha256"
+    [[ "$emit_legacy_v1" -eq 0 ]] || shasum -a 256 "$(basename "$legacy_update_artifact")" > "$(basename "$legacy_update_artifact").sha256"
+  )
 fi
 
 pkgbuild --root "$payload_root" --scripts "$scripts_root" --identifier com.akubrowser.runtime --version "$sidecar_version" --install-location / "$component_package"
