@@ -117,15 +117,17 @@ Public unsigned preview:
 ```
 
 Stable unsigned candidates use the
-[GitHub Mac-to-Windows signing handoff](github-macos-signing-handoff.md). The
-private update key remains on the primary Windows machine. The current builder
-still signs inside the Mac build and therefore must not be used for a new stable
-candidate until it is split into a Mac signing-request producer and Windows
-finalizer; do not work around this boundary by copying the private key to Mac.
+[GitHub Mac-to-Windows signing handoff](github-macos-signing-handoff.md). Run
+`scripts/run-macos-signing-request.sh` to produce unsigned canonical manifests
+and the handoff ZIP. Windows runs
+`scripts/finalize-macos-signing-request.ps1` with the private key, and Mac runs
+`scripts/finalize-macos-signing.sh` to verify the returned receipt. The private
+update key remains on the primary Windows machine; the Mac builder rejects a
+private-key argument.
 
 Future Developer ID production packaging may still use the macOS Application,
 Installer, and notarization identities locally. Runtime-update manifest signing
-remains a separate Windows-authority step: production packaging must consume the
+remains a separate Windows-authority step: production packaging consumes the
 returned signed manifest instead of receiving the Ed25519 private key on Mac.
 
 ## Linux boundary

@@ -90,7 +90,7 @@ sidecar_update_artifact="$package_directory/AkuSidecar-${sidecar_version}-macos-
 sidecar_update_manifest="$package_directory/AkuSidecarUpdate-macos-universal.json"
 legacy_update_artifact="$package_directory/AkuBrowserRuntime-${version}-macos-universal.zip"
 legacy_update_manifest="$package_directory/AkuBrowserRuntimeUpdate-macos-universal.json"
-if [[ -f "$sidecar_update_artifact" || -f "$sidecar_update_manifest" || -f "$legacy_update_artifact" || -f "$legacy_update_manifest" ]]; then
+if [[ -f "$sidecar_update_manifest" || -f "$legacy_update_manifest" ]]; then
   [[ -f "$sidecar_update_artifact" && -f "$sidecar_update_manifest" ]] || die "AkuSidecar v2 update artifact and manifest must be produced together"
   if [[ "$emit_legacy_v1" -eq 1 ]]; then
     [[ -f "$legacy_update_artifact" && -f "$legacy_update_manifest" ]] || die "aligned releases must retain the legacy v1 update feed during transition"
@@ -135,6 +135,34 @@ for (const item of manifest.files) {
   const data = fs.readFileSync(path.join(root, ...item.path.split("/")));
   if (data.length !== item.size || crypto.createHash("sha256").update(data).digest("hex") !== item.sha256) throw new Error(`runtime payload drifted: ${item.path}`);
 }
+NODE
+fi
+
+sidecar_unsigned_manifest="$package_directory/AkuSidecarUpdate-macos-universal.unsigned.json"
+legacy_unsigned_manifest="$package_directory/AkuBrowserRuntimeUpdate-macos-universal.unsigned.json"
+if [[ -f "$sidecar_unsigned_manifest" || -f "$legacy_unsigned_manifest" ]]; then
+  [[ ! -f "$sidecar_update_manifest" && ! -f "$legacy_update_manifest" ]] || die "unsigned and signed update manifests must not coexist in the Mac producer output"
+  [[ -f "$sidecar_update_artifact" && -f "$sidecar_unsigned_manifest" ]] || die "AkuSidecar v2 unsigned artifact and manifest must be produced together"
+  if [[ "$emit_legacy_v1" -eq 1 ]]; then
+    [[ -f "$legacy_update_artifact" && -f "$legacy_unsigned_manifest" ]] || die "aligned releases must retain the unsigned legacy v1 request manifest"
+  else
+    [[ ! -f "$legacy_update_artifact" && ! -f "$legacy_unsigned_manifest" ]] || die "independent component releases must not emit an invalid unsigned legacy v1 feed"
+  fi
+  node --input-type=module - "$sidecar_update_artifact" "$sidecar_unsigned_manifest" "$legacy_update_artifact" "$legacy_unsigned_manifest" "$sidecar_version" "$version" "$emit_legacy_v1" <<'NODE'
+import crypto from "node:crypto";
+import fs from "node:fs";
+import path from "node:path";
+const [sidecarArtifactPath, sidecarManifestPath, legacyArtifactPath, legacyManifestPath, sidecarVersion, releaseVersion, emitLegacyV1] = process.argv.slice(2);
+const verifyUnsigned = (artifactPath, manifestPath, expectedSchema, expectedProduct, expectedVersion, expectedName, expectedTag) => {
+  const artifact = fs.readFileSync(artifactPath);
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+  if (Object.hasOwn(manifest, "signature")) throw new Error(`unsigned manifest contains a signature: ${path.basename(manifestPath)}`);
+  if (manifest.schemaVersion !== expectedSchema || manifest.product !== expectedProduct || manifest.channel !== "stable") throw new Error(`unsigned manifest identity is invalid: ${path.basename(manifestPath)}`);
+  if ((manifest.sidecarVersion ?? manifest.version) !== expectedVersion || !manifest.artifact.url.endsWith(`/v${expectedTag}/${expectedName}`)) throw new Error(`unsigned manifest URL or version is invalid: ${path.basename(manifestPath)}`);
+  if (manifest.artifact.size !== artifact.length || manifest.artifact.sha256 !== crypto.createHash("sha256").update(artifact).digest("hex")) throw new Error(`unsigned artifact digest is invalid: ${path.basename(manifestPath)}`);
+};
+verifyUnsigned(sidecarArtifactPath, sidecarManifestPath, 2, "AkuSidecar", sidecarVersion, `AkuSidecar-${sidecarVersion}-macos-universal.zip`, sidecarVersion);
+if (emitLegacyV1 === "1") verifyUnsigned(legacyArtifactPath, legacyManifestPath, 1, "AkuBrowser", releaseVersion, `AkuBrowserRuntime-${releaseVersion}-macos-universal.zip`, releaseVersion);
 NODE
 fi
 echo "macOS runtime installer structural test passed: $package_path"

@@ -87,6 +87,20 @@ func TestRunSignsIndependentSidecarV2Manifest(t *testing.T) {
 	verifySignature(t, unsigned, signed.Signature)
 }
 
+func TestVerifySignedAcceptsSidecarV2Manifest(t *testing.T) {
+	unsigned := validV2Manifest()
+	output := signFixture(t, unsigned)
+	root := t.TempDir()
+	signedPath := filepath.Join(root, "signed-v2.json")
+	if err := os.WriteFile(signedPath, output, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	publicKey := ed25519.NewKeyFromSeed(testSeed()).Public().(ed25519.PublicKey)
+	if err := verifySigned(signedPath, base64.StdEncoding.EncodeToString(publicKey)); err != nil {
+		t.Fatalf("verify signed Sidecar v2 manifest: %v", err)
+	}
+}
+
 func TestRunRejectsUnknownFieldsForBothSchemas(t *testing.T) {
 	for _, fixture := range []string{
 		`{"schemaVersion":1,"product":"AkuBrowser","unexpected":true}`,

@@ -130,7 +130,8 @@ After the runner returns, perform release-kit QA before 3B:
 
 Run only after Windows 3B acceptance. The Mac lane verifies the clean frozen
 tuple, builds both universal artifacts in a fresh output directory, runs macOS
-3A, and stops at the signing-request boundary before Windows signing.
+3A, and stops at the signing-request boundary before Windows signing. The Mac
+lane never receives the update private key.
 
 On the primary Windows machine, obtain the pinned public key from the stable key
 metadata and copy only that public value to the Mac:
@@ -145,11 +146,14 @@ $env:AKU_UPDATE_PUBLIC_KEY = (
 On macOS, set `AKU_UPDATE_PUBLIC_KEY` to that Base64 value. Never copy
 `runtime-update-stable-v1.seed.dpapi` or a plaintext private key to macOS.
 
-Follow the [GitHub macOS signing handoff](github-macos-signing-handoff.md).
-The current Mac stable runner still requires a private-key path and must not be
-used for a stable candidate until its signing stage has been split out to the
-Windows finalizer. Stop before macOS 3B until Mac has verified the Windows-signed
-manifests and finalized the release kit.
+Run `scripts/run-macos-signing-request.sh` (or the compatibility entry point
+`scripts/run-macos-stable-gate.sh`) with the frozen tuple and
+`$AKU_UPDATE_PUBLIC_KEY`. It creates `publish/` and `handoff/` lanes and returns
+`status: awaiting_windows_signing`. Follow the [GitHub macOS signing handoff](github-macos-signing-handoff.md).
+Windows runs `scripts/finalize-macos-signing-request.ps1` with the temporary
+decrypted key, then Mac runs `scripts/finalize-macos-signing.sh` to verify the
+receipt and produce the final kit. Stop before macOS 3B until this verification
+and finalization pass succeeds.
 
 For pre-Store 3B, keep development staging separate from publishable output:
 

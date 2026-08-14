@@ -118,6 +118,7 @@ title, notes, prerelease flag, or publication state.
 stable-key metadata property `publicKeyBase64`. It is safe to transfer to macOS.
 The Windows file `runtime-update-stable-v1.seed.dpapi` is a DPAPI-protected
 private seed; never copy it or any plaintext derivative to macOS, and never
-upload it as a release artifact. The current Mac stable scripts still require a
-private-key path, so they are not an approved stable lane until the documented
-Mac request/Windows finalizer split is implemented.
+upload it as a release artifact. `scripts/run-macos-signing-request.sh` now
+produces the unsigned Mac handoff kit; Windows signs with
+`scripts/finalize-macos-signing-request.ps1`, and Mac verifies with
+`scripts/finalize-macos-signing.sh` before 3B.

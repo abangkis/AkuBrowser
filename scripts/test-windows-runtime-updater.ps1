@@ -28,6 +28,9 @@ $builder = Get-Content (Join-Path $browserRoot "scripts\build-windows-runtime-in
 $macBuilder = Get-Content (Join-Path $browserRoot "scripts\build-macos-runtime-installer.sh") -Raw
 $windowsStableGate = Get-Content (Join-Path $browserRoot "scripts\run-windows-stable-gate.ps1") -Raw
 $macStableGate = Get-Content (Join-Path $browserRoot "scripts\run-macos-stable-gate.sh") -Raw
+$macProducer = Get-Content (Join-Path $browserRoot "scripts\run-macos-signing-request.sh") -Raw
+$macFinalizer = Get-Content (Join-Path $browserRoot "scripts\finalize-macos-signing-request.ps1") -Raw
+$macVerifier = Get-Content (Join-Path $browserRoot "scripts\finalize-macos-signing.sh") -Raw
 $workflow = Get-Content (Join-Path $browserRoot ".github\workflows\windows-runtime-installer.yml") -Raw
 $distributionContract = Get-Content (Join-Path $browserRoot "docs\chrome-store-distribution-contract.md") -Raw
 $nativeProtocolV2 = Get-Content (Join-Path $browserRoot "contracts\native-runtime-messaging.schema.json") -Raw | ConvertFrom-Json
@@ -76,7 +79,8 @@ Assert-True ($builder.Contains('check-native-host-min-version.mjs')) "Windows bu
 Assert-True ($macBuilder.Contains('check-native-host-min-version.mjs')) "macOS builder must gate packaged Native Host SemVer against Sidecar minHostVersion."
 Assert-True ($builder.Contains('/DAPP_VERSION=$sidecarVersion')) "Windows installer identity must follow the independently versioned Sidecar."
 Assert-True ($macBuilder.Contains('--version "$sidecar_version"')) "macOS installer identity must follow the independently versioned Sidecar."
-Assert-True ($macBuilder.Contains('unsigned stable installers require --update-signing-private-key')) "Public stable macOS builds must not omit the signed Sidecar feed."
+Assert-True ($macBuilder.Contains('--emit-unsigned-update-manifests')) "macOS builder must emit unsigned manifests for the Windows signing handoff."
+Assert-True (-not $macBuilder.Contains('go run -buildvcs=false ./cmd/sign-update-manifest')) "macOS builder must not sign update manifests."
 foreach ($required in @(
     'ReleaseVersion',
     'SidecarVersion',
@@ -108,15 +112,20 @@ Assert-True ($builder.Contains('"$legacyUpdateArtifactPath.sha256"')) "Windows b
 foreach ($required in @(
     '--release-version <version>',
     '--sidecar-version <version>',
-    '--update-signing-private-key <path>',
+    '--update-public-key <base64>',
     'AkuBrowserRuntimeSetup-${sidecar_version}-macos-universal.pkg',
     'AkuSidecar-${sidecar_version}-macos-universal.zip',
-    'AkuSidecarUpdate-macos-universal.json',
-    'releaseTag: `v${sidecarVersion}`'
+    'AkuSidecarUpdate-macos-universal.unsigned.json',
+    'releaseTag: `v${sidecarVersion}`',
+    'status: "awaiting_windows_signing"'
 )) {
-    Assert-True ($macStableGate.Contains($required)) "macOS stable gate does not preserve the independent Sidecar release boundary: $required"
+    Assert-True ($macProducer.Contains($required)) "macOS signing-request producer is missing the release boundary: $required"
 }
-Assert-True (-not $macStableGate.Contains('AkuBrowserRuntimeSetup-${release_version}-macos-universal.pkg')) "macOS stable gate must not derive the installer name from the top-level AkuBrowser version."
+Assert-True ($macStableGate.Contains('run-macos-signing-request.sh')) "macOS stable gate must delegate to the signing-request producer."
+Assert-True ($macFinalizer.Contains('verify-signed')) "Windows Mac-signing finalizer must verify signed manifests."
+Assert-True ($macFinalizer.Contains('requestSha256')) "Windows Mac-signing finalizer must bind its receipt to the request ZIP."
+Assert-True ($macVerifier.Contains('signing receipt')) "Mac finalizer must verify the Windows signing receipt."
+Assert-True (-not $macProducer.Contains('update-signing-private-key')) "Mac signing-request producer must not accept a private key."
 Assert-True ([string]$release.distribution.chromeStore.nativeHost.version -match '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') "Release manifest must declare a valid Native Host version."
 Assert-True ($sidecarManifestSchema.properties.schemaVersion.const -eq 2 -and $sidecarManifestSchema.properties.product.const -eq "AkuSidecar") "Current update schema must describe AkuSidecar manifest v2."
 foreach ($required in @("sidecarVersion", "runtimeRevision", "minHostVersion", "bridgeCompatibility", "databaseCompatibility", "artifact", "signature")) {

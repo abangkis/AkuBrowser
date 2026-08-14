@@ -189,8 +189,10 @@ explicitly disclosed unsigned package, a pinned universal C2PA tool, and an
 Installer warning page. Users must verify the adjacent SHA-256
 and use macOS **Privacy & Security > Open Anyway** if Gatekeeper blocks the
 package; they must never disable Gatekeeper globally. Developer ID Application
-and Installer identities, notarization, and runtime-update signing keys remain
-future hardening work.
+and Installer identities and notarization remain future hardening work. Stable
+runtime-update manifests use the Mac signing-request producer and Windows
+finalizer documented in `docs/github-macos-signing-handoff.md`; the private key
+never leaves Windows.
 
 ## Canonical documentation
 

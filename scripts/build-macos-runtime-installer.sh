@@ -13,7 +13,7 @@ Options:
   --installer-identity <identity>      Developer ID Installer signing identity
   --notary-profile <profile>           notarytool keychain profile; submit and staple the package
   --update-public-key <base64>         Ed25519 update public key pinned into the native host
-  --update-signing-private-key <path>  Base64 Ed25519 seed/private key for the macOS update manifest
+  --emit-unsigned-update-manifests     Emit unsigned update artifacts/manifests for Windows signing handoff
   --unsigned-local-candidate           Build an explicitly unsigned local candidate
   --unsigned-preview-candidate         Build the public unsigned macOS preview asset
   --unsigned-stable-candidate          Build the unsigned stable macOS asset
@@ -41,6 +41,7 @@ installer_identity=""
 notary_profile=""
 update_public_key=""
 update_signing_private_key=""
+emit_unsigned_updates=0
 unsigned_local=0
 unsigned_preview=0
 unsigned_stable=0
@@ -57,6 +58,7 @@ while [[ $# -gt 0 ]]; do
     --notary-profile) notary_profile="$2"; shift 2 ;;
     --update-public-key) update_public_key="$2"; shift 2 ;;
     --update-signing-private-key) update_signing_private_key="$2"; shift 2 ;;
+    --emit-unsigned-update-manifests) emit_unsigned_updates=1; shift ;;
     --unsigned-local-candidate) unsigned_local=1; shift ;;
     --unsigned-preview-candidate) unsigned_preview=1; shift ;;
     --unsigned-stable-candidate) unsigned_stable=1; shift ;;
@@ -104,7 +106,7 @@ if [[ "$unsigned_stable" -eq 1 ]]; then
   [[ "$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.channel)' "$release_manifest")" = "stable" ]] || die "unsigned stable installers require a stable release manifest channel"
   [[ "$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution?.chromeStore?.nativeRuntimeInstallers?.["macos-universal"]?.trustState ?? "")' "$release_manifest")" = "unsigned" ]] || die "the stable macOS installer trust state must be declared unsigned"
   [[ -n "$update_public_key" ]] || die "unsigned stable installers require --update-public-key"
-  [[ -n "$update_signing_private_key" && -f "$update_signing_private_key" ]] || die "unsigned stable installers require --update-signing-private-key"
+  emit_unsigned_updates=1
 fi
 if [[ "$unsigned_local" -eq 0 ]]; then
   [[ "$bridge_identity_profile" = "$release_bridge_identity_profile" ]] || die "published installers must use the Bridge identity profile selected by the release manifest"
@@ -119,7 +121,9 @@ if [[ "$unsigned_local" -eq 0 && "$unsigned_preview" -eq 0 && "$unsigned_stable"
   [[ -n "$notary_profile" ]] || die "production build requires --notary-profile"
   [[ -n "$c2pa_tool" && -f "$c2pa_tool" ]] || die "production build requires --c2pa-tool"
   [[ -n "$update_public_key" ]] || die "production build requires --update-public-key"
-  [[ -n "$update_signing_private_key" && -f "$update_signing_private_key" ]] || die "production build requires --update-signing-private-key"
+fi
+if [[ "$emit_unsigned_updates" -eq 1 && "$unsigned_stable" -eq 0 ]]; then
+  die "--emit-unsigned-update-manifests requires --unsigned-stable-candidate"
 fi
 if [[ "$unsigned_preview" -eq 1 || "$unsigned_stable" -eq 1 ]]; then
   [[ -n "$c2pa_tool" && -f "$c2pa_tool" ]] || die "public unsigned preview requires --c2pa-tool"
@@ -139,6 +143,10 @@ if [[ "$allow_dirty" -eq 0 ]]; then
   for repository in "$browser_root" "$bridge_root" "$sidecar_root"; do
     [[ -z "$(git -C "$repository" status --porcelain)" ]] || die "release sources must be clean; use --allow-dirty for a local candidate"
   done
+fi
+
+if [[ -n "$update_signing_private_key" ]]; then
+  die "macOS builds no longer accept an update private key; use the Windows signing finalizer"
 fi
 
 go_cache="${TMPDIR:-/tmp}/akubrowser-go-cache"
@@ -237,15 +245,13 @@ if [[ -n "$application_identity" ]]; then
   [[ ! -f "$version_root/c2patool" ]] || codesign --force --options runtime --timestamp --sign "$application_identity" "$version_root/c2patool"
 fi
 
-if [[ -n "$update_signing_private_key" ]]; then
+if [[ "$emit_unsigned_updates" -eq 1 ]]; then
   update_payload="$build_root/update-payload"
   sidecar_update_artifact="$output_root/AkuSidecar-${sidecar_version}-macos-universal.zip"
   legacy_update_artifact="$output_root/AkuBrowserRuntime-${version}-macos-universal.zip"
-  sidecar_update_manifest="$output_root/AkuSidecarUpdate-macos-universal.json"
-  legacy_update_manifest="$output_root/AkuBrowserRuntimeUpdate-macos-universal.json"
-  unsigned_sidecar_update_manifest="$build_root/sidecar-update-v2-unsigned.json"
-  unsigned_legacy_update_manifest="$build_root/runtime-update-v1-unsigned.json"
-  rm -f -- "$sidecar_update_artifact" "$sidecar_update_artifact.sha256" "$legacy_update_artifact" "$legacy_update_artifact.sha256" "$sidecar_update_manifest" "$legacy_update_manifest"
+  unsigned_sidecar_update_manifest="$output_root/AkuSidecarUpdate-macos-universal.unsigned.json"
+  unsigned_legacy_update_manifest="$output_root/AkuBrowserRuntimeUpdate-macos-universal.unsigned.json"
+  rm -f -- "$sidecar_update_artifact" "$sidecar_update_artifact.sha256" "$legacy_update_artifact" "$legacy_update_artifact.sha256" "$unsigned_sidecar_update_manifest" "$unsigned_legacy_update_manifest" "$output_root/AkuSidecarUpdate-macos-universal.json" "$output_root/AkuBrowserRuntimeUpdate-macos-universal.json"
   mkdir -p "$update_payload"
   cp -R "$version_root/". "$update_payload/"
   node --input-type=module - "$update_payload" "$sidecar_version" <<'NODE'
@@ -333,12 +339,6 @@ fs.writeFileSync(destination, `${JSON.stringify({
 }, null, 2)}\n`);
 NODE
   fi
-  derived_sidecar_update_public_key="$(cd "$browser_root/installer/windows" && GOCACHE="$go_cache" GOMODCACHE="$go_mod_cache" go run -buildvcs=false ./cmd/sign-update-manifest -manifest "$unsigned_sidecar_update_manifest" -private-key "$update_signing_private_key" -output "$sidecar_update_manifest")"
-  [[ "$derived_sidecar_update_public_key" = "$update_public_key" ]] || die "runtime-update private key does not match the public key pinned into the native host"
-  if [[ "$emit_legacy_v1" -eq 1 ]]; then
-    derived_legacy_update_public_key="$(cd "$browser_root/installer/windows" && GOCACHE="$go_cache" GOMODCACHE="$go_mod_cache" go run -buildvcs=false ./cmd/sign-update-manifest -manifest "$unsigned_legacy_update_manifest" -private-key "$update_signing_private_key" -output "$legacy_update_manifest")"
-    [[ "$derived_legacy_update_public_key" = "$update_public_key" ]] || die "legacy runtime-update private key does not match the public key pinned into the native host"
-  fi
   shasum -a 256 "$sidecar_update_artifact" > "$sidecar_update_artifact.sha256"
   [[ "$emit_legacy_v1" -eq 0 ]] || shasum -a 256 "$legacy_update_artifact" > "$legacy_update_artifact.sha256"
 fi
@@ -366,3 +366,6 @@ lipo -archs "$version_root/AkuSidecar"
 
 echo "macOS runtime installer: $versioned_package"
 echo "stable release asset: $stable_package"
+if [[ "$emit_unsigned_updates" -eq 1 ]]; then
+  echo "unsigned update manifest: $output_root/AkuSidecarUpdate-macos-universal.unsigned.json"
+fi

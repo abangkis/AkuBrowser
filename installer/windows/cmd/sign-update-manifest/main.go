@@ -147,33 +147,63 @@ func verifySigned(manifestPath, publicKeyText string) error {
 	if err := json.Unmarshal(data, &header); err != nil {
 		return fmt.Errorf("decode signed manifest: %w", err)
 	}
-	if header.SchemaVersion != 1 {
-		return fmt.Errorf("signed manifest verification supports frozen schema version 1, got %d", header.SchemaVersion)
+	switch header.SchemaVersion {
+	case 1:
+		var signed signedManifestV1
+		if err := decodeStrict(data, &signed); err != nil {
+			return err
+		}
+		if signed.SchemaVersion != 1 || signed.Product != "AkuBrowser" ||
+			signed.Signature.Algorithm != "ed25519" || signed.Signature.KeyID != "aku-runtime-stable-v1" {
+			return errors.New("legacy signed update manifest identity is invalid")
+		}
+		unsigned := unsignedManifestV1{
+			SchemaVersion: signed.SchemaVersion, Product: signed.Product, Channel: signed.Channel,
+			Version: signed.Version, RuntimeRevision: signed.RuntimeRevision,
+			BridgeContractVersion: signed.BridgeContractVersion, PublishedAt: signed.PublishedAt,
+			Artifact: signed.Artifact,
+		}
+		payload, err := json.Marshal(unsigned)
+		if err != nil {
+			return err
+		}
+		signatureBytes, err := base64.StdEncoding.DecodeString(signed.Signature.Value)
+		if err != nil || len(signatureBytes) != ed25519.SignatureSize ||
+			!ed25519.Verify(ed25519.PublicKey(publicKey), payload, signatureBytes) {
+			return errors.New("legacy update manifest signature is invalid")
+		}
+		return nil
+	case 2:
+		var signed signedManifestV2
+		if err := decodeStrict(data, &signed); err != nil {
+			return err
+		}
+		unsigned := unsignedManifestV2{
+			SchemaVersion: signed.SchemaVersion, Product: signed.Product,
+			Channel: signed.Channel, SidecarVersion: signed.SidecarVersion,
+			RuntimeRevision: signed.RuntimeRevision, MinHostVersion: signed.MinHostVersion,
+			BridgeCompatibility:   signed.BridgeCompatibility,
+			DatabaseCompatibility: signed.DatabaseCompatibility,
+			PublishedAt:           signed.PublishedAt, Urgency: signed.Urgency, Deadline: signed.Deadline,
+			Artifact: signed.Artifact,
+		}
+		if err := validateV2(unsigned); err != nil {
+			return err
+		}
+		payload, err := json.Marshal(unsigned)
+		if err != nil {
+			return err
+		}
+		signatureBytes, err := base64.StdEncoding.DecodeString(signed.Signature.Value)
+		if err != nil || len(signatureBytes) != ed25519.SignatureSize ||
+			signed.Signature.Algorithm != "ed25519" || signed.Signature.KeyID != "aku-runtime-stable-v1" ||
+			!ed25519.Verify(ed25519.PublicKey(publicKey), payload, signatureBytes) {
+			return errors.New("Sidecar update manifest signature is invalid")
+		}
+		return nil
+	default:
+		return fmt.Errorf("signed manifest verification does not support schema version %d", header.SchemaVersion)
 	}
-	var signed signedManifestV1
-	if err := decodeStrict(data, &signed); err != nil {
-		return err
-	}
-	if signed.SchemaVersion != 1 || signed.Product != "AkuBrowser" ||
-		signed.Signature.Algorithm != "ed25519" || signed.Signature.KeyID != "aku-runtime-stable-v1" {
-		return errors.New("legacy signed update manifest identity is invalid")
-	}
-	unsigned := unsignedManifestV1{
-		SchemaVersion: signed.SchemaVersion, Product: signed.Product, Channel: signed.Channel,
-		Version: signed.Version, RuntimeRevision: signed.RuntimeRevision,
-		BridgeContractVersion: signed.BridgeContractVersion, PublishedAt: signed.PublishedAt,
-		Artifact: signed.Artifact,
-	}
-	payload, err := json.Marshal(unsigned)
-	if err != nil {
-		return err
-	}
-	signatureBytes, err := base64.StdEncoding.DecodeString(signed.Signature.Value)
-	if err != nil || len(signatureBytes) != ed25519.SignatureSize ||
-		!ed25519.Verify(ed25519.PublicKey(publicKey), payload, signatureBytes) {
-		return errors.New("legacy update manifest signature is invalid")
-	}
-	return nil
 }
 
 func run(manifestPath, privateKeyPath, outputPath string) error {

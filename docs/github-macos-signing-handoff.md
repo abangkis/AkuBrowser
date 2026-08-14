@@ -23,6 +23,19 @@ the transport; the existing Windows-owned draft is the only staging location.
 - [ ] Verify the frozen AkuBrowser, AkuBridge, and AkuSidecar SHAs and clean trees.
 - [ ] Build and test the universal ZIP, PKG, Sidecar update archive, checksums,
       unsigned canonical update manifests, and machine-readable provenance.
+- [ ] Run `scripts/run-macos-signing-request.sh` with the frozen source tuple and
+      public key. It creates a kit with `publish/` and `handoff/` lanes.
+- [ ] The producer command is:
+
+      ```sh
+      ./scripts/run-macos-signing-request.sh \
+        --release-version <release-version> \
+        --sidecar-version <sidecar-version> \
+        --browser-sha <AkuBrowser-SHA> \
+        --bridge-sha <AkuBridge-SHA> \
+        --sidecar-sha <AkuSidecar-SHA> \
+        --update-public-key "$AKU_UPDATE_PUBLIC_KEY"
+      ```
 - [ ] Package only the unsigned manifests, artifact metadata, source tuple, and
       signing-request receipt as
       `AkuBrowser-<release-version>-macos-signing-request.zip`.
@@ -39,8 +52,24 @@ the transport; the existing Windows-owned draft is the only staging location.
 - [ ] Unprotect the DPAPI seed into an explicitly named temporary plaintext file.
 - [ ] Sign the exact canonical manifests and verify that the derived public key
       equals `publicKeyBase64` in `runtime-update-stable-v1.json`.
-- [ ] Produce the final signed manifests and a receipt that binds their SHA-256
-      digests to the request asset IDs and frozen source tuple.
+- [ ] Run `scripts/finalize-macos-signing-request.ps1` with the request ZIP,
+      downloaded Mac assets, temporary plaintext key, and public key. Produce
+      the final signed manifests and a receipt that binds their SHA-256 digests
+      to the request asset IDs and frozen source tuple.
+- [ ] The Windows finalizer command is:
+
+      ```powershell
+      .\scripts\finalize-macos-signing-request.ps1 `
+        -SigningRequestZip <downloaded-request.zip> `
+        -MacAssetsRoot <downloaded-mac-publish-lane> `
+        -UpdatePublicKey $env:AKU_UPDATE_PUBLIC_KEY `
+        -UpdateSigningPrivateKeyPath <temporary-plaintext-key> `
+        -GitHubAssetMapPath <asset-id-map.json> `
+        -RemoveEphemeralPrivateKey
+      ```
+- [ ] If `-GitHubAssetMapPath` is used, provide a JSON object whose property
+      names are the exact GitHub asset filenames and whose values are their
+      numeric GitHub asset IDs.
 - [ ] Overwrite and delete the temporary plaintext key immediately after signing.
 - [ ] Upload the signed manifests and receipt to the same draft, then read them
       back and compare their GitHub digests.
@@ -50,8 +79,20 @@ the transport; the existing Windows-owned draft is the only staging location.
 - [ ] Download the Windows signing receipt and signed manifests from the draft.
 - [ ] Verify the receipt, pinned public key, manifest signatures, source tuple,
       artifact URLs, sizes, and SHA-256 digests.
-- [ ] Assemble the final Mac release-kit allowlist without regenerating or
-      modifying the signed manifests.
+- [ ] Run `scripts/finalize-macos-signing.sh` with the original request ZIP,
+      Mac publish assets, Windows-signed output, and public key. Assemble the
+      final Mac release-kit allowlist without regenerating or modifying the
+      signed manifests.
+- [ ] The Mac finalizer command is:
+
+      ```sh
+      ./scripts/finalize-macos-signing.sh \
+        --request <original-signing-request.zip> \
+        --assets-root <mac-publish-lane> \
+        --signed-root <windows-signed-output> \
+        --update-public-key "$AKU_UPDATE_PUBLIC_KEY" \
+        --output-root artifacts/stable-<sidecar-version>-macos-final
+      ```
 - [ ] Run macOS clean-machine 3B on the finalized candidate and return its evidence
       to Windows.
 
@@ -63,9 +104,9 @@ the transport; the existing Windows-owned draft is the only staging location.
 
 ## Current tooling boundary
 
-`run-macos-stable-gate.sh` and `build-macos-runtime-installer.sh` currently sign
-inside the Mac build and therefore still require
-`--update-signing-private-key`. Do not satisfy that option by copying the stable
-private key to macOS. The stable Mac lane is blocked at the signing handoff until
-the tooling is split into a Mac signing-request producer and a Windows finalizer.
-
+The signing boundary is now enforced by the scripts: Mac builds pin only the
+public key and emit unsigned canonical manifests; Windows is the only place
+that invokes `installer/windows/cmd/sign-update-manifest` with the private key;
+Mac verifies the returned receipt and signatures before finalization. The Mac
+builder rejects `--update-signing-private-key`, so the DPAPI seed and any
+plaintext derivative must remain on Windows.
