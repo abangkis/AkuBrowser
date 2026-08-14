@@ -38,29 +38,11 @@ publication. It does not claim Chrome Web Store installation or production-ID
 acceptance. The GitHub portable ZIP/bundle is covered by the automated artifact
 gate above.
 
-1. start from a Windows machine or account with no AkuBrowser installation or database;
-2. install Codex App, sign in locally, and confirm it is ready;
-3. confirm Chrome is signed in to every source that will be enabled (X, LinkedIn, Facebook, or Instagram);
-4. copy the runner's complete `acceptance/` folder to the clean machine, extract
-   its `AkuBridge-*-prestore-unpacked.zip`, load that directory through **Load unpacked**, and
-   verify Chrome assigns the manifest-key-pinned `development` ID declared by
-   `config/bridge-identities.json`;
-5. open Setup and confirm it detects that the companion runtime is missing,
-   names the local `*-unsigned-local.exe`, and does not open a future GitHub release URL;
-6. run that matching installer from the same `acceptance/` folder, record the
-   actual SmartScreen/antivirus behavior, then select **Check runtime**;
-7. select **Check Codex**, confirm Codex is detected, and explicitly confirm that
-   sign-in and prerequisites are complete;
-8. grant only the intended source permissions, open AkuBrowser, complete
-   onboarding and calibration, and run one full **Update now**;
-9. inspect captured, evaluated, and selected evidence, then test Chrome restart,
-   Windows restart, runtime stop/start, installer repair, uninstall, and reinstall;
-10. confirm local data persists where required and that setup exposes recoverable
-    actions for every deliberately interrupted state;
-11. reset AkuBrowser and confirm onboarding starts from zero without classifying
-    pre-reset native items as resurfaced; and
-12. confirm no portable AkuBrowser ZIP, terminal launcher, or AkuSupervisor
-    process is required.
+Execute the single reusable
+[Windows clean-machine Step 3B](windows-clean-machine-3b.md) runbook. It owns the
+ordered manual procedure, pass/fail rule, Installed apps success identifier,
+known non-blockers, and release acceptance log. The detailed product-behavior
+checks below supplement that runbook and should be exercised where applicable.
 
 Never mix the two lanes. `publish/` uses the production Store identity and is
 the only GitHub-uploadable directory. `acceptance/` uses the unpacked development

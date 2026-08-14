@@ -199,6 +199,7 @@ future hardening work.
 - [AI Feedback Engine contract](docs/ai-feedback-contract.md)
 - [Preview release](docs/preview-release.md)
 - [Stable release checklist](docs/stable-release-checklist.md)
+- [Windows clean-machine Step 3B](docs/windows-clean-machine-3b.md)
 - [Windows preview acceptance](docs/windows-preview-acceptance.md)
 - [macOS preview acceptance](docs/macos-preview-acceptance.md)
 - [Build Week evidence and judge checklist](BUILD_WEEK.md)

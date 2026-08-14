@@ -41,6 +41,13 @@ not build, automated-acceptance, or clean-machine evidence.
       commit SHA; the workflow reads back and asserts every checkout's `HEAD`.
 - [ ] Keep existing preview tags immutable; do not merge preview binaries.
 
+After freeze, a documentation-only acceptance record or runbook clarification
+does not retarget the frozen tuple when a diff audit proves it is not consumed
+by packaging and changes no script, manifest, version, URL, identity, or
+user-facing product/installer copy. Keep the release tag on the recorded frozen
+SHA. Any change outside that narrow evidence exception invalidates the candidate
+and requires a new tuple and affected-platform rebuild.
+
 ## 2. Build the candidate for the current platform pass
 
 - [ ] **Windows pass:** run the Windows stable gate once. It must create one
@@ -182,6 +189,9 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
 
 ## 3B. Clean-machine acceptance
 
+- [ ] On Windows, execute the complete
+      [Windows clean-machine Step 3B](windows-clean-machine-3b.md) runbook and
+      record its pass/fail decision and non-blocking observations.
 - [ ] Copy the complete `acceptance/` lane from the single Windows or macOS
       release kit to the clean machine; do not fetch a not-yet-published GitHub URL.
 - [ ] Extract and Load unpacked the frozen pre-Store AkuBridge package; verify
