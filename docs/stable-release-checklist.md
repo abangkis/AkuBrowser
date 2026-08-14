@@ -35,10 +35,13 @@ not build, automated-acceptance, or clean-machine evidence.
 
 ## 1. Freeze the release
 
-- [ ] Finish and commit every release-script, checklist, manifest, version, URL,
-      identity, and user-facing installer/setup change before selecting the tuple.
-      A release-process fix after freeze invalidates the candidate even when the
-      product payload itself did not change.
+- [ ] Finish and commit every manifest, version, URL, identity, packaged payload,
+      and user-facing installer/setup change before selecting the source tuple.
+- [ ] A newer release-tooling commit may operate on the older frozen tuple only
+      when `scripts/verify-release-tooling-drift.mjs` passes on both Mac and
+      Windows. The artifact records both `sourceCommits` and `toolingCommits`.
+      Any drift outside its narrow documentation/tooling allowlist invalidates
+      the candidate; freeze is not advanced merely because tooling is newer.
 - [ ] Select one clean AkuBrowser, AkuBridge, and AkuSidecar source tuple.
 - [ ] Confirm `release.version` equals `<release-version>` and
       `components.akuSidecar.version` equals `<sidecar-version>`; Bridge and
@@ -49,12 +52,12 @@ not build, automated-acceptance, or clean-machine evidence.
       commit SHA; the workflow reads back and asserts every checkout's `HEAD`.
 - [ ] Keep existing preview tags immutable; do not merge preview binaries.
 
-After freeze, a documentation-only acceptance record or runbook clarification
-does not retarget the frozen tuple when a diff audit proves it is not consumed
-by packaging and changes no script, manifest, version, URL, identity, or
-user-facing product/installer copy. Keep the release tag on the recorded frozen
-SHA. Any change outside that narrow evidence exception invalidates the candidate
-and requires a new tuple and affected-platform rebuild.
+After freeze, documentation and explicitly allowlisted release-tooling changes
+do not retarget the frozen source tuple when the verifier passes. Pin the newer
+tooling SHA separately and keep the release tag on the recorded frozen source
+SHA. Any manifest, version, URL, identity, contract, runtime source, packaged
+payload, or user-facing product/installer change invalidates the candidate and
+requires a new tuple plus the affected-platform rebuild and acceptance.
 
 ## 2. Build the candidate for the current platform pass
 
@@ -148,7 +151,8 @@ On macOS, set `AKU_UPDATE_PUBLIC_KEY` to that Base64 value. Never copy
 
 Run `scripts/run-macos-signing-request.sh` (or the compatibility entry point
 `scripts/run-macos-stable-gate.sh`) with the frozen tuple and
-`$AKU_UPDATE_PUBLIC_KEY`. It creates `publish/` and `handoff/` lanes and returns
+the separately pinned `--browser-tooling-sha` plus `$AKU_UPDATE_PUBLIC_KEY`.
+It creates `publish/` and `handoff/` lanes and returns
 `status: awaiting_windows_signing`. Follow the [GitHub macOS signing handoff](github-macos-signing-handoff.md).
 Windows runs `scripts/finalize-macos-signing-request.ps1` with the temporary
 decrypted key, then Mac runs `scripts/finalize-macos-signing.sh` to verify the

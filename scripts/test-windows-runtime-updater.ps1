@@ -31,6 +31,7 @@ $macStableGate = Get-Content (Join-Path $browserRoot "scripts\run-macos-stable-g
 $macProducer = Get-Content (Join-Path $browserRoot "scripts\run-macos-signing-request.sh") -Raw
 $macFinalizer = Get-Content (Join-Path $browserRoot "scripts\finalize-macos-signing-request.ps1") -Raw
 $macVerifier = Get-Content (Join-Path $browserRoot "scripts\finalize-macos-signing.sh") -Raw
+$releaseToolingVerifier = Get-Content (Join-Path $browserRoot "scripts\verify-release-tooling-drift.mjs") -Raw
 $workflow = Get-Content (Join-Path $browserRoot ".github\workflows\windows-runtime-installer.yml") -Raw
 $distributionContract = Get-Content (Join-Path $browserRoot "docs\chrome-store-distribution-contract.md") -Raw
 $nativeProtocolV2 = Get-Content (Join-Path $browserRoot "contracts\native-runtime-messaging.schema.json") -Raw | ConvertFrom-Json
@@ -112,6 +113,7 @@ Assert-True ($builder.Contains('"$legacyUpdateArtifactPath.sha256"')) "Windows b
 foreach ($required in @(
     '--release-version <version>',
     '--sidecar-version <version>',
+    '--browser-tooling-sha <full SHA>',
     '--update-public-key <base64>',
     'AkuBrowserRuntimeSetup-${sidecar_version}-macos-universal.pkg',
     'AkuSidecar-${sidecar_version}-macos-universal.zip',
@@ -126,6 +128,9 @@ Assert-True ($macFinalizer.Contains('verify-signed')) "Windows Mac-signing final
 Assert-True ($macFinalizer.Contains('requestSha256')) "Windows Mac-signing finalizer must bind its receipt to the request ZIP."
 Assert-True ($macVerifier.Contains('signing receipt')) "Mac finalizer must verify the Windows signing receipt."
 Assert-True (-not $macProducer.Contains('update-signing-private-key')) "Mac signing-request producer must not accept a private key."
+foreach ($required in @('release-tooling-only', 'releaseSourceSha', 'toolingSha', '--no-renames', '--diff-filter=ACDMRTUXB', 'post-freeze drift includes packaged or unapproved source files')) {
+    Assert-True ($releaseToolingVerifier.Contains($required)) "Release tooling-drift verifier is missing its fail-closed boundary: $required"
+}
 Assert-True ([string]$release.distribution.chromeStore.nativeHost.version -match '^\d+\.\d+\.\d+(?:-[0-9A-Za-z.-]+)?$') "Release manifest must declare a valid Native Host version."
 Assert-True ($sidecarManifestSchema.properties.schemaVersion.const -eq 2 -and $sidecarManifestSchema.properties.product.const -eq "AkuSidecar") "Current update schema must describe AkuSidecar manifest v2."
 foreach ($required in @("sidecarVersion", "runtimeRevision", "minHostVersion", "bridgeCompatibility", "databaseCompatibility", "artifact", "signature")) {

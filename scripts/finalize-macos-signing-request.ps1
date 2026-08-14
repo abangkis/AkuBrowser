@@ -102,6 +102,14 @@ try {
     foreach ($property in @("akuBrowser", "akuBridge", "akuSidecar")) {
         Assert-True ([string]$requestMetadata.sourceCommits.$property -cmatch '^[a-f0-9]{40}$') "Signing request source SHA is invalid: $property"
     }
+    Assert-True ([string]$requestMetadata.toolingCommits.akuBrowser -cmatch '^[a-f0-9]{40}$') "Signing request AkuBrowser tooling SHA is invalid."
+    $toolingDriftPath = Join-Path $requestDirectory "browser-tooling-drift.json"
+    Assert-True (Test-Path -LiteralPath $toolingDriftPath -PathType Leaf) "AkuBrowser tooling-drift receipt is missing."
+    Assert-True ((Get-Sha256 $toolingDriftPath) -eq [string]$requestMetadata.provenance.browserToolingDriftSha256) "AkuBrowser tooling-drift receipt digest differs from request."
+    $toolingDrift = Read-Json $toolingDriftPath
+    Assert-True ([string]$toolingDrift.releaseSourceSha -ceq [string]$requestMetadata.sourceCommits.akuBrowser -and [string]$toolingDrift.toolingSha -ceq [string]$requestMetadata.toolingCommits.akuBrowser -and [string]$toolingDrift.status -eq "ok" -and -not [bool]$toolingDrift.workingTreeDirty) "AkuBrowser release/tooling boundary differs from request or was produced from a dirty checkout."
+    $verifiedToolingDrift = (& node (Join-Path $browserRoot "scripts\verify-release-tooling-drift.mjs") $browserRoot ([string]$requestMetadata.sourceCommits.akuBrowser) ([string]$requestMetadata.toolingCommits.akuBrowser) | Out-String | ConvertFrom-Json)
+    Assert-True ([string]$verifiedToolingDrift.changedFilesSha256 -eq [string]$toolingDrift.changedFilesSha256) "Windows did not reproduce the Mac tooling-drift proof."
     $portableProvenance = Read-Json (Join-Path $requestDirectory "portable-artifact-manifest.json")
     foreach ($property in @("akuBrowser", "akuBridge", "akuSidecar")) {
         Assert-True ([string]$portableProvenance.sourceCommits.$property -ceq [string]$requestMetadata.sourceCommits.$property) "Portable artifact provenance differs from the request: $property"
@@ -204,6 +212,7 @@ if (!signature || JSON.stringify(stable(unsigned)) !== JSON.stringify(stable(sig
         sidecarVersion = [string]$requestMetadata.sidecarVersion
         releaseTag = [string]$requestMetadata.releaseTag
         sourceCommits = $requestMetadata.sourceCommits
+        toolingCommits = $requestMetadata.toolingCommits
         publicKey = $requestMetadata.publicKey
         assetRecords = $receiptAssets
         signedManifests = $signedManifestRecords
@@ -218,6 +227,7 @@ if (!signature || JSON.stringify(stable(unsigned)) !== JSON.stringify(stable(sig
         sidecarVersion = [string]$requestMetadata.sidecarVersion
         releaseTag = [string]$requestMetadata.releaseTag
         sourceCommits = $requestMetadata.sourceCommits
+        toolingCommits = $requestMetadata.toolingCommits
         signing = [ordered]@{ macosInstaller = "unsigned"; updateManifests = "ed25519"; privateKeyLocation = "windows-only" }
         publishAssets = @((Get-ChildItem -LiteralPath $signedRoot -File | Sort-Object Name | ForEach-Object {
             [ordered]@{ path = "publish/$($_.Name)"; bytes = $_.Length; sha256 = Get-Sha256 $_.FullName }

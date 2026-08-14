@@ -37,6 +37,7 @@ unzip -q "$request_zip" -d "$inspect_root/request"
 [[ -f "$inspect_root/request/signing-request.json" ]] || die "signing request metadata is missing"
 [[ -f "$inspect_root/request/release-manifest.json" ]] || die "release manifest is missing from signing request"
 [[ -f "$inspect_root/request/portable-artifact-manifest.json" ]] || die "portable artifact manifest is missing from signing request"
+[[ -f "$inspect_root/request/browser-tooling-drift.json" ]] || die "AkuBrowser tooling-drift receipt is missing"
 
 if find "$inspect_root/request" -type f \( -name '*.dpapi' -o -name '*.key' -o -name '*private*' -o -name '*secret*' \) -print -quit | grep -q .; then
   die "signing request contains a private-key-like file"
@@ -63,6 +64,8 @@ const record = (file) => ({
 });
 
 const request = readJson(path.join(requestRoot, "signing-request.json"));
+const toolingDriftPath = path.join(requestRoot, "browser-tooling-drift.json");
+const toolingDrift = readJson(toolingDriftPath);
 if (request.schemaVersion !== 1 || request.kind !== "AkuBrowser.macos-signing-request" || request.status !== "unsigned") {
   fail("signing request identity is invalid");
 }
@@ -71,6 +74,14 @@ if (!/^\d+\.\d+\.\d+$/.test(request.releaseVersion) || !/^\d+\.\d+\.\d+$/.test(r
 }
 for (const [name, sha] of Object.entries(request.sourceCommits ?? {})) {
   if (!/^[a-f0-9]{40}$/.test(sha)) fail(`source commit is invalid: ${name}`);
+}
+if (!/^[a-f0-9]{40}$/.test(request.toolingCommits?.akuBrowser ?? "") ||
+    toolingDrift.schemaVersion !== 1 || toolingDrift.status !== "ok" || toolingDrift.workingTreeDirty !== false ||
+    !["none", "release-tooling-only"].includes(toolingDrift.kind) ||
+    toolingDrift.releaseSourceSha !== request.sourceCommits.akuBrowser ||
+    toolingDrift.toolingSha !== request.toolingCommits.akuBrowser ||
+    request.provenance?.browserToolingDriftSha256 !== sha256(toolingDriftPath)) {
+  fail("AkuBrowser release/tooling provenance is invalid");
 }
 if (request.publicKey?.algorithm !== "Ed25519" || request.publicKey?.keyId !== "aku-runtime-stable-v1" ||
     request.publicKey?.base64 !== expectedPublicKey || Buffer.from(expectedPublicKey, "base64").length !== 32) {
@@ -94,6 +105,11 @@ if (portableManifest.sourceCommits?.akuBrowser !== request.sourceCommits.akuBrow
     portableManifest.sourceCommits?.akuSidecar !== request.sourceCommits.akuSidecar ||
     (portableManifest.sourceDirty ?? []).length !== 0) {
   fail("portable artifact provenance does not match the frozen source tuple");
+}
+if (portableManifest.toolingCommits?.akuBrowser !== request.toolingCommits.akuBrowser ||
+    portableManifest.releaseToolingDrift?.releaseSourceSha !== request.sourceCommits.akuBrowser ||
+    portableManifest.releaseToolingDrift?.toolingSha !== request.toolingCommits.akuBrowser) {
+  fail("portable artifact records the wrong release-tooling boundary");
 }
 
 for (const item of request.unsignedManifests ?? []) {

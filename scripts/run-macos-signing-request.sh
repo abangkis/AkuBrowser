@@ -9,6 +9,7 @@ Required:
   --release-version <version>       Top-level AkuBrowser release version
   --sidecar-version <version>       AkuSidecar version and GitHub release tag
   --browser-sha <full SHA>
+  --browser-tooling-sha <full SHA>   AkuBrowser commit containing approved release tooling
   --bridge-sha <full SHA>
   --sidecar-sha <full SHA>
   --update-public-key <base64>      Ed25519 public key pinned into the host
@@ -31,6 +32,7 @@ release_manifest="$browser_root/release/release-manifest.json"
 release_version=""
 sidecar_version=""
 browser_sha=""
+browser_tooling_sha=""
 bridge_sha=""
 sidecar_sha=""
 update_public_key=""
@@ -42,6 +44,7 @@ while [[ $# -gt 0 ]]; do
     --release-version) release_version="$2"; shift 2 ;;
     --sidecar-version) sidecar_version="$2"; shift 2 ;;
     --browser-sha) browser_sha="$2"; shift 2 ;;
+    --browser-tooling-sha) browser_tooling_sha="$2"; shift 2 ;;
     --bridge-sha) bridge_sha="$2"; shift 2 ;;
     --sidecar-sha) sidecar_sha="$2"; shift 2 ;;
     --update-public-key) update_public_key="$2"; shift 2 ;;
@@ -55,7 +58,7 @@ done
 [[ "$(uname -s)" = "Darwin" ]] || die "run the macOS signing-request producer on macOS"
 [[ "$release_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "--release-version must be a stable semantic version"
 [[ "$sidecar_version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "--sidecar-version must be a stable semantic version"
-for sha in "$browser_sha" "$bridge_sha" "$sidecar_sha"; do
+for sha in "$browser_sha" "$browser_tooling_sha" "$bridge_sha" "$sidecar_sha"; do
   [[ "$sha" =~ ^[a-f0-9]{40}$ ]] || die "all frozen source SHAs must be full lowercase commit IDs"
 done
 [[ -n "$update_public_key" ]] || die "--update-public-key is required"
@@ -85,8 +88,10 @@ if (release.distribution?.chromeStore?.nativeRuntimeInstallers?.["macos-universa
 NODE
 emit_legacy_v1="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.version === r.components?.akuBridge?.version && r.version === r.components?.akuSidecar?.version && r.components?.akuBridge?.runtimeRevision === r.components?.akuSidecar?.runtimeRevision ? "1" : "0")' "$release_manifest")"
 
+[[ -z "$(git -C "$browser_root" status --porcelain)" ]] || die "release tooling source is dirty: $browser_root"
+tooling_drift_json="$(node "$browser_root/scripts/verify-release-tooling-drift.mjs" "$browser_root" "$browser_sha" "$browser_tooling_sha")"
+
 for repository_and_sha in \
-  "$browser_root:$browser_sha" \
   "$bridge_root:$bridge_sha" \
   "$sidecar_root:$sidecar_sha"; do
   repository="${repository_and_sha%:*}"
@@ -114,10 +119,13 @@ installer_root="$stage_root/installer"
 publish_root="$stage_root/publish"
 request_root="$stage_root/request"
 mkdir -p "$publish_root" "$request_root"
+printf '%s\n' "$tooling_drift_json" > "$request_root/browser-tooling-drift.json"
 
 "$browser_root/scripts/build-macos-preview.sh" \
   --architecture universal \
-  --output-root "$preview_root"
+  --output-root "$preview_root" \
+  --release-browser-sha "$browser_sha" \
+  --browser-tooling-sha "$browser_tooling_sha"
 "$browser_root/scripts/test-macos-preview.sh" \
   --zip "$preview_root/AkuBrowser-${release_version}-macos-universal.zip"
 
@@ -154,12 +162,12 @@ fi
 copy_asset "$release_manifest" "$request_root/release-manifest.json"
 copy_asset "$preview_root/AkuBrowser-${release_version}-macos-universal/artifact-manifest.json" "$request_root/portable-artifact-manifest.json"
 
-node --input-type=module - "$request_root/signing-request.json" "$request_root" "$publish_root" "$release_version" "$sidecar_version" "$emit_legacy_v1" "$browser_sha" "$bridge_sha" "$sidecar_sha" "$update_public_key" <<'NODE'
+node --input-type=module - "$request_root/signing-request.json" "$request_root" "$publish_root" "$release_version" "$sidecar_version" "$emit_legacy_v1" "$browser_sha" "$browser_tooling_sha" "$bridge_sha" "$sidecar_sha" "$update_public_key" <<'NODE'
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-const [destination, requestRoot, publishRoot, releaseVersion, sidecarVersion, emitLegacyV1, browserSha, bridgeSha, sidecarSha, publicKey] = process.argv.slice(2);
+const [destination, requestRoot, publishRoot, releaseVersion, sidecarVersion, emitLegacyV1, browserSha, browserToolingSha, bridgeSha, sidecarSha, publicKey] = process.argv.slice(2);
 const sha256 = (file) => crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 const record = (name) => {
   const file = path.join(publishRoot, name);
@@ -202,6 +210,11 @@ const unsignedManifests = unsignedNames.map((inputName) => {
   };
 });
 const portable = JSON.parse(fs.readFileSync(path.join(requestRoot, "portable-artifact-manifest.json"), "utf8"));
+const toolingDriftPath = path.join(requestRoot, "browser-tooling-drift.json");
+const toolingDrift = JSON.parse(fs.readFileSync(toolingDriftPath, "utf8"));
+if (toolingDrift.releaseSourceSha !== browserSha || toolingDrift.toolingSha !== browserToolingSha || toolingDrift.status !== "ok") {
+  throw new Error("AkuBrowser release/tooling provenance is invalid");
+}
 const request = {
   schemaVersion: 1,
   kind: "AkuBrowser.macos-signing-request",
@@ -210,11 +223,13 @@ const request = {
   sidecarVersion,
   releaseTag: `v${sidecarVersion}`,
   sourceCommits: { akuBrowser: browserSha, akuBridge: bridgeSha, akuSidecar: sidecarSha },
+  toolingCommits: { akuBrowser: browserToolingSha },
   publicKey: { algorithm: "Ed25519", keyId: "aku-runtime-stable-v1", base64: publicKey },
   publishAssets,
   unsignedManifests,
   provenance: {
     portableArtifactManifestSha256: sha256(path.join(requestRoot, "portable-artifact-manifest.json")),
+    browserToolingDriftSha256: sha256(toolingDriftPath),
     portableSourceCommits: portable.sourceCommits,
   },
 };
@@ -233,12 +248,12 @@ cp "$request_zip" "$output_root/handoff/$request_archive"
   --assets-root "$output_root/publish" \
   --public-key "$update_public_key"
 
-node --input-type=module - "$output_root/release-kit.json" "$output_root" "$output_root/publish" "$output_root/handoff" "$release_version" "$sidecar_version" "$browser_sha" "$bridge_sha" "$sidecar_sha" <<'NODE'
+node --input-type=module - "$output_root/release-kit.json" "$output_root" "$output_root/publish" "$output_root/handoff" "$release_version" "$sidecar_version" "$browser_sha" "$browser_tooling_sha" "$bridge_sha" "$sidecar_sha" <<'NODE'
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 
-const [destination, outputRoot, publishRoot, handoffRoot, releaseVersion, sidecarVersion, browserSha, bridgeSha, sidecarSha] = process.argv.slice(2);
+const [destination, outputRoot, publishRoot, handoffRoot, releaseVersion, sidecarVersion, browserSha, browserToolingSha, bridgeSha, sidecarSha] = process.argv.slice(2);
 const recordLane = (root) => fs.readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isFile()).sort((a, b) => a.name.localeCompare(b.name)).map((entry) => {
   const file = path.join(root, entry.name);
   return { path: path.relative(outputRoot, file).split(path.sep).join("/"), bytes: fs.statSync(file).size, sha256: crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex") };
@@ -251,6 +266,7 @@ const kit = {
   releaseTag: `v${sidecarVersion}`,
   outputRoot,
   sourceCommits: { akuBrowser: browserSha, akuBridge: bridgeSha, akuSidecar: sidecarSha },
+  toolingCommits: { akuBrowser: browserToolingSha },
   signing: { macosInstaller: "unsigned", updateManifests: "windows-finalizer", privateKeyLocation: "windows-only" },
   publishAssets: recordLane(publishRoot),
   handoffAssets: recordLane(handoffRoot),

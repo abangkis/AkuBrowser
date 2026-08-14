@@ -94,6 +94,7 @@ if (receipt.schemaVersion !== 1 || receipt.kind !== "AkuBrowser.macos-signing-re
 if (receipt.requestArchive !== path.basename(requestZip) || receipt.requestSha256 !== sha256(requestZip)) throw new Error("signing receipt is not bound to this request ZIP");
 if (receipt.releaseVersion !== request.releaseVersion || receipt.sidecarVersion !== request.sidecarVersion || receipt.releaseTag !== request.releaseTag) throw new Error("signing receipt release identity differs from request");
 if (JSON.stringify(receipt.sourceCommits) !== JSON.stringify(request.sourceCommits)) throw new Error("signing receipt source tuple differs from request");
+if (JSON.stringify(receipt.toolingCommits) !== JSON.stringify(request.toolingCommits)) throw new Error("signing receipt tooling tuple differs from request");
 if (receipt.publicKey?.base64 !== publicKey || receipt.publicKey?.keyId !== "aku-runtime-stable-v1" || receipt.publicKey?.algorithm !== "Ed25519") throw new Error("signing receipt public key differs from request");
 if ((receipt.assetRecords ?? []).length !== (request.publishAssets ?? []).length) throw new Error("signing receipt asset count differs from request");
 for (const expectedAsset of request.publishAssets) {
@@ -212,6 +213,7 @@ const kit = {
   sidecarVersion,
   releaseTag: `v${sidecarVersion}`,
   sourceCommits: request.sourceCommits,
+  toolingCommits: request.toolingCommits,
   signing: { macosInstaller: "unsigned", updateManifests: "ed25519", privateKeyLocation: "windows-only" },
   publishAssets,
 };

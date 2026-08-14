@@ -8,6 +8,8 @@ Usage: ./scripts/build-macos-preview.sh [options]
 Options:
   --architecture <x64|arm64|universal>  Build target (default: host architecture)
   --output-root <path>                  Artifact directory (default: artifacts)
+  --release-browser-sha <full SHA>      Frozen AkuBrowser payload authority (default: current HEAD)
+  --browser-tooling-sha <full SHA>      Pinned release-tooling commit (default: current HEAD)
   --skip-validation                     Skip source tests and package checks
   --allow-dirty                         Build from non-clean source trees
   -h, --help                            Show this help
@@ -40,6 +42,8 @@ architecture="$default_architecture"
 output_root="$browser_root/artifacts"
 skip_validation=0
 allow_dirty=0
+release_browser_sha=""
+browser_tooling_sha=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -51,6 +55,16 @@ while [[ $# -gt 0 ]]; do
     --output-root)
       [[ $# -ge 2 ]] || die "--output-root requires a value"
       output_root="$2"
+      shift 2
+      ;;
+    --release-browser-sha)
+      [[ $# -ge 2 ]] || die "--release-browser-sha requires a value"
+      release_browser_sha="$2"
+      shift 2
+      ;;
+    --browser-tooling-sha)
+      [[ $# -ge 2 ]] || die "--browser-tooling-sha requires a value"
+      browser_tooling_sha="$2"
       shift 2
       ;;
     --skip-validation)
@@ -79,6 +93,15 @@ esac
 for command_name in git go node npm shasum zip; do
   require_command "$command_name"
 done
+
+current_browser_head="$(git -C "$browser_root" rev-parse HEAD)"
+release_browser_sha="${release_browser_sha:-$current_browser_head}"
+browser_tooling_sha="${browser_tooling_sha:-$current_browser_head}"
+tooling_drift_args=("$browser_root" "$release_browser_sha" "$browser_tooling_sha")
+if [[ $allow_dirty -eq 1 ]]; then
+  tooling_drift_args+=(--allow-dirty)
+fi
+tooling_drift_json="$(node "$browser_root/scripts/verify-release-tooling-drift.mjs" "${tooling_drift_args[@]}")"
 
 [[ -f "$release_manifest_path" ]] || die "release manifest is missing: $release_manifest_path"
 [[ -f "$bridge_identity_registry_path" ]] || die "Bridge identity registry is missing: $bridge_identity_registry_path"
@@ -193,6 +216,8 @@ cleanup() {
   rm -rf -- "$tmp_root"
 }
 trap cleanup EXIT
+tooling_drift_path="$tmp_root/browser-tooling-drift.json"
+printf '%s\n' "$tooling_drift_json" > "$tooling_drift_path"
 
 build_sidecar() {
   local goarch="$1"
@@ -266,12 +291,12 @@ cp "$browser_root/release/macos/Start-AkuBrowser.command" "$artifact_root/Start-
 cp "$browser_root/release/macos/README.md" "$artifact_root/README.md"
 chmod 755 "$artifact_root/Start-AkuBrowser.sh" "$artifact_root/Start-AkuBrowser.command"
 
-node --input-type=module - "$artifact_root/artifact-manifest.json" "$release_manifest_path" "$browser_root" "$sidecar_root" "$bridge_root" "$architecture" "$verification_path" <<'NODE'
+node --input-type=module - "$artifact_root/artifact-manifest.json" "$release_manifest_path" "$browser_root" "$sidecar_root" "$bridge_root" "$architecture" "$verification_path" "$tooling_drift_path" <<'NODE'
 import { execFileSync } from "node:child_process";
 import fs from "node:fs";
 import path from "node:path";
 
-const [destination, releasePath, browserRoot, sidecarRoot, bridgeRoot, architecture, verificationPath] = process.argv.slice(2);
+const [destination, releasePath, browserRoot, sidecarRoot, bridgeRoot, architecture, verificationPath, toolingDriftPath] = process.argv.slice(2);
 const release = JSON.parse(fs.readFileSync(releasePath, "utf8"));
 const bridgeIdentityRegistry = JSON.parse(fs.readFileSync(path.join(browserRoot, "config/bridge-identities.json"), "utf8"));
 const bridgeIdentityProfile = release.distribution?.chromeStore?.bridgeIdentityProfile;
@@ -279,6 +304,7 @@ const bridgeIdentity = bridgeIdentityRegistry.profiles?.[bridgeIdentityProfile];
 if (!bridgeIdentity) throw new Error("release-selected Bridge identity is missing from the registry");
 const bridgeExtensionOrigin = `chrome-extension://${bridgeIdentity.extensionId}/`;
 const verification = JSON.parse(fs.readFileSync(verificationPath, "utf8"));
+const releaseToolingDrift = JSON.parse(fs.readFileSync(toolingDriftPath, "utf8"));
 const repositories = { akuBrowser: browserRoot, akuSidecar: sidecarRoot, akuBridge: bridgeRoot };
 const sourceCommits = {};
 const sourceDirty = [];
@@ -286,6 +312,7 @@ for (const [name, root] of Object.entries(repositories)) {
   sourceCommits[name] = execFileSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
   if (execFileSync("git", ["-C", root, "status", "--porcelain"], { encoding: "utf8" }).trim()) sourceDirty.push(name);
 }
+sourceCommits.akuBrowser = releaseToolingDrift.releaseSourceSha;
 const manifest = {
   schemaVersion: 1,
   product: release.product,
@@ -295,6 +322,8 @@ const manifest = {
   format: "portable-zip",
   builtAtUtc: new Date().toISOString(),
   sourceCommits,
+  toolingCommits: { akuBrowser: releaseToolingDrift.toolingSha },
+  releaseToolingDrift,
   sourceDirty,
   components: release.components,
   akuBridgeFingerprint: verification.fingerprint,

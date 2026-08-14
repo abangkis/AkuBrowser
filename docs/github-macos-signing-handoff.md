@@ -21,6 +21,9 @@ the transport; the existing Windows-owned draft is the only staging location.
 ### A. Mac build and signing request
 
 - [ ] Verify the frozen AkuBrowser, AkuBridge, and AkuSidecar SHAs and clean trees.
+- [ ] Checkout the separately pinned AkuBrowser tooling SHA. It may be newer than
+      the frozen payload SHA only when `verify-release-tooling-drift.mjs` proves
+      that every intervening change is approved release tooling or documentation.
 - [ ] Build and test the universal ZIP, PKG, Sidecar update archive, checksums,
       unsigned canonical update manifests, and machine-readable provenance.
 - [ ] Run `scripts/run-macos-signing-request.sh` with the frozen source tuple and
@@ -32,6 +35,7 @@ the transport; the existing Windows-owned draft is the only staging location.
         --release-version <release-version> \
         --sidecar-version <sidecar-version> \
         --browser-sha <AkuBrowser-SHA> \
+        --browser-tooling-sha <AkuBrowser-tooling-SHA> \
         --bridge-sha <AkuBridge-SHA> \
         --sidecar-sha <AkuSidecar-SHA> \
         --update-public-key "$AKU_UPDATE_PUBLIC_KEY"
@@ -49,6 +53,8 @@ the transport; the existing Windows-owned draft is the only staging location.
       authenticated `gh`; do not accept files from an unrelated URL or branch.
 - [ ] Match every source SHA, asset name, size, and SHA-256 digest to the frozen
       request before decrypting the key.
+- [ ] Reproduce the Mac tooling-drift proof on Windows. Any changed packaged,
+      manifest, identity, contract, or runtime source invalidates the old freeze.
 - [ ] Unprotect the DPAPI seed into an explicitly named temporary plaintext file.
 - [ ] Sign the exact canonical manifests and verify that the derived public key
       equals `publicKeyBase64` in `runtime-update-stable-v1.json`.

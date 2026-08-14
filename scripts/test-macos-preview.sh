@@ -143,6 +143,13 @@ if (artifactManifest.bridgeIdentity?.profile !== bridgeIdentityProfile) fail("ar
 if (artifactManifest.bridgeIdentity?.distribution !== bridgeIdentity.distribution) fail("artifact provenance records the wrong Bridge distribution");
 if (artifactManifest.bridgeIdentity?.authority !== "config/bridge-identities.json") fail("artifact provenance does not record the Bridge identity authority");
 if (artifactManifest.bridgeIdentity?.extensionOrigin !== bridgeExtensionOrigin) fail("artifact provenance records the wrong Bridge extension origin");
+if (!/^[a-f0-9]{40}$/.test(artifactManifest.sourceCommits?.akuBrowser ?? "") ||
+    !/^[a-f0-9]{40}$/.test(artifactManifest.toolingCommits?.akuBrowser ?? "") ||
+    artifactManifest.releaseToolingDrift?.status !== "ok" ||
+    artifactManifest.releaseToolingDrift?.releaseSourceSha !== artifactManifest.sourceCommits.akuBrowser ||
+    artifactManifest.releaseToolingDrift?.toolingSha !== artifactManifest.toolingCommits.akuBrowser) {
+  fail("artifact provenance does not preserve the release/tooling boundary");
+}
 const bridgeInstallInstruction = readme.indexOf("Install **AkuBrowser** from the Chrome Web Store");
 const launcherInstruction = readme.indexOf("./Start-AkuBrowser.sh");
 if (bridgeInstallInstruction < 0) fail("bundle README does not explain how to install AkuBrowser from the Chrome Web Store");
