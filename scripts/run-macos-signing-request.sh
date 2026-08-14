@@ -153,6 +153,10 @@ copy_asset "$installer_root/AkuBrowserRuntimeSetup.pkg" "$publish_root/"
 copy_asset "$installer_root/AkuBrowserRuntimeSetup.pkg.sha256" "$publish_root/"
 copy_asset "$installer_root/AkuSidecar-${sidecar_version}-macos-universal.zip" "$publish_root/"
 copy_asset "$installer_root/AkuSidecar-${sidecar_version}-macos-universal.zip.sha256" "$publish_root/"
+if [[ "$emit_legacy_v1" -eq 1 ]]; then
+  copy_asset "$installer_root/AkuBrowserRuntime-${release_version}-macos-universal.zip" "$publish_root/"
+  copy_asset "$installer_root/AkuBrowserRuntime-${release_version}-macos-universal.zip.sha256" "$publish_root/"
+fi
 copy_asset "$release_manifest" "$publish_root/release-manifest.json"
 
 copy_asset "$installer_root/AkuSidecarUpdate-macos-universal.unsigned.json" "$request_root/"
@@ -185,6 +189,12 @@ const publishNames = [
   `AkuSidecar-${sidecarVersion}-macos-universal.zip.sha256`,
   "release-manifest.json",
 ];
+if (emitLegacyV1 === "1") {
+  publishNames.splice(-1, 0,
+    `AkuBrowserRuntime-${releaseVersion}-macos-universal.zip`,
+    `AkuBrowserRuntime-${releaseVersion}-macos-universal.zip.sha256`,
+  );
+}
 const publishAssets = publishNames.map(record);
 const unsignedNames = [`AkuSidecarUpdate-macos-universal.unsigned.json`];
 if (emitLegacyV1 === "1") unsignedNames.push("AkuBrowserRuntimeUpdate-macos-universal.unsigned.json");
