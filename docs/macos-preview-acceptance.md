@@ -106,12 +106,18 @@ Those future hardening gates do not describe the trust state of the immutable
 
 For stable releases, the primary Windows machine creates the one authoritative
 GitHub draft and authors its initial release notes after Windows 3B. The Mac
-operator receives that draft URL and the frozen three-repository tuple, then
-uploads only the exact asset allowlist printed by `run-macos-stable-gate.sh`.
+operator receives that draft URL and the frozen three-repository tuple. Mac
+uploads its publishable binaries plus a signing-request ZIP; Windows verifies
+and signs the canonical manifests, and Mac verifies the returned signed result
+before 3B. Follow the complete
+[GitHub macOS signing handoff](github-macos-signing-handoff.md).
 The Mac pass must not create another release or change the draft's tag, target,
 title, notes, prerelease flag, or publication state.
 
 `AKU_UPDATE_PUBLIC_KEY` is the Base64 Ed25519 public key copied from the Windows
 stable-key metadata property `publicKeyBase64`. It is safe to transfer to macOS.
 The Windows file `runtime-update-stable-v1.seed.dpapi` is a DPAPI-protected
-private seed; never copy it to macOS and never upload it as a release artifact.
+private seed; never copy it or any plaintext derivative to macOS, and never
+upload it as a release artifact. The current Mac stable scripts still require a
+private-key path, so they are not an approved stable lane until the documented
+Mac request/Windows finalizer split is implemented.

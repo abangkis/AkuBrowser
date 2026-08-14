@@ -116,27 +116,17 @@ Public unsigned preview:
   --unsigned-preview-candidate
 ```
 
-Stable unsigned `v0.7.9` candidate:
+Stable unsigned candidates use the
+[GitHub Mac-to-Windows signing handoff](github-macos-signing-handoff.md). The
+private update key remains on the primary Windows machine. The current builder
+still signs inside the Mac build and therefore must not be used for a new stable
+candidate until it is split into a Mac signing-request producer and Windows
+finalizer; do not work around this boundary by copying the private key to Mac.
 
-```sh
-./scripts/build-macos-runtime-installer.sh \
-  --c2pa-tool ../AkuSidecar/runtime/dev/macos-universal/c2patool \
-  --update-public-key "$AKU_UPDATE_PUBLIC_KEY" \
-  --update-signing-private-key /secure/path/runtime-update-signing-key.txt \
-  --unsigned-stable-candidate
-```
-
-Production:
-
-```sh
-./scripts/build-macos-runtime-installer.sh \
-  --c2pa-tool /secure/path/c2patool \
-  --application-identity "Developer ID Application: Example (TEAMID)" \
-  --installer-identity "Developer ID Installer: Example (TEAMID)" \
-  --notary-profile AkuBrowserNotary \
-  --update-public-key "$AKU_UPDATE_PUBLIC_KEY" \
-  --update-signing-private-key /secure/path/update-signing-key.txt
-```
+Future Developer ID production packaging may still use the macOS Application,
+Installer, and notarization identities locally. Runtime-update manifest signing
+remains a separate Windows-authority step: production packaging must consume the
+returned signed manifest instead of receiving the Ed25519 private key on Mac.
 
 ## Linux boundary
 

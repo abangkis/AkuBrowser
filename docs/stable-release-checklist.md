@@ -20,6 +20,9 @@ pass must run serially on its target environment:
       key to the macOS environment.
 - [ ] On macOS, verify the tuple, complete Step 2 for macOS and Step 3A for macOS,
       then stop.
+- [ ] Use the [GitHub macOS signing handoff](github-macos-signing-handoff.md):
+      Mac uploads a signing request to the existing draft, Windows signs it, and
+      Mac verifies and finalizes the candidate. The private key stays on Windows.
 - [ ] Run and explicitly accept macOS Step 3B on Intel and Apple silicon.
 - [ ] Upload only the allowlisted macOS assets to the existing draft. Do not
       create a second release or edit its tag, title, notes, or publication state.
@@ -125,9 +128,9 @@ After the runner returns, perform release-kit QA before 3B:
 
 ### macOS compact execution card
 
-Run only after Windows 3B acceptance. One command verifies the clean frozen tuple,
-uses a fresh output directory, builds both universal artifacts, runs every macOS
-3A gate, verifies checksums/provenance, and prints machine-readable evidence:
+Run only after Windows 3B acceptance. The Mac lane verifies the clean frozen
+tuple, builds both universal artifacts in a fresh output directory, runs macOS
+3A, and stops at the signing-request boundary before Windows signing.
 
 On the primary Windows machine, obtain the pinned public key from the stable key
 metadata and copy only that public value to the Mac:
@@ -139,24 +142,14 @@ $env:AKU_UPDATE_PUBLIC_KEY = (
 ).publicKeyBase64
 ```
 
-On macOS, set `AKU_UPDATE_PUBLIC_KEY` to that Base64 value. The corresponding
-private signing key must be transferred separately through an approved secure
-channel. Never copy `runtime-update-stable-v1.seed.dpapi` to macOS: it is the
-Windows DPAPI-protected private seed and is neither portable nor needed for
-manifest verification.
+On macOS, set `AKU_UPDATE_PUBLIC_KEY` to that Base64 value. Never copy
+`runtime-update-stable-v1.seed.dpapi` or a plaintext private key to macOS.
 
-```sh
-./scripts/run-macos-stable-gate.sh \
-  --release-version <release-version> \
-  --sidecar-version <sidecar-version> \
-  --browser-sha <full AkuBrowser SHA> \
-  --bridge-sha <full AkuBridge SHA> \
-  --sidecar-sha <full AkuSidecar SHA> \
-  --update-public-key "$AKU_UPDATE_PUBLIC_KEY" \
-  --update-signing-private-key /secure/path/runtime-update-signing-key.txt
-```
-
-Stop for explicit macOS 3B authorization after the runner returns `status: ok`.
+Follow the [GitHub macOS signing handoff](github-macos-signing-handoff.md).
+The current Mac stable runner still requires a private-key path and must not be
+used for a stable candidate until its signing stage has been split out to the
+Windows finalizer. Stop before macOS 3B until Mac has verified the Windows-signed
+manifests and finalized the release kit.
 
 For pre-Store 3B, keep development staging separate from publishable output:
 
@@ -174,15 +167,13 @@ Load `../AkuBridge`, install only the matching `*-unsigned-local.pkg`, then chec
 runtime, Codex, source login, one full update, restart, repair, and data-preserving
 reinstall. Never upload the development output directory.
 
-After acceptance, upload only the stable runner output plus `release-manifest.json`
-and the pinned C2PA SBOM. Never upload `*-unsigned-local.pkg` or a runtime-update
-pair not created by this pass. Read the draft back and compare every GitHub digest.
-
-The stable output allowlist is exactly the `assets` array printed by the runner.
-It always includes the Sidecar-versioned PKG, stable PKG alias, schema-v2 macOS
-feed, and Sidecar ZIP/checksum. It includes the frozen v1 pair only for an
-aligned transitional release. For an independent release, the later promotion
-gate carries the frozen signed v1 feed aliases from the previous Latest without
+Upload only the Mac publishable binaries and the signing-request ZIP described
+by the handoff document. After Windows signing and Mac verification, the final
+allowlist includes the Sidecar-versioned PKG, stable PKG alias, schema-v2 macOS
+feed, Sidecar ZIP/checksum, and signing receipt. Never upload
+`*-unsigned-local.pkg`. Remove the signing request and every unsigned manifest
+before publication. For an independent release, the later promotion gate
+carries the frozen signed v1 feed aliases from the previous Latest without
 regenerating them or copying their archives; their URLs stay pinned to the old
 immutable tag.
 
@@ -191,7 +182,10 @@ immutable tag.
 - [ ] Pass the automated Windows build, portable smoke, installer, updater, and
       lifecycle gates.
 - [ ] Pass the automated macOS universal build, portable smoke, and installer
-      structure gates.
+      structure gates, then stop at the signing-request boundary.
+- [ ] Pass the Mac-to-Windows GitHub handoff: verify the signing request on
+      Windows, sign with the DPAPI-protected authority, and verify the signed
+      result again on Mac before macOS 3B.
 - [ ] Treat GitHub portable ZIP/bundle validation as an automated 3A
       responsibility; do not repeat it as a manual clean-machine flow.
 - [ ] Verify checksums, artifact manifests, source commits, Store identity, and
@@ -227,7 +221,7 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
 - [ ] Pass Windows update/repair, Chrome restart, PC restart, stop/start,
       uninstall, and reinstall tests.
 - [ ] Pass the equivalent pre-Store macOS flow on the supported Intel and
-      Apple-silicon architectures.
+      Apple-silicon architectures using the Windows-finalized signed manifests.
 - [ ] Verify the actual antivirus, SmartScreen, or Gatekeeper behavior and
       confirm the user guidance matches it.
 - [ ] Do not use the portable AkuBrowser bundle or a terminal launcher as
@@ -260,6 +254,9 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
 - [ ] Push only the selected immutable tags without moving or replacing an existing tag.
 - [ ] On Windows, reconcile all Windows and macOS artifacts, checksums,
       manifests, SBOMs, and acceptance evidence against their allowlists.
+- [ ] Remove the macOS signing-request ZIP and every unsigned manifest from the
+      draft; confirm the final signing receipt remains and no private material
+      was ever uploaded.
 - [ ] Refine the Windows-authored release notes with the final cross-platform
       acceptance state; do not reconstruct them only from the Mac checkout.
 - [ ] Verify GitHub asset names, sizes, digests, source commits, release target,
