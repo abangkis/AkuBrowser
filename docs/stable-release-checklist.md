@@ -14,12 +14,17 @@ pass must run serially on its target environment:
 - [ ] Freeze the source tuple once in Step 1.
 - [ ] On Windows, complete Step 2 for Windows and Step 3A for Windows, then stop.
 - [ ] Run and explicitly accept Windows Step 3B before starting any macOS pass.
-- [ ] Hand the same frozen tuple and Windows evidence to the macOS environment.
+- [ ] On the primary Windows machine, complete Step 3C: create the initial draft
+      release and accurate release notes from the full development history.
+- [ ] Hand the same frozen tuple, draft URL, Windows evidence, and public update
+      key to the macOS environment.
 - [ ] On macOS, verify the tuple, complete Step 2 for macOS and Step 3A for macOS,
       then stop.
 - [ ] Run and explicitly accept macOS Step 3B on Intel and Apple silicon.
-- [ ] Return all artifacts and evidence to the primary Windows machine before
-      continuing to Steps 4 and 5.
+- [ ] Upload only the allowlisted macOS assets to the existing draft. Do not
+      create a second release or edit its tag, title, notes, or publication state.
+- [ ] Return all evidence to the primary Windows machine before continuing to
+      Steps 4 and 5.
 
 Do not advance a platform checkbox from another operating system. A syntax or
 configuration check performed on the wrong host is only a preflight check; it is
@@ -124,6 +129,22 @@ Run only after Windows 3B acceptance. One command verifies the clean frozen tupl
 uses a fresh output directory, builds both universal artifacts, runs every macOS
 3A gate, verifies checksums/provenance, and prints machine-readable evidence:
 
+On the primary Windows machine, obtain the pinned public key from the stable key
+metadata and copy only that public value to the Mac:
+
+```powershell
+$env:AKU_UPDATE_PUBLIC_KEY = (
+  Get-Content -LiteralPath 'D:\data\keys\AkuBrowser\runtime-update-stable-v1.json' -Raw |
+    ConvertFrom-Json
+).publicKeyBase64
+```
+
+On macOS, set `AKU_UPDATE_PUBLIC_KEY` to that Base64 value. The corresponding
+private signing key must be transferred separately through an approved secure
+channel. Never copy `runtime-update-stable-v1.seed.dpapi` to macOS: it is the
+Windows DPAPI-protected private seed and is neither portable nor needed for
+manifest verification.
+
 ```sh
 ./scripts/run-macos-stable-gate.sh \
   --release-version <release-version> \
@@ -217,15 +238,32 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
       files listed under its `publishAssets`, never `acceptanceAssets`.
 - [ ] Obtain explicit Windows and macOS release acceptance.
 
-## 4. Stage the stable release
+## 3C. Create the Windows-owned draft
+
+- [ ] On the primary Windows machine, confirm `v<sidecar-version>` does not
+      already exist as a tag or release.
+- [ ] Create one GitHub release with target set to the frozen AkuBrowser SHA,
+      `draft=true`, and `prerelease=false`. Do not create or push the final tag yet.
+- [ ] Write the initial title and concise release notes on Windows, where the full
+      cross-repository development history is available.
+- [ ] Upload only the Windows files listed by the accepted kit's `publishAssets`.
+- [ ] Read the draft back and verify its target, state, notes, and Windows asset
+      digests before handing its URL to macOS.
+- [ ] Treat the Windows-authored title and notes as authoritative during the Mac
+      pass. macOS may upload only its runner allowlist to this existing draft.
+
+## 4. Reconcile and stage the stable release
 
 - [ ] Create the annotated `v<sidecar-version>` release tag at the frozen
       AkuBrowser authority and AkuSidecar commits. Tag AkuBridge only when the
       Store component itself advances; never relabel an unchanged Bridge version.
 - [ ] Push only the selected immutable tags without moving or replacing an existing tag.
-- [ ] Create a draft GitHub release with `prerelease=false`.
-- [ ] Upload all Windows and macOS artifacts, checksums, manifests, and SBOMs.
-- [ ] Verify GitHub asset names, sizes, digests, source commits, and release notes.
+- [ ] On Windows, reconcile all Windows and macOS artifacts, checksums,
+      manifests, SBOMs, and acceptance evidence against their allowlists.
+- [ ] Refine the Windows-authored release notes with the final cross-platform
+      acceptance state; do not reconstruct them only from the Mac checkout.
+- [ ] Verify GitHub asset names, sizes, digests, source commits, release target,
+      release notes, `draft=true`, and `prerelease=false`.
 
 ## 5. Publish and verify
 
