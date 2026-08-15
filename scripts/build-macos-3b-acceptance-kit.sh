@@ -112,14 +112,22 @@ if [[ "$allow_dirty" -eq 0 ]]; then
   [[ -z "$(git -C "$browser_root" status --porcelain)" ]] || die "release tooling source is dirty; commit it or use --allow-dirty only while developing the generator"
 fi
 
-node --input-type=module - "$final_kit_manifest" "$browser_root" "$bridge_root" "$sidecar_root" <<'NODE'
+current_browser_sha="$(git -C "$browser_root" rev-parse HEAD)"
+final_tooling_sha="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).toolingCommits?.akuBrowser ?? "")' "$final_kit_manifest")"
+tooling_drift_json="$(node "$browser_root/scripts/verify-release-tooling-drift.mjs" "$browser_root" "$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).sourceCommits?.akuBrowser ?? "")' "$final_kit_manifest")" "$current_browser_sha")"
+node --input-type=module - "$final_kit_manifest" "$browser_root" "$bridge_root" "$sidecar_root" "$final_tooling_sha" "$current_browser_sha" <<'NODE'
 import fs from "node:fs";
 import { execFileSync } from "node:child_process";
-const [kitPath, browserRoot, bridgeRoot, sidecarRoot] = process.argv.slice(2);
+const [kitPath, browserRoot, bridgeRoot, sidecarRoot, finalToolingSha, currentBrowserSha] = process.argv.slice(2);
 const kit = JSON.parse(fs.readFileSync(kitPath, "utf8"));
 const head = (root) => execFileSync("git", ["-C", root, "rev-parse", "HEAD"], { encoding: "utf8" }).trim();
 if (head(bridgeRoot) !== kit.sourceCommits?.akuBridge || head(sidecarRoot) !== kit.sourceCommits?.akuSidecar) throw new Error("Bridge or Sidecar HEAD differs from the finalized Mac source tuple");
-if (head(browserRoot) !== kit.toolingCommits?.akuBrowser) throw new Error("AkuBrowser HEAD differs from the finalized Mac tooling commit");
+if (head(browserRoot) !== currentBrowserSha) throw new Error("AkuBrowser HEAD changed during acceptance-kit generation");
+try {
+  execFileSync("git", ["-C", browserRoot, "merge-base", "--is-ancestor", finalToolingSha, currentBrowserSha], { stdio: "ignore" });
+} catch {
+  throw new Error("AkuBrowser HEAD is not a descendant of the finalized Mac tooling commit");
+}
 NODE
 
 if [[ -z "$output_root" ]]; then
@@ -212,11 +220,11 @@ const [destination, releaseVersion, unpackedName, installerName, developmentId, 
 fs.writeFileSync(destination, `# macOS Step 3B acceptance kit ${releaseVersion}\n\nThis entire folder is local test input/evidence only. Never upload it to GitHub or the Chrome Web Store.\n\n1. In Chrome, disable any production AkuBrowser extension and Load unpacked from \`${unpackedName}/\`.\n2. Verify extension ID \`${developmentId}\`.\n3. Run \`${installerName}\`; it is universal, unsigned, and bound to that development ID.\n4. Return to Setup and run Check runtime, Check Codex, source consent/login, and one full Update now.\n5. Complete every item in \`STEP-3B-CHECKLIST.md\`.\n\nThe production ID is \`${productionId}\` and must not be enabled during this pre-Store test. The finalized Windows-signed manifest hashes are recorded in \`../acceptance-kit.json\`; signed production files remain in the separate finalized release kit.\n`);
 NODE
 
-node --input-type=module - "$building_root/acceptance-kit.json" "$acceptance_root" "$final_kit_manifest" "$final_receipt" "$package_fingerprint_json" "$release_version" "$sidecar_version" "$bridge_version" "$development_id" "$allow_dirty" <<'NODE'
+node --input-type=module - "$building_root/acceptance-kit.json" "$acceptance_root" "$final_kit_manifest" "$final_receipt" "$package_fingerprint_json" "$release_version" "$sidecar_version" "$bridge_version" "$development_id" "$allow_dirty" "$current_browser_sha" "$tooling_drift_json" <<'NODE'
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-const [destination, acceptanceRoot, finalKitPath, receiptPath, fingerprintJson, releaseVersion, sidecarVersion, bridgeVersion, developmentId, allowDirty] = process.argv.slice(2);
+const [destination, acceptanceRoot, finalKitPath, receiptPath, fingerprintJson, releaseVersion, sidecarVersion, bridgeVersion, developmentId, allowDirty, currentBrowserSha, toolingDriftJson] = process.argv.slice(2);
 const hash = (file) => crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 const finalKit = JSON.parse(fs.readFileSync(finalKitPath, "utf8"));
 const receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
@@ -233,6 +241,8 @@ const kit = {
   sidecarVersion,
   sourceCommits: finalKit.sourceCommits,
   toolingCommits: finalKit.toolingCommits,
+  acceptanceToolingCommit: currentBrowserSha,
+  toolingDrift: JSON.parse(toolingDriftJson),
   sourceDirtyAllowed: allowDirty === "1",
   identity: { profile: "development", extensionId: developmentId },
   unpackedBridge: { path: `acceptance/AkuBridge-${bridgeVersion}-prestore-unpacked`, fingerprint: JSON.parse(fingerprintJson).fingerprint },
