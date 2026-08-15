@@ -34,6 +34,8 @@ $bridgePackage = Read-Json (Join-Path $bridgeRoot "package.json")
 $bridgeManifest = Read-Json (Join-Path $bridgeRoot "manifest.json")
 $releaseManifest = Read-Json (Join-Path $browserRoot "release\release-manifest.json")
 $bridgeIdentityRegistryPath = Join-Path $browserRoot "config\bridge-identities.json"
+& node (Join-Path $PSScriptRoot "validate-bridge-identity-registry.mjs") $bridgeIdentityRegistryPath | Out-Null
+Assert-True ($LASTEXITCODE -eq 0) "Bridge identity registry validation failed."
 $lifecycleAcceptance = Read-Json (Join-Path $browserRoot "acceptance\windows-runtime-lifecycle.json")
 $sidecarConfig = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $domain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
@@ -74,6 +76,7 @@ $developmentIdentityText = & node (Join-Path $PSScriptRoot "bridge-extension-ide
 Assert-True ($LASTEXITCODE -eq 0) "AkuBridge development manifest key does not match the identity registry."
 $developmentIdentity = ($developmentIdentityText | Out-String) | ConvertFrom-Json
 Assert-True ($developmentIdentity.distribution -eq "unpacked" -and $developmentIdentity.derivedExtensionId -eq $developmentIdentity.extensionId) "AkuBridge development identity is not deterministically pinned."
+Assert-True ($sidecarConfig.deployment.mode -eq "development" -and $sidecarConfig.deployment.bridgeIdentityProfile -eq "development") "AkuSidecar workspace deployment identity is unexpected."
 foreach ($source in @("x", "linkedin", "facebook", "instagram")) {
     Assert-True ($sourceCatalog -match ('id:\s*"' + [regex]::Escape($source) + '"')) "AkuBridge source catalog is missing $source."
 }

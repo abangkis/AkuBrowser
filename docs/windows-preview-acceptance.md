@@ -44,10 +44,11 @@ ordered manual procedure, pass/fail rule, Installed apps success identifier,
 known non-blockers, and release acceptance log. The detailed product-behavior
 checks below supplement that runbook and should be exercised where applicable.
 
-Never mix the two lanes. `publish/` uses the production Store identity and is
-the only GitHub-uploadable directory. `acceptance/` uses the unpacked development
-identity and exists only for Step 3B. The root `release-kit.json` records both
-allowlists and their hashes.
+Never mix the two lanes. Store installers and update metadata in `publish/` use
+the `production-store` identity. Portable offline bundles in `publish/` use the
+separate `production-offline` identity. `acceptance/` uses the unpacked
+`acceptance` identity and exists only for Step 3B. The root `release-kit.json`
+records both allowlists and their hashes.
 
 The production Chrome Web Store ID, Store-managed installation/update, and
 versioned public Setup download are verified only after publication in Step 5

@@ -87,7 +87,8 @@ node "$browser_root/scripts/check-native-host-min-version.mjs" "${host_version_c
 emit_legacy_v1="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.version === r.components?.akuBridge?.version && r.version === r.components?.akuSidecar?.version && r.components?.akuBridge?.runtimeRevision === r.components?.akuSidecar?.runtimeRevision ? "1" : "0")' "$release_manifest")"
 release_bridge_identity_profile="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution?.chromeStore?.bridgeIdentityProfile ?? "")' "$release_manifest")"
 bridge_identity_schema_version="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.schemaVersion ?? "")' "$bridge_identity_registry")"
-[[ "$bridge_identity_schema_version" = "1" ]] || die "unsupported Bridge identity registry schema"
+[[ "$bridge_identity_schema_version" = "2" ]] || die "unsupported Bridge identity registry schema"
+node "$browser_root/scripts/validate-bridge-identity-registry.mjs" "$bridge_identity_registry" >/dev/null || die "Bridge identity registry validation failed"
 [[ -n "$release_bridge_identity_profile" ]] || die "the release manifest must select a Bridge identity profile"
 bridge_identity_profile="${bridge_identity_profile:-$release_bridge_identity_profile}"
 release_bridge_identity_distribution="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); const p=r.profiles?.[process.argv[2]]; if (!p) throw new Error("release Bridge identity profile is not declared in config/bridge-identities.json"); console.log(p.distribution ?? "")' "$bridge_identity_registry" "$release_bridge_identity_profile")"
@@ -99,9 +100,6 @@ expected_c2pa_version="$(node --input-type=module -e 'import fs from "node:fs"; 
 [[ "$release_bridge_identity_distribution" = "chrome-web-store" ]] || die "the release Bridge identity must use Chrome Web Store distribution"
 [[ "$release_extension_id" =~ ^[a-p]{32}$ ]] || die "the release Bridge identity must declare an exact Chrome Web Store extension ID"
 [[ "$extension_id" =~ ^[a-p]{32}$ ]] || die "the selected Bridge identity must declare an exact 32-character Chrome extension ID"
-if [[ "$bridge_identity_distribution" = "unpacked" ]]; then
-  node "$browser_root/scripts/bridge-extension-identity.mjs" "$bridge_identity_registry" "$bridge_root/manifest.json" "$bridge_identity_profile" >/dev/null || die "the unpacked Bridge identity does not match manifest.key"
-fi
 if [[ "$unsigned_stable" -eq 1 ]]; then
   [[ "$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.channel)' "$release_manifest")" = "stable" ]] || die "unsigned stable installers require a stable release manifest channel"
   [[ "$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution?.chromeStore?.nativeRuntimeInstallers?.["macos-universal"]?.trustState ?? "")' "$release_manifest")" = "unsigned" ]] || die "the stable macOS installer trust state must be declared unsigned"
@@ -193,13 +191,27 @@ host_ldflags="-s -w -X main.runtimeHostVersion=$native_host_version"
 build_universal_go "$bridge_root/native-host" . "$host_root/AkuBrowserRuntimeHost" "$host_ldflags"
 build_universal_go "$sidecar_root" ./cmd/akusidecar "$version_root/AkuSidecar" "-s -w"
 
-node --input-type=module - "$sidecar_root/config/sidecar.json" "$version_root/config/sidecar.json" "$extension_id" <<'NODE'
+node --input-type=module - "$sidecar_root/config/sidecar.json" "$version_root/config/sidecar.json" "$extension_id" "$bridge_identity_profile" "$sidecar_version" <<'NODE'
 import fs from "node:fs";
-const [source, destination, extensionId] = process.argv.slice(2);
+const [source, destination, extensionId, profile, version] = process.argv.slice(2);
 const config = JSON.parse(fs.readFileSync(source, "utf8"));
 config.database.path = "data/aku-browser.db";
 config.reasoning.executable = "";
 config.bridge.trustedExtensionOrigins = [`chrome-extension://${extensionId}/`];
+const modes = {
+  development: "development",
+  acceptance: "acceptance",
+  "production-store": "production-store",
+  "production-offline": "production-offline",
+};
+if (!modes[profile]) throw new Error(`unsupported deployment profile: ${profile}`);
+config.deployment = {
+  mode: modes[profile],
+  runtimeInstallKind: "installed",
+  bridgeIdentityProfile: profile,
+  releaseVersion: version,
+  artifactId: `AkuBrowserRuntimeSetup-${version}-macos-${profile}`,
+};
 fs.writeFileSync(destination, `${JSON.stringify(config, null, 2)}\n`);
 NODE
 cp "$sidecar_root"/schemas/*.schema.json "$version_root/schemas/"

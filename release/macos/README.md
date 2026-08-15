@@ -1,13 +1,12 @@
 # AkuBrowser macOS portable bundle
 
-This portable bundle contains the native Go `AkuSidecar` runtime and works with
-the published AkuBrowser extension from the Chrome Web Store. It does not
-include `AkuSupervisor`.
+This self-contained offline bundle contains AkuBridge and the native Go
+`AkuSidecar` runtime. Its unpacked AkuBridge uses a dedicated, stable
+offline-production identity and does not require Chrome Web Store installation.
+It does not include `AkuSupervisor`.
 
-The included `AkuBridge` directory is retained for source inspection and
-advanced troubleshooting. Do not load it unpacked alongside the Chrome Web
-Store extension: the production runtime accepts only the published extension's
-exact identity.
+Do not run the offline and Chrome Web Store editions together. Their extension
+identities and trusted runtime configurations are intentionally different.
 
 ## Prerequisites
 
@@ -18,10 +17,11 @@ exact identity.
 
 ## Install and start
 
-1. Install **AkuBrowser** from the Chrome Web Store:
-   <https://chromewebstore.google.com/detail/akubrowser/phkaipecbhpgopggbfpcejgngbhddnkk>
-2. Extract the ZIP to a writable directory.
-3. Start AkuBrowser from Terminal:
+1. Extract the ZIP to a writable directory.
+2. In Chrome, open `chrome://extensions`, enable **Developer mode**, select
+   **Load unpacked**, and choose the included `AkuBridge` directory.
+3. Verify the offline extension ID against `artifact-manifest.json`.
+4. Start AkuBrowser from Terminal:
 
    ```sh
    ./Start-AkuBrowser.sh
@@ -30,10 +30,9 @@ exact identity.
    You can also double-click `Start-AkuBrowser.command` in Finder. Keep the
    terminal open while using AkuBrowser; Ctrl+C stops the Sidecar cleanly.
 
-Install the Chrome Web Store extension before starting the portable runtime so
-the capture bridge is available when onboarding begins. For local
-unpacked-extension development, use the AkuWorkspace development flow and its
-named `development` Bridge identity rather than this production bundle.
+Load the bundled offline extension before starting the portable runtime. For
+Chrome Web Store production, use the Store extension and installed companion
+runtime. For workspace development, use the named `development` identity.
 
 User data is stored under `~/Library/Application Support/AkuBrowser/data` and
 survives replacement of the extracted bundle.

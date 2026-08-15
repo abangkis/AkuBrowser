@@ -1,15 +1,13 @@
 # AkuBrowser Windows portable bundle
 
-This portable bundle contains the Go AkuSidecar runtime and the pinned
-`c2patool.exe` runtime used for local, image-only Content Credentials
-verification. It works with the published AkuBrowser extension from the Chrome
-Web Store. It does not install a Windows service and does not include
-AkuSupervisor.
+This self-contained offline bundle contains AkuBridge, the Go AkuSidecar
+runtime, and the pinned `c2patool.exe` runtime used for local, image-only
+Content Credentials verification. Its unpacked AkuBridge has a dedicated,
+stable offline-production identity. It does not depend on Chrome Web Store
+installation, install a Windows service, or include AkuSupervisor.
 
-The included `AkuBridge` directory is retained for source inspection and
-advanced troubleshooting. Do not load it unpacked alongside the Chrome Web
-Store extension: the production runtime accepts only the published extension's
-exact identity.
+Do not run the offline and Chrome Web Store editions together. Their extension
+identities and trusted runtime configurations are intentionally different.
 
 ## What it demonstrates
 
@@ -30,24 +28,25 @@ development tooling and is intentionally excluded from this bundle.
 
 ## Install and start
 
-1. Install **AkuBrowser** from the Chrome Web Store:
-   <https://chromewebstore.google.com/detail/akubrowser/phkaipecbhpgopggbfpcejgngbhddnkk>
-2. Extract the complete ZIP to a writable directory.
-3. Open PowerShell in the extracted directory and run:
+1. Extract the complete ZIP to a writable directory.
+2. In Chrome, open `chrome://extensions`, enable **Developer mode**, select
+   **Load unpacked**, and choose the included `AkuBridge` directory.
+3. Verify that Chrome shows the offline extension ID documented in
+   `artifact-manifest.json`.
+4. Open PowerShell in the extracted directory and run:
 
    ```powershell
    .\Start-AkuBrowser.ps1
    ```
 
-4. If running PowerShell scripts is unavailable, use `Start-AkuBrowser.cmd` as
+5. If running PowerShell scripts is unavailable, use `Start-AkuBrowser.cmd` as
    the fallback launcher.
-5. Keep its terminal open while using AkuBrowser.
-6. Press Ctrl+C in that terminal to stop AkuBrowser.
+6. Keep its terminal open while using AkuBrowser.
+7. Press Ctrl+C in that terminal to stop AkuBrowser.
 
-Install the Chrome Web Store extension before starting the portable runtime.
-This ensures the capture bridge is available when onboarding begins instead of
-launching a partially working system. For local unpacked-extension development,
-use the AkuWorkspace development flow and its named `development` Bridge
+Load the bundled offline extension before starting the portable runtime. For
+Chrome Web Store production, use the Store extension and installed companion
+runtime instead. For workspace development, use the named `development`
 identity rather than this production bundle.
 
 `Start-AkuBrowser.ps1` is the primary launcher and exposes the diagnostic and

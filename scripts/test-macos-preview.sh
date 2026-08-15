@@ -123,21 +123,24 @@ const packageConfig = JSON.parse(fs.readFileSync(`${artifactDirectory}/config/si
 const readme = fs.readFileSync(`${artifactDirectory}/README.md`, "utf8");
 const fail = (message) => { throw new Error(message); };
 
-const bridgeIdentityProfile = release.distribution?.chromeStore?.bridgeIdentityProfile;
+const bridgeIdentityProfile = release.distribution?.offlineBundle?.bridgeIdentityProfile;
 const bridgeIdentity = registry.profiles?.[bridgeIdentityProfile];
-if (registry.schemaVersion !== 1 || !bridgeIdentityProfile || !bridgeIdentity) {
+if (registry.schemaVersion !== 2 || !bridgeIdentityProfile || !bridgeIdentity) {
   fail("the release does not select a valid Bridge identity profile");
 }
-if (bridgeIdentity.distribution !== "chrome-web-store") fail("the release Bridge identity is not a Chrome Web Store profile");
+if (bridgeIdentity.distribution !== "offline-bundle") fail("the release Bridge identity is not an offline profile");
 if (!/^[a-p]{32}$/.test(bridgeIdentity.extensionId ?? "")) fail("the release Bridge extension ID is invalid");
 const bridgeExtensionOrigin = `chrome-extension://${bridgeIdentity.extensionId}/`;
 if (artifactRelease.version !== release.version) fail("artifact release version differs from AkuBrowser");
 if (bridgeManifest.version_name !== release.components?.akuBridge?.version) fail("bundled AkuBridge product version differs from the release tuple");
 if (bridgeManifest.version !== release.components?.akuBridge?.chromeVersion) fail("bundled AkuBridge Chrome version differs from the release tuple");
-if (Object.hasOwn(bridgeManifest, "key")) fail("production portable AkuBridge contains the unpacked development manifest key");
+if (!bridgeManifest.key) fail("offline production AkuBridge does not contain its stable manifest public key");
 const trustedOrigins = packageConfig.bridge?.trustedExtensionOrigins ?? [];
 if (trustedOrigins.length !== 1 || trustedOrigins[0] !== bridgeExtensionOrigin) {
   fail("packaged AkuSidecar does not trust exactly the release-selected Bridge origin");
+}
+if (packageConfig.deployment?.mode !== "production-offline" || packageConfig.deployment?.runtimeInstallKind !== "portable") {
+  fail("packaged AkuSidecar does not declare offline portable mode");
 }
 if (artifactManifest.bridgeIdentity?.profile !== bridgeIdentityProfile) fail("artifact provenance records the wrong Bridge identity profile");
 if (artifactManifest.bridgeIdentity?.distribution !== bridgeIdentity.distribution) fail("artifact provenance records the wrong Bridge distribution");
@@ -150,12 +153,11 @@ if (!/^[a-f0-9]{40}$/.test(artifactManifest.sourceCommits?.akuBrowser ?? "") ||
     artifactManifest.releaseToolingDrift?.toolingSha !== artifactManifest.toolingCommits.akuBrowser) {
   fail("artifact provenance does not preserve the release/tooling boundary");
 }
-const bridgeInstallInstruction = readme.indexOf("Install **AkuBrowser** from the Chrome Web Store");
+const bridgeInstallInstruction = readme.toLowerCase().indexOf("load unpacked");
 const launcherInstruction = readme.indexOf("./Start-AkuBrowser.sh");
-if (bridgeInstallInstruction < 0) fail("bundle README does not explain how to install AkuBrowser from the Chrome Web Store");
+if (bridgeInstallInstruction < 0) fail("bundle README does not explain how to load the offline AkuBridge package");
 if (launcherInstruction < 0) fail("bundle README does not identify Start-AkuBrowser.sh as the launcher");
-if (bridgeInstallInstruction >= launcherInstruction) fail("bundle README must install the Chrome Web Store extension before starting AkuBrowser");
-if (!readme.includes("Do not load it unpacked")) fail("bundle README does not prevent loading the inspection copy of AkuBridge unpacked");
+if (bridgeInstallInstruction >= launcherInstruction) fail("bundle README must load the offline extension before starting AkuBrowser");
 NODE
 
 port="$($python_bin -c 'import socket; s=socket.socket(); s.bind(("127.0.0.1", 0)); print(s.getsockname()[1]); s.close()')"

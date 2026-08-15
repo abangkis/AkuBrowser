@@ -56,8 +56,8 @@ final_kit_manifest="$final_kit/release-kit.json"
 release_version="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).version)' "$release_manifest")"
 sidecar_version="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).components.akuSidecar.version)' "$release_manifest")"
 bridge_version="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).components.akuBridge.version)' "$release_manifest")"
-development_id="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).profiles.development.extensionId)' "$identity_registry")"
-production_id="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).profiles.production.extensionId)' "$identity_registry")"
+acceptance_id="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).profiles.acceptance.extensionId)' "$identity_registry")"
+production_id="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).profiles["production-store"].extensionId)' "$identity_registry")"
 
 final_receipt="$(node --input-type=module - "$final_kit_manifest" "$final_kit" "$release_version" "$sidecar_version" <<'NODE'
 import crypto from "node:crypto";
@@ -104,7 +104,7 @@ for signed_manifest in \
   )
 done
 
-node "$browser_root/scripts/bridge-extension-identity.mjs" "$identity_registry" "$bridge_root/manifest.json" development >/dev/null
+node "$browser_root/scripts/validate-bridge-identity-registry.mjs" "$identity_registry" >/dev/null
 for repository in "$bridge_root" "$sidecar_root"; do
   [[ -z "$(git -C "$repository" status --porcelain)" ]] || die "release source is dirty: $repository"
 done
@@ -129,6 +129,8 @@ try {
   throw new Error("AkuBrowser HEAD is not a descendant of the finalized Mac tooling commit");
 }
 NODE
+
+node "$browser_root/scripts/project-bridge-package-identity.mjs" "$identity_registry" "$unpacked_root" acceptance >/dev/null
 
 if [[ -z "$output_root" ]]; then
   output_root="$browser_root/artifacts/stable-${sidecar_version}-macos-3b"
@@ -172,12 +174,12 @@ bridge_zip="$acceptance_root/$unpacked_name.zip"
 (cd "$unpacked_root" && zip -q -r "$bridge_zip" .)
 (cd "$acceptance_root" && shasum -a 256 "$unpacked_name.zip" > "$unpacked_name.zip.sha256")
 
-node --input-type=module - "$acceptance_root/$unpacked_name.receipt.json" "$bridge_zip" "$verification_json" "$package_fingerprint_json" "$bridge_root" "$development_id" <<'NODE'
+node --input-type=module - "$acceptance_root/$unpacked_name.receipt.json" "$bridge_zip" "$verification_json" "$package_fingerprint_json" "$bridge_root" "$acceptance_id" <<'NODE'
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import { execFileSync } from "node:child_process";
-const [destination, zipPath, verificationJson, fingerprintJson, bridgeRoot, developmentId] = process.argv.slice(2);
+const [destination, zipPath, verificationJson, fingerprintJson, bridgeRoot, acceptanceId] = process.argv.slice(2);
 const verification = JSON.parse(verificationJson);
 const fingerprint = JSON.parse(fingerprintJson);
 const data = fs.readFileSync(zipPath);
@@ -189,7 +191,7 @@ const receipt = {
   sha256: crypto.createHash("sha256").update(data).digest("hex"),
   extensionFingerprint: fingerprint.fingerprint,
   fileCount: fingerprint.files.length,
-  identity: { profile: "development", distribution: "unpacked", extensionId: developmentId },
+  identity: { profile: "acceptance", distribution: "unpacked", extensionId: acceptanceId },
   source: { repository: "AkuBridge", commit: execFileSync("git", ["-C", bridgeRoot, "rev-parse", "HEAD"], { encoding: "utf8" }).trim(), dirty: false },
 };
 fs.writeFileSync(destination, `${JSON.stringify(receipt, null, 2)}\n`);
@@ -198,7 +200,7 @@ NODE
 installer_stage="$building_root/installer-stage"
 installer_args=(
   --output-root "$installer_stage"
-  --bridge-identity-profile development
+  --bridge-identity-profile acceptance
   --c2pa-tool "$c2pa_tool"
   --update-public-key "$update_public_key"
   --unsigned-local-candidate
@@ -209,22 +211,22 @@ installer_args=(
 cp "$installer_stage/$installer_name" "$acceptance_root/$installer_name"
 cp "$installer_stage/$installer_name.sha256" "$acceptance_root/$installer_name.sha256"
 "$browser_root/scripts/test-macos-runtime-installer.sh" \
-  --bridge-identity-profile development \
+  --bridge-identity-profile acceptance \
   "$acceptance_root/$installer_name"
 
 cp "$browser_root/docs/macos-clean-machine-3b.md" "$acceptance_root/STEP-3B-CHECKLIST.md"
 
-node --input-type=module - "$acceptance_root/README.md" "$release_version" "$unpacked_name" "$installer_name" "$development_id" "$production_id" <<'NODE'
+node --input-type=module - "$acceptance_root/README.md" "$release_version" "$unpacked_name" "$installer_name" "$acceptance_id" "$production_id" <<'NODE'
 import fs from "node:fs";
-const [destination, releaseVersion, unpackedName, installerName, developmentId, productionId] = process.argv.slice(2);
-fs.writeFileSync(destination, `# macOS Step 3B acceptance kit ${releaseVersion}\n\nThis entire folder is local test input/evidence only. Never upload it to GitHub or the Chrome Web Store.\n\n1. In Chrome, disable any production AkuBrowser extension and Load unpacked from \`${unpackedName}/\`.\n2. Verify extension ID \`${developmentId}\`.\n3. Run \`${installerName}\`; it is universal, unsigned, and bound to that development ID.\n4. Return to Setup and run Check runtime, Check Codex, source consent/login, and one full Update now.\n5. Complete every item in \`STEP-3B-CHECKLIST.md\`.\n\nThe production ID is \`${productionId}\` and must not be enabled during this pre-Store test. The finalized Windows-signed manifest hashes are recorded in \`../acceptance-kit.json\`; signed production files remain in the separate finalized release kit.\n`);
+const [destination, releaseVersion, unpackedName, installerName, acceptanceId, productionId] = process.argv.slice(2);
+fs.writeFileSync(destination, `# macOS Step 3B acceptance kit ${releaseVersion}\n\nThis entire folder is local test input/evidence only. Never upload it to GitHub or the Chrome Web Store.\n\n1. In Chrome, disable any production AkuBrowser extension and Load unpacked from \`${unpackedName}/\`.\n2. Verify acceptance extension ID \`${acceptanceId}\`.\n3. Run \`${installerName}\`; it is universal, unsigned, and bound to that acceptance ID.\n4. Return to Setup and run Check runtime, Check Codex, source consent/login, and one full Update now.\n5. Complete every item in \`STEP-3B-CHECKLIST.md\`.\n\nThe Store production ID is \`${productionId}\` and must not be enabled during this acceptance test. The finalized Windows-signed manifest hashes are recorded in \`../acceptance-kit.json\`; signed production files remain in the separate finalized release kit.\n`);
 NODE
 
-node --input-type=module - "$building_root/acceptance-kit.json" "$acceptance_root" "$final_kit_manifest" "$final_receipt" "$package_fingerprint_json" "$release_version" "$sidecar_version" "$bridge_version" "$development_id" "$allow_dirty" "$current_browser_sha" "$tooling_drift_json" <<'NODE'
+node --input-type=module - "$building_root/acceptance-kit.json" "$acceptance_root" "$final_kit_manifest" "$final_receipt" "$package_fingerprint_json" "$release_version" "$sidecar_version" "$bridge_version" "$acceptance_id" "$allow_dirty" "$current_browser_sha" "$tooling_drift_json" <<'NODE'
 import crypto from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
-const [destination, acceptanceRoot, finalKitPath, receiptPath, fingerprintJson, releaseVersion, sidecarVersion, bridgeVersion, developmentId, allowDirty, currentBrowserSha, toolingDriftJson] = process.argv.slice(2);
+const [destination, acceptanceRoot, finalKitPath, receiptPath, fingerprintJson, releaseVersion, sidecarVersion, bridgeVersion, acceptanceId, allowDirty, currentBrowserSha, toolingDriftJson] = process.argv.slice(2);
 const hash = (file) => crypto.createHash("sha256").update(fs.readFileSync(file)).digest("hex");
 const finalKit = JSON.parse(fs.readFileSync(finalKitPath, "utf8"));
 const receipt = JSON.parse(fs.readFileSync(receiptPath, "utf8"));
@@ -244,7 +246,7 @@ const kit = {
   acceptanceToolingCommit: currentBrowserSha,
   toolingDrift: JSON.parse(toolingDriftJson),
   sourceDirtyAllowed: allowDirty === "1",
-  identity: { profile: "development", extensionId: developmentId },
+  identity: { profile: "acceptance", extensionId: acceptanceId },
   unpackedBridge: { path: `acceptance/AkuBridge-${bridgeVersion}-prestore-unpacked`, fingerprint: JSON.parse(fingerprintJson).fingerprint },
   finalizedSigningEvidence: {
     receipt: path.basename(receiptPath),

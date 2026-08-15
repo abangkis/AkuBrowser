@@ -98,12 +98,16 @@ Assert-True ($release.channel -eq "stable") "Release manifest must declare the s
 Assert-True ($release.distribution.chromeStore.nativeRuntimeInstallers.'windows-x64'.trustState -eq "unsigned") "Windows stable gate currently requires the declared unsigned trust state."
 
 $identities = Read-Json $identityRegistryPath
-$productionIdentity = $identities.profiles.production
+$productionIdentity = $identities.profiles.'production-store'
+$acceptanceIdentity = $identities.profiles.acceptance
+$offlineIdentity = $identities.profiles.'production-offline'
 $developmentIdentity = $identities.profiles.development
-Assert-True ($identities.schemaVersion -eq 1) "Unsupported Bridge identity registry schema."
+Assert-True ($identities.schemaVersion -eq 2) "Unsupported Bridge identity registry schema."
 Assert-True ($productionIdentity.distribution -eq "chrome-web-store") "Production identity must be a Chrome Web Store identity."
-Assert-True ($developmentIdentity.distribution -eq "unpacked") "Development identity must be an unpacked identity."
-Assert-True ($productionIdentity.extensionId -ne $developmentIdentity.extensionId) "Publish and acceptance identities must remain different."
+Assert-True ($acceptanceIdentity.distribution -eq "unpacked") "Acceptance identity must be an unpacked identity."
+Assert-True ($offlineIdentity.distribution -eq "offline-bundle") "Offline production identity must be an offline-bundle identity."
+$identityIds = @($developmentIdentity.extensionId, $acceptanceIdentity.extensionId, $productionIdentity.extensionId, $offlineIdentity.extensionId)
+Assert-True (@($identityIds | Sort-Object -Unique).Count -eq 4) "Development, acceptance, Store, and offline identities must remain different."
 
 $UpdateSigningPrivateKeyPath = [IO.Path]::GetFullPath($UpdateSigningPrivateKeyPath)
 Assert-True (Test-Path -LiteralPath $UpdateSigningPrivateKeyPath -PathType Leaf) "Runtime-update signing key was not found."
@@ -174,13 +178,14 @@ if ($LASTEXITCODE -ne 0) { throw "Windows automated lifecycle gate failed." }
 
 & (Join-Path $PSScriptRoot "build-prestore-bridge-package.ps1") `
     -OutputDirectory $acceptanceRoot `
+    -BridgeIdentityProfile "acceptance" `
     -SkipChecks
 if ($LASTEXITCODE -ne 0) { throw "Pre-Store Bridge package build failed." }
 
 $localInstallerArguments = @{
     OutputRoot = $acceptanceRoot
     C2paToolPath = $C2paToolPath
-    BridgeIdentityProfile = "development"
+    BridgeIdentityProfile = "acceptance"
     UpdatePublicKey = $UpdatePublicKey
     UnsignedLocalCandidate = $true
     SkipValidation = $true
@@ -242,7 +247,7 @@ This folder is local test evidence only. Never upload any file from this folder 
 
 1. Extract ``AkuBridge-$($release.components.akuBridge.version)-prestore-unpacked.zip``.
 2. In Chrome, enable Developer mode and Load unpacked from the extracted folder.
-3. Verify extension ID ``$($developmentIdentity.extensionId)``.
+3. Verify extension ID ``$($acceptanceIdentity.extensionId)``.
 4. Open Setup. It must offer the local installer and must not open a future GitHub release URL.
 5. Run ``AkuBrowserRuntimeSetup-$SidecarVersion-unsigned-local.exe`` from this folder.
 6. Return to Setup, select Check runtime, check Codex, grant intended sources, and complete one Update now.
@@ -262,10 +267,11 @@ Assert-ExactLane $acceptanceRoot $acceptanceNames
 $kitReadme = @"
 # AkuBrowser Windows stable release kit $ReleaseVersion
 
-This is one release kit with two intentionally separate identity lanes:
+This is one release kit with three intentionally separate identity lanes:
 
-- ``publish/``: production Chrome Web Store identity. These are the only files eligible for GitHub release upload.
-- ``acceptance/``: manifest-key-pinned development identity. Use only for clean-machine Step 3B and never upload it.
+- Store runtime installers and update manifests in ``publish/``: ``production-store`` identity.
+- the portable ZIP in ``publish/``: self-contained ``production-offline`` identity and runtime.
+- ``acceptance/``: manifest-key-pinned ``acceptance`` identity. Use only for clean-machine Step 3B and never upload it.
 
 The portable ZIP under ``publish/`` is validated by automated Step 3A. It is not the Load unpacked package and is not manual Step 3B evidence.
 
@@ -290,8 +296,9 @@ $kitManifest = [ordered]@{
         akuSidecar = $SidecarSha
     }
     identities = [ordered]@{
-        publish = [ordered]@{ profile = "production"; extensionId = $productionIdentity.extensionId }
-        acceptance = [ordered]@{ profile = "development"; extensionId = $developmentIdentity.extensionId }
+        publish = [ordered]@{ profile = "production-store"; extensionId = $productionIdentity.extensionId }
+        acceptance = [ordered]@{ profile = "acceptance"; extensionId = $acceptanceIdentity.extensionId }
+        offline = [ordered]@{ profile = "production-offline"; extensionId = $offlineIdentity.extensionId }
     }
     signing = [ordered]@{ windowsInstaller = "unsigned"; updateManifests = "ed25519" }
     publishAssets = $publishAssets

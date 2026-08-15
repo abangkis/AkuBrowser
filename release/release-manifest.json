@@ -21,7 +21,7 @@
     },
     "chromeStore": {
       "extensionDistribution": "chrome-web-store",
-      "bridgeIdentityProfile": "production",
+      "bridgeIdentityProfile": "production-store",
       "nativeRuntimeInstallers": {
         "windows-x64": {
           "status": "stable-unsigned",
@@ -60,11 +60,20 @@
         "minimumProtocolVersion": 1
       }
     },
+    "offlineBundle": {
+      "extensionDistribution": "unpacked-offline",
+      "bridgeIdentityProfile": "production-offline",
+      "runtimeInstallKind": "portable",
+      "installation": "load-unpacked-and-run-bundled-runtime"
+    },
     "localOrigins": [
       "http://127.0.0.1:11122",
       "http://localhost:11122"
     ],
-    "akuBridgeInstallation": "chrome-web-store"
+    "akuBridgeInstallation": {
+      "store": "chrome-web-store",
+      "offline": "load-unpacked-from-bundle"
+    }
   },
   "components": {
     "akuSidecar": {
@@ -147,7 +156,7 @@
   },
   "bundle": {
     "deployables": [
-      "AkuBridge (Chrome Web Store extension)",
+      "AkuBridge (Chrome Web Store extension or stable-ID offline bundle)",
       "AkuSidecar (platform installer and signed update archive)"
     ],
     "internalHelpers": [
@@ -157,6 +166,7 @@
       "AkuSidecar",
       "Platform-native c2patool 0.26.60 for local image provenance verification",
       "AkuBridge Chrome Web Store integration metadata",
+      "Stable-ID unpacked AkuBridge for self-contained offline bundles",
       "Windows launcher and release configuration",
       "macOS launcher and release configuration",
       "Release provenance and SHA-256 checksums"
@@ -169,6 +179,6 @@
   "previewPrerequisites": [
     "Codex App with Codex App Server installed and locally signed in",
     "Google Chrome with every enabled source (X, LinkedIn, Facebook, or Instagram) already signed in",
-    "AkuBridge installed from the Chrome Web Store"
+    "AkuBridge installed from the Chrome Web Store for Store mode, or loaded from the bundled AkuBridge directory for offline mode"
   ]
 }

@@ -110,11 +110,13 @@ Run once from AkuBrowser on the primary Windows machine:
   -UpdateSigningPrivateKeyPath <secure-key-path>
 ```
 
-The runner must return `status: ok` and create exactly two lanes:
+The runner must return `status: ok` and create exactly two directories carrying
+three identities:
 
-- `publish/` uses the production Chrome Web Store identity and is the only
-  GitHub-uploadable asset directory;
-- `acceptance/` contains the matching manifest-key-pinned unpacked Bridge and
+- Store installers/update manifests in `publish/` use `production-store`;
+- portable ZIPs in `publish/` use `production-offline` and contain both the
+  stable-ID unpacked Bridge and portable runtime;
+- `acceptance/` contains the matching manifest-key-pinned `acceptance` Bridge and
   unsigned local runtime installer for Step 3B only. Never upload this lane.
 
 The root `release-kit.json` is the authoritative asset allowlist and records
@@ -201,7 +203,8 @@ immutable tag.
       result again on Mac before macOS 3B.
 - [ ] Treat GitHub portable ZIP/bundle validation as an automated 3A
       responsibility; do not repeat it as a manual clean-machine flow.
-- [ ] Verify checksums, artifact manifests, source commits, Store identity, and
+- [ ] Verify checksums, artifact manifests, source commits, all four registered
+      identities, projected deployment mode, and
       declared signing/notarization state.
 - [ ] Confirm Setup download URLs, fallback instructions, and security guidance
       keep ordinary bootstrap pinned to the Bridge-packaged Sidecar bootstrap
@@ -226,11 +229,11 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
 - [ ] Copy the complete platform `acceptance/` lane plus its root kit manifest
       to the clean machine; do not fetch a not-yet-published GitHub URL.
 - [ ] Extract and Load unpacked the frozen pre-Store AkuBridge package; verify
-      its manifest-key-pinned `development` identity from
+      its manifest-key-pinned `acceptance` identity from
       `config/bridge-identities.json` is unchanged across folders and machines.
 - [ ] Confirm Setup names the local acceptance installer and does not open the
       future `v<sidecar-version>` GitHub release URL.
-- [ ] Use only the matching development-identity local runtime from the same
+- [ ] Use only the matching acceptance-identity local runtime from the same
       `acceptance/` lane; never relabel or publish it as the production installer.
 - [ ] Complete runtime installation, Codex detection and sign-in confirmation,
       source consent, and one full AkuBrowser update.
@@ -311,6 +314,10 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
 - [ ] Confirm Store-managed extension updates and the production runtime
       compatibility contract; reverify the portable fallback through its
       automated checksums and manifests.
+- [ ] Verify the self-contained offline bundle separately: no Store dependency,
+      stable `production-offline` ID, bundled portable runtime, and
+      `Production · Offline bundle` pill. Do not enable it alongside the Store
+      edition.
 - [ ] Record known limitations, release URL, final digests, and acceptance evidence.
 - [ ] Keep the previous stable release available for rollback.
 

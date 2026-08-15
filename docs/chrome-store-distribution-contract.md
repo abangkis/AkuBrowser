@@ -74,10 +74,10 @@ separate `development` profile and projects its exact origin into the active
 Supervisor service arguments. The complete authority and projection rules are
 defined in [Bridge identity contract](bridge-identity-contract.md).
 
-The checked-in AkuBridge manifest carries a public key only to pin the unpacked
-development identity. Store and production portable packagers remove that key
-from their staged payloads before hashing and packaging; the published identity
-continues to be assigned and managed by the Chrome Web Store.
+The checked-in AkuBridge manifest carries the public `development` identity.
+The Store packager removes that key and projects `production-store`; the
+portable packager replaces it with the dedicated public
+`production-offline` key before hashing.
 
 AkuSidecar records the browser-supplied extension origin on every heartbeat.
 If two explicitly allowlisted origins remain live at the same time, Bridge
@@ -153,8 +153,8 @@ The installer action remains visible, attributable, and user initiated.
 ### Chrome or PC restart
 
 This automatic recovery applies to the Chrome Web Store distribution. The
-unpacked development identity suppresses automatic Native Messaging lifecycle
-work so reloading AkuBridge cannot start the installed production runtime.
+unpacked development and offline identities suppress automatic Native Messaging
+lifecycle work so reloading them cannot start the installed Store runtime.
 
 1. Chrome starts the user's profile and fires `chrome.runtime.onStartup`.
 2. The extension sends one `ensure_runtime` request.

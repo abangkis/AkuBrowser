@@ -1,76 +1,75 @@
-# Bridge identity contract
+# Bridge identity and deployment-mode contract
 
-Status: implemented, 7 August 2026.
+Status: implemented, 15 August 2026.
 
-## One authority, two named identities
+## One authority, four stable identities
 
 `config/bridge-identities.json` is the only checked-in authority for AkuBridge
-extension identities. It declares two different identities rather than one
-value that development overrides:
+extension identities. Every extension ID is unique and identifies one delivery
+lane:
 
-| Profile | Distribution | Purpose |
-| --- | --- | --- |
-| `development` | `unpacked` | Local AkuWorkspace development |
-| `production` | `chrome-web-store` | Published AkuBrowser extension and runtime packages |
+| Profile | Distribution | Runtime lifecycle | User-facing mode |
+| --- | --- | --- | --- |
+| `development` | Load unpacked workspace | Manual, Supervisor-owned | Development |
+| `acceptance` | Frozen Load unpacked package | Local acceptance installer | Stable candidate · 3B |
+| `production-store` | Chrome Web Store | Managed companion runtime | Production · Web Store |
+| `production-offline` | Self-contained offline ZIP | Bundled portable runtime | Production · Offline bundle |
 
-An extension ID must be changed in this registry, never in Sidecar source
-configuration, Supervisor service configuration, release scripts, or native
-host manifests.
+Never copy an ID into Sidecar source configuration, Supervisor service
+configuration, a native-host manifest, or release documentation. Packagers
+resolve the selected profile and project its exact origin.
 
-The unpacked `development` identity is cryptographically pinned by the public
-`key` in `AkuBridge/manifest.json`. Its Chrome extension ID is derived from that
-key and must equal the registry entry. The key is public identity material, not
-a signing secret; no private key is stored or required for Load unpacked.
+## Public identity keys
 
-## Development projection
+The three unpacked identities contain a checked-in RSA public key. The package
+projector writes that public material to `manifest.key`, giving Load unpacked a
+stable ID on every machine and from every directory. These public keys are not
+code-signing secrets. No private key is required or distributed for Load
+unpacked.
 
-`AkuSupervisor\scripts\dev.ps1 akusidecar` selects the `development` profile.
-Because the manifest key pins the ID, Chrome assigns the same development ID
-regardless of the directory used for Load unpacked or the machine running it.
-Before Supervisor starts AkuSidecar, the AkuWorkspace adapter projects the
-registry origin into the active, local Supervisor service arguments as:
+The checked-in AkuBridge manifest and `bridge-deployment.js` represent only the
+`development` workspace. Acceptance and offline packagers stage a copy and run
+`scripts/project-bridge-package-identity.mjs`; they never mutate the workspace
+manifest in place. The Chrome Web Store projector removes `manifest.key`
+because the Store owns the `production-store` identity.
 
-```text
---bridge-extension-origin chrome-extension://<development-id>/
-```
+## Trusted deployment metadata
 
-The script prints the selected channel, distribution, extension ID, registry
-path, and generated projection path at startup. The local `services.json` value
-is generated runtime state, not another authority; manual edits are replaced
-the next time `dev.ps1` runs. `-Rebuild` affects the Sidecar binary only and
-does not change identity selection.
+AkuSidecar configuration carries locally projected deployment provenance:
 
-The manifest key is also the runtime lifecycle marker. Automatic extension
-reload/update and Chrome-startup events from the unpacked development build do
-not contact the installed Native Messaging host and do not start the installed
-AkuSidecar runtime. Development runtime ownership remains with `dev.ps1`; an
-explicit extension action may still invoke `ensure_runtime` when the developer
-intentionally tests the installed-runtime path.
+- `mode`: `development`, `acceptance`, `production-store`, or
+  `production-offline`;
+- `runtimeInstallKind`: `workspace`, `installed`, or `portable`;
+- `bridgeIdentityProfile`;
+- release version, source-freeze tuple, and artifact ID when packaged.
 
-The checked-in `AkuSidecar/config/sidecar.json` therefore contains no trusted
-extension origin. Starting that base configuration without an explicit origin
-fails closed.
+Sidecar exposes this trusted local metadata through health/bootstrap APIs and
+renders the mode pill. AkuBridge does not get to self-declare Sidecar ownership.
+Sidecar still independently verifies the heartbeat's exact extension origin
+against its single configured trusted origin.
 
-## Production projection
+Missing metadata remains runnable for backward compatibility but appears as
+`Mode unknown`; release packagers and acceptance gates must reject it.
 
-`release/release-manifest.json` selects `bridgeIdentityProfile: production`.
-It does not repeat the extension ID. Windows and macOS release packagers
-resolve that profile through the registry and generate:
+## Channel rules
 
-- exactly one packaged Sidecar `trustedExtensionOrigins` entry for portable and
-  installed runtimes; and
-- the Native Messaging host `allowed_origins` entry for companion installers.
+- Development uses `AkuSupervisor\scripts\dev.ps1` and the `development`
+  origin. Automatic Native Messaging lifecycle remains disabled.
+- Step 3B uses the `acceptance` Bridge and an installer bound only to that
+  origin. It is never uploaded.
+- Web Store production uses `production-store`, removes the workspace key, and
+  enables managed Native Messaging lifecycle.
+- The offline ZIP uses `production-offline`, retains its dedicated public key,
+  contains the load-unpacked AkuBridge payload plus portable AkuSidecar, and
+  performs no Store or installer download.
+- Store and offline editions must not run concurrently.
 
-Production builds reject any profile other than the release-selected Chrome
-Web Store profile. An unsigned local installer may select another declared
-profile such as `development`; arbitrary extension IDs are not accepted.
-Production Chrome Web Store and portable packagers remove the development
-`manifest.key` from their staged AkuBridge payload. Production identity remains
-owned exclusively by the Chrome Web Store.
+## Security invariants
 
-## Security invariant
-
-AkuSidecar never trusts the first Bridge heartbeat, auto-discovers an extension
-ID, or accepts a wildcard origin. Every running channel receives exactly one
-origin derived from the registry before strict configuration validation.
-
+- All four IDs are unique and validated from the registry.
+- An unpacked package ID derives from the selected profile public key.
+- AkuSidecar never trusts the first heartbeat, discovers an ID dynamically, or
+  accepts a wildcard origin.
+- A packaged runtime trusts exactly one projected Bridge origin.
+- Environment and install kind come from local runtime packaging, not an
+  extension message.

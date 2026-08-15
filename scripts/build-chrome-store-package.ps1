@@ -8,6 +8,7 @@ $ErrorActionPreference = "Stop"
 $browserRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $workspaceRoot = Split-Path $browserRoot -Parent
 $bridgeRoot = Join-Path $workspaceRoot "AkuBridge"
+$identityRegistryPath = Join-Path $browserRoot "config\bridge-identities.json"
 
 function Write-Utf8NoBom([string]$Path, [string]$Content) {
     [IO.File]::WriteAllText($Path, $Content, [Text.UTF8Encoding]::new($false))
@@ -49,12 +50,11 @@ foreach ($entry in $verification.files) {
     Copy-Item -LiteralPath $source -Destination $target
 }
 
-# The checked-in manifest key pins the unpacked development identity. It must
-# never enter the Chrome Web Store package, whose identity is Store-managed.
-$stagedManifestPath = Join-Path $stagingRoot "manifest.json"
-$stagedManifest = Get-Content -LiteralPath $stagedManifestPath -Raw | ConvertFrom-Json
-$stagedManifest.PSObject.Properties.Remove("key")
-Write-Utf8NoBom $stagedManifestPath (($stagedManifest | ConvertTo-Json -Depth 20) + "`n")
+# The Store package receives both its keyless manifest and explicit deployment
+# lifecycle from the registry-selected Store profile.
+$projectionJson = node (Join-Path $PSScriptRoot "project-bridge-package-identity.mjs") $identityRegistryPath $stagingRoot "production-store"
+if ($LASTEXITCODE -ne 0) { throw "Chrome Web Store identity projection failed." }
+$projection = ($projectionJson | Out-String) | ConvertFrom-Json
 
 $packageVerificationJson = node (Join-Path $PSScriptRoot "fingerprint-extension-directory.mjs") $stagingRoot
 if ($LASTEXITCODE -ne 0) { throw "Packaged extension fingerprint failed." }
@@ -91,6 +91,7 @@ $receipt = [ordered]@{
     extensionFingerprint = $packageVerification.fingerprint
     sourceFingerprint = $verification.fingerprint
     developmentKeyRemoved = $true
+    identity = $projection
     fileCount = $expectedFiles.Count
     source = @{
         repository = "AkuBridge"

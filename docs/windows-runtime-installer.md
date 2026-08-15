@@ -83,7 +83,7 @@ Windows stable gate documented in `docs/stable-release-checklist.md`:
 ```
 
 The `publish/` lane contains the versioned installer and documented stable
-alias. The `acceptance/` lane contains a differently named development-identity
+alias. The `acceptance/` lane contains a differently named acceptance-identity
 installer plus the exact unpacked Bridge for Step 3B. This is a deliberate
 unsigned release exception, not evidence of a signed publisher identity.
 
@@ -100,8 +100,8 @@ $env:AKU_WINDOWS_SIGNING_PASSWORD = "<PFX password>"
 Production builds read the profile selected by
 `release/release-manifest.json`, then resolve its exact Chrome Web Store ID
 from `config/bridge-identities.json`. Production rejects a different profile.
-An unsigned development candidate may select the declared `development`
-profile, but cannot supply an arbitrary ID. The checked-in Sidecar base
+An unsigned local candidate may select a declared non-Store profile, but cannot
+supply an arbitrary ID. The checked-in Sidecar base
 configuration contains no trusted origin; the installer generates its packaged
 allowlist from the selected registry profile. See
 [Bridge identity contract](bridge-identity-contract.md).

@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string]$OutputDirectory = "",
-    [string]$BridgeIdentityProfile = "development",
+    [string]$BridgeIdentityProfile = "acceptance",
     [switch]$SkipChecks,
     [switch]$AllowDirty
 )
@@ -19,13 +19,6 @@ if ([string]::IsNullOrWhiteSpace($OutputDirectory)) {
 $OutputDirectory = [IO.Path]::GetFullPath($OutputDirectory)
 if (-not $OutputDirectory.StartsWith($browserRoot, [StringComparison]::OrdinalIgnoreCase)) {
     throw "OutputDirectory must stay inside $browserRoot"
-}
-
-$identityJson = node (Join-Path $PSScriptRoot "bridge-extension-identity.mjs") $registryPath $manifestPath $BridgeIdentityProfile
-if ($LASTEXITCODE -ne 0) { throw "Bridge development identity validation failed." }
-$identity = $identityJson | ConvertFrom-Json
-if ($identity.distribution -ne "unpacked" -or $identity.derivedExtensionId -ne $identity.extensionId) {
-    throw "The pre-Store package requires a manifest-key-pinned unpacked identity."
 }
 
 if (-not $SkipChecks) {
@@ -59,6 +52,16 @@ foreach ($entry in $verification.files) {
     $target = Join-Path $stagingRoot $entry.path
     New-Item -ItemType Directory -Force -Path (Split-Path $target -Parent) | Out-Null
     Copy-Item -LiteralPath $source -Destination $target
+}
+
+$projectionJson = node (Join-Path $PSScriptRoot "project-bridge-package-identity.mjs") $registryPath $stagingRoot $BridgeIdentityProfile
+if ($LASTEXITCODE -ne 0) { throw "Bridge acceptance identity projection failed." }
+$projection = ($projectionJson | Out-String) | ConvertFrom-Json
+$identityJson = node (Join-Path $PSScriptRoot "bridge-extension-identity.mjs") $registryPath (Join-Path $stagingRoot "manifest.json") $BridgeIdentityProfile
+if ($LASTEXITCODE -ne 0) { throw "Bridge acceptance identity validation failed." }
+$identity = ($identityJson | Out-String) | ConvertFrom-Json
+if ($identity.distribution -ne "unpacked" -or $identity.derivedExtensionId -ne $identity.extensionId) {
+    throw "The pre-Store package requires a manifest-key-pinned acceptance identity."
 }
 
 $packageVerificationJson = node (Join-Path $PSScriptRoot "fingerprint-extension-directory.mjs") $stagingRoot

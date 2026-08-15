@@ -10,14 +10,14 @@ const registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
 const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
 const profile = registry.profiles?.[profileName];
 
-if (registry.schemaVersion !== 1) throw new Error("unsupported Bridge identity registry schema");
+if (registry.schemaVersion !== 2) throw new Error("unsupported Bridge identity registry schema");
 if (!profile) throw new Error(`Bridge identity profile is not declared: ${profileName}`);
 if (!/^[a-p]{32}$/.test(profile.extensionId ?? "")) {
   throw new Error(`Bridge identity profile has an invalid extension ID: ${profileName}`);
 }
 
 let derivedExtensionId = null;
-if (profile.distribution === "unpacked") {
+if (typeof profile.publicKey === "string" && profile.publicKey.length > 0) {
   if (typeof manifest.key !== "string" || manifest.key.length === 0) {
     throw new Error("unpacked Bridge identity requires manifest.key");
   }
@@ -32,6 +32,8 @@ if (profile.distribution === "unpacked") {
   if (derivedExtensionId !== profile.extensionId) {
     throw new Error(`manifest.key derives ${derivedExtensionId}, expected ${profile.extensionId}`);
   }
+} else if (typeof manifest.key === "string" && manifest.key.trim() !== "") {
+  throw new Error(`${profileName} is Store-managed and must not contain manifest.key`);
 }
 
 console.log(JSON.stringify({

@@ -156,7 +156,9 @@ $sidecarCoreVersion = ($sidecarVersion -split '-', 2)[0]
 $versionQuad = "$sidecarCoreVersion.0"
 $nsisCompiler = Find-NsisCompiler $NsisPath
 $releaseBridgeIdentityProfile = [string]$release.distribution.chromeStore.bridgeIdentityProfile
-Assert-True ($bridgeIdentityRegistry.schemaVersion -eq 1) "Unsupported Bridge identity registry schema."
+Assert-True ($bridgeIdentityRegistry.schemaVersion -eq 2) "Unsupported Bridge identity registry schema."
+& node (Join-Path $PSScriptRoot "validate-bridge-identity-registry.mjs") $bridgeIdentityRegistryPath | Out-Null
+Assert-True ($LASTEXITCODE -eq 0) "Bridge identity registry validation failed."
 $releaseBridgeIdentityProperty = $bridgeIdentityRegistry.profiles.PSObject.Properties[$releaseBridgeIdentityProfile]
 Assert-True (-not [string]::IsNullOrWhiteSpace($releaseBridgeIdentityProfile) -and $null -ne $releaseBridgeIdentityProperty) "The release manifest must select an existing Bridge identity profile."
 $releaseBridgeIdentity = $releaseBridgeIdentityProperty.Value
@@ -172,12 +174,6 @@ $selectedBridgeIdentity = $selectedBridgeIdentityProperty.Value
 $selectedBridgeIdentityDistribution = [string]$selectedBridgeIdentity.distribution
 $ExtensionId = [string]$selectedBridgeIdentity.extensionId
 Assert-True ($ExtensionId -match '^[a-p]{32}$') "The selected Bridge identity must declare an exact 32-character Chrome extension ID."
-if ($selectedBridgeIdentityDistribution -eq "unpacked") {
-    $identityVerificationText = & node (Join-Path $PSScriptRoot "bridge-extension-identity.mjs") $bridgeIdentityRegistryPath (Join-Path $bridgeRoot "manifest.json") $BridgeIdentityProfile
-    Assert-True ($LASTEXITCODE -eq 0) "The unpacked Bridge identity does not match manifest.key."
-    $identityVerification = ($identityVerificationText | Out-String) | ConvertFrom-Json
-    Assert-True ($identityVerification.derivedExtensionId -eq $ExtensionId) "The unpacked Bridge identity derivation is inconsistent."
-}
 Assert-True (-not ($CertificatePath -and $SigningThumbprint)) "Choose a PFX path or certificate thumbprint, not both."
 if (-not $UnsignedLocalCandidate) {
     Assert-True ($BridgeIdentityProfile -eq $releaseBridgeIdentityProfile) "Production installers must use the Bridge identity profile selected by the release manifest."
@@ -349,6 +345,21 @@ $config = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $config.database.path = "runtime/aku-browser.db"
 $config.reasoning.executable = ""
 $config.bridge.trustedExtensionOrigins = @("chrome-extension://$ExtensionId/")
+$deploymentMode = switch ($BridgeIdentityProfile) {
+    "development" { "development" }
+    "acceptance" { "acceptance" }
+    "production-store" { "production-store" }
+    "production-offline" { "production-offline" }
+    default { throw "Unsupported deployment profile: $BridgeIdentityProfile" }
+}
+$config.deployment = [ordered]@{
+    mode = $deploymentMode
+    runtimeInstallKind = "installed"
+    bridgeIdentityProfile = $BridgeIdentityProfile
+    releaseVersion = $sidecarVersion
+    sourceFreeze = ($sourceCommits.Values -join ":")
+    artifactId = "AkuBrowserRuntimeSetup-$sidecarVersion-$BridgeIdentityProfile"
+}
 Write-Utf8NoBom (Join-Path $configOutput "sidecar.json") ($config | ConvertTo-Json -Depth 10)
 
 $schemasOutput = Join-Path $runtimePayload "schemas"

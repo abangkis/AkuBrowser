@@ -1,14 +1,40 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "profiles": {
     "development": {
+      "environment": "development",
       "distribution": "unpacked",
+      "runtimeLifecycle": "manual",
+      "runtimeAcquisition": "workspace",
       "extensionId": "mfeebfabkhmoaepbcdbbeefpobkedfmp",
-      "identitySource": "AkuBridge/manifest.json#key"
+      "publicKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAi+2n3emVPzEGx3qvX0nny73+5buc7wlnWbmMznhpK0ULhvv9gEKh7JQySTEFSCgu+qkD7+WJQiWJaAUi1jVpRQeFr0tQay/dLNdtS7XsSDOF5hOAQKILoDtKraaHXhdluee4nTVjS0AUHb+Qmknrgx/PIOW4z/tfeaGfO+esQUFN/BbWPhMwjVPUWVpxg9eQMcH74ivVXAy9PD1TWSYI73aqB6vgLetS9IWYEvu5q9/SX8lh9DCPyJQML/LM9e5CdgalFvoFunceFe09W9jfYNeaUm4kQEjYeBhDRwsusyniqbTYm3WlK4KnRIc0hhjAsqxbEfqnuAzsjfeJGso85wIDAQAB",
+      "identitySource": "config/bridge-identities.json#profiles.development.publicKey"
     },
-    "production": {
+    "acceptance": {
+      "environment": "acceptance",
+      "distribution": "unpacked",
+      "runtimeLifecycle": "manual",
+      "runtimeAcquisition": "local-installer",
+      "extensionId": "bhaacoeefknkgbbajdikklgjpklgcoof",
+      "publicKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAz87vNJm9cMJAHmxVK2k4olrYyvmEGPJP2lpEALo9dy4dkZedjbtBRhbTZ9eAKJXjPDXOCmGfYnheTT069u63W+R4EJY0xmLzEmD3xRJAepC4EmDeu6e/4b9HkEobb/pBsZE7RfyLpAsPs6W8EKCu1kdUG6tkaWMSgcVAaixqeLBmO2WQUalgFk43rgUL71TYox7/Z6CvJ+bax9rV3AGgv4DX9VXFz0zW9Otap6Jd3FDYXzrSTi9NG97YYZdA7Z66y8vITmRvGkwHod+6GMDsF/OpjvK+r2kG/WY+bz5VdsFuifya0TaYja6Ef1A/0dZFh5BDcuZ2G6yes7ejoaNm3wIDAQAB",
+      "identitySource": "config/bridge-identities.json#profiles.acceptance.publicKey"
+    },
+    "production-store": {
+      "environment": "production",
       "distribution": "chrome-web-store",
-      "extensionId": "phkaipecbhpgopggbfpcejgngbhddnkk"
+      "runtimeLifecycle": "managed",
+      "runtimeAcquisition": "release",
+      "extensionId": "phkaipecbhpgopggbfpcejgngbhddnkk",
+      "identitySource": "chrome-web-store"
+    },
+    "production-offline": {
+      "environment": "production",
+      "distribution": "offline-bundle",
+      "runtimeLifecycle": "manual",
+      "runtimeAcquisition": "bundled-portable",
+      "extensionId": "noleinpgfppekjkkaileknacdkcbokdc",
+      "publicKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxpZR2FWdg65kY1NUbeXSj08olIa4JJ/A4cixet8/Jj6GKv9YUzUHMsrrqulN0XoCL4jT81SW9yjppqIh4S8HDai+OAAb/Bnjh8YjWyChUR5LZDUhaIKXYrpaG29rPvmGeM2rkZQsKc/MKvYCeKH3YxewYZtFSoUTgFyuLpbPId1iJT2oSAbYe7U/k/0NI9AnlAQzy0lADoKxS5a0HQ7BWezG1TT2HSkiWY0XiNco10nE/V5IZmW4Z7+x3tNlYP23Y8tfVU7qSAxG/TPREARrGtJrDw2dt+N6UCHQ9UrvxExcHcxRNBHwFnNgla0cIyfWYdQkfvZ7myPMT3QYKs6QlQIDAQAB",
+      "identitySource": "config/bridge-identities.json#profiles.production-offline.publicKey"
     }
   }
 }

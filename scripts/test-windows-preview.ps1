@@ -8,9 +8,9 @@ $ErrorActionPreference = "Stop"
 $browserRoot = Split-Path -Parent $PSScriptRoot
 $release = Get-Content -LiteralPath (Join-Path $browserRoot "release\release-manifest.json") -Raw | ConvertFrom-Json
 $bridgeIdentityRegistry = Get-Content -LiteralPath (Join-Path $browserRoot "config\bridge-identities.json") -Raw | ConvertFrom-Json
-$bridgeIdentityProfile = [string]$release.distribution.chromeStore.bridgeIdentityProfile
+$bridgeIdentityProfile = [string]$release.distribution.offlineBundle.bridgeIdentityProfile
 $bridgeIdentityProperty = $bridgeIdentityRegistry.profiles.PSObject.Properties[$bridgeIdentityProfile]
-if ($bridgeIdentityRegistry.schemaVersion -ne 1 -or [string]::IsNullOrWhiteSpace($bridgeIdentityProfile) -or $null -eq $bridgeIdentityProperty) {
+if ($bridgeIdentityRegistry.schemaVersion -ne 2 -or [string]::IsNullOrWhiteSpace($bridgeIdentityProfile) -or $null -eq $bridgeIdentityProperty) {
     throw "The release does not select a valid Bridge identity profile."
 }
 $bridgeIdentity = $bridgeIdentityProperty.Value
@@ -123,10 +123,10 @@ foreach ($required in @(
 }
 
 $bundleReadme = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "README.md") -Raw
-$bridgeInstallInstruction = $bundleReadme.IndexOf('Install **AkuBrowser** from the Chrome Web Store', [StringComparison]::Ordinal)
+$bridgeInstallInstruction = $bundleReadme.IndexOf('Load unpacked', [StringComparison]::OrdinalIgnoreCase)
 $primaryLauncherInstruction = $bundleReadme.IndexOf('.\Start-AkuBrowser.ps1', [StringComparison]::OrdinalIgnoreCase)
 $fallbackLauncherInstruction = $bundleReadme.IndexOf('use `Start-AkuBrowser.cmd` as', [StringComparison]::OrdinalIgnoreCase)
-Assert-True ($bridgeInstallInstruction -ge 0) "Bundle README does not explain how to install AkuBrowser from the Chrome Web Store."
+Assert-True ($bridgeInstallInstruction -ge 0) "Bundle README does not explain how to load its offline AkuBridge package."
 Assert-True ($primaryLauncherInstruction -ge 0) "Bundle README does not identify Start-AkuBrowser.ps1 as the primary launcher."
 Assert-True ($fallbackLauncherInstruction -ge 0) "Bundle README does not identify Start-AkuBrowser.cmd as the fallback launcher."
 Assert-True ($bundleReadme.IndexOf('exception for that exact file', [StringComparison]::OrdinalIgnoreCase) -ge 0) "Bundle README does not explain the narrow AkuSidecar.exe antivirus exception."
@@ -155,8 +155,11 @@ $packageConfig = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "config\
 Assert-True ($artifactRelease.version -eq $release.version) "Artifact release version differs from AkuBrowser."
 Assert-True ($bridgeManifest.version_name -eq $release.components.akuBridge.version) "Bundled AkuBridge product version differs from the release tuple."
 Assert-True ($bridgeManifest.version -eq $release.components.akuBridge.chromeVersion) "Bundled AkuBridge Chrome version differs from the release tuple."
-Assert-True ($null -eq $bridgeManifest.PSObject.Properties["key"]) "Production portable AkuBridge must not contain the unpacked development manifest key."
-Assert-True ($bridgeIdentity.distribution -eq "chrome-web-store") "The release Bridge identity is not a Chrome Web Store profile."
+Assert-True (-not [string]::IsNullOrWhiteSpace([string]$bridgeManifest.key)) "Offline AkuBridge must retain its stable manifest public key."
+Assert-True ($bridgeIdentity.distribution -eq "offline-bundle") "The release Bridge identity is not an offline production profile."
+Assert-True ($packageConfig.deployment.mode -eq "production-offline") "Packaged AkuSidecar does not declare offline production mode."
+Assert-True ($packageConfig.deployment.runtimeInstallKind -eq "portable") "Packaged AkuSidecar does not declare portable runtime ownership."
+Assert-True ($packageConfig.deployment.bridgeIdentityProfile -eq $bridgeIdentityProfile) "Packaged AkuSidecar records the wrong Bridge identity profile."
 Assert-True (@($packageConfig.bridge.trustedExtensionOrigins).Count -eq 1 -and $packageConfig.bridge.trustedExtensionOrigins[0] -eq $bridgeExtensionOrigin) "Packaged AkuSidecar does not trust exactly the release-selected Bridge origin."
 Assert-True ($artifactManifest.bridgeIdentity.profile -eq $bridgeIdentityProfile) "Artifact provenance records the wrong Bridge identity profile."
 Assert-True ($artifactManifest.bridgeIdentity.distribution -eq $bridgeIdentity.distribution) "Artifact provenance records the wrong Bridge distribution."

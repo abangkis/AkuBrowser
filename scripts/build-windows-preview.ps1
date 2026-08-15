@@ -71,17 +71,17 @@ $bridgePackage = Read-Json (Join-Path $bridgeRoot "package.json")
 $bridgeManifest = Read-Json (Join-Path $bridgeRoot "manifest.json")
 $sidecarDomain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
 
-$bridgeIdentityProfile = [string]$release.distribution.chromeStore.bridgeIdentityProfile
+$bridgeIdentityProfile = [string]$release.distribution.offlineBundle.bridgeIdentityProfile
 $bridgeIdentityProperty = $bridgeIdentityRegistry.profiles.PSObject.Properties[$bridgeIdentityProfile]
-Assert-True ($bridgeIdentityRegistry.schemaVersion -eq 1) "Unsupported Bridge identity registry schema."
+Assert-True ($bridgeIdentityRegistry.schemaVersion -eq 2) "Unsupported Bridge identity registry schema."
 Assert-True (-not [string]::IsNullOrWhiteSpace($bridgeIdentityProfile) -and $null -ne $bridgeIdentityProperty) "The release manifest must select an existing Bridge identity profile."
 $bridgeIdentity = $bridgeIdentityProperty.Value
 $bridgeExtensionId = [string]$bridgeIdentity.extensionId
 $bridgeExtensionOrigin = "chrome-extension://$bridgeExtensionId/"
-Assert-True ($bridgeIdentity.distribution -eq "chrome-web-store") "The Windows release must use a Chrome Web Store Bridge identity."
-Assert-True ($bridgeExtensionId -match '^[a-p]{32}$') "The production Bridge identity must declare an exact Chrome Web Store extension ID."
-Assert-True ($null -eq $release.distribution.chromeStore.PSObject.Properties["extensionId"]) "The release manifest must not duplicate the Bridge extension ID."
-Assert-True ($null -eq $release.distribution.chromeStore.PSObject.Properties["extensionOrigin"]) "The release manifest must not duplicate the Bridge extension origin."
+Assert-True ($bridgeIdentity.distribution -eq "offline-bundle") "The Windows portable bundle must use the offline production Bridge identity."
+Assert-True ($bridgeExtensionId -match '^[a-p]{32}$') "The offline Bridge identity must declare an exact extension ID."
+Assert-True ($null -eq $release.distribution.offlineBundle.PSObject.Properties["extensionId"]) "The release manifest must not duplicate the Bridge extension ID."
+Assert-True ($null -eq $release.distribution.offlineBundle.PSObject.Properties["extensionOrigin"]) "The release manifest must not duplicate the Bridge extension origin."
 
 Assert-True ($release.distribution.authorityRepository -eq "AkuBrowser") "AkuBrowser is not the declared distribution authority."
 Assert-True ($release.distribution.windows.architecture -eq "x64") "The release manifest does not describe Windows x64."
@@ -192,6 +192,14 @@ $packageConfig = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $packageConfig.database.path = "data/aku-sidecar.db"
 $packageConfig.reasoning.executable = ""
 $packageConfig.bridge.trustedExtensionOrigins = @($bridgeExtensionOrigin)
+$packageConfig.deployment = [ordered]@{
+    mode = "production-offline"
+    runtimeInstallKind = "portable"
+    bridgeIdentityProfile = $bridgeIdentityProfile
+    releaseVersion = [string]$release.version
+    sourceFreeze = ($sourceCommits.Values -join ":")
+    artifactId = "AkuBrowser-$($release.version)-windows-x64"
+}
 Write-Utf8NoBom (Join-Path $configDirectory "sidecar.json") ($packageConfig | ConvertTo-Json -Depth 10)
 
 $schemaOutput = Join-Path $artifactRoot "schemas"
@@ -213,9 +221,10 @@ foreach ($file in $bridgeVerification.files) {
     Copy-Item -LiteralPath $source -Destination $destination
 }
 $packagedBridgeManifestPath = Join-Path $bridgeOutput "manifest.json"
-$packagedBridgeManifest = Read-Json $packagedBridgeManifestPath
-$packagedBridgeManifest.PSObject.Properties.Remove("key")
-Write-Utf8NoBom $packagedBridgeManifestPath (($packagedBridgeManifest | ConvertTo-Json -Depth 20) + "`n")
+$projectionJson = & node (Join-Path $PSScriptRoot "project-bridge-package-identity.mjs") $bridgeIdentityRegistryPath $bridgeOutput $bridgeIdentityProfile
+Assert-True ($LASTEXITCODE -eq 0) "Offline Bridge identity projection failed."
+$projection = ($projectionJson | Out-String) | ConvertFrom-Json
+Assert-True ($projection.extensionId -eq $bridgeExtensionId) "Offline Bridge projection returned the wrong extension ID."
 $packagedBridgeVerificationText = & node (Join-Path $PSScriptRoot "fingerprint-extension-directory.mjs") $bridgeOutput
 if ($LASTEXITCODE -ne 0) { throw "Packaged AkuBridge fingerprint failed." }
 $packagedBridgeVerification = ($packagedBridgeVerificationText | Out-String) | ConvertFrom-Json

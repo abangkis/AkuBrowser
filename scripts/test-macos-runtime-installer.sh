@@ -40,7 +40,7 @@ extension_id="$(node --input-type=module -e '
   const [registryPath, profile] = process.argv.slice(1);
   const registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
   const identity = registry.profiles?.[profile];
-  if (registry.schemaVersion !== 1 || !profile || !identity || !/^[a-p]{32}$/.test(identity.extensionId ?? "")) {
+  if (registry.schemaVersion !== 2 || !profile || !identity || !/^[a-p]{32}$/.test(identity.extensionId ?? "")) {
     throw new Error("expected Bridge identity profile is invalid");
   }
   console.log(identity.extensionId);
@@ -62,10 +62,22 @@ host="$payload/host/AkuBrowserRuntimeHost"
 sidecar="$payload/runtime/versions/$sidecar_version/AkuSidecar"
 c2pa_tool="$payload/runtime/versions/$sidecar_version/c2patool"
 current="$payload/runtime/current.json"
+sidecar_config="$payload/runtime/versions/$sidecar_version/config/sidecar.json"
 
-for required in "$distribution" "$preinstall" "$postinstall" "$host" "$sidecar" "$current" "$payload/Uninstall-AkuBrowserRuntime.command"; do
+for required in "$distribution" "$preinstall" "$postinstall" "$host" "$sidecar" "$current" "$sidecar_config" "$payload/Uninstall-AkuBrowserRuntime.command"; do
   [[ -f "$required" ]] || die "package payload is missing: $required"
 done
+
+node --input-type=module - "$sidecar_config" "$bridge_identity_profile" "$sidecar_version" <<'NODE'
+import fs from "node:fs";
+const [file, profile, version] = process.argv.slice(2);
+const config = JSON.parse(fs.readFileSync(file, "utf8"));
+const expectedMode = profile === "acceptance" ? "acceptance" : profile;
+if (config.deployment?.mode !== expectedMode || config.deployment?.runtimeInstallKind !== "installed" ||
+    config.deployment?.bridgeIdentityProfile !== profile || config.deployment?.releaseVersion !== version) {
+  throw new Error("installed runtime deployment provenance is invalid");
+}
+NODE
 grep -q 'enable_currentUserHome="true"' "$distribution" || die "package is not current-user scoped"
 grep -q 'enable_localSystem="false"' "$distribution" || die "package unexpectedly permits system installation"
 grep -q "runtime/versions/$sidecar_version/AkuSidecar" "$postinstall" || die "postinstall version drifted"
@@ -73,9 +85,9 @@ grep -Fq 'data/.runtime-version' "$postinstall" || die "postinstall does not rec
 grep -Fq 'pre-downgrade-' "$preinstall" || die "preinstall does not archive newer downgrade data"
 grep -Fq "$sidecar_version" "$preinstall" || die "preinstall target version drifted"
 grep -Fq "chrome-extension://$extension_id/" "$postinstall" || die "expected $bridge_identity_profile extension origin is missing"
-if [[ "$bridge_identity_profile" = "development" ]]; then
-  production_extension_id="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).profiles.production.extensionId)' "$bridge_identity_registry")"
-  ! grep -Fq "chrome-extension://$production_extension_id/" "$postinstall" || die "development package also permits the production extension origin"
+if [[ "$bridge_identity_profile" = "acceptance" ]]; then
+  production_extension_id="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).profiles["production-store"].extensionId)' "$bridge_identity_registry")"
+  ! grep -Fq "chrome-extension://$production_extension_id/" "$postinstall" || die "acceptance package also permits the production extension origin"
 fi
 grep -q 'Google/Chrome/NativeMessagingHosts' "$postinstall" || die "Chrome Native Messaging registration is missing"
 grep -Fq -- '--preserve-data' "$payload/Uninstall-AkuBrowserRuntime.command" || die "macOS uninstaller lacks preserve-data mode"
@@ -113,7 +125,7 @@ if ! pkgutil --check-signature "$package_path" >/dev/null; then
   [[ "$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution.chromeStore.nativeRuntimeInstallers["macos-universal"].trustState)' "$release_manifest")" = "unsigned" ]] || die "unsigned package is not declared by the release manifest"
 fi
 
-if [[ "$unsigned_package" -eq 1 && ( "$bridge_identity_profile" != "development" || "$(basename "$package_path")" != *-unsigned-local.pkg ) ]]; then
+if [[ "$unsigned_package" -eq 1 && ( "$bridge_identity_profile" != "acceptance" || "$(basename "$package_path")" != *-unsigned-local.pkg ) ]]; then
   unsigned_welcome="$inspect_root/expanded/Resources/welcome.html"
   [[ -f "$unsigned_welcome" ]] || die "unsigned package is missing its welcome disclosure"
   tr '\n' ' ' < "$unsigned_welcome" | tr -s '[:space:]' ' ' | grep -Eq 'not( |</strong>) .*signed|not Developer ID-signed or notarized' || die "unsigned package does not identify its trust state"

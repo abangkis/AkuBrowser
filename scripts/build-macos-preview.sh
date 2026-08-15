@@ -136,11 +136,11 @@ const domain = fs.readFileSync(path.join(sidecarRoot, "internal/domain/types.go"
 
 const fail = (message) => { throw new Error(message); };
 if (release.distribution?.authorityRepository !== "AkuBrowser") fail("AkuBrowser is not the distribution authority");
-if (bridgeIdentityRegistry.schemaVersion !== 1) fail("unsupported Bridge identity registry schema");
-const bridgeIdentityProfile = release.distribution?.chromeStore?.bridgeIdentityProfile;
+if (bridgeIdentityRegistry.schemaVersion !== 2) fail("unsupported Bridge identity registry schema");
+const bridgeIdentityProfile = release.distribution?.offlineBundle?.bridgeIdentityProfile;
 const bridgeIdentity = bridgeIdentityRegistry.profiles?.[bridgeIdentityProfile];
 if (!bridgeIdentityProfile || !bridgeIdentity) fail("the release manifest must select an existing Bridge identity profile");
-if (bridgeIdentity.distribution !== "chrome-web-store") fail("the macOS release must use a Chrome Web Store Bridge identity");
+if (bridgeIdentity.distribution !== "offline-bundle") fail("the macOS portable release must use an offline Bridge identity");
 if (!/^[a-p]{32}$/.test(bridgeIdentity.extensionId ?? "")) {
   fail("the production Bridge identity must declare an exact Chrome Web Store extension ID");
 }
@@ -250,15 +250,22 @@ const [source, destination, releasePath, registryPath] = process.argv.slice(2);
 const config = JSON.parse(fs.readFileSync(source, "utf8"));
 const release = JSON.parse(fs.readFileSync(releasePath, "utf8"));
 const registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
-const profile = release.distribution?.chromeStore?.bridgeIdentityProfile;
+const profile = release.distribution?.offlineBundle?.bridgeIdentityProfile;
 const identity = registry.profiles?.[profile];
-if (!identity || identity.distribution !== "chrome-web-store" || !/^[a-p]{32}$/.test(identity.extensionId ?? "")) {
-  throw new Error("the release-selected Bridge identity is not a valid Chrome Web Store identity");
+if (!identity || identity.distribution !== "offline-bundle" || !/^[a-p]{32}$/.test(identity.extensionId ?? "")) {
+  throw new Error("the release-selected Bridge identity is not a valid offline identity");
 }
 config.database.path = "data/aku-sidecar.db";
 config.reasoning.executable = "";
 config.bridge ??= {};
 config.bridge.trustedExtensionOrigins = [`chrome-extension://${identity.extensionId}/`];
+config.deployment = {
+  mode: "production-offline",
+  runtimeInstallKind: "portable",
+  bridgeIdentityProfile: profile,
+  releaseVersion: release.version,
+  artifactId: `AkuBrowser-${release.version}-macos-portable`,
+};
 fs.writeFileSync(destination, `${JSON.stringify(config, null, 2)}\n`);
 NODE
 
@@ -277,11 +284,9 @@ for (const file of verification.files) {
   fs.mkdirSync(path.dirname(destination), { recursive: true });
   fs.copyFileSync(source, destination);
 }
-const manifestPath = path.join(destinationRoot, "manifest.json");
-const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-delete manifest.key;
-fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 NODE
+
+node "$browser_root/scripts/project-bridge-package-identity.mjs" "$bridge_identity_registry_path" "$artifact_root/AkuBridge" "production-offline" >/dev/null
 
 node "$browser_root/scripts/fingerprint-extension-directory.mjs" "$artifact_root/AkuBridge" > "$verification_path"
 
@@ -299,7 +304,7 @@ import path from "node:path";
 const [destination, releasePath, browserRoot, sidecarRoot, bridgeRoot, architecture, verificationPath, toolingDriftPath] = process.argv.slice(2);
 const release = JSON.parse(fs.readFileSync(releasePath, "utf8"));
 const bridgeIdentityRegistry = JSON.parse(fs.readFileSync(path.join(browserRoot, "config/bridge-identities.json"), "utf8"));
-const bridgeIdentityProfile = release.distribution?.chromeStore?.bridgeIdentityProfile;
+const bridgeIdentityProfile = release.distribution?.offlineBundle?.bridgeIdentityProfile;
 const bridgeIdentity = bridgeIdentityRegistry.profiles?.[bridgeIdentityProfile];
 if (!bridgeIdentity) throw new Error("release-selected Bridge identity is missing from the registry");
 const bridgeExtensionOrigin = `chrome-extension://${bridgeIdentity.extensionId}/`;

@@ -2,7 +2,7 @@
 
 Use this runbook for the manual Windows acceptance of every stable AkuBrowser
 candidate. Replace `<version>` with the frozen release version. This validates
-the unpacked development Bridge and its matching local runtime before Store
+the frozen unpacked `acceptance` Bridge identity and its matching local runtime before Store
 publication; it does not validate the production Chrome Web Store package.
 
 ## Inputs
@@ -27,8 +27,9 @@ root `release-kit.json`. The entire lane is non-publishable.
 - [ ] Copy the complete `acceptance/` lane plus the root `release-kit.json`.
       Verify every file's byte count and SHA-256 against `acceptanceAssets`.
 - [ ] Extract `AkuBridge-<version>-prestore-unpacked.zip`, use Chrome **Load
-      unpacked**, and verify the development extension ID printed in the lane's
-      README and `release-kit.json`.
+      unpacked**, and verify the acceptance extension ID printed in the lane's
+      README and `release-kit.json`. It must be the dedicated `acceptance` ID,
+      never the workspace development or either production ID.
 - [ ] Open Setup and select **Check runtime**. Before installation it must report
       the runtime unavailable, offer the named local installer, and avoid a
       not-yet-published GitHub URL.

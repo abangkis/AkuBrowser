@@ -1,8 +1,8 @@
 # macOS clean-machine Step 3B
 
 Use this runbook for the manual macOS acceptance of every stable AkuBrowser
-candidate on both Intel and Apple silicon. This validates the unpacked
-development Bridge and its matching local runtime before Store publication; it
+candidate on both Intel and Apple silicon. This validates the frozen unpacked
+`acceptance` Bridge identity and its matching local runtime before Store publication; it
 does not validate the production Chrome Web Store package.
 
 ## Inputs
@@ -21,7 +21,7 @@ terminal launcher as Step 3B evidence.
 ## Manual checklist
 
 - [ ] Confirm the kit says `status: ok`, `publishable: false`, identity profile
-      `development`, and the expected development extension ID.
+      `acceptance`, and the expected acceptance extension ID.
 - [ ] Verify every file under `acceptance/` against `acceptanceAssets` in
       `acceptance-kit.json` and verify the unpacked Bridge fingerprint.
 - [ ] Stop any AkuSidecar process. Quarantine the old AkuBrowser application
@@ -30,7 +30,7 @@ terminal launcher as Step 3B evidence.
 - [ ] Disable any production AkuBrowser extension. In Chrome, enable Developer
       mode, select **Load unpacked**, and choose the named unpacked Bridge folder
       inside `acceptance/`.
-- [ ] Verify the loaded extension ID equals the development ID printed in the
+- [ ] Verify the loaded extension ID equals the acceptance ID printed in the
       README and `acceptance-kit.json`.
 - [ ] Open Setup and select **Check runtime**. Before installation it must report
       the runtime unavailable, offer the named local package, and avoid a
@@ -76,4 +76,4 @@ failed required item stops the release. A non-blocking UX observation must be
 recorded for follow-up but does not silently change the frozen candidate.
 
 Keep release-specific screenshots and logs with the local release evidence.
-Never upload the development acceptance kit.
+Never upload the non-publishable acceptance kit.

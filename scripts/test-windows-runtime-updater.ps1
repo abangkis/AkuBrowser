@@ -92,7 +92,7 @@ foreach ($required in @(
     'acceptance',
     'release-kit.json',
     'build-prestore-bridge-package.ps1',
-    'BridgeIdentityProfile = "development"',
+    'BridgeIdentityProfile = "acceptance"',
     'UnsignedLocalCandidate = $true',
     'UnsignedStableCandidate = $true',
     'AkuBrowserRuntimeSetup-$SidecarVersion-unsigned-local.exe',

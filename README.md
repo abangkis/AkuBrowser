@@ -10,8 +10,9 @@ bundle boundary, and preview prerequisites are recorded in
 >
 > The Chrome Web Store extension is the supported production installation for
 > AkuBrowser. After installing it, use the guided **Setup** flow to install or
-> update the local AkuSidecar companion runtime. The manual Windows/macOS
-> bundles remain available as a fallback for testing and recovery.
+> update the local AkuSidecar companion runtime. The Windows/macOS portable
+> bundles are a separate, self-contained offline production lane with their
+> own stable unpacked-extension identity.
 
 ## Latest release downloads
 
@@ -24,7 +25,9 @@ these links without another README change:
 - [All release assets and checksums](https://github.com/abangkis/AkuBrowser/releases/latest)
 
 The portable Windows and macOS bundles remain versioned assets on the release
-page. Verify the adjacent SHA-256 file before using a manual fallback.
+page. Each contains its matching AkuBridge and AkuSidecar runtime for offline
+installation. Verify the adjacent SHA-256 file before using one, and do not run
+the offline and Chrome Web Store editions together.
 
 AkuBrowser turns bounded samples from the user's chosen social feeds into one finite, source-backed Timeline. The current source registry supports X, LinkedIn, Facebook, and opt-in Instagram. It is designed for people who want to keep up without surrendering their attention to another infinite feed.
 
@@ -106,8 +109,9 @@ remains only the generic process owner.
 The preview assumes Codex App with App Server is installed and signed in
 locally, and that Chrome is already signed in to every enabled source. Store
 users follow the guided extension Setup and install the user-scoped companion
-runtime; the portable ZIP remains available as a manual fallback. Its bundled
-production Bridge is not the Load unpacked package for clean-machine acceptance.
+runtime; the portable ZIP remains available as a self-contained offline lane.
+Its bundled `production-offline` Bridge is distinct from both the Store package
+and the Load unpacked `acceptance` package used for clean-machine Step 3B.
 See [Preview release](docs/preview-release.md).
 
 Build and smoke-test the Windows x64 portable preview from this repository:

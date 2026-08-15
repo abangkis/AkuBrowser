@@ -61,17 +61,14 @@ of presenting a terminal calibration error.
 
 ## Portable fallback and Bridge installation
 
-The stable portable bundle works with AkuBrowser installed from the Chrome Web
-Store. Install the extension first, then start the portable runtime so
-onboarding never begins with only half of the local system available. The
-bundled `AkuBridge` directory remains available for source inspection and
-advanced troubleshooting, but must not be loaded unpacked alongside the Store
-copy: a production runtime accepts only the exact release-selected Store
-identity.
+The stable portable bundle is a self-contained offline lane. Load its bundled
+`AkuBridge` directory first, verify the stable `production-offline` ID, and then
+start the portable runtime. The separate Chrome Web Store lane uses the
+`production-store` identity and installed companion runtime; do not enable both
+lanes together.
 
 Local unpacked-extension work remains a separate AkuWorkspace development
-channel. It projects the named `development` identity into Sidecar rather than
-changing a packaged production artifact. On Windows, run the bundled
+channel, and Step 3B uses a fourth `acceptance` identity. On Windows, run the bundled
 `.\Start-AkuBrowser.ps1` launcher from PowerShell and confirm the Bridge-ready
 status. `Start-AkuBrowser.cmd` remains a convenience fallback and delegates to
 the same PowerShell script.

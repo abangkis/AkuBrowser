@@ -12,7 +12,7 @@ $identityRegistry = Get-Content $identityRegistryPath -Raw | ConvertFrom-Json
 $sidecarConfig = Get-Content (Join-Path $workspaceRoot "AkuSidecar\config\sidecar.json") -Raw | ConvertFrom-Json
 $profileName = [string]$release.distribution.chromeStore.bridgeIdentityProfile
 $profileProperty = $identityRegistry.profiles.PSObject.Properties[$profileName]
-if ($identityRegistry.schemaVersion -ne 1) { throw "Unsupported Bridge identity registry schema." }
+if ($identityRegistry.schemaVersion -ne 2) { throw "Unsupported Bridge identity registry schema." }
 if ([string]::IsNullOrWhiteSpace($profileName) -or $null -eq $profileProperty) { throw "Release manifest must select an existing Bridge identity profile." }
 $storeIdentity = $profileProperty.Value
 $storeId = [string]$storeIdentity.extensionId
