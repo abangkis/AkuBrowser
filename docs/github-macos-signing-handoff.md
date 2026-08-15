@@ -101,12 +101,21 @@ the transport; the existing Windows-owned draft is the only staging location.
       ```
 - [ ] Run macOS clean-machine 3B on the finalized candidate and return its evidence
       to Windows.
+- [ ] After returning the finalizer and 3B evidence, stop. Do not remove assets,
+      edit release metadata, create or push tags, publish the draft, or promote
+      the release from macOS.
 
-### D. Pre-publication cleanup
+### D. Windows final publication handback
 
+- [ ] Resume only on the primary Windows release machine after receiving explicit
+      macOS 3B acceptance and its finalized release-kit evidence.
 - [ ] Windows verifies the complete cross-platform release allowlist.
 - [ ] Remove the signing-request ZIP and every unsigned manifest from the draft.
 - [ ] Confirm no staging asset or private material remains before publication.
+- [ ] Update the Windows-authored release notes so both platform acceptance states
+      are accurate, then create and push the immutable stable tags.
+- [ ] Windows alone publishes the draft and performs the public digest/Latest
+      verification. The Mac operator has no final-publisher responsibility.
 
 ## Current tooling boundary
 
@@ -115,4 +124,6 @@ public key and emit unsigned canonical manifests; Windows is the only place
 that invokes `installer/windows/cmd/sign-update-manifest` with the private key;
 Mac verifies the returned receipt and signatures before finalization. The Mac
 builder rejects `--update-signing-private-key`, so the DPAPI seed and any
-plaintext derivative must remain on Windows.
+plaintext derivative must remain on Windows. Publication authority follows the
+same boundary: Mac returns verification evidence, while Windows performs final
+cleanup, tagging, release-note updates, publication, and Latest promotion.
