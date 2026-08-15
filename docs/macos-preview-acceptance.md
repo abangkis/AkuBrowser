@@ -46,16 +46,16 @@ automated 3A acceptance, and this gate does not claim production Store identity.
 1. start from a macOS user account with no AkuBrowser installation or database;
 2. install Codex App/App Server or a compatible Codex CLI and sign in locally;
 3. confirm Chrome is signed in to each source that will be enabled;
-4. use the frozen package from `scripts/build-prestore-bridge-package.ps1`,
-   extract it anywhere, load it through **Load unpacked**, and verify its
-   manifest-key-pinned `development` identity from
-   `config/bridge-identities.json`;
-5. install the matching development-identity staging `.pkg`, then check the
-   runtime and Codex prerequisites;
+4. generate the separate kit with `scripts/build-macos-3b-acceptance-kit.sh`,
+   load its generated unpacked Bridge folder, and verify its manifest-key-pinned
+   `development` identity from `config/bridge-identities.json`;
+5. install the matching versioned `*-unsigned-local.pkg` from the same
+   `acceptance/` lane, then check the runtime and Codex prerequisites;
 6. grant only the intended source permissions and complete one full AkuBrowser
    update; and
 7. complete the companion lifecycle checks below without a portable ZIP,
-   terminal launcher, AkuSupervisor, or development workspace.
+   terminal launcher, AkuSupervisor, or development workspace. Follow the
+   canonical [macOS clean-machine Step 3B](macos-clean-machine-3b.md) runbook.
 
 Unsigned preview binaries may trigger Gatekeeper. Do not disable Gatekeeper
 globally. Use the macOS security prompt, or remove quarantine only after the

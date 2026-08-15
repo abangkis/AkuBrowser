@@ -7,7 +7,7 @@ publication; it does not validate the production Chrome Web Store package.
 
 ## Inputs
 
-- the complete `acceptance/` lane from one unified Windows release kit;
+- the complete, separate `acceptance/` lane from one unified Windows release kit;
 - the root `release-kit.json` from that same kit;
 - a clean Windows x64 machine or account;
 - Chrome, Codex App signed in locally, and signed-in source accounts.
@@ -15,12 +15,17 @@ publication; it does not validate the production Chrome Web Store package.
 Never use files from `publish/`, a future GitHub URL, the portable bundle, or a
 terminal launcher as Step 3B evidence.
 
+The Windows stable gate is the only producer of this lane. Do not rebuild or
+copy individual files into it after the gate: the unpacked Bridge ZIP, receipt,
+local installer, checksums, and README must remain together and must match the
+root `release-kit.json`. The entire lane is non-publishable.
+
 ## Manual checklist
 
 - [ ] Confirm no AkuBrowser runtime/database from an earlier test remains and no
       old AkuSidecar process is running.
-- [ ] Copy the complete `acceptance/` lane. Verify every file's byte count and
-      SHA-256 against `release-kit.json`.
+- [ ] Copy the complete `acceptance/` lane plus the root `release-kit.json`.
+      Verify every file's byte count and SHA-256 against `acceptanceAssets`.
 - [ ] Extract `AkuBridge-<version>-prestore-unpacked.zip`, use Chrome **Load
       unpacked**, and verify the development extension ID printed in the lane's
       README and `release-kit.json`.

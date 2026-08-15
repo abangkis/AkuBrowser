@@ -39,11 +39,13 @@ try {
 const exactToolingFiles = new Set([
   ".github/workflows/windows-runtime-installer.yml",
   "scripts/build-macos-preview.sh",
+  "scripts/build-macos-3b-acceptance-kit.sh",
   "scripts/build-macos-runtime-installer.sh",
   "scripts/finalize-macos-signing-request.ps1",
   "scripts/finalize-macos-signing.sh",
   "scripts/run-macos-signing-request.sh",
   "scripts/run-macos-stable-gate.sh",
+  "scripts/run-windows-stable-gate.ps1",
   "scripts/test-macos-preview.sh",
   "scripts/test-macos-runtime-installer.sh",
   "scripts/test-macos-signing-request.sh",

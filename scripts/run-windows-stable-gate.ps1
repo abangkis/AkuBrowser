@@ -192,6 +192,7 @@ if ($LASTEXITCODE -ne 0) { throw "Pre-Store development runtime installer build 
 $localInstaller = Join-Path $acceptanceRoot "AkuBrowserRuntimeSetup-$SidecarVersion-unsigned-local.exe"
 $localSignature = Get-AuthenticodeSignature -LiteralPath $localInstaller
 Assert-True ($localSignature.Status -eq "NotSigned") "Local acceptance installer unexpectedly has signature state $($localSignature.Status)."
+Copy-Item -LiteralPath (Join-Path $browserRoot "docs\windows-clean-machine-3b.md") -Destination (Join-Path $acceptanceRoot "STEP-3B-CHECKLIST.md")
 
 Copy-Item -LiteralPath $releaseManifestPath -Destination (Join-Path $publishRoot "release-manifest.json")
 
@@ -224,7 +225,8 @@ $acceptanceNames = @(
     "AkuBridge-$($release.components.akuBridge.version)-prestore-unpacked.zip.sha256",
     "AkuBridge-$($release.components.akuBridge.version)-prestore-unpacked.receipt.json",
     "AkuBrowserRuntimeSetup-$SidecarVersion-unsigned-local.exe",
-    "AkuBrowserRuntimeSetup-$SidecarVersion-unsigned-local.exe.sha256"
+    "AkuBrowserRuntimeSetup-$SidecarVersion-unsigned-local.exe.sha256",
+    "STEP-3B-CHECKLIST.md"
 )
 foreach ($name in @($publishNames)) {
     Assert-True (Test-Path -LiteralPath (Join-Path $publishRoot $name) -PathType Leaf) "Publish asset is missing: $name"
@@ -244,7 +246,9 @@ This folder is local test evidence only. Never upload any file from this folder 
 4. Open Setup. It must offer the local installer and must not open a future GitHub release URL.
 5. Run ``AkuBrowserRuntimeSetup-$SidecarVersion-unsigned-local.exe`` from this folder.
 6. Return to Setup, select Check runtime, check Codex, grant intended sources, and complete one Update now.
-7. Complete restart, repair, uninstall, reinstall, and data-preservation checks from ``docs/windows-preview-acceptance.md``.
+7. Complete every item in ``STEP-3B-CHECKLIST.md`` from this folder.
+
+Keep this complete ``acceptance/`` lane together with the root ``release-kit.json`` and verify every entry under ``acceptanceAssets`` before testing.
 
 The publishable production identity is ``$($productionIdentity.extensionId)``; it is intentionally not used by this pre-Store kit.
 "@
