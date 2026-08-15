@@ -20,8 +20,9 @@ The installer owns:
 - the HKCU Windows uninstall registration.
 
 Product data remains under `%LOCALAPPDATA%\AkuBrowser\data`. Install, repair,
-upgrade, and uninstall never place that directory under the replaceable program
-root.
+and upgrade never place that directory under the replaceable program root. A
+normal uninstall preserves it; the graphical uninstaller also offers an
+explicit **Full reset** that permanently removes data and downgrade archives.
 
 ## Trust boundary
 
@@ -131,5 +132,16 @@ asset is the target linked by the Store extension.
   the normal place to check, update, run, and stop the runtime.
 
 Uninstall removes the Chrome Native Messaging and Installed Apps registrations
-first. Locked executable files are scheduled for deletion at reboot. User data
-is preserved.
+first. Locked executable files are scheduled for deletion at reboot. The
+default **Preserve data** choice keeps user data for reinstall; **Full reset**
+removes the database, downgrade archives, and receipt.
+
+Every successful install records the writing runtime in
+`%LOCALAPPDATA%\AkuBrowser\data\.runtime-version`. If Setup finds a newer writer
+version than the installer, it must not open that database with the older
+runtime. Interactive Setup asks whether to archive the newer data and create a
+fresh database; declining aborts without changing data. Acceptance moves the
+directory under `data-backups\pre-downgrade-*` and records
+`downgrade-receipt.txt`. Silent downgrade defaults to abort. If installation is
+bypassed, the Native Messaging Host reports a typed `data_version_incompatible`
+error so Setup shows **Newer data detected** rather than retrying indefinitely.

@@ -228,6 +228,8 @@ NODE
 
 cp "$installer_source/Uninstall-AkuBrowserRuntime.command" "$install_root/Uninstall-AkuBrowserRuntime.command"
 chmod 755 "$install_root/Uninstall-AkuBrowserRuntime.command"
+sed -e "s/@VERSION@/$sidecar_version/g" "$installer_source/scripts/preinstall" > "$scripts_root/preinstall"
+chmod 755 "$scripts_root/preinstall"
 sed -e "s/@VERSION@/$sidecar_version/g" -e "s/@EXTENSION_ID@/$extension_id/g" "$installer_source/scripts/postinstall" > "$scripts_root/postinstall"
 chmod 755 "$scripts_root/postinstall"
 cp "$installer_source/resources/"*.html "$resources_root/"

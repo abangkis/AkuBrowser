@@ -1,8 +1,11 @@
 Unicode true
 
 !include "MUI2.nsh"
+!include "FileFunc.nsh"
 !include "LogicLib.nsh"
 !include "StrFunc.nsh"
+!include "TextFunc.nsh"
+!include "WordFunc.nsh"
 
 ${StrStr}
 
@@ -34,6 +37,10 @@ ${StrStr}
 Var SetupMutexHandle
 Var InstallAttemptStarted
 Var InstallAttemptCompleted
+Var DowngradeDetected
+Var DowngradeVersion
+Var DowngradeBackup
+Var UninstallFullReset
 
 Name "${PRODUCT_NAME} ${APP_VERSION}"
 Caption "${PRODUCT_NAME} Setup"
@@ -91,6 +98,8 @@ Function .onInit
   SetShellVarContext current
   StrCpy $InstallAttemptStarted 0
   StrCpy $InstallAttemptCompleted 0
+  StrCpy $DowngradeDetected 0
+  StrCpy $DowngradeVersion ""
   System::Call 'kernel32::CreateMutexW(p0, i0, w "${SETUP_MUTEX_NAME}") p.r0'
   System::Call 'kernel32::GetLastError() i.r1'
   StrCpy $SetupMutexHandle $0
@@ -108,6 +117,58 @@ Function .onInit
     Abort
     continue_same_version:
   ${EndIf}
+  Call DetectDowngrade
+FunctionEnd
+
+Function DetectDowngrade
+  IfFileExists "$LOCALAPPDATA\AkuBrowser\data\.runtime-version" read_data_marker read_installed_version
+
+  read_data_marker:
+  FileOpen $0 "$LOCALAPPDATA\AkuBrowser\data\.runtime-version" r
+  FileRead $0 $DowngradeVersion
+  FileClose $0
+  ${TrimNewLines} $DowngradeVersion $DowngradeVersion
+  Goto compare_downgrade
+
+  read_installed_version:
+  ReadRegStr $DowngradeVersion HKCU "${PRODUCT_REGISTRY_KEY}" "Version"
+
+  compare_downgrade:
+  ${If} $DowngradeVersion == ""
+    Return
+  ${EndIf}
+  ${VersionCompare} $DowngradeVersion "${APP_VERSION}" $0
+  ${If} $0 != 1
+    Return
+  ${EndIf}
+  MessageBox MB_YESNO|MB_ICONEXCLAMATION|MB_DEFBUTTON2 "AkuBrowser data was written by newer Runtime $DowngradeVersion. This installer contains older Runtime ${APP_VERSION}.$\r$\n$\r$\nSelect Yes to archive the newer data and create a fresh database. Select No to close Setup without changing the data." /SD IDNO IDYES accept_downgrade_reset
+  Abort
+
+  accept_downgrade_reset:
+  StrCpy $DowngradeDetected 1
+FunctionEnd
+
+Function PrepareDowngradeData
+  ${If} $DowngradeDetected != 1
+    Return
+  ${EndIf}
+  IfFileExists "$LOCALAPPDATA\AkuBrowser\data" 0 write_downgrade_marker
+  ${GetTime} "" "L" $0 $1 $2 $3 $4 $5 $6
+  CreateDirectory "$LOCALAPPDATA\AkuBrowser\data-backups"
+  StrCpy $DowngradeBackup "$LOCALAPPDATA\AkuBrowser\data-backups\pre-downgrade-$DowngradeVersion-to-${APP_VERSION}-$2$1$0T$4$5$6"
+  ClearErrors
+  Rename "$LOCALAPPDATA\AkuBrowser\data" "$DowngradeBackup"
+  ${If} ${Errors}
+    MessageBox MB_OK|MB_ICONSTOP "Setup could not archive the newer AkuBrowser data. Close programs using the database and run Setup again."
+    Abort
+  ${EndIf}
+  CreateDirectory "$LOCALAPPDATA\AkuBrowser"
+  FileOpen $0 "$LOCALAPPDATA\AkuBrowser\downgrade-receipt.txt" w
+  FileWrite $0 "from=$DowngradeVersion$\r$\nto=${APP_VERSION}$\r$\nbackup=$DowngradeBackup$\r$\n"
+  FileClose $0
+
+  write_downgrade_marker:
+  CreateDirectory "$LOCALAPPDATA\AkuBrowser\data"
 FunctionEnd
 
 Function .onGUIEnd
@@ -205,6 +266,15 @@ FunctionEnd
 
 Function un.onInit
   SetShellVarContext current
+  StrCpy $UninstallFullReset 0
+  IfSilent uninstall_choice_done
+  MessageBox MB_YESNOCANCEL|MB_ICONQUESTION|MB_DEFBUTTON1 "Choose how AkuBrowser user data should be handled.$\r$\n$\r$\nYes: Preserve data for an ordinary uninstall or reinstall.$\r$\nNo: Full reset and permanently remove data plus downgrade archives.$\r$\nCancel: Close the uninstaller." /SD IDYES IDYES uninstall_choice_done IDNO uninstall_full_reset
+  Abort
+
+  uninstall_full_reset:
+  StrCpy $UninstallFullReset 1
+
+  uninstall_choice_done:
 FunctionEnd
 
 Section "AkuBrowser Runtime" InstallSection
@@ -227,9 +297,15 @@ Section "AkuBrowser Runtime" InstallSection
   ; Activate the new runtime only after every executable and support file was
   ; extracted successfully. An interrupted install therefore leaves the prior
   ; current.json authoritative.
+  Call PrepareDowngradeData
   CreateDirectory "$INSTDIR\runtime"
   SetOutPath "$INSTDIR\runtime"
   File /oname=current.json "${PAYLOAD_ROOT}\runtime\current.json"
+
+  CreateDirectory "$LOCALAPPDATA\AkuBrowser\data"
+  FileOpen $0 "$LOCALAPPDATA\AkuBrowser\data\.runtime-version" w
+  FileWrite $0 "${APP_VERSION}$\r$\n"
+  FileClose $0
 
   ; Remove bootstrap executables left by the earlier nested-engine installer.
   Delete /REBOOTOK "$INSTDIR\host\AkuBrowserRuntimeMaintenance.exe"
@@ -263,4 +339,9 @@ Section "Uninstall"
   Delete /REBOOTOK "$INSTDIR\install.log"
   Delete "$INSTDIR\Uninstall.exe"
   RMDir "$INSTDIR"
+  ${If} $UninstallFullReset = 1
+    RMDir /r /REBOOTOK "$LOCALAPPDATA\AkuBrowser\data"
+    RMDir /r /REBOOTOK "$LOCALAPPDATA\AkuBrowser\data-backups"
+    Delete /REBOOTOK "$LOCALAPPDATA\AkuBrowser\downgrade-receipt.txt"
+  ${EndIf}
 SectionEnd

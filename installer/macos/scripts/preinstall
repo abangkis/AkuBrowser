@@ -1,0 +1,76 @@
+#!/bin/sh
+set -eu
+
+target_home="$3"
+if [ -z "$target_home" ] || [ "$target_home" = "/" ]; then
+  console_user="$(/usr/bin/stat -f '%Su' /dev/console)"
+  if [ -z "$console_user" ] || [ "$console_user" = "root" ] || [ "$console_user" = "loginwindow" ]; then
+    echo "AkuBrowser Runtime requires an interactive macOS user" >&2
+    exit 1
+  fi
+  target_home="$(/usr/bin/dscl . -read "/Users/$console_user" NFSHomeDirectory | /usr/bin/awk '{print $2}')"
+fi
+
+case "$target_home" in
+  /Users/*) ;;
+  *)
+    echo "AkuBrowser Runtime refused an unexpected home target" >&2
+    exit 1
+    ;;
+esac
+
+runtime_root="$target_home/Library/Application Support/AkuBrowser"
+data_root="$runtime_root/data"
+data_marker="$data_root/.runtime-version"
+current_metadata="$runtime_root/runtime/current.json"
+installed_version=""
+
+if [ -f "$data_marker" ]; then
+  installed_version="$(/usr/bin/head -n 1 "$data_marker" | /usr/bin/tr -d '[:space:]')"
+  if ! /usr/bin/printf '%s\n' "$installed_version" | /usr/bin/grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+    echo "AkuBrowser data runtime marker is invalid; use Full reset before reinstalling" >&2
+    exit 1
+  fi
+elif [ -f "$current_metadata" ]; then
+  installed_version="$(/usr/bin/plutil -extract version raw -o - "$current_metadata" 2>/dev/null || true)"
+fi
+
+is_newer_version() {
+  /usr/bin/awk -v left="$1" -v right="$2" 'BEGIN {
+    leftRaw = left; rightRaw = right;
+    sub(/-.*/, "", left); sub(/-.*/, "", right);
+    split(left, l, "."); split(right, r, ".");
+    for (i = 1; i <= 3; i++) {
+      if ((l[i] + 0) > (r[i] + 0)) exit 0;
+      if ((l[i] + 0) < (r[i] + 0)) exit 1;
+    }
+    leftPre = index(leftRaw, "-"); rightPre = index(rightRaw, "-");
+    if (leftPre == 0 && rightPre > 0) exit 0;
+    if (leftPre > 0 && rightPre == 0) exit 1;
+    if (leftPre > 0 && rightPre > 0 && substr(leftRaw, leftPre + 1) > substr(rightRaw, rightPre + 1)) exit 0;
+    exit 1;
+  }'
+}
+
+if [ -n "$installed_version" ] && ! /usr/bin/printf '%s\n' "$installed_version" | /usr/bin/grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+  installed_version=""
+fi
+
+if [ -n "$installed_version" ] && is_newer_version "$installed_version" "@VERSION@" && [ -d "$data_root" ]; then
+  timestamp="$(/bin/date -u '+%Y%m%dT%H%M%SZ')"
+  backup_root="$runtime_root/data-backups"
+  backup_path="$backup_root/pre-downgrade-${installed_version}-to-@VERSION@-${timestamp}-$$"
+  /bin/mkdir -p "$backup_root"
+  /bin/mv "$data_root" "$backup_path"
+  /bin/mkdir -p "$data_root"
+  /usr/bin/printf '%s\n' \
+    '{' \
+    '  "schemaVersion": 1,' \
+    "  \"fromVersion\": \"$installed_version\"," \
+    '  "toVersion": "@VERSION@",' \
+    "  \"backupPath\": \"$backup_path\"," \
+    "  \"createdAt\": \"$timestamp\"" \
+    '}' > "$runtime_root/downgrade-receipt.json"
+fi
+
+exit 0

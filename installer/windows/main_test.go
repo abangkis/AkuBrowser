@@ -21,6 +21,9 @@ func TestCompletionMessageExplainsPortableRuntimeHandoff(t *testing.T) {
 	if strings.Contains(completionMessage("uninstalled"), "select Check runtime") {
 		t.Fatal("uninstall completion message must not ask the user to check the runtime")
 	}
+	if strings.Contains(completionMessage("fully reset"), "select Check runtime") {
+		t.Fatal("full reset completion message must not ask the user to check the runtime")
+	}
 }
 
 func TestSetupDoesNotLaunchNestedUnsignedExecutables(t *testing.T) {
@@ -94,6 +97,32 @@ func TestSetupStopsRunningSidecarOnlyAfterConfirmation(t *testing.T) {
 	}
 	if strings.Index(script, "want Setup to stop AkuBrowser Runtime now") > strings.Index(script, "taskkill.exe") {
 		t.Fatal("setup attempts to stop AkuSidecar before asking the user")
+	}
+}
+
+func TestSetupHandlesDowngradesAndOffersFullReset(t *testing.T) {
+	data, err := os.ReadFile("setup.nsi")
+	if err != nil {
+		t.Fatal(err)
+	}
+	script := string(data)
+	for _, required := range []string{
+		`.runtime-version`,
+		`!include "TextFunc.nsh"`,
+		"VersionCompare",
+		"AkuBrowser data was written by newer Runtime",
+		"archive the newer data and create a fresh database",
+		"pre-downgrade-",
+		"Preserve data for an ordinary uninstall or reinstall",
+		"Full reset and permanently remove data plus downgrade archives",
+		`RMDir /r /REBOOTOK "$LOCALAPPDATA\AkuBrowser\data"`,
+	} {
+		if !strings.Contains(script, required) {
+			t.Fatalf("setup is missing downgrade/reset contract %q", required)
+		}
+	}
+	if strings.Index(script, "Call PrepareDowngradeData") > strings.Index(script, `File /oname=current.json`) {
+		t.Fatal("downgrade data is not archived before the older runtime is activated")
 	}
 }
 

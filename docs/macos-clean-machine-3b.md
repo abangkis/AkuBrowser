@@ -44,8 +44,26 @@ terminal launcher as Step 3B evidence.
       signed in and ready.
 - [ ] Grant only intended sources, confirm those Chrome sessions are signed in,
       complete onboarding/calibration, and run one full **Update now**.
+- [ ] After installation, Setup must show **Check runtime**, not **Show local
+      installer**. Selecting it must re-check and start the compatible runtime;
+      it must not incorrectly retain **Repair required**.
+- [ ] Run the uninstaller with **Preserve data**, reinstall, and confirm the
+      existing database remains usable.
+- [ ] Simulate a downgrade by placing a valid newer version in
+      `data/.runtime-version`, then run the older candidate package. The macOS
+      package must automatically archive the newer `data/` directory under
+      `data-backups/pre-downgrade-*`, create `downgrade-receipt.json`, and start
+      with a fresh database. macOS Installer scripts cannot present a reliable
+      interactive choice, so this archive-first reset is automatic and disclosed
+      in the installer UI.
+- [ ] If the package downgrade step is bypassed, Setup must report **Newer data
+      detected** with **Reset with installer**. A generic **Try again** loop is a
+      failure.
+- [ ] Run the uninstaller again with **Full reset** and confirm `data/`,
+      `data-backups/`, and `downgrade-receipt.json` are removed. Reinstall and
+      confirm onboarding starts from a fresh database.
 - [ ] Pass Chrome restart, macOS restart, Sidecar stop/recovery, installer repair,
-      uninstall, reinstall, and required data-preservation checks.
+      uninstall/reinstall, preserve-data, downgrade, and full-reset checks.
 - [ ] Repeat the complete run on Intel and Apple silicon. Record architecture,
       extension ID, installer/runtime version, hashes, Gatekeeper behavior,
       screenshots/logs, non-blockers, and the final pass/fail decision.

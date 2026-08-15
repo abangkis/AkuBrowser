@@ -52,7 +52,7 @@ func TestInstallRepairAndUninstallPreserveUserData(t *testing.T) {
 	}
 	assertFileContent(t, filepath.Join(installRoot, "host", "AkuBrowserRuntimeHost.exe"), "native-host")
 
-	if err := installer.Uninstall(); err != nil {
+	if err := installer.Uninstall(false); err != nil {
 		t.Fatalf("uninstall: %v", err)
 	}
 	if !registry.nativeRemoved || !registry.uninstallerRemoved {
@@ -91,7 +91,7 @@ func TestExternalSetupOwnsUninstallerRegistration(t *testing.T) {
 	if registry.registration.DisplayName != "" {
 		t.Fatalf("engine replaced outer setup registration: %#v", registry.registration)
 	}
-	if err := installer.Uninstall(); err != nil {
+	if err := installer.Uninstall(false); err != nil {
 		t.Fatalf("uninstall: %v", err)
 	}
 	if registry.uninstallerRemoved {
@@ -120,13 +120,48 @@ func TestUninstallRemovesUpdatedRuntimeVersionsButPreservesUnownedFiles(t *testi
 	writeTestFile(t, futureRuntime, []byte("future-runtime"))
 	writeTestFile(t, unowned, []byte("do-not-remove"))
 
-	if err := installer.Uninstall(); err != nil {
+	if err := installer.Uninstall(false); err != nil {
 		t.Fatalf("uninstall: %v", err)
 	}
 	if _, err := os.Stat(futureRuntime); !os.IsNotExist(err) {
 		t.Fatalf("future runtime survived uninstall: %v", err)
 	}
 	assertFileContent(t, unowned, "do-not-remove")
+}
+
+func TestFullResetUninstallRemovesUserData(t *testing.T) {
+	payload, manifest := installerFixture(t)
+	base := t.TempDir()
+	installer := Installer{
+		Payload:          payload,
+		Manifest:         manifest,
+		InstallRoot:      filepath.Join(base, "Programs", "AkuBrowser"),
+		DataRoot:         filepath.Join(base, "AkuBrowser", "data"),
+		SourceExecutable: filepath.Join(base, "download", "AkuBrowserRuntimeMaintenance.exe"),
+		Registry:         &memoryRegistry{},
+	}
+	writeTestFile(t, installer.SourceExecutable, []byte("maintenance-engine"))
+	writeTestFile(t, filepath.Join(installer.DataRoot, "aku-browser.db"), []byte("testing-data"))
+	dataContainer := filepath.Dir(installer.DataRoot)
+	writeTestFile(t, filepath.Join(dataContainer, "data-backups", "pre-downgrade-test", "aku-browser.db"), []byte("archived-data"))
+	writeTestFile(t, filepath.Join(dataContainer, "downgrade-receipt.txt"), []byte("backup=pre-downgrade-test"))
+	if err := installer.Install(); err != nil {
+		t.Fatal(err)
+	}
+	if err := installer.Uninstall(true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := os.Stat(installer.DataRoot); !os.IsNotExist(err) {
+		t.Fatalf("full reset preserved user data: %v", err)
+	}
+	for _, target := range []string{
+		filepath.Join(dataContainer, "data-backups"),
+		filepath.Join(dataContainer, "downgrade-receipt.txt"),
+	} {
+		if _, err := os.Stat(target); !os.IsNotExist(err) {
+			t.Fatalf("full reset preserved %s: %v", target, err)
+		}
+	}
 }
 
 func TestInstallerRejectsPayloadTraversalAndChecksumMismatch(t *testing.T) {
@@ -158,6 +193,29 @@ func TestInstallerRequiresDataOutsideProgramRoot(t *testing.T) {
 	}
 	if err := installer.Install(); err == nil {
 		t.Fatal("installer accepted user data inside the replaceable program root")
+	}
+}
+
+func TestInstallerRejectsBroadOrUnexpectedDataRoot(t *testing.T) {
+	payload, manifest := installerFixture(t)
+	root := t.TempDir()
+	sourceSetup := filepath.Join(root, "setup.exe")
+	writeTestFile(t, sourceSetup, []byte("setup"))
+	for _, dataRoot := range []string{
+		filepath.VolumeName(root) + string(filepath.Separator),
+		filepath.Join(root, "AkuBrowser"),
+	} {
+		installer := Installer{
+			Payload:          payload,
+			Manifest:         manifest,
+			InstallRoot:      filepath.Join(root, "program"),
+			DataRoot:         dataRoot,
+			SourceExecutable: sourceSetup,
+			Registry:         &memoryRegistry{},
+		}
+		if err := installer.Uninstall(true); err == nil {
+			t.Fatalf("full reset accepted unsafe data root %q", dataRoot)
+		}
 	}
 }
 

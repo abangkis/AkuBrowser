@@ -227,6 +227,16 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
       `acceptance/` lane; never relabel or publish it as the production installer.
 - [ ] Complete runtime installation, Codex detection and sign-in confirmation,
       source consent, and one full AkuBrowser update.
+- [ ] After installation, confirm Setup offers **Check runtime** and transitions
+      to Running without a stale **Repair required** / **Show local installer**
+      state.
+- [ ] On both platforms, verify ordinary uninstall preserves user data and the
+      explicit **Full reset** path removes data plus downgrade archives.
+- [ ] On both platforms, simulate newer data with `data/.runtime-version` and
+      verify downgrade protection: Windows asks before archive-and-reset; macOS
+      discloses and automatically performs archive-and-reset. If the installer
+      is bypassed, Setup must show **Newer data detected**, never an untyped
+      **Try again** loop.
 - [ ] Pass Windows update/repair, Chrome restart, PC restart, stop/start,
       uninstall, and reinstall tests.
 - [ ] Pass the equivalent pre-Store macOS flow on the supported Intel and

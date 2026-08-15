@@ -46,8 +46,25 @@ root `release-kit.json`. The entire lane is non-publishable.
 - [ ] Grant only intended sources, complete onboarding/calibration, and run one
       full **Update now**. Inspect captured, evaluated, selected, and retained
       results for errors.
+- [ ] After installation, Setup must show **Check runtime**, not **Show local
+      installer**. Selecting it must re-check and start the compatible runtime;
+      it must not incorrectly retain **Repair required**.
+- [ ] Uninstall and choose **Preserve data**, reinstall, and confirm the existing
+      database remains usable.
+- [ ] Simulate a downgrade by placing a valid newer version in
+      `%LOCALAPPDATA%\AkuBrowser\data\.runtime-version`, then run the older
+      candidate installer. Confirm its archive-and-reset prompt. Choosing No must
+      abort without changing data; choosing Yes must move the newer data under
+      `data-backups\pre-downgrade-*`, write `downgrade-receipt.txt`, and create a
+      fresh database.
+- [ ] If the installer downgrade step is bypassed, Setup must report **Newer data
+      detected** with **Reset with installer**. A generic **Try again** loop is a
+      failure.
+- [ ] Uninstall again and choose **Full reset**. Confirm `data`, `data-backups`,
+      and `downgrade-receipt.txt` are removed; reinstall and confirm onboarding
+      starts from a fresh database.
 - [ ] Pass Chrome restart, Windows restart, runtime stop/start, installer repair,
-      uninstall, reinstall, required data preservation, and full-reset checks.
+      uninstall/reinstall, preserve-data, downgrade, and full-reset checks.
 - [ ] Record extension ID, installer/runtime version, hashes, Installed apps
       evidence, antivirus behavior, screenshots/logs, non-blockers, and the final
       pass/fail decision.
@@ -61,10 +78,6 @@ not silently change the frozen candidate.
 
 ## Current known non-blockers
 
-- Setup may alternate between **Check runtime** and **Show local installer**
-  during installation. After installation, it may still show **Check runtime**
-  instead of **Start runtime**; selecting it starts the runtime successfully.
-  Improve this state transition in a later release.
 - Antivirus inspection can make installation appear to execute twice or
   sequentially. Use the verified installer result plus **AkuBrowser Runtime** in
   Installed apps as the successful-install evidence, rather than the number of
@@ -74,7 +87,7 @@ not silently change the frozen candidate.
 
 | Release | Date | Environment | Result | Evidence and observations |
 | --- | --- | --- | --- | --- |
-| 0.8.0 | 2026-08-14 | Windows clean-machine flow | Passed | Development Bridge and local unsigned runtime completed the flow; AkuBrowser Runtime 0.8.0 appeared in Installed apps. The two UX observations above were non-blocking. |
+| 0.8.0 | 2026-08-14 | Windows clean-machine flow | Passed before lifecycle UX fix | Development Bridge and local unsigned runtime completed the flow; AkuBrowser Runtime 0.8.0 appeared in Installed apps. The stale repair label was fixed afterward and requires Windows re-verification. |
 
 Keep release-specific screenshots and logs with the release evidence. Refine
 this runbook when a repeated observation becomes a required check or a fixed

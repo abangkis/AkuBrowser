@@ -88,9 +88,12 @@ the 0.7.9 macOS Store path requires clean Intel and Apple-silicon evidence for:
 9. versioned installer repair/update, idle handoff, activation, rollback, and
    checksum rejection; signed automatic runtime updates remain future
    hardening work;
-10. repair and uninstall preserving `~/Library/Application Support/AkuBrowser/data`;
-11. portable-runtime conflict guidance; and
-12. Linux showing an unavailable installer state rather than a broken link.
+10. repair and ordinary uninstall preserving
+    `~/Library/Application Support/AkuBrowser/data`, plus explicit Full reset;
+11. archive-first downgrade handling using `data/.runtime-version`, with a
+    fresh database and typed **Newer data detected** fallback when bypassed;
+12. portable-runtime conflict guidance; and
+13. Linux showing an unavailable installer state rather than a broken link.
 
 `scripts/test-macos-runtime-installer.sh` validates package structure and
 architecture locally. It does not replace the two clean-machine install runs.

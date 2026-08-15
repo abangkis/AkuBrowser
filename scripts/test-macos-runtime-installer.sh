@@ -57,23 +57,29 @@ distribution="$inspect_root/expanded/Distribution"
 component="$inspect_root/expanded/AkuBrowserRuntime.pkg"
 payload="$component/Payload/Library/Application Support/AkuBrowser"
 postinstall="$component/Scripts/postinstall"
+preinstall="$component/Scripts/preinstall"
 host="$payload/host/AkuBrowserRuntimeHost"
 sidecar="$payload/runtime/versions/$sidecar_version/AkuSidecar"
 c2pa_tool="$payload/runtime/versions/$sidecar_version/c2patool"
 current="$payload/runtime/current.json"
 
-for required in "$distribution" "$postinstall" "$host" "$sidecar" "$current" "$payload/Uninstall-AkuBrowserRuntime.command"; do
+for required in "$distribution" "$preinstall" "$postinstall" "$host" "$sidecar" "$current" "$payload/Uninstall-AkuBrowserRuntime.command"; do
   [[ -f "$required" ]] || die "package payload is missing: $required"
 done
 grep -q 'enable_currentUserHome="true"' "$distribution" || die "package is not current-user scoped"
 grep -q 'enable_localSystem="false"' "$distribution" || die "package unexpectedly permits system installation"
 grep -q "runtime/versions/$sidecar_version/AkuSidecar" "$postinstall" || die "postinstall version drifted"
+grep -Fq 'data/.runtime-version' "$postinstall" || die "postinstall does not record the runtime data writer version"
+grep -Fq 'pre-downgrade-' "$preinstall" || die "preinstall does not archive newer downgrade data"
+grep -Fq "$sidecar_version" "$preinstall" || die "preinstall target version drifted"
 grep -Fq "chrome-extension://$extension_id/" "$postinstall" || die "expected $bridge_identity_profile extension origin is missing"
 if [[ "$bridge_identity_profile" = "development" ]]; then
   production_extension_id="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).profiles.production.extensionId)' "$bridge_identity_registry")"
   ! grep -Fq "chrome-extension://$production_extension_id/" "$postinstall" || die "development package also permits the production extension origin"
 fi
 grep -q 'Google/Chrome/NativeMessagingHosts' "$postinstall" || die "Chrome Native Messaging registration is missing"
+grep -Fq -- '--preserve-data' "$payload/Uninstall-AkuBrowserRuntime.command" || die "macOS uninstaller lacks preserve-data mode"
+grep -Fq -- '--full-reset' "$payload/Uninstall-AkuBrowserRuntime.command" || die "macOS uninstaller lacks full-reset mode"
 
 for executable in "$host" "$sidecar"; do
   architectures="$(lipo -archs "$executable")"

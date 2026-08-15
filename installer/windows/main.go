@@ -22,6 +22,7 @@ func runInstaller() int {
 	var (
 		repair              = flag.Bool("repair", false, "repair the current AkuBrowser Runtime installation")
 		uninstall           = flag.Bool("uninstall", false, "uninstall AkuBrowser Runtime while preserving user data")
+		fullReset           = flag.Bool("full-reset", false, "remove user data during uninstall")
 		quiet               = flag.Bool("quiet", false, "suppress completion UI")
 		installRoot         = flag.String("install-root", "", "absolute AkuBrowser Runtime installation directory")
 		externalUninstaller = flag.Bool("external-uninstaller", false, "let an outer setup wizard own Add or Remove Programs registration")
@@ -29,6 +30,10 @@ func runInstaller() int {
 	flag.Parse()
 	if *repair && *uninstall {
 		finish(*quiet, errors.New("repair and uninstall cannot be requested together"))
+		return 2
+	}
+	if *fullReset && !*uninstall {
+		finish(*quiet, errors.New("full reset requires uninstall"))
 		return 2
 	}
 	payload, err := fs.Sub(embeddedPayload, "payload")
@@ -68,7 +73,10 @@ func runInstaller() int {
 	action := "installed"
 	if *uninstall {
 		action = "uninstalled"
-		err = installer.Uninstall()
+		if *fullReset {
+			action = "fully reset"
+		}
+		err = installer.Uninstall(*fullReset)
 	} else {
 		if *repair {
 			action = "repaired"
@@ -95,7 +103,7 @@ func resolveInstallRoot(localAppData, requested string) (string, error) {
 
 func completionMessage(action string) string {
 	message := fmt.Sprintf("AkuBrowser Runtime %s successfully.", action)
-	if action == "uninstalled" {
+	if action == "uninstalled" || action == "fully reset" {
 		return message
 	}
 	return message + "\n\nReturn to Chrome and select Check runtime in AkuBrowser Setup. " +

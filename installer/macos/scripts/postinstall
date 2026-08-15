@@ -41,6 +41,8 @@ chrome_manifest="$chrome_manifest_dir/com.akubrowser.runtime.json"
   '}' > "$host_manifest"
 /bin/cp "$host_manifest" "$chrome_manifest"
 /bin/chmod 600 "$host_manifest" "$chrome_manifest"
+/usr/bin/printf '%s\n' '@VERSION@' > "$runtime_root/data/.runtime-version"
+/bin/chmod 600 "$runtime_root/data/.runtime-version"
 
 if [ -n "$console_user" ]; then
   /usr/sbin/chown -R "$console_user":staff "$runtime_root"

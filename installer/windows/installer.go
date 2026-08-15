@@ -114,7 +114,7 @@ func (installer Installer) Install() error {
 	return nil
 }
 
-func (installer Installer) Uninstall() error {
+func (installer Installer) Uninstall(fullReset bool) error {
 	if err := installer.validateRoots(); err != nil {
 		return err
 	}
@@ -151,6 +151,18 @@ func (installer Installer) Uninstall() error {
 		}
 	}
 	removeEmptyDirectories(installer.InstallRoot)
+	if fullReset {
+		dataContainer := filepath.Dir(installer.DataRoot)
+		for _, target := range []string{
+			installer.DataRoot,
+			filepath.Join(dataContainer, "data-backups"),
+			filepath.Join(dataContainer, "downgrade-receipt.txt"),
+		} {
+			if err := os.RemoveAll(target); err != nil {
+				failures = append(failures, fmt.Errorf("remove AkuBrowser reset target %q: %w", filepath.Base(target), err))
+			}
+		}
+	}
 	return errors.Join(failures...)
 }
 
@@ -241,7 +253,7 @@ func (installer Installer) validateRoots() error {
 		return errors.New("installer root is invalid")
 	}
 	dataRoot, err := filepath.Abs(installer.DataRoot)
-	if err != nil {
+	if err != nil || filepath.Base(dataRoot) != "data" || filepath.Dir(dataRoot) == filepath.VolumeName(dataRoot)+string(filepath.Separator) {
 		return errors.New("data root is invalid")
 	}
 	relative, err := filepath.Rel(installRoot, dataRoot)
