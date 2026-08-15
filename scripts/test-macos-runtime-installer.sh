@@ -3,25 +3,49 @@ set -euo pipefail
 
 die() { echo "error: $*" >&2; exit 1; }
 
+usage() {
+  cat <<'EOF'
+Usage: ./scripts/test-macos-runtime-installer.sh [options] [package]
+
+Options:
+  --bridge-identity-profile <name>  Expected identity profile (default: release profile)
+  -h, --help                        Show this help
+EOF
+}
+
 browser_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 release_manifest="$browser_root/release/release-manifest.json"
 bridge_identity_registry="$browser_root/config/bridge-identities.json"
 version="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1],"utf8")).version)' "$release_manifest")"
 sidecar_version="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1],"utf8")).components.akuSidecar.version)' "$release_manifest")"
 emit_legacy_v1="$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.version === r.components?.akuBridge?.version && r.version === r.components?.akuSidecar?.version && r.components?.akuBridge?.runtimeRevision === r.components?.akuSidecar?.runtimeRevision ? "1" : "0")' "$release_manifest")"
+bridge_identity_profile=""
+package_path=""
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --bridge-identity-profile) bridge_identity_profile="$2"; shift 2 ;;
+    -h|--help) usage; exit 0 ;;
+    -*) die "unknown argument: $1" ;;
+    *) [[ -z "$package_path" ]] || die "only one installer package may be supplied"; package_path="$1"; shift ;;
+  esac
+done
+
+release_bridge_identity_profile="$(node --input-type=module -e '
+  import fs from "node:fs";
+  console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).distribution?.chromeStore?.bridgeIdentityProfile ?? "");
+' "$release_manifest")"
+bridge_identity_profile="${bridge_identity_profile:-$release_bridge_identity_profile}"
 extension_id="$(node --input-type=module -e '
   import fs from "node:fs";
-  const [releasePath, registryPath] = process.argv.slice(1);
-  const release = JSON.parse(fs.readFileSync(releasePath, "utf8"));
+  const [registryPath, profile] = process.argv.slice(1);
   const registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
-  const profile = release.distribution?.chromeStore?.bridgeIdentityProfile;
   const identity = registry.profiles?.[profile];
-  if (registry.schemaVersion !== 1 || !profile || !identity || identity.distribution !== "chrome-web-store" || !/^[a-p]{32}$/.test(identity.extensionId ?? "")) {
-    throw new Error("release Bridge identity profile is invalid");
+  if (registry.schemaVersion !== 1 || !profile || !identity || !/^[a-p]{32}$/.test(identity.extensionId ?? "")) {
+    throw new Error("expected Bridge identity profile is invalid");
   }
   console.log(identity.extensionId);
-' "$release_manifest" "$bridge_identity_registry")"
-package_path="${1:-$browser_root/artifacts/AkuBrowserRuntimeSetup-${sidecar_version}-macos-universal-unsigned-local.pkg}"
+' "$bridge_identity_registry" "$bridge_identity_profile")"
+package_path="${package_path:-$browser_root/artifacts/AkuBrowserRuntimeSetup-${sidecar_version}-macos-universal-unsigned-local.pkg}"
 [[ -f "$package_path" ]] || die "installer package is missing: $package_path"
 package_directory="$(cd "$(dirname "$package_path")" && pwd)"
 
@@ -44,7 +68,11 @@ done
 grep -q 'enable_currentUserHome="true"' "$distribution" || die "package is not current-user scoped"
 grep -q 'enable_localSystem="false"' "$distribution" || die "package unexpectedly permits system installation"
 grep -q "runtime/versions/$sidecar_version/AkuSidecar" "$postinstall" || die "postinstall version drifted"
-grep -q "chrome-extension://$extension_id/" "$postinstall" || die "production extension origin is missing"
+grep -Fq "chrome-extension://$extension_id/" "$postinstall" || die "expected $bridge_identity_profile extension origin is missing"
+if [[ "$bridge_identity_profile" = "development" ]]; then
+  production_extension_id="$(node --input-type=module -e 'import fs from "node:fs"; console.log(JSON.parse(fs.readFileSync(process.argv[1], "utf8")).profiles.production.extensionId)' "$bridge_identity_registry")"
+  ! grep -Fq "chrome-extension://$production_extension_id/" "$postinstall" || die "development package also permits the production extension origin"
+fi
 grep -q 'Google/Chrome/NativeMessagingHosts' "$postinstall" || die "Chrome Native Messaging registration is missing"
 
 for executable in "$host" "$sidecar"; do
@@ -79,7 +107,7 @@ if ! pkgutil --check-signature "$package_path" >/dev/null; then
   [[ "$(node --input-type=module -e 'import fs from "node:fs"; const r=JSON.parse(fs.readFileSync(process.argv[1],"utf8")); console.log(r.distribution.chromeStore.nativeRuntimeInstallers["macos-universal"].trustState)' "$release_manifest")" = "unsigned" ]] || die "unsigned package is not declared by the release manifest"
 fi
 
-if [[ "$unsigned_package" -eq 1 ]]; then
+if [[ "$unsigned_package" -eq 1 && ( "$bridge_identity_profile" != "development" || "$(basename "$package_path")" != *-unsigned-local.pkg ) ]]; then
   unsigned_welcome="$inspect_root/expanded/Resources/welcome.html"
   [[ -f "$unsigned_welcome" ]] || die "unsigned package is missing its welcome disclosure"
   tr '\n' ' ' < "$unsigned_welcome" | tr -s '[:space:]' ' ' | grep -Eq 'not( |</strong>) .*signed|not Developer ID-signed or notarized' || die "unsigned package does not identify its trust state"

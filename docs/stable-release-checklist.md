@@ -3,8 +3,8 @@
 This is the source of truth for publishing every stable AkuBrowser release.
 Replace `<release-version>` and `<sidecar-version>` independently and record the
 exact source commits before starting. Platform-specific
-test detail remains in the [Windows](windows-preview-acceptance.md) and
-[macOS](macos-preview-acceptance.md) acceptance documents.
+test detail remains in the [Windows Step 3B](windows-clean-machine-3b.md) and
+[macOS Step 3B](macos-clean-machine-3b.md) acceptance runbooks.
 
 ## Execution order and machine handoff
 
@@ -159,21 +159,19 @@ decrypted key, then Mac runs `scripts/finalize-macos-signing.sh` to verify the
 receipt and produce the final kit. Stop before macOS 3B until this verification
 and finalization pass succeeds.
 
-For pre-Store 3B, keep development staging separate from publishable output:
+For pre-Store 3B, generate one separate, non-publishable Mac acceptance kit
+from the finalized Windows-signed Mac kit:
 
 ```sh
-node scripts/bridge-extension-identity.mjs \
-  config/bridge-identities.json ../AkuBridge/manifest.json development
-./scripts/build-macos-runtime-installer.sh \
-  --output-root "artifacts/development-<sidecar-version>-macos" \
-  --bridge-identity-profile development \
-  --c2pa-tool ../AkuSidecar/runtime/dev/macos-universal/c2patool \
-  --unsigned-local-candidate
+./scripts/build-macos-3b-acceptance-kit.sh \
+  --final-kit "artifacts/stable-<sidecar-version>-macos-final"
 ```
 
-Load `../AkuBridge`, install only the matching `*-unsigned-local.pkg`, then check
-runtime, Codex, source login, one full update, restart, repair, and data-preserving
-reinstall. Never upload the development output directory.
+The result is `artifacts/stable-<sidecar-version>-macos-3b/`, containing only an
+`acceptance/` lane and `acceptance-kit.json`. Load the generated unpacked Bridge
+folder, not the source checkout, and install only its matching versioned
+`*-unsigned-local.pkg`. Follow [macOS clean-machine Step 3B](macos-clean-machine-3b.md).
+Never copy production files into this lane or upload the Mac 3B directory.
 
 Upload only the Mac publishable binaries and the signing-request ZIP described
 by the handoff document. After Windows signing and Mac verification, the final
@@ -215,8 +213,11 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
 - [ ] On Windows, execute the complete
       [Windows clean-machine Step 3B](windows-clean-machine-3b.md) runbook and
       record its pass/fail decision and non-blocking observations.
-- [ ] Copy the complete `acceptance/` lane from the single Windows or macOS
-      release kit to the clean machine; do not fetch a not-yet-published GitHub URL.
+- [ ] On macOS, generate the separate kit from the finalized Windows-signed Mac
+      release kit, then execute the complete
+      [macOS clean-machine Step 3B](macos-clean-machine-3b.md) runbook.
+- [ ] Copy the complete platform `acceptance/` lane plus its root kit manifest
+      to the clean machine; do not fetch a not-yet-published GitHub URL.
 - [ ] Extract and Load unpacked the frozen pre-Store AkuBridge package; verify
       its manifest-key-pinned `development` identity from
       `config/bridge-identities.json` is unchanged across folders and machines.
@@ -236,8 +237,9 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
       clean-machine acceptance evidence.
 - [ ] Record that 3B validates clean-machine integration, not Chrome Web Store
       installation, production identity, or Store-managed updates.
-- [ ] Preserve `release-kit.json` and the completed 3B evidence; upload only the
-      files listed under its `publishAssets`, never `acceptanceAssets`.
+- [ ] Preserve the release-kit manifest, acceptance-kit manifest, and completed
+      3B evidence; upload only files listed under the release kit's
+      `publishAssets`, never any `acceptanceAssets` or Mac 3B file.
 - [ ] Obtain explicit Windows and macOS release acceptance.
 
 ## 3C. Create the Windows-owned draft
