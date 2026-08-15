@@ -116,6 +116,11 @@ before 3B. Follow the complete
 [GitHub macOS signing handoff](github-macos-signing-handoff.md).
 The Mac pass must not create another release or change the draft's tag, target,
 title, notes, prerelease flag, or publication state.
+After the Mac finalizer and clean-machine 3B pass, return the finalized release-kit
+and acceptance evidence to the primary Windows machine and stop. Windows is the
+sole final publisher: it reconciles the cross-platform allowlist, removes the
+signing request, updates final notes, creates and pushes stable tags, publishes
+the draft, and verifies Latest.
 
 `AKU_UPDATE_PUBLIC_KEY` is the Base64 Ed25519 public key copied from the Windows
 stable-key metadata property `publicKeyBase64`. It is safe to transfer to macOS.

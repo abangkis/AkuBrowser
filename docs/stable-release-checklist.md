@@ -24,10 +24,17 @@ pass must run serially on its target environment:
       Mac uploads a signing request to the existing draft, Windows signs it, and
       Mac verifies and finalizes the candidate. The private key stays on Windows.
 - [ ] Run and explicitly accept macOS Step 3B on Intel and Apple silicon.
-- [ ] Upload only the allowlisted macOS assets to the existing draft. Do not
-      create a second release or edit its tag, title, notes, or publication state.
-- [ ] Return all evidence to the primary Windows machine before continuing to
-      Steps 4 and 5.
+- [ ] Mac confirms the assets already staged by the handoff match its finalized
+      kit, returns its finalizer and 3B evidence to Windows, then stops. Mac does
+      not perform any post-3B GitHub mutation.
+- [ ] On the primary Windows machine, reconcile that evidence and perform all of
+      Steps 4 and 5 as the sole final publisher.
+
+**Final publisher invariant:** only the primary Windows machine may remove
+handoff assets, edit final release notes, create or push stable tags, publish the
+draft, or promote it to Latest. macOS may upload only its pre-signing allowlist
+and signing request during the handoff; successful macOS 3B is an evidence return,
+not publication authority.
 
 Do not advance a platform checkbox from another operating system. A syntax or
 configuration check performed on the wrong host is only a preflight check; it is
@@ -266,8 +273,10 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
 - [ ] Treat the Windows-authored title and notes as authoritative during the Mac
       pass. macOS may upload only its runner allowlist to this existing draft.
 
-## 4. Reconcile and stage the stable release
+## 4. Windows-only: reconcile and stage the stable release
 
+- [ ] Confirm this step is running from the primary Windows release checkout;
+      do not continue Step 4 from macOS.
 - [ ] Create the annotated `v<sidecar-version>` release tag at the frozen
       AkuBrowser authority and AkuSidecar commits. Tag AkuBridge only when the
       Store component itself advances; never relabel an unchanged Bridge version.
@@ -282,8 +291,10 @@ explicit Windows 3B acceptance. Apply the same stop between macOS 3A and macOS 3
 - [ ] Verify GitHub asset names, sizes, digests, source commits, release target,
       release notes, `draft=true`, and `prerelease=false`.
 
-## 5. Publish and verify
+## 5. Windows-only: publish and verify
 
+- [ ] Confirm the primary Windows machine still owns the authenticated publisher
+      session and that no Mac-side release mutation occurred after 3B.
 - [ ] Confirm the Windows and macOS stable installer aliases, Sidecar archives,
       and schema-v2 feeds are all attached to `v<sidecar-version>`.
 - [ ] Confirm both schema-v1 feed aliases are attached. For an independent
