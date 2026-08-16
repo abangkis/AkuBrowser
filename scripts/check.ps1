@@ -91,7 +91,7 @@ Assert-True ($sidecarConfig.reasoning.provider -eq "codex-app-server") "AkuSidec
 Assert-True ($sidecarConfig.preference.mode -eq "guarded_live") "High-authority guarded personalization must be the fresh default."
 Assert-True ($sidecarConfig.capture.profile -eq "standard") "Standard 1x must be the fresh bounded-load default."
 Assert-True ($sidecarConfig.reasoning.planning.effort -eq "high") "Acquisition planning must default to Luna High."
-Assert-True ($sidecarConfig.reasoning.evaluation.effort -eq "xhigh") "Candidate evaluation must default to Luna XHigh."
+Assert-True ($sidecarConfig.reasoning.evaluation.effort -eq "high") "Candidate evaluation must default to Luna High."
 Assert-True ($sidecarConfig.reasoning.semanticEvent.effort -eq "high") "Semantic resolution must default to Luna High."
 Assert-True ($sidecarConfig.reasoning.aiDetection.effort -eq "high") "AI Deep Detection must default to Luna High."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $sidecarRoot "package.json"))) "AkuSidecar must not contain a Node package."
@@ -106,7 +106,7 @@ Assert-True ($releaseManifest.components.c2paTool.licenseSha256.apache2 -eq "86b
 Assert-True ($domain -match 'BridgeContractVersion\s*=\s*"aku-browser\.bridge\.v2"') "Bridge contract boundary is unexpected."
 Assert-True ($domain -match 'DefaultAIDetectionPresentation\s*=\s*"drawer"') "AI Detector must default to Drawer."
 Assert-True ($domain -match 'DefaultReasoningAcquisition\s*=\s*"luna_high"') "Acquisition profile default drifted."
-Assert-True ($domain -match 'DefaultReasoningEvaluation\s*=\s*"luna_xhigh"') "Evaluation profile default drifted."
+Assert-True ($domain -match 'DefaultReasoningEvaluation\s*=\s*"luna_high"') "Evaluation profile default drifted."
 Assert-True ($domain -match 'DefaultReasoningSemantic\s*=\s*"luna_high"') "Semantic profile default drifted."
 Assert-True ($domain -match 'DefaultReasoningAIDeep\s*=\s*"luna_high"') "AI Deep profile default drifted."
 

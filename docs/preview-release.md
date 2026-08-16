@@ -4,7 +4,7 @@
 user-triggered Codex prerequisite check to Setup, with installation guidance
 when Codex App Server is unavailable and manual sign-in confirmation only after
 a compatible executable is detected. It keeps the bounded Luna
-Max reasoning profile as an explicit tuning option, while Luna XHigh is the
+Max reasoning profile as an explicit tuning option, while Luna High is the
 fresh default for Candidate Evaluation, and raises the fresh Auto Update daily
 model budget from 1M to 2M tokens while retaining the 25% user reserve. Existing persisted profile and
 quota settings remain authoritative. This is the packaged
@@ -133,11 +133,12 @@ The model-backed profiles are:
 | Process | Default profile |
 | --- | --- |
 | Acquisition planning | Luna High |
-| Candidate evaluation | Luna XHigh |
+| Candidate evaluation | Luna High |
 | Semantic event resolution | Luna High |
 | AI Deep Detection | Luna High |
 
-Only Candidate Evaluation uses Luna XHigh by default. Existing persisted user
+Candidate Evaluation uses Luna High by default so a routine check has more
+headroom before the bounded reasoning timeout. Existing persisted user
 settings remain authoritative; these values apply to a fresh database or full
 reset.
 

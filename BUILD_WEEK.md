@@ -91,8 +91,9 @@ product through four schema-bound roles:
 4. **AI Deep Detection** asynchronously reviews retained posts after the
    Timeline is already usable.
 
-Candidate Evaluation defaults to Luna XHigh. Acquisition Planning, Semantic
-Event Resolution, and AI Deep Detection default to Luna High. The user can
+Candidate Evaluation now defaults to Luna High to keep routine checks within
+the bounded reasoning deadline. Acquisition Planning, Semantic Event
+Resolution, and AI Deep Detection also default to Luna High. The user can
 select only profiles from a bounded catalog; arbitrary model strings are not
 accepted. AkuSidecar remains authoritative for permissions, budgets,
 validation, filtering, persistence, and rendering.
