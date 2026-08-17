@@ -129,7 +129,9 @@ Push-Location $sidecarRoot
 try {
     & go test -p 1 ./...
     if ($LASTEXITCODE -ne 0) { throw "AkuSidecar tests failed." }
-    & node --test --test-isolation=none (Join-Path $sidecarRoot "test\capture-surface-release-barrier.test.mjs")
+    & node --test --test-isolation=none `
+        (Join-Path $sidecarRoot "test\capture-surface-release-barrier.test.mjs") `
+        (Join-Path $sidecarRoot "test\timeline-media-carousel.test.mjs")
     if ($LASTEXITCODE -ne 0) { throw "AkuSidecar browser lifecycle tests failed." }
 }
 finally { Pop-Location }

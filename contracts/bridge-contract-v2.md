@@ -29,8 +29,8 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge product version `0.8.0` / Chrome manifest version `0.8.0.0`;
-- runtime revision `source-adapters-v100`;
-- build id `aku-bridge-0.8.0-source-adapters-v100`; and
+- runtime revision `source-adapters-v101`;
+- build id `aku-bridge-0.8.0-source-adapters-v101`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -38,7 +38,7 @@ current-process heartbeat is `reconnecting`; any observed mismatch is
 `incompatible`. A session may start only when the current heartbeat is exact.
 The exact current capability set includes
 `mediaEvidenceAdapterVersions.x=x-response-evidence-v2`,
-`mediaEvidenceAdapterVersions.instagram=instagram-structured-video-v1`, and the bounded
+`mediaEvidenceAdapterVersions.instagram=instagram-structured-carousel-v2`, and the bounded
 `observe_response_media_evidence` and `dispatch_background_commands` actions.
 These declare evidence observation and bounded Sidecar-command dispatch, not
 authority to issue provider requests or take unbounded browser control.
@@ -52,6 +52,9 @@ permission, dynamic content-script registration, and effective `ready` state.
 Only sources whose permission and script registration are both ready can enter
 an update. `grantedSources` remains an additive diagnostic projection, not the
 final readiness authority; missing per-source readiness is incompatible.
+The bounded capture tuple includes `maxMediaPerBlock=20`; one-to-four media keep
+the compact grid while larger newly captured sets can retain source order for
+the timeline carousel.
 
 ## Page relay messages
 
