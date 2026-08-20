@@ -163,7 +163,19 @@ for (const origin of ["http://127.0.0.1:11122", "http://localhost:11122"]) {
 if (bridgePackage.version !== bridgeManifest.version_name) fail("AkuBridge package and manifest versions differ");
 if (bridgePackage.version !== release.components?.akuBridge?.version) fail("AkuBridge version drifted from the release tuple");
 if (bridgeManifest.version !== release.components?.akuBridge?.chromeVersion) fail("AkuBridge Chrome version drifted from the release tuple");
-if (sidecarConfig.reasoning?.provider !== "codex-app-server") fail("AkuSidecar must default to Codex App Server");
+const reasoning = sidecarConfig.reasoning ?? {};
+const activeProvider = reasoning.activeProvider;
+if (activeProvider !== "codex-app-server") fail("AkuSidecar must default to Codex App Server");
+const activeProviderConfig = reasoning.providers?.[activeProvider];
+if (!activeProviderConfig) fail("AkuSidecar active reasoning provider is not declared");
+for (const [field, label] of [
+  ["planning", "Acquisition planning"],
+  ["evaluation", "Candidate evaluation"],
+  ["semanticEvent", "Semantic resolution"],
+  ["aiDetection", "AI Deep Detection"],
+]) {
+  if (activeProviderConfig[field]?.effort !== "high") fail(`${label} must default to Luna High`);
+}
 const sidecarVersion = release.components?.akuSidecar?.version;
 const declaredSidecarVersion = domain.match(/ApplicationVersion\s*=\s*"([^"]+)"/)?.[1];
 if (declaredSidecarVersion !== sidecarVersion) {

@@ -87,13 +87,19 @@ Assert-True ($responseEvidenceAdapter -match 'RUNTIME_REVISION\s*=\s*"x-response
 foreach ($operation in @("HomeTimeline", "HomeLatestTimeline", "TweetDetail")) {
     Assert-True ($responseEvidenceAdapter -match [regex]::Escape($operation)) "AkuBridge response-evidence operation $operation is missing."
 }
-Assert-True ($sidecarConfig.reasoning.provider -eq "codex-app-server") "AkuSidecar must default to Codex App Server."
+$reasoning = $sidecarConfig.reasoning
+Assert-True ($null -ne $reasoning -and $null -ne $reasoning.activeProvider -and $null -ne $reasoning.providers) "AkuSidecar reasoning provider configuration is missing."
+$activeProvider = [string]$reasoning.activeProvider
+Assert-True ($activeProvider -eq "codex-app-server") "AkuSidecar must default to Codex App Server."
+$activeProviderProperty = $reasoning.providers.PSObject.Properties[$activeProvider]
+Assert-True ($null -ne $activeProviderProperty -and $null -ne $activeProviderProperty.Value) "AkuSidecar active reasoning provider is not declared."
+$activeProviderConfig = $activeProviderProperty.Value
 Assert-True ($sidecarConfig.preference.mode -eq "guarded_live") "High-authority guarded personalization must be the fresh default."
 Assert-True ($sidecarConfig.capture.profile -eq "standard") "Standard 1x must be the fresh bounded-load default."
-Assert-True ($sidecarConfig.reasoning.planning.effort -eq "high") "Acquisition planning must default to Luna High."
-Assert-True ($sidecarConfig.reasoning.evaluation.effort -eq "high") "Candidate evaluation must default to Luna High."
-Assert-True ($sidecarConfig.reasoning.semanticEvent.effort -eq "high") "Semantic resolution must default to Luna High."
-Assert-True ($sidecarConfig.reasoning.aiDetection.effort -eq "high") "AI Deep Detection must default to Luna High."
+Assert-True ($activeProviderConfig.planning.effort -eq "high") "Acquisition planning must default to Luna High."
+Assert-True ($activeProviderConfig.evaluation.effort -eq "high") "Candidate evaluation must default to Luna High."
+Assert-True ($activeProviderConfig.semanticEvent.effort -eq "high") "Semantic resolution must default to Luna High."
+Assert-True ($activeProviderConfig.aiDetection.effort -eq "high") "AI Deep Detection must default to Luna High."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $sidecarRoot "package.json"))) "AkuSidecar must not contain a Node package."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $browserRoot "package.json"))) "AkuBrowser must not contain a Node package."
 Assert-True ($domain -match 'ApplicationVersion\s*=\s*"0\.8\.0"') "AkuSidecar version boundary is unexpected."
@@ -157,7 +163,7 @@ finally { Pop-Location }
     AkuBridge = $bridgePackage.version
     AkuBridgeRuntime = $bridgePackage.akuRuntimeRevision
     AkuSidecar = "0.8.0"
-    provider = $sidecarConfig.reasoning.provider
+    provider = $activeProvider
     preferenceAuthority = $sidecarConfig.preference.mode
     boundedLoadDefault = $sidecarConfig.capture.profile
 } | ConvertTo-Json
