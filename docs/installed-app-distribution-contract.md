@@ -203,6 +203,16 @@ operation, but it cannot call Chrome Extensions APIs directly.
 The current `setup.html`, `setup.js`, popup route, service-worker setup route,
 and setup-specific tests are therefore migration inputs, not target ownership.
 
+The extension retains one narrow UI responsibility that cannot move into the
+loopback application: Chrome's source-scoped optional host permission prompt.
+The normal Sidecar-owned `Open source` flow asks AkuBridge to inspect the exact
+source permission first. When absent, AkuBridge opens a minimal per-source
+permission broker; after a successful user-gesture grant and content-script
+reconciliation, that same tab continues to the canonical source feed. The
+source site then displays either its authenticated feed or its own login page.
+No return URL is accepted from the page request; source IDs and destinations
+come only from the packaged allowlist.
+
 ## Login and isolated profile policy
 
 The pinned Chromium profile is intentionally separate from every system Chrome
@@ -437,7 +447,9 @@ highest-impact remaining gaps are:
   system Chrome;
 - `AkuBridge/manifest.json`, `popup.js`, `service-worker.js`, and extension
   contract tests still treat `setup.html` as the setup surface;
-- source permission requests still originate in the old extension setup page;
+- the normal source-open path now uses a narrow extension-owned permission
+  broker, but the legacy monolithic extension setup surface and its duplicate
+  source-selection controls still need removal after Sidecar setup migration;
 - the current runtime updater and Native Messaging lifecycle are Sidecar/
   companion-oriented rather than whole-tuple app-managed;
 - `production-app`, `production-installed-app`, launcher, tuple, and unsigned
