@@ -2,6 +2,12 @@
 
 Status: Stage 4 implementation, 28 July 2026.
 
+> **Historical companion-installer contract — superseded for target
+> production.** This document describes the current Store/companion runtime
+> installer and remains accurate for that shipped lane. The target replaces it
+> with one signed installer that also owns AkuBridge, pinned Chromium, and
+> AkuBrowserLauncher. See the [installed-app distribution contract](installed-app-distribution-contract.md).
+
 ## Outcome
 
 `AkuBrowserRuntimeSetup.exe` is a self-contained, user-scoped Windows setup

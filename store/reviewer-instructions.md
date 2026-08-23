@@ -1,5 +1,12 @@
 # Chrome Web Store reviewer instructions
 
+> **Historical review guide — no longer the target production path.** These
+> instructions describe the current Chrome Web Store and companion-runtime
+> implementation. The approved target has no Web Store or system-Chrome
+> production lane and is defined in the [installed-app distribution contract](../docs/installed-app-distribution-contract.md).
+> Preserve this file only as evidence for the historical Store lane; do not use
+> it as target acceptance criteria.
+
 ## Product boundary
 
 The Store item is **AkuBrowser**. The repository/internal extension component is

@@ -2,6 +2,12 @@
 
 Status: implemented, 15 August 2026.
 
+> **Target routing:** this document records the currently shipped development,
+> acceptance, Store, and offline identities. The approved installed-app target
+> is defined in the [installed-app distribution contract](installed-app-distribution-contract.md)
+> and is not implemented by this registry yet. Do not treat
+> `production-store` as target production authority.
+
 ## One authority, four stable identities
 
 `config/bridge-identities.json` is the only checked-in authority for AkuBridge

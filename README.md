@@ -4,6 +4,15 @@ Current release: **`0.7.9`**. The canonical component tuple,
 bundle boundary, and preview prerequisites are recorded in
 [`release/release-manifest.json`](release/release-manifest.json).
 
+> **Approved target distribution — not implemented yet.** The next production
+> direction is one signed installer containing AkuBrowserLauncher, AkuSidecar,
+> AkuBridge, pinned Chromium, and the local support assets, with setup owned by
+> AkuSidecar inside an isolated app shell. Chrome Web Store and system Chrome
+> are not part of that target. See the canonical
+> [installed-app distribution contract](docs/installed-app-distribution-contract.md).
+> The Store/portable instructions below describe the current shipped state and
+> remain historical evidence until the migration is complete.
+
 > ### Install AkuBrowser from the Chrome Web Store
 >
 > [**Add AkuBrowser to Chrome →**](https://chromewebstore.google.com/detail/akubrowser/phkaipecbhpgopggbfpcejgngbhddnkk)
@@ -59,12 +68,13 @@ checksums, launchers, and acceptance guidance, while keeping application
 runtime code in its component repositories. AkuBrowser has no Node package or
 application runtime of its own.
 
+### Current shipped distribution (historical)
+
 The staged consumer distribution path publishes the extension under the public
 name **AkuBrowser** while retaining `AkuBridge` as the internal component name.
 Its Native Messaging, companion installer, Store, and signed runtime-update
-gates are defined in
-[`docs/chrome-store-distribution-contract.md`](docs/chrome-store-distribution-contract.md)
-and [`docs/chrome-store-rollout-plan.md`](docs/chrome-store-rollout-plan.md).
+gates are preserved as current implementation history in
+[`docs/chrome-store-distribution-contract.md`](docs/chrome-store-distribution-contract.md).
 Development and production extension IDs are named profiles in one registry;
 their generated runtime projections are defined in
 [`docs/bridge-identity-contract.md`](docs/bridge-identity-contract.md).
@@ -200,6 +210,7 @@ never leaves Windows.
 
 ## Canonical documentation
 
+- [Installed-app distribution target](docs/installed-app-distribution-contract.md)
 - [Product contract](docs/product-contract.md)
 - [Runtime contract](docs/runtime-contract.md)
 - [AI Feedback Engine contract](docs/ai-feedback-contract.md)

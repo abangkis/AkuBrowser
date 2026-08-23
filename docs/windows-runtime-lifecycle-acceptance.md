@@ -2,6 +2,11 @@
 
 Status: Stage 5 implementation, 28 July 2026.
 
+> **Historical acceptance boundary.** These checks validate the current Store
+> and companion-runtime lifecycle. They do not validate the approved unified
+> installed-app target; use the [installed-app distribution contract](installed-app-distribution-contract.md)
+> for the future acceptance gates.
+
 ## Automated boundary
 
 Run:

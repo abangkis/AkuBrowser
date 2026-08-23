@@ -2,6 +2,13 @@
 
 Status: Stage 7 implementation, 29 July 2026.
 
+> **Historical Sidecar-only updater contract — superseded for target
+> production.** This document records the current Native Messaging and
+> companion-runtime updater. The approved target updates a complete signed
+> AkuBrowser tuple and rolls back the whole tuple atomically; see the
+> [installed-app distribution contract](installed-app-distribution-contract.md).
+> Binary/delta patching is not part of that target yet.
+
 ## Outcome
 
 AkuBridge and AkuSidecar update independently. Chrome Web Store owns Bridge

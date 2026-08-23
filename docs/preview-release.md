@@ -20,6 +20,11 @@ AkuBrowser is the distribution authority: it owns portable bundle assembly,
 release provenance, launchers, checksums, and acceptance documentation.
 AkuSidecar and AkuBridge remain the authoritative source-component projects.
 
+> **Historical preview notice:** this document describes the current preview's
+> Store/portable and system-Chrome prerequisites. The approved production
+> direction is a single isolated app-shell installer; it is not implemented in
+> this preview. See the [installed-app distribution contract](installed-app-distribution-contract.md).
+
 Windows has two coordinated delivery paths: the portable x64 ZIP remains the
 manual fallback, while the Chrome Web Store flow uses a user-scoped companion
 runtime installer. The stable `v0.7.9` release provides the equivalent

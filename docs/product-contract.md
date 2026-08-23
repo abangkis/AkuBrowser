@@ -2,6 +2,11 @@
 
 Status: canonical product boundary, 27 July 2026.
 
+> **Distribution routing:** product behavior remains canonical here, while the
+> approved installed-app first-run, isolated profile, permission broker, and
+> launcher boundaries are defined in the [installed-app distribution contract](installed-app-distribution-contract.md).
+> The distribution target is approved but not implemented yet.
+
 ## Promise
 
 AkuBrowser gives the user a finite answer to “what changed?” across selected social sources. It inspects a bounded capture, explains source-backed updates, counts unique information rather than repeated posts, learns from direct corrections, and stops. It does not reproduce an infinite feed and it does not claim comprehensive coverage.

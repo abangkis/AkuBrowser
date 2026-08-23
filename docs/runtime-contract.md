@@ -2,6 +2,12 @@
 
 Status: canonical implementation boundary, 27 July 2026.
 
+> **Distribution note:** this remains the component/runtime behavior contract
+> for the current implementation. Installed-app packaging, app-shell startup,
+> and whole-tuple update authority are defined separately in the approved
+> [installed-app distribution contract](installed-app-distribution-contract.md).
+> That target is not implemented yet.
+
 ## Components
 
 - AkuBridge is a Manifest V3 Chrome extension. It owns source-specific DOM adapters, bounded read-only capture, freshness recovery, truthful quality reports, and capture-surface cleanup.

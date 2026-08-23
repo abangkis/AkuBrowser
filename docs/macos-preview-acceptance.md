@@ -6,6 +6,10 @@ The `v0.7.9-preview1` target contains one `macos-universal` ZIP and one
 explicitly unsigned universal user-scoped `.pkg`, each carrying x64 and arm64
 Sidecar slices for Intel and Apple-silicon Macs.
 
+> **Historical preview acceptance.** This runbook validates the current
+> Store/portable preview and is not the acceptance contract for the approved
+> installed-app target. See the [installed-app distribution contract](installed-app-distribution-contract.md).
+
 ## Automated artifact gate
 
 Run on a Mac from the AkuBrowser repository:

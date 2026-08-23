@@ -2,6 +2,13 @@
 
 Status: implemented distribution authority, 31 July 2026.
 
+> **Historical shipped-state contract — superseded for target production.**
+> This document preserves the Chrome Web Store plus companion-runtime design
+> that current artifacts implement. The approved production direction is the
+> single installed-app tuple in the [installed-app distribution contract](installed-app-distribution-contract.md).
+> Do not use this document as evidence that the target unified installer,
+> app-shell startup, or whole-tuple updater is implemented.
+
 ## Decision
 
 The public Chrome Web Store product is **AkuBrowser**. `AkuBridge` remains the

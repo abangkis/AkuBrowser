@@ -2,6 +2,11 @@
 
 Status: 0.7.9 implementation contract.
 
+> **Historical companion-installer contract — superseded for target
+> production.** This file records the current Store/macOS companion lane. The
+> approved target is one signed installed-app tuple containing Sidecar, Bridge,
+> pinned Chromium, and the launcher; see the [installed-app distribution contract](installed-app-distribution-contract.md).
+
 ## Outcome
 
 `AkuBrowserRuntimeSetup.pkg` is the macOS companion for the Chrome Web Store

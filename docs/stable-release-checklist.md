@@ -6,6 +6,13 @@ exact source commits before starting. Platform-specific
 test detail remains in the [Windows Step 3B](windows-clean-machine-3b.md) and
 [macOS Step 3B](macos-clean-machine-3b.md) acceptance runbooks.
 
+> **Current-lane notice:** this checklist governs the existing Store/portable
+> release machinery. The approved single-installer target, including full
+> Bridge + Sidecar + pinned-Chromium tuple updates, is specified in the
+> [installed-app distribution contract](installed-app-distribution-contract.md)
+> and requires a future checklist revision. Do not claim the target is shipped
+> because this checklist passes.
+
 ## Execution order and machine handoff
 
 The release is coordinated from the primary Windows machine, but each platform

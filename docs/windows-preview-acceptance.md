@@ -3,6 +3,10 @@
 AkuBrowser owns distribution. AkuSidecar and AkuBridge remain source component
 repositories; AkuSupervisor and AkuSupervisorConformance are not packaged.
 
+> **Historical preview acceptance.** This runbook validates the current
+> Store/portable and pre-Store lanes, not the approved single-installer
+> installed-app target. See the [installed-app distribution contract](installed-app-distribution-contract.md).
+
 ## Automated artifact gate
 
 Run the complete Windows gate from AkuBrowser. It builds and validates both the
