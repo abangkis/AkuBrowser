@@ -66,6 +66,19 @@
       "runtimeInstallKind": "portable",
       "installation": "load-unpacked-and-run-bundled-runtime"
     },
+    "installedApp": {
+      "status": "staged-builder",
+      "bridgeIdentityProfile": "production-app",
+      "format": "windows-x64-installed-app-tuple",
+      "builder": "scripts/build-windows-installed-app.ps1",
+      "installerStatus": "not-shipped",
+      "signedInstaller": false,
+      "database": {
+        "currentSchemaVersion": 9,
+        "acceptedInputSchemaVersions": [7, 8, 9],
+        "rollbackStatus": "not-implemented"
+      }
+    },
     "localOrigins": [
       "http://127.0.0.1:11122",
       "http://localhost:11122"

@@ -40,6 +40,7 @@ Assert-True ($LASTEXITCODE -eq 0) "Bridge identity registry validation failed."
 $lifecycleAcceptance = Read-Json (Join-Path $browserRoot "acceptance\windows-runtime-lifecycle.json")
 $sidecarConfig = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $domain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
+$sidecarSchema = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\store\schema.go") -Raw
 $bridgeCapabilities = Get-Content -LiteralPath (Join-Path $bridgeRoot "bridge-capabilities.js") -Raw
 $sourceCatalog = Get-Content -LiteralPath (Join-Path $bridgeRoot "source-catalog.js") -Raw
 $responseEvidenceAdapter = Get-Content -LiteralPath (Join-Path $bridgeRoot "x-response-evidence-adapter.js") -Raw
@@ -65,6 +66,12 @@ foreach ($scenario in $expectedLifecycleScenarios) {
 }
 Assert-True ($releaseManifest.distribution.authorityRepository -eq "AkuBrowser") "AkuBrowser must remain the distribution authority."
 Assert-True ($releaseManifest.distribution.windows.format -eq "portable-zip") "Windows preview must remain a portable ZIP."
+Assert-True ($releaseManifest.distribution.installedApp.status -eq "staged-builder" -and $releaseManifest.distribution.installedApp.installerStatus -eq "not-shipped" -and $releaseManifest.distribution.installedApp.signedInstaller -eq $false) "Installed-app builder must remain staged and must not claim a shipped signed installer."
+Assert-True ($releaseManifest.distribution.installedApp.bridgeIdentityProfile -eq "production-app") "Installed-app builder must select production-app."
+Assert-True (Test-Path -LiteralPath (Join-Path $browserRoot "scripts\build-windows-installed-app.ps1") -PathType Leaf) "Installed-app builder script is missing."
+Assert-True (Test-Path -LiteralPath (Join-Path $browserRoot "scripts\test-windows-installed-app-builder.ps1") -PathType Leaf) "Installed-app builder acceptance script is missing."
+Assert-True ($sidecarSchema -match ('const SchemaVersion = ' + [regex]::Escape([string]$releaseManifest.distribution.installedApp.database.currentSchemaVersion) + '(?:\r?\n|$)')) "Installed-app database schema drifted from AkuSidecar."
+Assert-True ($releaseManifest.distribution.installedApp.database.rollbackStatus -eq "not-implemented") "Installed-app builder must not claim database rollback before tuple rollback exists."
 Assert-True ($releaseManifest.distribution.chromeStore.nativeRuntimeInstallers.'windows-x64'.stableAsset -eq "AkuBrowserRuntimeSetup.exe") "Windows Store installer asset is unexpected."
 Assert-True ($releaseManifest.distribution.chromeStore.nativeRuntimeInstallers.'windows-x64'.trustState -eq "unsigned") "Windows stable installer trust state is unexpected."
 Assert-True ($releaseManifest.distribution.chromeStore.nativeRuntimeInstallers.'macos-universal'.stableAsset -eq "AkuBrowserRuntimeSetup.pkg") "macOS Store installer asset is unexpected."
@@ -97,10 +104,10 @@ Assert-True ($null -ne $activeProviderProperty -and $null -ne $activeProviderPro
 $activeProviderConfig = $activeProviderProperty.Value
 Assert-True ($sidecarConfig.preference.mode -eq "guarded_live") "High-authority guarded personalization must be the fresh default."
 Assert-True ($sidecarConfig.capture.profile -eq "standard") "Standard 1x must be the fresh bounded-load default."
-Assert-True ($activeProviderConfig.planning.effort -eq "high") "Acquisition planning must default to Luna High."
-Assert-True ($activeProviderConfig.evaluation.effort -eq "high") "Candidate evaluation must default to Luna High."
-Assert-True ($activeProviderConfig.semanticEvent.effort -eq "high") "Semantic resolution must default to Luna High."
-Assert-True ($activeProviderConfig.aiDetection.effort -eq "high") "AI Deep Detection must default to Luna High."
+Assert-True ($activeProviderConfig.planning.minReasoningTier -eq "high") "Acquisition planning must default to Luna High."
+Assert-True ($activeProviderConfig.evaluation.minReasoningTier -eq "high") "Candidate evaluation must default to Luna High."
+Assert-True ($activeProviderConfig.semanticEvent.minReasoningTier -eq "high") "Semantic resolution must default to Luna High."
+Assert-True ($activeProviderConfig.aiDetection.minReasoningTier -eq "high") "AI Deep Detection must default to Luna High."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $sidecarRoot "package.json"))) "AkuSidecar must not contain a Node package."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $browserRoot "package.json"))) "AkuBrowser must not contain a Node package."
 Assert-True ($domain -match 'ApplicationVersion\s*=\s*"0\.8\.0"') "AkuSidecar version boundary is unexpected."

@@ -1,7 +1,13 @@
 # AkuBrowser installed-app distribution contract
 
 Status: approved target architecture; Phase 0 identity and Windows launcher
-vertical slice implemented, unified installer and shipped migration pending.
+vertical slice implemented, and a local Windows tuple builder is staged. A
+signed unified installer and shipped migration remain pending.
+
+The staged builder records the current Sidecar database schema separately from
+the historical Sidecar-only update feed. It accepts the current additive
+7-to-9 migration path, but database rollback remains explicitly unimplemented
+until whole-tuple activation and rollback are built.
 
 This document is the canonical distribution target for the next AkuBrowser
 product direction. It supersedes the assumption that production is delivered
@@ -418,7 +424,8 @@ The approved target is not implemented in the current repositories. The
 highest-impact gaps are:
 
 - the Windows launcher vertical slice verifies a staged tuple and starts the
-  app shell, but no current installer builds or activates that tuple;
+  app shell; `scripts/build-windows-installed-app.ps1` now builds a local
+  staged tuple, but no signed installer activates or ships it;
 - current Windows/macOS installer builders package a companion runtime rather
   than one Bridge + Sidecar + Chromium installer;
 - the current preview still requires manual unpacked Bridge installation and
@@ -430,6 +437,9 @@ highest-impact gaps are:
   companion-oriented rather than whole-tuple app-managed;
 - `production-app` identity and launcher contracts exist, but current release
   builders still emit only Store/offline lanes;
+- the staged tuple builder records `production-installed-app` metadata, while
+  AkuSidecar's current deployment validator still needs the corresponding
+  mode before an end-to-end Sidecar startup gate can pass;
 - pinned-Chromium Bridge heartbeat behavior must be fixed and accepted before
   end-to-end setup migration.
 
