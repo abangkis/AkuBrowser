@@ -343,7 +343,7 @@ $configOutput = Join-Path $runtimePayload "config"
 New-Item -ItemType Directory -Force -Path $configOutput | Out-Null
 $config = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $config.database.path = "runtime/aku-browser.db"
-$config.reasoning.executable = ""
+$config.reasoning.providers.'codex-app-server'.executable = ""
 $config.bridge.trustedExtensionOrigins = @("chrome-extension://$ExtensionId/")
 $deploymentMode = switch ($BridgeIdentityProfile) {
     "development" { "development" }

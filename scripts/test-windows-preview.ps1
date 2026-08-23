@@ -160,6 +160,8 @@ Assert-True ($bridgeIdentity.distribution -eq "offline-bundle") "The release Bri
 Assert-True ($packageConfig.deployment.mode -eq "production-offline") "Packaged AkuSidecar does not declare offline production mode."
 Assert-True ($packageConfig.deployment.runtimeInstallKind -eq "portable") "Packaged AkuSidecar does not declare portable runtime ownership."
 Assert-True ($packageConfig.deployment.bridgeIdentityProfile -eq $bridgeIdentityProfile) "Packaged AkuSidecar records the wrong Bridge identity profile."
+Assert-True ($null -ne $packageConfig.reasoning.providers.'codex-app-server') "Packaged AkuSidecar is missing the codex-app-server provider configuration."
+Assert-True ([string]$packageConfig.reasoning.providers.'codex-app-server'.executable -eq "") "Packaged AkuSidecar must discover the Codex executable at runtime."
 Assert-True (@($packageConfig.bridge.trustedExtensionOrigins).Count -eq 1 -and $packageConfig.bridge.trustedExtensionOrigins[0] -eq $bridgeExtensionOrigin) "Packaged AkuSidecar does not trust exactly the release-selected Bridge origin."
 Assert-True ($artifactManifest.bridgeIdentity.profile -eq $bridgeIdentityProfile) "Artifact provenance records the wrong Bridge identity profile."
 Assert-True ($artifactManifest.bridgeIdentity.distribution -eq $bridgeIdentity.distribution) "Artifact provenance records the wrong Bridge distribution."

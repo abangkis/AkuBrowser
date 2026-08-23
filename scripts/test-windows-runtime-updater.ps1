@@ -79,6 +79,7 @@ Assert-True ($macBuilder.Contains('-X main.runtimeHostVersion=$native_host_versi
 Assert-True ($builder.Contains('check-native-host-min-version.mjs')) "Windows builder must gate packaged Native Host SemVer against Sidecar minHostVersion."
 Assert-True ($macBuilder.Contains('check-native-host-min-version.mjs')) "macOS builder must gate packaged Native Host SemVer against Sidecar minHostVersion."
 Assert-True ($builder.Contains('/DAPP_VERSION=$sidecarVersion')) "Windows installer identity must follow the independently versioned Sidecar."
+Assert-True ($builder.Contains("reasoning.providers.'codex-app-server'.executable")) "Windows runtime builder must preserve the provider-scoped reasoning schema."
 Assert-True ($macBuilder.Contains('--version "$sidecar_version"')) "macOS installer identity must follow the independently versioned Sidecar."
 Assert-True ($macBuilder.Contains('--emit-unsigned-update-manifests')) "macOS builder must emit unsigned manifests for the Windows signing handoff."
 Assert-True (-not $macBuilder.Contains('go run -buildvcs=false ./cmd/sign-update-manifest')) "macOS builder must not sign update manifests."

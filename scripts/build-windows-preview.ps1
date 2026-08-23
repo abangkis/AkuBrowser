@@ -190,7 +190,7 @@ $configDirectory = Join-Path $artifactRoot "config"
 New-Item -ItemType Directory -Force -Path $configDirectory | Out-Null
 $packageConfig = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $packageConfig.database.path = "data/aku-sidecar.db"
-$packageConfig.reasoning.executable = ""
+$packageConfig.reasoning.providers.'codex-app-server'.executable = ""
 $packageConfig.bridge.trustedExtensionOrigins = @($bridgeExtensionOrigin)
 $packageConfig.deployment = [ordered]@{
     mode = "production-offline"
