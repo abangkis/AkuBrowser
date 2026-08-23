@@ -3,12 +3,12 @@
 Status: implemented, 15 August 2026.
 
 > **Target routing:** this document records the currently shipped development,
-> acceptance, Store, and offline identities. The approved installed-app target
-> is defined in the [installed-app distribution contract](installed-app-distribution-contract.md)
-> and is not implemented by this registry yet. Do not treat
-> `production-store` as target production authority.
+> acceptance, Store, and offline identities plus the staged `production-app`
+> identity. The approved installed-app target is defined in the
+> [installed-app distribution contract](installed-app-distribution-contract.md).
+> Do not treat `production-store` as target production authority.
 
-## One authority, four stable identities
+## One authority, five stable identities
 
 `config/bridge-identities.json` is the only checked-in authority for AkuBridge
 extension identities. Every extension ID is unique and identifies one delivery
@@ -20,6 +20,7 @@ lane:
 | `acceptance` | Frozen Load unpacked package | Local acceptance installer | Stable candidate · 3B |
 | `production-store` | Chrome Web Store | Managed companion runtime | Production · Web Store |
 | `production-offline` | Self-contained offline ZIP | Bundled portable runtime | Production · Offline bundle |
+| `production-app` | Signed installed-app bundle | Launcher-managed bundled runtime | Production · Installed app |
 
 Never copy an ID into Sidecar source configuration, Supervisor service
 configuration, a native-host manifest, or release documentation. Packagers
@@ -27,14 +28,14 @@ resolve the selected profile and project its exact origin.
 
 ## Public identity keys
 
-The three unpacked identities contain a checked-in RSA public key. The package
+The four non-Store identities contain a checked-in RSA public key. The package
 projector writes that public material to `manifest.key`, giving Load unpacked a
 stable ID on every machine and from every directory. These public keys are not
 code-signing secrets. No private key is required or distributed for Load
 unpacked.
 
 The checked-in AkuBridge manifest and `bridge-deployment.js` represent only the
-`development` workspace. Acceptance and offline packagers stage a copy and run
+`development` workspace. Acceptance, offline, and installed-app packagers stage a copy and run
 `scripts/project-bridge-package-identity.mjs`; they never mutate the workspace
 manifest in place. The Chrome Web Store projector removes `manifest.key`
 because the Store owns the `production-store` identity.
@@ -68,11 +69,14 @@ Missing metadata remains runnable for backward compatibility but appears as
 - The offline ZIP uses `production-offline`, retains its dedicated public key,
   contains the load-unpacked AkuBridge payload plus portable AkuSidecar, and
   performs no Store or installer download.
+- The installed-app lane uses `production-app`, its own public key and exact
+  origin, the pinned Chromium profile, and launcher-managed lifecycle. It is
+  staged but is not yet emitted by the unified installer.
 - Store and offline editions must not run concurrently.
 
 ## Security invariants
 
-- All four IDs are unique and validated from the registry.
+- All five IDs are unique and validated from the registry.
 - An unpacked package ID derives from the selected profile public key.
 - AkuSidecar never trusts the first heartbeat, discovers an ID dynamically, or
   accepts a wildcard origin.

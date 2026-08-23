@@ -20,6 +20,9 @@ boundary or staged as the normative input to an explicitly gated implementation.
 - `runtime-update-manifest-v1.schema.json` freezes the legacy AkuBrowser runtime
   feed. It remains separately signed during migration because installed v1
   hosts reject every unknown field; v2 fields must never be added to that feed.
+- `installed-app-active-pointer.schema.json` and
+  `installed-app-bundle-manifest.schema.json` define the strict Windows launcher
+  selection and complete-tuple payload boundary for the new installed-app lane.
 - `examples/native-runtime-ensure-request.json` and
   `examples/native-runtime-ready-response.json` are accepted v2 examples.
   Their `native-runtime-v1-*` counterparts are accepted frozen migration

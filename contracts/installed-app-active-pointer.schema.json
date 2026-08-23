@@ -1,0 +1,16 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://akubrowser.local/contracts/installed-app-active-pointer.schema.json",
+  "title": "AkuBrowser installed-app active pointer",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "version", "manifestPath"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "version": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+    "manifestPath": {
+      "type": "string",
+      "pattern": "^runtime/versions/[A-Za-z0-9][A-Za-z0-9._-]{0,63}/manifest\\.json$"
+    }
+  }
+}

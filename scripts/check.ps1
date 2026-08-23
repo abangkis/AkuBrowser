@@ -9,6 +9,7 @@ $workspaceRoot = Split-Path -Parent $browserRoot
 $bridgeRoot = Join-Path $workspaceRoot "AkuBridge"
 $sidecarRoot = Join-Path $workspaceRoot "AkuSidecar"
 $installerRoot = Join-Path $browserRoot "installer\windows"
+$launcherRoot = Join-Path $browserRoot "launcher"
 $cacheRoot = Join-Path $workspaceRoot ".go-cache"
 $env:GOCACHE = Join-Path $cacheRoot "build"
 $env:GOMODCACHE = Join-Path $cacheRoot "mod"
@@ -153,6 +154,13 @@ Push-Location $installerRoot
 try {
     & go test -count=1 ./...
     if ($LASTEXITCODE -ne 0) { throw "AkuBrowser Windows installer tests failed." }
+}
+finally { Pop-Location }
+
+Push-Location $launcherRoot
+try {
+    & go test -count=1 ./...
+    if ($LASTEXITCODE -ne 0) { throw "AkuBrowser launcher tests failed." }
 }
 finally { Pop-Location }
 

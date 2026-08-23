@@ -35,6 +35,15 @@
       "extensionId": "noleinpgfppekjkkaileknacdkcbokdc",
       "publicKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAxpZR2FWdg65kY1NUbeXSj08olIa4JJ/A4cixet8/Jj6GKv9YUzUHMsrrqulN0XoCL4jT81SW9yjppqIh4S8HDai+OAAb/Bnjh8YjWyChUR5LZDUhaIKXYrpaG29rPvmGeM2rkZQsKc/MKvYCeKH3YxewYZtFSoUTgFyuLpbPId1iJT2oSAbYe7U/k/0NI9AnlAQzy0lADoKxS5a0HQ7BWezG1TT2HSkiWY0XiNco10nE/V5IZmW4Z7+x3tNlYP23Y8tfVU7qSAxG/TPREARrGtJrDw2dt+N6UCHQ9UrvxExcHcxRNBHwFnNgla0cIyfWYdQkfvZ7myPMT3QYKs6QlQIDAQAB",
       "identitySource": "config/bridge-identities.json#profiles.production-offline.publicKey"
+    },
+    "production-app": {
+      "environment": "production",
+      "distribution": "installed-app",
+      "runtimeLifecycle": "managed",
+      "runtimeAcquisition": "bundled-installer",
+      "extensionId": "piijgldhnhknddmiljookikjpheiiddn",
+      "publicKey": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArDwEbOV7DVsTQDpUKcphv7F4gwaz/+Svbiq8jdAaK0vVtedcpse5eRNyGabDMHNny5TkRKHmWlFttswM+yAVA8YJbCTZV5DHMQIfbo1Dbsu7qVZtvr/+nyrv3yugR4EU1A0fhoBmwPaoRAN21e2DUtSlX+0uDLhEub0+sIg5DP/KU71mPWm9cZqMMFLvfs5T43NlWKqpEYAw6sFBQJlWeRLvWgbirSuweCdByXr967JZMmwmGOggXLaTevP2GhOgdLIleVc/3VCqqWU3RRofp0svybnEsvzfrxJF4RKAvDWNZcsyxD4jyJ3uk44wrh9m/LWUeDBw8Z1giaUDBOstBwIDAQAB",
+      "identitySource": "config/bridge-identities.json#profiles.production-app.publicKey"
     }
   }
 }

@@ -1,7 +1,7 @@
 # AkuBrowser installed-app distribution contract
 
-Status: approved target architecture; not implemented in the current shipped
-Store/portable lanes.
+Status: approved target architecture; Phase 0 identity and Windows launcher
+vertical slice implemented, unified installer and shipped migration pending.
 
 This document is the canonical distribution target for the next AkuBrowser
 product direction. It supersedes the assumption that production is delivered
@@ -102,10 +102,9 @@ manifest and into Sidecar's trusted extension-origin configuration. Sidecar
 must independently verify the exact origin on every heartbeat; it must never
 discover or accept a wildcard origin from Bridge.
 
-The target identity should be named explicitly, such as `production-app`, in
-the identity registry. Reusing the current `production-offline` profile is a
-possible migration tactic, but it must not silently turn the existing offline
-contract into the new production contract. The target profile must bind:
+The target identity is named explicitly as `production-app` in the identity
+registry and has a distinct public key and extension ID. It does not alias the
+existing `production-offline` identity. The target profile binds:
 
 - exact extension ID and public manifest key;
 - installed-app distribution and lifecycle metadata;
@@ -113,10 +112,9 @@ contract into the new production contract. The target profile must bind:
 - exact Bridge contract and required capabilities;
 - exact pinned Chromium and app-shell policy.
 
-The current identity rules and four-profile registry are described in the
-[Bridge identity contract](bridge-identity-contract.md). That document is
-historical for Store/portable distribution until it is updated for the target
-profile.
+The current identity rules and five-profile registry are described in the
+[Bridge identity contract](bridge-identity-contract.md). Store and portable
+profiles remain historical implementation lanes during migration.
 
 If Native Messaging is retained during migration, its manifest may allow only
 this exact installed-app origin and one installer-owned executable path. It
@@ -419,8 +417,8 @@ The target is not ready until all of these pass on each supported platform:
 The approved target is not implemented in the current repositories. The
 highest-impact gaps are:
 
-- `AkuSidecar/internal/appshell/appshell.go` supports app-shell flags, but the
-  installed launcher does not make them the production path;
+- the Windows launcher vertical slice verifies a staged tuple and starts the
+  app shell, but no current installer builds or activates that tuple;
 - current Windows/macOS installer builders package a companion runtime rather
   than one Bridge + Sidecar + Chromium installer;
 - the current preview still requires manual unpacked Bridge installation and
@@ -430,7 +428,8 @@ highest-impact gaps are:
 - source permission requests still originate in the old extension setup page;
 - the current runtime updater and Native Messaging lifecycle are Sidecar/
   companion-oriented rather than whole-tuple app-managed;
-- identity/configuration names still distinguish Store and offline lanes;
+- `production-app` identity and launcher contracts exist, but current release
+  builders still emit only Store/offline lanes;
 - pinned-Chromium Bridge heartbeat behavior must be fixed and accepted before
   end-to-end setup migration.
 

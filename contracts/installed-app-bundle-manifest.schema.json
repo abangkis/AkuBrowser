@@ -1,0 +1,89 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://akubrowser.local/contracts/installed-app-bundle-manifest.schema.json",
+  "title": "AkuBrowser installed-app bundle manifest",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "product", "platform", "version", "chromiumVersion", "bridgeVersion",
+    "bridgeContract", "sidecarPath", "configPath", "chromiumPath",
+    "bridgeExtensionPath", "bridgeIdentity", "storage", "health", "payload"
+  ],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "product": { "const": "AkuBrowser" },
+    "platform": { "const": "windows-x64" },
+    "version": { "$ref": "#/$defs/version" },
+    "chromiumVersion": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "bridgeVersion": { "type": "string", "minLength": 1, "maxLength": 64 },
+    "bridgeContract": { "const": "aku-browser.bridge.v2" },
+    "sidecarPath": { "$ref": "#/$defs/relativePath" },
+    "configPath": { "$ref": "#/$defs/relativePath" },
+    "chromiumPath": { "$ref": "#/$defs/relativePath" },
+    "bridgeExtensionPath": { "$ref": "#/$defs/relativePath" },
+    "bridgeIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "profile", "environment", "distribution", "runtimeLifecycle",
+        "runtimeAcquisition", "extensionId", "origin"
+      ],
+      "properties": {
+        "profile": { "const": "production-app" },
+        "environment": { "const": "production" },
+        "distribution": { "const": "installed-app" },
+        "runtimeLifecycle": { "const": "managed" },
+        "runtimeAcquisition": { "const": "bundled-installer" },
+        "extensionId": { "type": "string", "pattern": "^[a-p]{32}$" },
+        "origin": { "type": "string", "pattern": "^chrome-extension://[a-p]{32}/$" }
+      }
+    },
+    "storage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "userDataRoot", "userDataRelativePath", "browserProfileRoot",
+        "browserProfileRelativePath"
+      ],
+      "properties": {
+        "userDataRoot": { "const": "local-app-data" },
+        "userDataRelativePath": { "const": "AkuBrowser/data" },
+        "browserProfileRoot": { "const": "local-app-data" },
+        "browserProfileRelativePath": { "const": "AkuBrowser/browser-profile" }
+      }
+    },
+    "health": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["host", "port", "path", "timeoutMs"],
+      "properties": {
+        "host": { "const": "127.0.0.1" },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 },
+        "path": { "const": "/api/health" },
+        "timeoutMs": { "type": "integer", "minimum": 1000, "maximum": 120000 }
+      }
+    },
+    "payload": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["path", "size", "sha256"],
+        "properties": {
+          "path": { "$ref": "#/$defs/relativePath" },
+          "size": { "type": "integer", "minimum": 0 },
+          "sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "version": { "type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$" },
+    "relativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    }
+  }
+}

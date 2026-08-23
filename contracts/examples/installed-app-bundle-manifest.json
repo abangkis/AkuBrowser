@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "product": "AkuBrowser",
+  "platform": "windows-x64",
+  "version": "0.8.0",
+  "chromiumVersion": "140.0.7339.185",
+  "bridgeVersion": "0.8.0",
+  "bridgeContract": "aku-browser.bridge.v2",
+  "sidecarPath": "AkuSidecar.exe",
+  "configPath": "config/sidecar.json",
+  "chromiumPath": "chromium/bin/chrome.exe",
+  "bridgeExtensionPath": "AkuBridge",
+  "bridgeIdentity": {
+    "profile": "production-app",
+    "environment": "production",
+    "distribution": "installed-app",
+    "runtimeLifecycle": "managed",
+    "runtimeAcquisition": "bundled-installer",
+    "extensionId": "piijgldhnhknddmiljookikjpheiiddn",
+    "origin": "chrome-extension://piijgldhnhknddmiljookikjpheiiddn/"
+  },
+  "storage": {
+    "userDataRoot": "local-app-data",
+    "userDataRelativePath": "AkuBrowser/data",
+    "browserProfileRoot": "local-app-data",
+    "browserProfileRelativePath": "AkuBrowser/browser-profile"
+  },
+  "health": {
+    "host": "127.0.0.1",
+    "port": 11122,
+    "path": "/api/health",
+    "timeoutMs": 20000
+  },
+  "payload": [
+    {
+      "path": "AkuSidecar.exe",
+      "size": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "path": "config/sidecar.json",
+      "size": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "path": "chromium/bin/chrome.exe",
+      "size": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    },
+    {
+      "path": "AkuBridge/manifest.json",
+      "size": 1,
+      "sha256": "0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  ]
+}

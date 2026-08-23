@@ -211,6 +211,7 @@ never leaves Windows.
 ## Canonical documentation
 
 - [Installed-app distribution target](docs/installed-app-distribution-contract.md)
+- [AkuBrowserLauncher Windows vertical slice](launcher/README.md)
 - [Product contract](docs/product-contract.md)
 - [Runtime contract](docs/runtime-contract.md)
 - [AI Feedback Engine contract](docs/ai-feedback-contract.md)

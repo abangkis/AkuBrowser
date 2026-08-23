@@ -30,6 +30,7 @@ fs.writeFileSync(manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
 
 const mode = profileName === "production-store" ? "production-store"
   : profileName === "production-offline" ? "production-offline"
+    : profileName === "production-app" ? "production-app"
     : profileName;
 const deploymentSource = `export const BRIDGE_DEPLOYMENT = Object.freeze(${JSON.stringify({
   mode,

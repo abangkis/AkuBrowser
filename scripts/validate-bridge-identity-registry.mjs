@@ -5,7 +5,7 @@ const [registryPath] = process.argv.slice(2);
 if (!registryPath) throw new Error("usage: validate-bridge-identity-registry.mjs <registry>");
 const registry = JSON.parse(fs.readFileSync(registryPath, "utf8"));
 if (registry.schemaVersion !== 2) throw new Error("unsupported Bridge identity registry schema");
-const required = ["development", "acceptance", "production-store", "production-offline"];
+const required = ["development", "acceptance", "production-store", "production-offline", "production-app"];
 const ids = new Set();
 for (const name of required) {
   const profile = registry.profiles?.[name];
