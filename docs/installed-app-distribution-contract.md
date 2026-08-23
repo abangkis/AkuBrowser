@@ -96,8 +96,11 @@ The exact platform paths may differ, but these invariants must hold:
 - repair and uninstall resolve paths from an ownership manifest and refuse
   paths that escape the installed root.
 
-The current runtime installer does not yet satisfy this layout: it stages the
-Native Host and Sidecar payload but not AkuBridge or pinned Chromium. See the
+The legacy runtime installer does not satisfy this layout: it stages the Native
+Host and Sidecar payload but not AkuBridge or pinned Chromium. A separate staged
+NSIS lane now consumes the verified installed-app tuple, writes the active
+pointer last, and preserves data and the isolated profile on ordinary uninstall.
+It remains unsigned and not shipped; see the
 [current implementation gap](#current-implementation-gap).
 
 ## Installed-app identity and trust
@@ -420,12 +423,14 @@ The target is not ready until all of these pass on each supported platform:
 
 ## Current implementation gap
 
-The approved target is not implemented in the current repositories. The
-highest-impact gaps are:
+The approved target is partially implemented in the current repositories. The
+highest-impact remaining gaps are:
 
-- the Windows launcher vertical slice verifies a staged tuple and starts the
-  app shell; `scripts/build-windows-installed-app.ps1` now builds a local
-  staged tuple, but no signed installer activates or ships it;
+- the Windows launcher verifies a staged tuple and starts the app shell;
+  `scripts/build-windows-installed-app.ps1` builds the tuple and
+  `scripts/build-windows-installed-app-installer.ps1` emits a separate unsigned
+  NSIS candidate, but no signed installer has passed clean-machine install and
+  launch acceptance or shipped;
 - current Windows/macOS installer builders package a companion runtime rather
   than one Bridge + Sidecar + Chromium installer;
 - the current preview still requires manual unpacked Bridge installation and
@@ -435,11 +440,9 @@ highest-impact gaps are:
 - source permission requests still originate in the old extension setup page;
 - the current runtime updater and Native Messaging lifecycle are Sidecar/
   companion-oriented rather than whole-tuple app-managed;
-- `production-app` identity and launcher contracts exist, but current release
-  builders still emit only Store/offline lanes;
-- the staged tuple builder records `production-installed-app` metadata, while
-  AkuSidecar's current deployment validator still needs the corresponding
-  mode before an end-to-end Sidecar startup gate can pass;
+- `production-app`, `production-installed-app`, launcher, tuple, and unsigned
+  NSIS builder contracts exist, but signing, atomic same-version repair,
+  whole-tuple rollback, and release publication remain unimplemented;
 - pinned-Chromium Bridge heartbeat behavior must be fixed and accepted before
   end-to-end setup migration.
 

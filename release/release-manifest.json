@@ -71,6 +71,7 @@
       "bridgeIdentityProfile": "production-app",
       "format": "windows-x64-installed-app-tuple",
       "builder": "scripts/build-windows-installed-app.ps1",
+      "installerBuilder": "scripts/build-windows-installed-app-installer.ps1",
       "installerStatus": "not-shipped",
       "signedInstaller": false,
       "database": {

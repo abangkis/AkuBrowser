@@ -11,10 +11,11 @@ This module is the installed-app lifecycle entry point defined by
 - owns one installed-app instance, starts AkuSidecar with exact app-shell paths,
   waits for matching health, and uses its scoped idle-shutdown API.
 
-The manifest is not yet a standalone signed update envelope. In this slice its
-trust comes from a verified, signed installer boundary. Installer integration,
-signed update discovery, atomic activation, repair, and rollback remain later
-phases.
+The manifest is not yet a standalone signed update envelope. The staged NSIS
+lane validates the tuple before compilation and writes `current.json` last, but
+its current artifact is explicitly unsigned and not shipped. Production
+signing, clean-machine launch acceptance, atomic same-version repair, signed
+update discovery, and rollback remain later phases.
 
 Run focused tests:
 
