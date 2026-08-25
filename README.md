@@ -1,10 +1,13 @@
 # AkuBrowser
 
-Current release: **`0.7.9`**. The canonical component tuple,
-bundle boundary, and preview prerequisites are recorded in
-[`release/release-manifest.json`](release/release-manifest.json).
+Current shipped release: **`0.7.9`**. The repository also contains an
+unshipped **`0.8.0`** development tuple in
+[`release/release-manifest.json`](release/release-manifest.json); its installed-
+app schema metadata must be reconciled with the current Sidecar before another
+candidate is built. The canonical bundle boundary and migration gates are in
+the [installed-app distribution contract](docs/installed-app-distribution-contract.md).
 
-> **Approved target distribution — not implemented yet.** The next production
+> **Approved target distribution — partially staged, not shipped.** The next production
 > direction is one signed installer containing AkuBrowserLauncher, AkuSidecar,
 > AkuBridge, pinned Chromium, and the local support assets, with setup owned by
 > AkuSidecar inside an isolated app shell. Chrome Web Store and system Chrome

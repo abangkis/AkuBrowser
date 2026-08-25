@@ -1,13 +1,18 @@
 # AkuBrowser installed-app distribution contract
 
-Status: approved target architecture; Phase 0 identity and Windows launcher
-vertical slice implemented, and a local Windows tuple builder is staged. A
-signed unified installer and shipped migration remain pending.
+Status: approved target architecture. Phase 0 identity, the Windows launcher
+vertical slice, a local Windows tuple builder, and an unsigned NSIS installer
+candidate are staged. The initial Phase 2 Sidecar-owned setup and Phase 3
+per-source broker/readiness loop are implemented in development and have passed
+one isolated fresh-profile X acceptance. Multi-source and failure-path
+acceptance remain before signed-installer work resumes. A signed unified
+installer and shipped migration remain pending.
 
-The staged builder records the current Sidecar database schema separately from
-the historical Sidecar-only update feed. It accepts the current additive
-7-to-9 migration path, but database rollback remains explicitly unimplemented
-until whole-tuple activation and rollback are built.
+AkuSidecar now uses database schema 10 and accepts additive startup migration
+from schemas 7, 8, and 9. The staged installed-app release manifest still
+records schema 9 and must be reconciled before the tuple builder is used for a
+new candidate. Database rollback remains explicitly unimplemented until
+whole-tuple activation and rollback are built.
 
 This document is the canonical distribution target for the next AkuBrowser
 product direction. It supersedes the assumption that production is delivered
@@ -348,6 +353,24 @@ validated to remain outside that root before any recursive removal.
 
 ## Phased migration and acceptance gates
 
+Execution priority is deliberately development-first: complete and exercise
+Sidecar-owned first-run, per-source permission/login readiness, calibration,
+and Timeline behavior under AkuSupervisor before returning to installer
+polish. Token/payload optimization is parked after the completed savings work;
+it is not a gate for the migration phases below. Development may temporarily
+use installed Chrome Stable with AkuBrowser's dedicated development profile so
+real Google-backed source login can proceed. This is not a production
+distribution decision: the target remains launcher-managed pinned Chromium,
+and its login compatibility must pass before release.
+
+Reasoning-provider evaluation is also independent from installer packaging.
+Codex App Server remains the authoritative Sidecar baseline. OpenRouter free
+models, currently led by an experimental Nemotron Ultra assessment, must pass
+Sidecar corpus, reliability, tail-latency, privacy-routing, and non-authoritative
+shadow gates before they become a development provider choice. The assessment
+uses `OPENROUTER_API_KEY`; strict ZDR routing will be measured separately and
+has not yet been integrated into Sidecar.
+
 ### Phase 0 — Contract and identity
 
 - Define the installed-app identity/profile and bundle manifest.
@@ -436,6 +459,14 @@ The target is not ready until all of these pass on each supported platform:
 The approved target is partially implemented in the current repositories. The
 highest-impact remaining gaps are:
 
+The 2026-08-25 development acceptance passed the first complete Sidecar-owned
+path with an isolated SharedTemp database and pinned Chromium profile: X
+permission grant, authenticated source readiness, onboarding persistence,
+first bounded update, three-item calibration, and Sidecar/Bridge restart
+recovery all completed without opening the monolithic Bridge setup page. This
+proves the migrated flow for one source; it does not yet close the multi-source,
+permission denial/revocation, Codex preflight, or production-login gates.
+
 - the Windows launcher verifies a staged tuple and starts the app shell;
   `scripts/build-windows-installed-app.ps1` builds the tuple and
   `scripts/build-windows-installed-app-installer.ps1` emits a separate unsigned
@@ -443,20 +474,34 @@ highest-impact remaining gaps are:
   launch acceptance or shipped;
 - current Windows/macOS installer builders package a companion runtime rather
   than one Bridge + Sidecar + Chromium installer;
-- the current preview still requires manual unpacked Bridge installation and
-  system Chrome;
+- the current interactive development lane uses system Chrome Stable with a
+  dedicated AkuBrowser profile and one-time manual unpacked Bridge loading;
+  automated acceptance continues to use a fresh pinned Chromium profile;
 - `AkuBridge/manifest.json`, `popup.js`, `service-worker.js`, and extension
   contract tests still treat `setup.html` as the setup surface;
-- the normal source-open path now uses a narrow extension-owned permission
-  broker, but the legacy monolithic extension setup surface and its duplicate
-  source-selection controls still need removal after Sidecar setup migration;
+- Sidecar first-run and the normal source-open path now use the narrow
+  extension-owned permission broker and require at least one selected source
+  to reach effective ready state before onboarding completes. Fresh-profile
+  deny/grant, sign-in, restart, and calibration acceptance must pass before the
+  legacy monolithic extension setup surface and its duplicate source-selection
+  controls can be removed;
 - the current runtime updater and Native Messaging lifecycle are Sidecar/
   companion-oriented rather than whole-tuple app-managed;
 - `production-app`, `production-installed-app`, launcher, tuple, and unsigned
   NSIS builder contracts exist, but signing, atomic same-version repair,
   whole-tuple rollback, and release publication remain unimplemented;
-- pinned-Chromium Bridge heartbeat behavior must be fixed and accepted before
-  end-to-end setup migration.
+- Bridge heartbeat and reconnect behavior passed exact protocol 2.0 recovery
+  in isolated pinned Chromium and returned healthy after a cooperative reload
+  in the active development profile. Multi-source and failure-path acceptance
+  remain before end-to-end setup migration can be declared complete;
+- the installed-app manifest still declares Sidecar database schema 9 while
+  the current Sidecar runtime is schema 10. Packaging must fail closed until
+  the tuple metadata and accepted migration inputs are updated and validated;
+- Sidecar can validate a configured reasoning executable but has no
+  authoritative pre-invocation signal for Codex authentication/readiness. A
+  provider-specific readiness contract is still required before Codex can be
+  made a truthful first-run gate instead of being proven by the first bounded
+  calibration request.
 
 Until these gaps are closed, the current Store/companion and portable-preview
 documents describe shipped behavior and must not be silently interpreted as
