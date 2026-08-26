@@ -75,8 +75,8 @@
       "installerStatus": "not-shipped",
       "signedInstaller": false,
       "database": {
-        "currentSchemaVersion": 9,
-        "acceptedInputSchemaVersions": [7, 8, 9],
+        "currentSchemaVersion": 10,
+        "acceptedInputSchemaVersions": [7, 8, 9, 10],
         "rollbackStatus": "not-implemented"
       }
     },
