@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -18,9 +19,15 @@ import (
 )
 
 type RunOptions struct {
-	InstallRoot string
-	VerifyOnly  bool
+	InstallRoot          string
+	DevelopmentWorkspace string
+	VerifyOnly           bool
 }
+
+const (
+	installedApplicationID   = "AI4U.AkuBrowser"
+	developmentApplicationID = "AI4U.AkuBrowser.Development"
+)
 
 type ExitError struct {
 	Code int
@@ -39,6 +46,18 @@ func DefaultInstallRoot() (string, error) {
 }
 
 func Run(ctx context.Context, options RunOptions) error {
+	if workspace := strings.TrimSpace(options.DevelopmentWorkspace); workspace != "" {
+		if options.InstallRoot != "" || options.VerifyOnly {
+			return errors.New("--development-workspace cannot be combined with --install-root or --verify-only")
+		}
+		if err := setCurrentApplicationID(developmentApplicationID); err != nil {
+			return err
+		}
+		return runDevelopmentSupervisor(ctx, workspace)
+	}
+	if err := setCurrentApplicationID(installedApplicationID); err != nil {
+		return err
+	}
 	root := options.InstallRoot
 	if root == "" {
 		var err error
@@ -78,7 +97,16 @@ func runSidecar(ctx context.Context, tuple Tuple, paths LaunchPaths) error {
 	if err != nil {
 		return fmt.Errorf("create runtime control token: %w", err)
 	}
-	args := append(tuple.SidecarArgs(paths), "--runtime-control-token", controlToken)
+	relaunchCommand, err := installedRelaunchCommand(tuple.InstallRoot)
+	if err != nil {
+		return err
+	}
+	args := append(tuple.SidecarArgs(paths),
+		"--app-user-model-id", installedApplicationID,
+		"--app-relaunch-command", relaunchCommand,
+		"--app-relaunch-display-name", "AkuBrowser",
+		"--runtime-control-token", controlToken,
+	)
 	command := exec.Command(paths.SidecarPath, args...)
 	command.Dir = tuple.VersionRoot
 	command.Stdout = os.Stdout
@@ -121,6 +149,52 @@ func runSidecar(ctx context.Context, tuple Tuple, paths LaunchPaths) error {
 		stopOwnedProcess(command, waitResult, client, healthURL, controlToken)
 		return nil
 	}
+}
+
+func runDevelopmentSupervisor(ctx context.Context, workspace string) error {
+	workspace, err := filepath.Abs(workspace)
+	if err != nil {
+		return fmt.Errorf("resolve development workspace: %w", err)
+	}
+	supervisor := filepath.Join(workspace, "AkuSupervisor", "target", "dev", "aku-supervisor.exe")
+	info, err := os.Stat(supervisor)
+	if err != nil {
+		return fmt.Errorf("locate development AkuSupervisor at %s: %w", supervisor, err)
+	}
+	if info.IsDir() {
+		return fmt.Errorf("development AkuSupervisor path is a directory: %s", supervisor)
+	}
+	command := exec.CommandContext(ctx, supervisor, "start", "akusidecar", "--actor", "user", "--reason", "AkuBrowser taskbar launch")
+	command.Dir = filepath.Dir(supervisor)
+	command.Stdout = os.Stdout
+	command.Stderr = os.Stderr
+	if err := command.Run(); err != nil {
+		return fmt.Errorf("start development AkuSidecar through AkuSupervisor: %w", err)
+	}
+	return nil
+}
+
+func installedRelaunchCommand(installRoot string) (string, error) {
+	executable, err := os.Executable()
+	if err != nil {
+		return "", fmt.Errorf("resolve launcher executable for relaunch: %w", err)
+	}
+	quotedExecutable, err := quoteWindowsCommandArgument(executable)
+	if err != nil {
+		return "", err
+	}
+	quotedRoot, err := quoteWindowsCommandArgument(installRoot)
+	if err != nil {
+		return "", err
+	}
+	return quotedExecutable + " --install-root " + quotedRoot, nil
+}
+
+func quoteWindowsCommandArgument(value string) (string, error) {
+	if strings.ContainsRune(value, '"') {
+		return "", fmt.Errorf("Windows relaunch argument contains an unsupported quote: %q", value)
+	}
+	return `"` + value + `"`, nil
 }
 
 func checkHealth(client *http.Client, endpoint string) (string, string, error) {

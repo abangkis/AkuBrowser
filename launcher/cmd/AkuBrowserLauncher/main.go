@@ -12,11 +12,16 @@ import (
 
 func main() {
 	installRoot := flag.String("install-root", "", "installed AkuBrowser root (defaults to the launcher directory)")
+	developmentWorkspace := flag.String("development-workspace", "", "development workspace containing AkuSupervisor")
 	verifyOnly := flag.Bool("verify-only", false, "verify the active tuple and exit without starting AkuSidecar")
 	flag.Parse()
 	ctx, cancel := launcher.SignalContext(context.Background())
 	defer cancel()
-	err := launcher.Run(ctx, launcher.RunOptions{InstallRoot: *installRoot, VerifyOnly: *verifyOnly})
+	err := launcher.Run(ctx, launcher.RunOptions{
+		InstallRoot:          *installRoot,
+		DevelopmentWorkspace: *developmentWorkspace,
+		VerifyOnly:           *verifyOnly,
+	})
 	if err == nil {
 		return
 	}

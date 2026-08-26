@@ -249,6 +249,9 @@ entry point for installed users. It must:
 - verify the installed payload before launch;
 - pass the exact Sidecar, Chromium, Bridge, profile, database, and control
   paths;
+- provide one explicit `AI4U.AkuBrowser` Windows AppUserModelID plus the
+  matching launcher relaunch command, display name, and stable AkuBrowser icon
+  resource to the app-shell window;
 - wait for the Sidecar health contract before presenting the app shell;
 - surface bounded diagnostics when a component is missing, corrupt, or
   incompatible;
@@ -259,6 +262,12 @@ entry point for installed users. It must:
 The launcher must not become a second product runtime. Product state remains in
 Sidecar; browser capture remains in Bridge; the launcher owns only packaging,
 lifecycle, and recovery.
+
+Development uses the distinct `AI4U.AkuBrowser.Development` identity so its
+taskbar item cannot merge with an installed release. The development relaunch
+target is still `AkuBrowserLauncher`, but that launcher delegates startup to
+`AkuSupervisor start akusidecar`; AkuSupervisor remains a generic lifecycle
+authority and does not learn AkuBrowser-specific identity or browser flags.
 
 ## Failure and recovery contract
 

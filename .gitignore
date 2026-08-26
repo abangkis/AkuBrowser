@@ -7,6 +7,7 @@ build/
 coverage/
 .nyc_output/
 artifacts/
+/launcher/AkuBrowserLauncher.exe
 
 # Local configuration and secrets
 .env
