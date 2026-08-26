@@ -126,7 +126,7 @@ $buildParameters = @{}
 if (-not [string]::IsNullOrWhiteSpace($OutputRoot)) { $buildParameters.OutputRoot = $OutputRoot }
 if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
     $C2paToolPath = (& (Join-Path $PSScriptRoot 'provision-shared-c2patool.ps1') | Out-String).Trim()
-    if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($C2paToolPath)) {
+    if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
         throw 'The shared c2patool could not be provisioned.'
     }
 }
