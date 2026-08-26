@@ -6,6 +6,7 @@ param(
 
 $ErrorActionPreference = "Stop"
 $browserRoot = Split-Path -Parent $PSScriptRoot
+$workspaceRoot = Split-Path -Parent $browserRoot
 $release = Get-Content -LiteralPath (Join-Path $browserRoot "release\release-manifest.json") -Raw | ConvertFrom-Json
 $bridgeIdentityRegistry = Get-Content -LiteralPath (Join-Path $browserRoot "config\bridge-identities.json") -Raw | ConvertFrom-Json
 $bridgeIdentityProfile = [string]$release.distribution.offlineBundle.bridgeIdentityProfile
@@ -16,11 +17,28 @@ if ($bridgeIdentityRegistry.schemaVersion -ne 2 -or [string]::IsNullOrWhiteSpace
 $bridgeIdentity = $bridgeIdentityProperty.Value
 $bridgeExtensionOrigin = "chrome-extension://$([string]$bridgeIdentity.extensionId)/"
 
+function Resolve-SharedTemporaryRoot {
+    $ancestor = [IO.DirectoryInfo]$workspaceRoot
+    while ($null -ne $ancestor) {
+        $candidate = Join-Path $ancestor.FullName "SharedTemp"
+        if (Test-Path -LiteralPath $candidate -PathType Container) {
+            $root = [IO.Path]::GetFullPath((Join-Path $candidate "AkuBrowser\preview-validation"))
+            New-Item -ItemType Directory -Force -Path $root | Out-Null
+            return $root
+        }
+        $ancestor = $ancestor.Parent
+    }
+    throw "No ancestor-owned SharedTemp exists above $workspaceRoot"
+}
+
+$temporaryRoot = Resolve-SharedTemporaryRoot
+$temporaryPrefix = $temporaryRoot.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+$browserPrefix = [IO.Path]::GetFullPath($browserRoot).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+
 function Remove-TemporaryDirectory([string] $Path) {
     $absolutePath = [IO.Path]::GetFullPath($Path)
-    $tempPrefix = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
-    if (-not $absolutePath.StartsWith($tempPrefix, [StringComparison]::OrdinalIgnoreCase)) {
-        throw "Refusing to remove a directory outside the temporary root: $absolutePath"
+    if (-not $absolutePath.StartsWith($temporaryPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+        throw "Refusing to remove a directory outside the shared temporary root: $absolutePath"
     }
     if (-not (Test-Path -LiteralPath $absolutePath)) {
         return
@@ -49,7 +67,7 @@ if ([string]::IsNullOrWhiteSpace($ArtifactDirectory)) {
     if (-not (Test-Path -LiteralPath $ZipPath -PathType Leaf)) {
         throw "Preview ZIP was not found: $ZipPath"
     }
-    $extractionRoot = Join-Path ([IO.Path]::GetTempPath()) ("akubrowser-release-extract-" + [Guid]::NewGuid().ToString("n"))
+    $extractionRoot = Join-Path $temporaryRoot ("akubrowser-release-extract-" + [Guid]::NewGuid().ToString("n"))
     New-Item -ItemType Directory -Force -Path $extractionRoot | Out-Null
     try {
         Expand-Archive -LiteralPath $ZipPath -DestinationPath $extractionRoot
@@ -61,6 +79,11 @@ if ([string]::IsNullOrWhiteSpace($ArtifactDirectory)) {
     exit 0
 }
 $ArtifactDirectory = [IO.Path]::GetFullPath($ArtifactDirectory)
+$artifactPrefix = $ArtifactDirectory.TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+if (-not $artifactPrefix.StartsWith($browserPrefix, [StringComparison]::OrdinalIgnoreCase) -and
+    -not $artifactPrefix.StartsWith($temporaryPrefix, [StringComparison]::OrdinalIgnoreCase)) {
+    throw "Preview validation may execute artifacts only from the AkuBrowser project or ancestor-owned SharedTemp: $ArtifactDirectory"
+}
 
 function Assert-True([bool] $Condition, [string] $Message) {
     if (-not $Condition) { throw $Message }
@@ -207,7 +230,7 @@ $listener.Start()
 $port = ([Net.IPEndPoint]$listener.LocalEndpoint).Port
 $listener.Stop()
 
-$smokeRoot = Join-Path ([IO.Path]::GetTempPath()) ("akubrowser-release-smoke-" + [Guid]::NewGuid().ToString("n"))
+$smokeRoot = Join-Path $temporaryRoot ("akubrowser-release-smoke-" + [Guid]::NewGuid().ToString("n"))
 New-Item -ItemType Directory -Force -Path $smokeRoot | Out-Null
 $database = Join-Path $smokeRoot "aku-sidecar.db"
 $process = $null

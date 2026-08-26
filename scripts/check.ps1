@@ -44,6 +44,7 @@ $sidecarSchema = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\stor
 $bridgeCapabilities = Get-Content -LiteralPath (Join-Path $bridgeRoot "bridge-capabilities.js") -Raw
 $sourceCatalog = Get-Content -LiteralPath (Join-Path $bridgeRoot "source-catalog.js") -Raw
 $responseEvidenceAdapter = Get-Content -LiteralPath (Join-Path $bridgeRoot "x-response-evidence-adapter.js") -Raw
+$windowsPreviewTest = Get-Content -LiteralPath (Join-Path $browserRoot "scripts\test-windows-preview.ps1") -Raw
 
 Assert-True ($releaseManifest.version -eq "0.8.0") "AkuBrowser release version is unexpected."
 Assert-True ($releaseManifest.channel -eq "stable") "AkuBrowser release manifest must declare the stable channel for the stable candidate."
@@ -95,6 +96,8 @@ Assert-True ($sourceCatalog -match 'mediaEvidenceAdapterVersion:\s*"x-response-e
 Assert-True ($bridgeCapabilities -match '"observe_response_media_evidence"') "AkuBridge response-evidence action is missing."
 Assert-True ($bridgeCapabilities -match '"dispatch_background_commands"') "AkuBridge background Auto Update dispatch action is missing."
 Assert-True ($responseEvidenceAdapter -match 'RUNTIME_REVISION\s*=\s*"x-response-evidence-v2"') "AkuBridge response-evidence runtime is unexpected."
+Assert-True ($windowsPreviewTest -match 'Resolve-SharedTemporaryRoot') "Windows preview validation must resolve the ancestor-owned SharedTemp."
+Assert-True ($windowsPreviewTest -notmatch '\[IO\.Path\]::GetTempPath\(\)') "Windows preview validation must not execute release binaries from the system temporary directory."
 foreach ($operation in @("HomeTimeline", "HomeLatestTimeline", "TweetDetail")) {
     Assert-True ($responseEvidenceAdapter -match [regex]::Escape($operation)) "AkuBridge response-evidence operation $operation is missing."
 }
