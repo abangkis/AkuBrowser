@@ -148,9 +148,9 @@
         "macos-universal": "3fd3d51f90317f4cffe37b44b7e397392d92dc178dce609ba48e0bcee15420a6"
       },
       "sourcePolicy": "pinned-local-release-binary",
-      "workspaceSource": "AkuSidecar/runtime/dev/c2patool.exe",
+      "workspaceSource": "../SharedTemp/AkuBrowser/shared-tools/c2patool/0.26.60/windows-x64/c2patool.exe",
       "platformWorkspaceSource": {
-        "windows-x64": "AkuSidecar/runtime/dev/c2patool.exe",
+        "windows-x64": "../SharedTemp/AkuBrowser/shared-tools/c2patool/0.26.60/windows-x64/c2patool.exe",
         "macos-universal": "AkuSidecar/runtime/dev/macos-universal/c2patool"
       },
       "upstreamAssets": {

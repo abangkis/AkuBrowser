@@ -16,7 +16,8 @@ $bridgeIdentityRegistryPath = Join-Path $browserRoot "config\bridge-identities.j
 & node (Join-Path $PSScriptRoot "check-runtime-identity.mjs") $workspaceRoot
 if ($LASTEXITCODE -ne 0) { throw "Runtime identity contract check failed before Windows preview build." }
 if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
-    $C2paToolPath = Join-Path $sidecarRoot "runtime\dev\c2patool.exe"
+    $c2paSource = (Get-Content -LiteralPath $releaseManifestPath -Raw | ConvertFrom-Json).components.c2paTool.workspaceSource
+    $C2paToolPath = Join-Path $workspaceRoot $c2paSource
 }
 $C2paToolPath = [IO.Path]::GetFullPath($C2paToolPath)
 
@@ -190,6 +191,7 @@ $configDirectory = Join-Path $artifactRoot "config"
 New-Item -ItemType Directory -Force -Path $configDirectory | Out-Null
 $packageConfig = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $packageConfig.database.path = "data/aku-sidecar.db"
+$packageConfig.mediaProvenance.c2paToolPath = "c2patool.exe"
 $packageConfig.reasoning.providers.'codex-app-server'.executable = ""
 $packageConfig.bridge.trustedExtensionOrigins = @($bridgeExtensionOrigin)
 $packageConfig.deployment = [ordered]@{

@@ -126,7 +126,8 @@ if ([string]::IsNullOrWhiteSpace($ChromiumRoot)) {
     $ChromiumRoot = Join-Path $sidecarRoot "runtime\chromium"
 }
 if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
-    $C2paToolPath = Join-Path $sidecarRoot "runtime\dev\c2patool.exe"
+    $c2paSource = (Read-Json $releaseManifestPath).components.c2paTool.workspaceSource
+    $C2paToolPath = Join-Path $workspaceRoot $c2paSource
 }
 $OutputRoot = Get-FullPath $OutputRoot
 $ChromiumRoot = Get-FullPath $ChromiumRoot
@@ -283,6 +284,7 @@ try {
     New-Item -ItemType Directory -Force -Path $configDirectory | Out-Null
     $packageConfig = Read-Json $sidecarConfigPath
     $packageConfig.database.path = "data/aku-sidecar.db"
+    $packageConfig.mediaProvenance.c2paToolPath = "c2patool.exe"
     $packageConfig.reasoning.providers.'codex-app-server'.executable = ""
     $packageConfig.bridge.trustedExtensionOrigins = @($extensionOrigin)
     $packageConfig.deployment = [ordered]@{

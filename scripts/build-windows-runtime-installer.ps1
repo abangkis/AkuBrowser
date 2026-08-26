@@ -219,7 +219,8 @@ $OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
 New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
 
 if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
-    $C2paToolPath = Join-Path $sidecarRoot "runtime\dev\c2patool.exe"
+    $c2paSource = $release.components.c2paTool.workspaceSource
+    $C2paToolPath = Join-Path $workspaceRoot $c2paSource
 }
 $C2paToolPath = [IO.Path]::GetFullPath($C2paToolPath)
 Assert-True (Test-Path -LiteralPath $C2paToolPath -PathType Leaf) "The pinned c2patool binary was not found: $C2paToolPath"
@@ -343,6 +344,7 @@ $configOutput = Join-Path $runtimePayload "config"
 New-Item -ItemType Directory -Force -Path $configOutput | Out-Null
 $config = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $config.database.path = "runtime/aku-browser.db"
+$config.mediaProvenance.c2paToolPath = "c2patool.exe"
 $config.reasoning.providers.'codex-app-server'.executable = ""
 $config.bridge.trustedExtensionOrigins = @("chrome-extension://$ExtensionId/")
 $deploymentMode = switch ($BridgeIdentityProfile) {

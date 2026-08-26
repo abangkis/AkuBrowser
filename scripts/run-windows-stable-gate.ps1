@@ -112,7 +112,7 @@ Assert-True (@($identityIds | Sort-Object -Unique).Count -eq 4) "Development, ac
 $UpdateSigningPrivateKeyPath = [IO.Path]::GetFullPath($UpdateSigningPrivateKeyPath)
 Assert-True (Test-Path -LiteralPath $UpdateSigningPrivateKeyPath -PathType Leaf) "Runtime-update signing key was not found."
 if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
-    $C2paToolPath = Join-Path $sidecarRoot "runtime\dev\c2patool.exe"
+    $C2paToolPath = Join-Path $workspaceRoot $release.components.c2paTool.workspaceSource
 }
 $C2paToolPath = [IO.Path]::GetFullPath($C2paToolPath)
 Assert-True (Test-Path -LiteralPath $C2paToolPath -PathType Leaf) "Pinned Windows c2patool was not found."

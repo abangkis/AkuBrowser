@@ -117,7 +117,7 @@ Assert-True ($domain -match 'ApplicationVersion\s*=\s*"0\.8\.0"') "AkuSidecar ve
 Assert-True ($releaseManifest.components.akuSidecar.version -eq "0.8.0") "AkuSidecar release manifest version is unexpected."
 Assert-True ($releaseManifest.components.c2paTool.version -eq "0.26.60") "Pinned c2patool version is unexpected."
 Assert-True ($releaseManifest.components.c2paTool.sha256 -eq "90cbcebe30250f8e8c53416d32ed86065dc04a23be86e4a2337f5cd1badfa0b7") "Pinned c2patool SHA-256 is unexpected."
-Assert-True ($releaseManifest.components.c2paTool.workspaceSource -eq "AkuSidecar/runtime/dev/c2patool.exe") "Pinned c2patool workspace source is unexpected."
+Assert-True ($releaseManifest.components.c2paTool.workspaceSource -eq "../SharedTemp/AkuBrowser/shared-tools/c2patool/0.26.60/windows-x64/c2patool.exe") "Pinned c2patool workspace source must use the ancestor-owned SharedTemp."
 Assert-True ($releaseManifest.components.c2paTool.licenseSha256.mit -eq "89375a50de90d2dcaa04406086da832ad452ebcaf6ab402ef3d51b8401a67c71") "Pinned c2patool MIT license SHA-256 is unexpected."
 Assert-True ($releaseManifest.components.c2paTool.licenseSha256.apache2 -eq "86bdd5dafab77451044b6fd6d2efab23e3410ce658eb097f04c04f4f54aed62f") "Pinned c2patool Apache license SHA-256 is unexpected."
 Assert-True ($domain -match 'BridgeContractVersion\s*=\s*"aku-browser\.bridge\.v2"') "Bridge contract boundary is unexpected."
