@@ -25,10 +25,11 @@ Social engagement is useful for discovery, but it is indirect behavioral inferen
 ## First-run experience
 
 1. The user chooses among the registered X, LinkedIn, Facebook, and Instagram sources. All registered sources are preselected for a new setup and remain independently configurable.
-2. AkuBrowser performs one bounded capture to obtain real candidates.
-3. Before the Timeline opens, the user calibrates a source-balanced sample with More, Neutral, Less, or a capture issue.
-4. The local profile becomes active when repeated directional evidence is sufficient.
-5. Later checks go directly to the finite Timeline and Update Inbox.
+2. Once at least one selected source is ready, the user selects the reasoning provider before the first bounded capture: Codex App Server is the default and most compliant option, Gemini requires a free Google key and discloses that captured post text is processed by Google, and local Ollama models keep reasoning on the machine. A provider whose credential is missing shows setup guidance instead of a dead end. The selection applies immediately; the first update always runs on the chosen provider.
+3. AkuBrowser performs one bounded capture to obtain real candidates.
+4. Before the Timeline opens, the user calibrates a source-balanced sample with More, Neutral, Less, or a capture issue.
+5. The local profile becomes active when repeated directional evidence is sufficient.
+6. Later checks go directly to the finite Timeline and Update Inbox.
 
 Later updates may also be prepared by Auto Update while AkuSidecar is running.
 Prepared batches remain outside the Timeline until explicitly opened, or until
