@@ -8,6 +8,11 @@ one isolated fresh-profile X acceptance. Multi-source and failure-path
 acceptance remain before signed-installer work resumes. A signed unified
 installer and shipped migration remain pending.
 
+Chrome Web Store publication is frozen as of 27 August 2026: no further Store
+builds are submitted, and all future production releases ship through this
+contract's single signed installer. The legacy Bridge-owned setup surface is
+retired under the [setup retirement plan](setup-retirement-plan.md).
+
 AkuSidecar now uses database schema 10 and accepts additive startup migration
 from schemas 7, 8, and 9. The staged installed-app release manifest still
 records schema 9 and must be reconciled before the tuple builder is used for a

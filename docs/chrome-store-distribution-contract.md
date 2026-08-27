@@ -1,13 +1,18 @@
 # Chrome Store distribution contract
 
-Status: implemented distribution authority, 31 July 2026.
+Status: implemented distribution authority, 31 July 2026. Publication frozen
+27 August 2026.
 
-> **Historical shipped-state contract — superseded for target production.**
+> **Historical shipped-state contract — publication frozen.**
+> Chrome Web Store publication of AkuBrowser is frozen: no further Store
+> builds are submitted, and all future production releases ship through the
+> single installed-app tuple in the
+> [installed-app distribution contract](installed-app-distribution-contract.md).
 > This document preserves the Chrome Web Store plus companion-runtime design
-> that current artifacts implement. The approved production direction is the
-> single installed-app tuple in the [installed-app distribution contract](installed-app-distribution-contract.md).
-> Do not use this document as evidence that the target unified installer,
-> app-shell startup, or whole-tuple updater is implemented.
+> that shipped artifacts implement and remains useful historical evidence for
+> the migration; it is not the forward-looking distribution authority.
+> Legacy setup-surface removal is tracked in the
+> [setup retirement plan](setup-retirement-plan.md).
 
 ## Decision
 
