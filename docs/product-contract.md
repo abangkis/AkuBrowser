@@ -47,7 +47,7 @@ publishes directly. When prepared material is available, the header separately
 offers **Load latest batch** and the finish line offers **Continue with next
 batch**.
 
-Reset learning removes calibration, More/Less feedback, and the fitted profile. Historical selection corrections and their restored Timeline items remain auditable, but corrections older than the reset boundary no longer train the rebuilt profile. Full reset first creates a verified SQLite backup, then clears Timeline, runs, learning, onboarding, settings, and native content-continuity history while preserving the Bridge identity.
+Reset learning removes calibration, More/Less feedback, and the fitted profile. Historical selection corrections and their restored Timeline items remain auditable, but corrections older than the reset boundary no longer train the rebuilt profile. Full reset first creates a verified SQLite backup, then clears Timeline, runs, learning, onboarding, settings, and native content-continuity history. It then revokes every optional source host permission and unregisters the source capture scripts through the Bridge, so no source remains ready from the previous setup, and stages an isolated-browser-profile wipe that the next app-shell launch applies before Chromium starts. The result is a genuine start-from-zero: clean database and clean capture surface. The Bridge identity remains valid throughout.
 
 ## Selection and personalization
 
