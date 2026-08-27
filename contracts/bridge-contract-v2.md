@@ -39,7 +39,8 @@ current-process heartbeat is `reconnecting`; any observed mismatch is
 The exact current capability set includes
 `mediaEvidenceAdapterVersions.x=x-response-evidence-v2`,
 `mediaEvidenceAdapterVersions.instagram=instagram-structured-carousel-v2`, and the bounded
-`observe_response_media_evidence` and `dispatch_background_commands` actions.
+`observe_response_media_evidence`, `dispatch_background_commands`, and
+`open_native_reader_window` actions.
 These declare evidence observation and bounded Sidecar-command dispatch, not
 authority to issue provider requests or take unbounded browser control.
 
@@ -72,6 +73,9 @@ quality evidence independently as `capturePerformance.outcome` (`complete`,
 - `AKU_BROWSER_X_MEDIA_EVIDENCE_LOOKUP`
 - `AKU_BROWSER_X_MEDIA_EVIDENCE_RESULT`
 - `AKU_BROWSER_X_MEDIA_EVIDENCE_FAILED`
+- `AKU_BROWSER_OPEN_NATIVE_POST`
+- `AKU_BROWSER_NATIVE_POST_OPENED`
+- `AKU_BROWSER_NATIVE_POST_OPEN_FAILED`
 - `AKU_BROWSER_BRIDGE_RELOAD_SELF`
 - `AKU_BROWSER_CONFIGURE_BACKGROUND_DISPATCH`
 - `AKU_BROWSER_BRIDGE_ERROR`
@@ -79,6 +83,12 @@ quality evidence independently as `capturePerformance.outcome` (`complete`,
 The relay transports only bounded commands, capability metadata, observations,
 and failures. It grants no arbitrary script, navigation, click, debugger,
 account, or filesystem authority.
+
+Native-post navigation has two explicit browser roles. User-initiated reads are
+opened in a revalidated, user-owned reader window. Capture and update work uses
+lease-owned managed windows and excludes the reader window from source-tab
+selection. Window identifiers are ephemeral local bindings, not durable or
+cross-profile identity, and the Bridge never closes the reader window.
 
 Capture snapshots may include bounded `candidateDiagnostics` supplied by the
 active source adapter. The generic Bridge sanitizer limits counts, reason-key
