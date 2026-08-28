@@ -2,10 +2,11 @@
 
 Current shipped release: **`0.7.9`**. The repository also contains an
 unshipped **`0.8.0`** development tuple in
-[`release/release-manifest.json`](release/release-manifest.json); its installed-
-app schema metadata must be reconciled with the current Sidecar before another
-candidate is built. The canonical bundle boundary and migration gates are in
-the [installed-app distribution contract](docs/installed-app-distribution-contract.md).
+[`release/release-manifest.json`](release/release-manifest.json). Its installed-
+app schema metadata is reconciled with AkuSidecar schema 10, but whole-tuple
+rollback and the remaining setup failure-path acceptance are still required
+before another release candidate. The canonical bundle boundary and gates are
+in the [installed-app distribution contract](docs/installed-app-distribution-contract.md).
 
 > **Approved target distribution — partially staged, not shipped.** The next production
 > direction is one signed installer containing AkuBrowserLauncher, AkuSidecar,

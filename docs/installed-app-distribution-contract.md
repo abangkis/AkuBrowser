@@ -3,10 +3,15 @@
 Status: approved target architecture. Phase 0 identity, the Windows launcher
 vertical slice, a local Windows tuple builder, and an unsigned NSIS installer
 candidate are staged. The initial Phase 2 Sidecar-owned setup and Phase 3
-per-source broker/readiness loop are implemented in development and have passed
-one isolated fresh-profile X acceptance. Multi-source and failure-path
-acceptance remain before signed-installer work resumes. A signed unified
-installer and shipped migration remain pending.
+per-source broker/readiness loop are implemented in development. One isolated
+fresh-profile X run passed, and the interactive development profile has since
+passed X/LinkedIn source readiness, durable closed-tab session recognition,
+provider selection, secure Gemini credential storage, and a first update on
+Gemini 3.5 Flash Lite. The persistent-profile reset lane has also passed the
+LinkedIn/Facebook deny-to-grant sequence, Sidecar restart, Bridge reload, first
+Codex update, calibration, and Timeline delivery. The complete failure-path
+matrix remains before signed-installer work resumes. A signed unified installer
+and shipped migration remain pending.
 
 Chrome Web Store publication is frozen as of 27 August 2026: no further Store
 builds are submitted, and all future production releases ship through this
@@ -14,9 +19,9 @@ contract's single signed installer. The legacy Bridge-owned setup surface is
 retired under the [setup retirement plan](setup-retirement-plan.md).
 
 AkuSidecar now uses database schema 10 and accepts additive startup migration
-from schemas 7, 8, and 9. The staged installed-app release manifest still
-records schema 9 and must be reconciled before the tuple builder is used for a
-new candidate. Database rollback remains explicitly unimplemented until
+from schemas 7, 8, and 9. The staged installed-app release manifest records
+schema 10 and accepts inputs 7–10, so the forward-migration tuple metadata is
+reconciled. Database rollback remains explicitly unimplemented until
 whole-tuple activation and rollback are built.
 
 This document is the canonical distribution target for the next AkuBrowser
@@ -239,10 +244,10 @@ must provide a clear per-source “open sign-in” action and report:
 No source is considered usable merely because it is selected in Sidecar.
 Bridge permission/readiness and source login readiness remain separate facts.
 
-Profile reset is a destructive action and requires explicit confirmation. An
-ordinary application update preserves the profile. An ordinary uninstall
-preserves user data according to the product retention policy; a full reset
-explicitly removes both data and the isolated profile.
+Browser-profile deletion is a separate destructive action and requires
+explicit confirmation. Ordinary application update, uninstall, and AkuBrowser
+full reset preserve the profile. Full reset clears AkuBrowser-owned state and
+revokes optional source permissions without deleting source login sessions.
 
 ## Launcher responsibilities
 
@@ -335,9 +340,12 @@ An ordinary uninstall must:
 - remove the installed-app identity/configuration;
 - preserve user data and any explicitly retained profile state.
 
-A full reset must require an explicit confirmation and remove user data,
-SQLite databases, downgrade backups, and the isolated browser profile. The
-uninstaller must report exactly what was preserved or removed.
+A full reset must require explicit confirmation, remove AkuBrowser-owned user
+data, SQLite databases, and downgrade backups, and ask Bridge to revoke every
+optional source permission and unregister its capture scripts. It preserves the
+isolated browser profile and source login sessions. Deleting that profile is a
+separate destructive operation with its own confirmation. The uninstaller must
+report exactly what was preserved or removed.
 
 The installed program root is replaceable. Data and profile paths must be
 validated to remain outside that root before any recursive removal.
@@ -377,13 +385,28 @@ real Google-backed source login can proceed. This is not a production
 distribution decision: the target remains launcher-managed pinned Chromium,
 and its login compatibility must pass before release.
 
-Reasoning-provider evaluation is also independent from installer packaging.
-Codex App Server remains the authoritative Sidecar baseline. OpenRouter free
-models, currently led by an experimental Nemotron Ultra assessment, must pass
-Sidecar corpus, reliability, tail-latency, privacy-routing, and non-authoritative
-shadow gates before they become a development provider choice. The assessment
-uses `OPENROUTER_API_KEY`; strict ZDR routing will be measured separately and
-has not yet been integrated into Sidecar.
+Reasoning-provider onboarding is independent from installer packaging and is
+complete for the current development catalog. Codex App Server remains the
+authoritative baseline; Gemini 3.5 Flash Lite uses a user-supplied key in the
+OS credential store; Ollama models use cost-free local readiness probes. The
+same server-side readiness rule protects onboarding and later provider
+switches, and provider changes apply at an idle boundary without restarting
+Sidecar. Groq remains hidden while endpoint- and provider-specific tuning is a
+separate follow-up, not an installed-app migration gate.
+
+### Current execution checkpoint — 28 August 2026
+
+1. Close the legacy-setup blocking gate in development: complete the remaining
+   typed failure-path states recorded in the
+   [setup retirement plan](setup-retirement-plan.md).
+2. Rewire Bridge entry points to the Sidecar app shell, then delete the legacy
+   `setup.html` surface only after that gate is recorded as passed.
+3. Return to distribution work: pass pinned-Chromium clean-machine login and
+   launcher acceptance, then implement signed whole-tuple activation, repair,
+   rollback, and uninstall behavior.
+
+UI polish and additional inference-cost tuning are follow-ups. They do not
+replace or block this execution order.
 
 ### Phase 0 — Contract and identity
 
@@ -464,7 +487,8 @@ The target is not ready until all of these pass on each supported platform:
 - interrupt installation/update and retain the known-good pointer;
 - restart after app-shell close/crash without orphaned descendants;
 - ordinary uninstall preserves declared data;
-- full reset removes declared data/profile only after confirmation;
+- full reset removes declared AkuBrowser data and revokes source permissions
+  after confirmation while preserving the browser profile and login sessions;
 - verify no credentials, cookies, source content, or arbitrary commands cross
   the launcher, Sidecar, Bridge, or Native Messaging boundaries.
 
@@ -506,16 +530,17 @@ permission denial/revocation, Codex preflight, or production-login gates.
   whole-tuple rollback, and release publication remain unimplemented;
 - Bridge heartbeat and reconnect behavior passed exact protocol 2.0 recovery
   in isolated pinned Chromium and returned healthy after a cooperative reload
-  in the active development profile. Multi-source and failure-path acceptance
-  remain before end-to-end setup migration can be declared complete;
-- the installed-app manifest still declares Sidecar database schema 9 while
-  the current Sidecar runtime is schema 10. Packaging must fail closed until
-  the tuple metadata and accepted migration inputs are updated and validated;
-- Sidecar can validate a configured reasoning executable but has no
-  authoritative pre-invocation signal for Codex authentication/readiness. A
-  provider-specific readiness contract is still required before Codex can be
-  made a truthful first-run gate instead of being proven by the first bounded
-  calibration request.
+  in the active development profile. The persistent-profile LinkedIn/Facebook
+  reset, deny-to-grant, recovery, first-update, calibration, and Timeline lane
+  has also passed. The failure-path matrix remains before end-to-end setup
+  migration can be declared complete;
+- the installed-app schema metadata is reconciled at schema 10, but rollback
+  across database migrations remains unavailable until whole-tuple rollback is
+  implemented;
+- Sidecar now exposes and enforces provider-specific readiness before
+  activation. Production packaging must still validate the same Codex and
+  Ollama readiness behavior from the installed tuple rather than assuming the
+  development acceptance transfers automatically.
 
 Until these gaps are closed, the current Store/companion and portable-preview
 documents describe shipped behavior and must not be silently interpreted as

@@ -1,8 +1,11 @@
 # AkuBrowser legacy Bridge setup retirement plan
 
-Status: active plan, 27 August 2026. Chrome Web Store publication is frozen;
-all future production releases ship through the single signed installed-app
-tuple defined in the [installed-app distribution contract](installed-app-distribution-contract.md).
+Status: active plan, updated 28 August 2026. Chrome Web Store publication is
+frozen; all future production releases ship through the single signed
+installed-app tuple defined in the
+[installed-app distribution contract](installed-app-distribution-contract.md).
+The Sidecar-owned provider onboarding and local readiness lane are complete.
+Legacy setup deletion remains blocked on the acceptance checklist below.
 
 This plan executes Phase 5 of the installed-app migration: removing the
 legacy Bridge-owned `setup.html` surface after the Sidecar-owned setup path
@@ -63,12 +66,14 @@ rejects any use of `AKU_BROWSER_OPEN_BRIDGE_SETUP` from its UI.
 Stage 2 deletes files. It starts only after the acceptance record named below
 passes with current code:
 
-- [ ] Fresh-profile multi-source acceptance on the development lane
-      (pinned Chromium, SharedTemp-isolated database): repeat the completed
-      X acceptance for LinkedIn and Facebook — deny then grant the optional
-      host permission, sign in inside the isolated profile, observe typed
-      `login_required` → ready transitions, restart Sidecar and Bridge,
-      complete calibration to Timeline.
+- [x] Reset multi-source acceptance on the development lane (Chrome Stable
+      with the dedicated persistent AkuBrowser development profile and an
+      isolated database): keep the profile/login sessions, revoke source
+      permissions, then repeat the completed X acceptance for LinkedIn and
+      Facebook — deny then grant the optional host permission, observe typed
+      `login_required` → ready transitions when applicable, restart Sidecar and
+      Bridge, and complete calibration to Timeline. Pinned-Chromium login
+      compatibility remains a later installed-app release gate.
 - [ ] Failure-path states render from Sidecar without the legacy page:
       permission denied, registration missing, login required, Codex
       unavailable/pre-flight blocked, runtime stopped, and portable offline
@@ -78,6 +83,30 @@ Record the run beneath this checklist in this document before staging
 deletions. This mirrors the existing gap note in the installed-app contract:
 one isolated X acceptance proved the flow for one source; multi-source and
 failure paths close the remaining precondition.
+
+Acceptance progress recorded on 28 August 2026:
+
+- Interactive development acceptance passed X and LinkedIn permission/session
+  readiness, including recognition of an authenticated source after its tab is
+  closed.
+- Provider onboarding passed Codex/local readiness presentation, secure Gemini
+  key storage, immediate Gemini selection, and a first Gemini-backed update.
+- The prescribed reset LinkedIn/Facebook lane passed: reset revoked optional
+  browser permissions while preserving the profile and login sessions;
+  LinkedIn Back left permission ungranted and its subsequent grant became
+  ready; Facebook Deny remained `permission_not_granted`, then retry with Allow
+  became ready. Both sources remained access-ready with source tabs closed.
+- AkuSidecar restarted gracefully and AkuBridge completed a cooperative reload
+  without losing either source permission. A Codex-backed two-source first
+  update then completed with four Timeline items and zero duplicates, followed
+  by a completed 4/4 calibration snapshot with no capture issues.
+- The `login_required` state remains contract-tested rather than live-tested in
+  this lane because preserving the authenticated profile is an explicit reset
+  requirement.
+
+Next action: run the remaining failure-state matrix without changing the setup
+surfaces. If it passes, proceed to Stage 1 entry-point rewiring; if it fails,
+fix only the failed Sidecar/Bridge state before reconsidering deletion.
 
 ## Stages
 
