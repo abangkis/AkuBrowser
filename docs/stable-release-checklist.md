@@ -15,15 +15,15 @@ not a release gate.
 
 Run this sequence from a clean AkuBrowser/AkuBridge/AkuSidecar source tuple:
 
-- [ ] Freeze the AkuBrowser, AkuBridge, and AkuSidecar commits and reconcile all
+- [x] Freeze the AkuBrowser, AkuBridge, and AkuSidecar commits and reconcile all
       version, identity, schema, and compatibility declarations to v0.9.0.
-- [ ] Build the installed-app tuple:
+- [x] Build the installed-app tuple:
 
   ```powershell
   .\scripts\build-windows-installed-app.ps1 -OutputRoot .\artifacts
   ```
 
-- [ ] Verify the tuple's hashes, exact `production-app` identity, pinned
+- [x] Verify the tuple's hashes, exact `production-app` identity, pinned
       Chromium payload, c2patool, schema 10 metadata, and launcher:
 
   ```powershell
@@ -31,7 +31,7 @@ Run this sequence from a clean AkuBrowser/AkuBridge/AkuSidecar source tuple:
     -ArtifactDirectory .\artifacts\AkuBrowser-<version>-windows-x64-installed-app
   ```
 
-- [ ] Build one Windows x64 NSIS installer candidate from that tuple:
+- [x] Build one Windows x64 NSIS installer candidate from that tuple:
 
   ```powershell
   .\scripts\build-windows-installed-app-installer.ps1 `
@@ -39,7 +39,7 @@ Run this sequence from a clean AkuBrowser/AkuBridge/AkuSidecar source tuple:
     -NsisPath "C:\Program Files (x86)\NSIS\makensis.exe"
   ```
 
-- [ ] Validate the installer structure and PE header. A local candidate may be
+- [x] Validate the installer structure and PE header. A local candidate may be
       unsigned; keep the SmartScreen/antivirus warning visible until final
       signing is independently verified:
 
@@ -49,7 +49,7 @@ Run this sequence from a clean AkuBrowser/AkuBridge/AkuSidecar source tuple:
     -InstallerPath .\artifacts\installed-app-installer\<candidate-installer>.exe
   ```
 
-- [ ] Record the final SHA-256 evidence and confirm that release notes and the
+- [x] Record the final SHA-256 evidence and confirm that release notes and the
       installer both disclose the intentionally unsigned SmartScreen state.
 - [ ] Run [Windows clean-machine Step 3B](windows-clean-machine-3b.md) using the
       one installer `.exe`, not a Store package, portable ZIP, system Chrome, or
