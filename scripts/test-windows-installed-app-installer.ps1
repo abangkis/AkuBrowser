@@ -34,7 +34,7 @@ Assert-True ($source.Contains('RMDir /r /REBOOTOK "$LOCALAPPDATA\AkuBrowser\brow
 $verification = & $builder -TupleDirectory $TupleDirectory -VerifyOnly | Out-String
 if ($LASTEXITCODE -ne 0) { throw "Installed-app installer verification failed." }
 $plan = $verification | ConvertFrom-Json
-Assert-True ($plan.status -eq "verified" -and $plan.signed -eq $false -and $plan.shipped -eq $false) "Installer verification reported an unexpected trust state."
+Assert-True ($plan.status -eq "verified" -and $plan.trustState -eq "unsigned" -and $plan.releaseReady -eq $true) "Installer verification reported an unexpected trust state."
 
 if (-not [string]::IsNullOrWhiteSpace($InstallerPath)) {
     $InstallerPath = [IO.Path]::GetFullPath($InstallerPath)
@@ -48,6 +48,6 @@ if (-not [string]::IsNullOrWhiteSpace($InstallerPath)) {
     version = [string]$plan.version
     tupleDirectory = [IO.Path]::GetFullPath($TupleDirectory)
     installerPath = if ([string]::IsNullOrWhiteSpace($InstallerPath)) { $null } else { $InstallerPath }
-    signed = $false
-    shipped = $false
+    trustState = "unsigned"
+    releaseReady = $true
 } | ConvertTo-Json -Depth 4

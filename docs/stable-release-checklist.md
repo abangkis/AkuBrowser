@@ -1,17 +1,77 @@
 # Stable release checklist
 
-This is the source of truth for publishing every stable AkuBrowser release.
-Replace `<release-version>` and `<sidecar-version>` independently and record the
-exact source commits before starting. Platform-specific
-test detail remains in the [Windows Step 3B](windows-clean-machine-3b.md) and
-[macOS Step 3B](macos-clean-machine-3b.md) acceptance runbooks.
+For the current milestone, this is the source of truth for the **v0.9.0 Windows
+x64 release**. Replace `<release-version>` and `<sidecar-version>` with
+the frozen values and record the exact source commits before starting. The
+release records. v0.9.0 is intentionally unsigned; signing is future hardening,
+not a release gate.
 
-> **Current-lane notice:** this checklist governs the existing Store/portable
-> release machinery. The approved single-installer target, including full
-> Bridge + Sidecar + pinned-Chromium tuple updates, is specified in the
-> [installed-app distribution contract](installed-app-distribution-contract.md)
-> and requires a future checklist revision. Do not claim the target is shipped
-> because this checklist passes.
+> **Current-lane notice:** v0.9.0 has one Windows installed-app installer `.exe`.
+> Chrome Web Store publication is frozen, and macOS/Linux are deferred. The
+> portable and Store flows retained below are historical/recovery procedures,
+> not v0.9.0 release gates.
+
+## v0.9.0 Windows-only release checklist
+
+Run this sequence from a clean AkuBrowser/AkuBridge/AkuSidecar source tuple:
+
+- [ ] Freeze the AkuBrowser, AkuBridge, and AkuSidecar commits and reconcile all
+      version, identity, schema, and compatibility declarations to v0.9.0.
+- [ ] Build the installed-app tuple:
+
+  ```powershell
+  .\scripts\build-windows-installed-app.ps1 -OutputRoot .\artifacts
+  ```
+
+- [ ] Verify the tuple's hashes, exact `production-app` identity, pinned
+      Chromium payload, c2patool, schema 10 metadata, and launcher:
+
+  ```powershell
+  .\scripts\test-windows-installed-app-builder.ps1 `
+    -ArtifactDirectory .\artifacts\AkuBrowser-<version>-windows-x64-installed-app
+  ```
+
+- [ ] Build one Windows x64 NSIS installer candidate from that tuple:
+
+  ```powershell
+  .\scripts\build-windows-installed-app-installer.ps1 `
+    -TupleDirectory .\artifacts\AkuBrowser-<version>-windows-x64-installed-app `
+    -NsisPath "C:\Program Files (x86)\NSIS\makensis.exe"
+  ```
+
+- [ ] Validate the installer structure and PE header. A local candidate may be
+      unsigned; keep the SmartScreen/antivirus warning visible until final
+      signing is independently verified:
+
+  ```powershell
+  .\scripts\test-windows-installed-app-installer.ps1 `
+    -TupleDirectory .\artifacts\AkuBrowser-<version>-windows-x64-installed-app `
+    -InstallerPath .\artifacts\installed-app-installer\<candidate-installer>.exe
+  ```
+
+- [ ] Record the final SHA-256 evidence and confirm that release notes and the
+      installer both disclose the intentionally unsigned SmartScreen state.
+- [ ] Run [Windows clean-machine Step 3B](windows-clean-machine-3b.md) using the
+      one installer `.exe`, not a Store package, portable ZIP, system Chrome, or
+      manually loaded extension.
+- [ ] Confirm the clean-machine flow covers launch without Developer Mode or
+      system Chrome; Codex App/App Server as an external prerequisite; optional
+      Gemini key storage/use; X, LinkedIn, Facebook, and Instagram adapters;
+      provider hot-swap at an idle boundary; schema 10 startup/migration; and
+      install, repair, update/rollback, uninstall, preserve-data, and full-reset
+      behavior.
+- [ ] Publish after the unsigned installer, checksum, release manifest, release
+      notes, and automated release evidence agree. Publish one installer
+      binary plus its checksum; do not publish a Chrome Web Store update.
+
+Independent Windows clean-machine evidence remains strongly recommended and is
+tracked as post-release hardening. macOS and Linux work is intentionally
+outside this release.
+
+## Historical cross-platform checklist (pre-v0.9.0)
+
+The remaining procedure documents the former Store/portable and macOS handoff
+flow for reproducibility and recovery. It is not an active v0.9.0 gate.
 
 ## Execution order and machine handoff
 

@@ -1,29 +1,42 @@
-# AkuBrowser 0.7.9
+# AkuBrowser v0.9.0 Windows release
 
-`0.7.9` is the current cross-platform distribution candidate. It retains the explicit,
-user-triggered Codex prerequisite check to Setup, with installation guidance
-when Codex App Server is unavailable and manual sign-in confirmation only after
-a compatible executable is detected. It keeps the bounded Luna
-Max reasoning profile as an explicit tuning option, while Luna High is the
-fresh default for Candidate Evaluation, and raises the fresh Auto Update daily
-model budget from 1M to 2M tokens while retaining the 25% user reserve. Existing persisted profile and
-quota settings remain authoritative. This is the packaged
-candidate described by the OpenAI Build Week
-[final project story](openai-build-week-submission.md) and
-[implementation evidence](../BUILD_WEEK.md). The first calibration
-check builds its semantic index locally without a model-backed cross-author
-comparison; later checks use the full Event Engine. The release contains
-AkuSidecar and a verified AkuBridge payload for audit and troubleshooting, while
-the published extension is installed from the Chrome Web Store. AkuSupervisor and
-AkuSupervisorConformance remain development tooling and are not shipped.
-AkuBrowser is the distribution authority: it owns portable bundle assembly,
-release provenance, launchers, checksums, and acceptance documentation.
-AkuSidecar and AkuBridge remain the authoritative source-component projects.
+Status: **stable, intentionally unsigned**. This document is the active release guide
+for the Windows x64 single-installer path. The candidate is one installer
+`.exe` containing AkuBrowserLauncher, AkuSidecar, the internal AkuBridge
+payload, pinned Chromium, c2patool, configuration, and checksums. Code signing
+and independent clean-machine certification remain future hardening.
 
-> **Historical preview notice:** this document describes the current preview's
-> Store/portable and system-Chrome prerequisites. The approved production
-> direction is a single isolated app-shell installer; it is not implemented in
-> this preview. See the [installed-app distribution contract](installed-app-distribution-contract.md).
+Chrome Web Store publication is frozen and is not an active v0.9.0 path. The
+candidate does not require system Chrome, Developer Mode, manual extension
+loading, or a separate runtime installer. macOS and Linux are deferred.
+
+The release contract covers four source adapters: X, LinkedIn, Facebook, and
+opt-in Instagram. Codex App/App Server remains an external prerequisite. The
+optional Gemini provider accepts a user-supplied key through the Sidecar
+credential flow, and provider hot-swaps apply at an idle boundary. AkuSidecar
+schema 10 is the active database boundary. These are v0.9.0 capabilities and
+acceptance targets.
+
+## v0.9.0 prerequisites and acceptance
+
+Before testing, obtain the installer, matching checksum, generated
+manifest, and frozen source-commit evidence. Use a clean Windows x64 machine
+or account. Install Codex App with App Server and complete local sign-in; the
+installer does not bundle Codex or social credentials. Sign in to each social
+source in the pinned Chromium profile during onboarding.
+
+The coordinator must record install, launch, Bridge heartbeat, four-adapter
+source readiness, Codex readiness, optional Gemini-key use, idle-boundary
+provider hot-swap, schema-10 migration behavior, repair, update/rollback,
+uninstall, preserve-data, and full-reset evidence in
+[Windows clean-machine Step 3B](windows-clean-machine-3b.md) as post-release
+hardening evidence. The unsigned installer may trigger SmartScreen or antivirus
+warnings; verify its published SHA-256 before running it.
+
+## Historical 0.7.9 preview
+
+The sections below preserve the previous cross-platform Store/portable preview
+as historical evidence. They are not v0.9.0 instructions or release gates.
 
 Windows has two coordinated delivery paths: the portable x64 ZIP remains the
 manual fallback, while the Chrome Web Store flow uses a user-scoped companion

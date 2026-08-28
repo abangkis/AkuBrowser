@@ -1,14 +1,18 @@
 # Bridge identity and deployment-mode contract
 
-Status: implemented, 15 August 2026.
+Status: implemented; v0.9.0 Windows x64 stable routing, 28 August 2026. The
+installer is intentionally unsigned; independent clean-machine certification
+remains future hardening.
 
-> **Target routing:** this document records the currently shipped development,
-> acceptance, Store, and offline identities plus the staged `production-app`
-> identity. The approved installed-app target is defined in the
-> [installed-app distribution contract](installed-app-distribution-contract.md).
-> Do not treat `production-store` as target production authority.
+> **Release routing:** this document records the development,
+> acceptance, historical Store/offline identities, and the v0.9.0
+> `production-app` identity. Chrome Web Store publication is frozen; the active
+> Windows distribution is the single installed-app installer. The approved
+> boundary is defined in the [installed-app distribution
+> contract](installed-app-distribution-contract.md). Do not treat
+> `production-store` or `production-offline` as v0.9.0 production authority.
 
-## One authority, five stable identities
+## One authority, five identity profiles
 
 `config/bridge-identities.json` is the only checked-in authority for AkuBridge
 extension identities. Every extension ID is unique and identifies one delivery
@@ -18,9 +22,9 @@ lane:
 | --- | --- | --- | --- |
 | `development` | Load unpacked workspace | Manual, Supervisor-owned | Development |
 | `acceptance` | Frozen Load unpacked package | Local acceptance installer | Stable candidate · 3B |
-| `production-store` | Chrome Web Store | Managed companion runtime | Production · Web Store |
-| `production-offline` | Self-contained offline ZIP | Bundled portable runtime | Production · Offline bundle |
-| `production-app` | Signed installed-app bundle | Launcher-managed bundled runtime | Production · Installed app |
+| `production-store` | Chrome Web Store (historical, frozen) | Managed companion runtime | Historical · Web Store |
+| `production-offline` | Self-contained offline ZIP (historical recovery) | Bundled portable runtime | Historical · Offline bundle |
+| `production-app` | Windows x64 installed app | Launcher-managed bundled runtime | Stable · Installed app |
 
 Never copy an ID into Sidecar source configuration, Supervisor service
 configuration, a native-host manifest, or release documentation. Packagers
@@ -44,8 +48,8 @@ because the Store owns the `production-store` identity.
 
 AkuSidecar configuration carries locally projected deployment provenance:
 
-- `mode`: `development`, `acceptance`, `production-store`, or
-  `production-offline`;
+- `mode`: `development`, `acceptance`, `production-store`,
+  `production-offline`, or `production-app`;
 - `runtimeInstallKind`: `workspace`, `installed`, or `portable`;
 - `bridgeIdentityProfile`;
 - release version, source-freeze tuple, and artifact ID when packaged.
@@ -64,15 +68,18 @@ Missing metadata remains runnable for backward compatibility but appears as
   origin. Automatic Native Messaging lifecycle remains disabled.
 - Step 3B uses the `acceptance` Bridge and an installer bound only to that
   origin. It is never uploaded.
-- Web Store production uses `production-store`, removes the workspace key, and
-  enables managed Native Messaging lifecycle.
-- The offline ZIP uses `production-offline`, retains its dedicated public key,
-  contains the load-unpacked AkuBridge payload plus portable AkuSidecar, and
-  performs no Store or installer download.
-- The installed-app lane uses `production-app`, its own public key and exact
-  origin, the pinned Chromium profile, and launcher-managed lifecycle. It is
-  staged but is not yet emitted by the unified installer.
-- Store and offline editions must not run concurrently.
+- The historical Web Store lane uses `production-store`, removes the workspace
+  key, and enables managed Native Messaging lifecycle. No new Store builds are
+  published.
+- The historical offline ZIP uses `production-offline`, retains its dedicated
+  public key, contains the load-unpacked AkuBridge payload plus portable
+  AkuSidecar, and performs no Store or installer download.
+- The v0.9.0 Windows release uses `production-app`, its own public key and exact
+  origin, the pinned Chromium profile, and launcher-managed lifecycle. Its
+  installer is intentionally unsigned; independent clean-machine certification
+  remains post-release hardening.
+- Store and offline editions are historical and must not be presented as the
+  v0.9.0 release path. macOS and Linux identities/releases are deferred.
 
 ## Security invariants
 

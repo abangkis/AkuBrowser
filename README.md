@@ -1,48 +1,44 @@
 # AkuBrowser
 
-Current shipped release: **`0.7.9`**. The repository also contains an
-unshipped **`0.8.0`** development tuple in
-[`release/release-manifest.json`](release/release-manifest.json). Its installed-
-app schema metadata is reconciled with AkuSidecar schema 10. The legacy Bridge
-setup surface and failure-path gate are complete; whole-tuple rollback, signed
-installer, and clean-machine acceptance remain before another release
-candidate. The canonical bundle boundary and gates are in the
-[installed-app distribution contract](docs/installed-app-distribution-contract.md).
+Current release: **`v0.9.0` for Windows x64**. It is distributed as one
+unsigned installer `.exe` containing AkuBrowserLauncher,
+AkuSidecar, the internal AkuBridge payload, pinned Chromium, c2patool, and the
+release configuration/checksums needed by the isolated app shell. The release
+publishes a SHA-256 checksum and explicitly discloses the unsigned SmartScreen
+trust state. Independent clean-machine coverage remains tracked as post-release
+hardening. The canonical
+bundle boundary and gates are in the [installed-app distribution
+contract](docs/installed-app-distribution-contract.md).
 
-> **Approved target distribution — partially staged, not shipped.** The next production
-> direction is one signed installer containing AkuBrowserLauncher, AkuSidecar,
-> AkuBridge, pinned Chromium, and the local support assets, with setup owned by
-> AkuSidecar inside an isolated app shell. Chrome Web Store and system Chrome
-> are not part of that target. See the canonical
-> [installed-app distribution contract](docs/installed-app-distribution-contract.md).
-> The Store/portable notes below describe shipped historical lanes only.
+> **v0.9.0 distribution boundary.** The active release path is
+> one Windows x64 installed-app installer. It does not require the Chrome Web
+> Store, system Chrome, Developer Mode, a manually loaded extension, or a
+> separate runtime installer. The current candidate still carries an honest
+> unsigned/SmartScreen warning; users should verify the published checksum.
+> macOS and Linux are deferred and are not part of this release.
 
 > ### Chrome Web Store publication is frozen
 >
 > The existing Chrome Web Store listing remains available to current users, but
 > no new Store builds are published. New production work targets the single
-> signed installed-app tuple, with AkuSidecar owning first-run onboarding in
-> the isolated app shell. See the [installed-app distribution target](docs/installed-app-distribution-contract.md).
->
-> The portable ZIP remains a technical-user and recovery lane with its own
-> matching AkuBridge and AkuSidecar tuple.
+> installed-app tuple, with AkuSidecar owning first-run onboarding in the
+> isolated app shell. The listing and portable ZIP are historical/recovery
+> lanes, not v0.9.0 release outputs. See the [installed-app distribution
+> target](docs/installed-app-distribution-contract.md).
 
-## Latest release downloads
+## Release downloads
 
-The stable GitHub release is [AkuBrowser 0.7.9](https://github.com/abangkis/AkuBrowser/releases/latest).
-Use the platform installer aliases below so future stable releases can update
-these links without another README change:
+The [AkuBrowser v0.9.0 release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.9.0)
+exposes one Windows x64 installer `.exe` and its SHA-256 checksum as the
+supported download. It is intentionally unsigned, so Windows may show a
+SmartScreen warning. Verify the checksum and do not run it alongside the frozen
+Store edition.
 
-- [Windows runtime installer](https://github.com/abangkis/AkuBrowser/releases/latest/download/AkuBrowserRuntimeSetup.exe)
-- [macOS runtime installer](https://github.com/abangkis/AkuBrowser/releases/latest/download/AkuBrowserRuntimeSetup.pkg)
-- [All release assets and checksums](https://github.com/abangkis/AkuBrowser/releases/latest)
+The old Windows/macOS runtime installers and portable bundles remain versioned
+historical/recovery assets. macOS and Linux downloads are explicitly deferred
+from v0.9.0.
 
-The portable Windows and macOS bundles remain versioned assets on the release
-page. Each contains its matching AkuBridge and AkuSidecar runtime for offline
-installation. Verify the adjacent SHA-256 file before using one, and do not run
-the offline and frozen Store editions together.
-
-AkuBrowser turns bounded samples from the user's chosen social feeds into one finite, source-backed Timeline. The current source registry supports X, LinkedIn, Facebook, and opt-in Instagram. It is designed for people who want to keep up without surrendering their attention to another infinite feed.
+AkuBrowser turns bounded samples from the user's chosen social feeds into one finite, source-backed Timeline. The current source registry supports four adapters: X, LinkedIn, Facebook, and opt-in Instagram. It is designed for people who want to keep up without surrendering their attention to another infinite feed.
 
 Its cross-author semantic Event Engine treats the underlying event—not the number of posts about it—as the unit of attention. When different authors or sources report the same specific occurrence, AkuBrowser can collapse the repetition while preserving the reports for inspection and correction. The user reads the change once instead of paying the same attention cost again for every account that repeated it.
 
@@ -67,12 +63,12 @@ The personalization rule is equally direct: explicit user feedback has more auth
 ## Distribution and workspace boundary
 
 AkuBrowser is the distribution authority as well as the product-contract and
-integration repository. It owns release manifests, portable bundle assembly,
-checksums, launchers, and acceptance guidance, while keeping application
-runtime code in its component repositories. AkuBrowser has no Node package or
-application runtime of its own.
+integration repository. It owns release manifests, installed-app installer
+assembly, checksums, launchers, and acceptance guidance, while keeping
+application runtime code in its component repositories. AkuBrowser has no Node
+package or application runtime of its own.
 
-### Current shipped distribution (historical)
+### Historical shipped distribution (pre-v0.9.0)
 
 The staged consumer distribution path publishes the extension under the public
 name **AkuBrowser** while retaining `AkuBridge` as the internal component name.
@@ -83,7 +79,7 @@ Development and production extension IDs are named profiles in one registry;
 their generated runtime projections are defined in
 [`docs/bridge-identity-contract.md`](docs/bridge-identity-contract.md).
 
-The end-user deployment has exactly two independently updated products:
+The pre-v0.9.0 end-user deployment had exactly two independently updated products:
 AkuBridge from the Chrome Web Store and AkuSidecar from the signed platform
 feed. The Native Messaging host is an internal helper shipped inside the
 AkuSidecar installer, not a third deployable. AkuSupervisor remains optional
@@ -98,7 +94,7 @@ development tooling and is never required or shipped to Store users.
 
 Only AkuBridge uses npm, because it is the Chrome extension. AkuSidecar is fully Go. In development AkuSupervisor may start Sidecar; production installation and update do not depend on Supervisor.
 
-## Development
+## Development and v0.9.0 release build
 
 Run the workspace check from this repository:
 
@@ -120,16 +116,41 @@ Open `http://127.0.0.1:11122` (or `http://localhost:11122`). Load
 reloads use the Sidecar's cooperative `reload_self` contract. AkuSupervisor
 remains only the generic process owner.
 
-The preview assumes Codex App with App Server is installed and signed in
-locally, and that Chrome is already signed in to every enabled source. First-run
-onboarding is owned by the Sidecar loopback app; the AkuBridge popup opens that
-app shell, and its source-permission broker handles each optional host grant.
-The portable ZIP remains available as a self-contained offline lane. Its bundled
-`production-offline` Bridge is distinct from the frozen Store package and the
-Load unpacked `acceptance` package used for clean-machine Step 3B.
-See [Preview release](docs/preview-release.md).
+The v0.9.0 installed app uses the bundled pinned Chromium profile and
+does not require system Chrome or manual extension loading. Codex App with App
+Server remains an external prerequisite and must be installed and signed in
+locally. An optional Gemini provider accepts a user-supplied key through the
+Sidecar credential flow; provider hot-swaps apply at an idle boundary. The four
+source adapters are X, LinkedIn, Facebook, and opt-in Instagram. AkuSidecar
+uses schema 10 and owns first-run onboarding, source readiness, and Timeline
+state. See [Preview/release candidate notes](docs/preview-release.md).
 
-Build and smoke-test the Windows x64 portable preview from this repository:
+The portable ZIP and Chrome Web Store package are historical/recovery lanes and
+are not v0.9.0 distribution paths.
+
+Build and validate the Windows installed-app release from this repository:
+
+```powershell
+.\scripts\build-windows-installed-app.ps1 -OutputRoot .\artifacts
+.\scripts\test-windows-installed-app-builder.ps1 `
+  -ArtifactDirectory .\artifacts\AkuBrowser-<version>-windows-x64-installed-app
+.\scripts\build-windows-installed-app-installer.ps1 `
+  -TupleDirectory .\artifacts\AkuBrowser-<version>-windows-x64-installed-app `
+  -NsisPath "C:\Program Files (x86)\NSIS\makensis.exe"
+.\scripts\test-windows-installed-app-installer.ps1 `
+  -TupleDirectory .\artifacts\AkuBrowser-<version>-windows-x64-installed-app `
+  -InstallerPath .\artifacts\installed-app-installer\AkuBrowserSetup-0.9.0-windows-x64.exe
+```
+
+These commands produce the intentionally unsigned release artifact and matching
+checksum. Automated checks validate the tuple, hashes, launcher, and PE
+structure; the broader clean-machine matrix remains documented in the [stable
+release checklist](docs/stable-release-checklist.md).
+
+### Historical portable preview build
+
+The following commands reproduce the pre-v0.9.0 portable recovery lane; they
+are not the active single-installer release gate:
 
 ```powershell
 .\scripts\build-windows-preview.ps1
@@ -140,12 +161,9 @@ The generated directory, ZIP, and ZIP checksum are written beneath
 `artifacts\`. Use `-AllowDirty` only while developing the pipeline; a publishable
 artifact requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees.
 
-For a frozen stable candidate, do not run the portable and installer builders
-into separate folders. Use `scripts/run-windows-stable-gate.ps1`; it creates one
-release kit with a GitHub-uploadable `publish/` lane and a local-only
-`acceptance/` lane containing the matching unpacked Bridge and runtime installer.
-The exact command and handoff gates are in the
-[stable release checklist](docs/stable-release-checklist.md).
+The old `scripts/run-windows-stable-gate.ps1` flow produces the historical
+Store/portable release kit. It is not the active v0.9.0 one-installer gate; keep
+its outputs only for recovery and historical reproduction.
 
 For a local release checkpoint, use the reconciled workflow instead:
 
@@ -183,10 +201,14 @@ submission-period extensions, and the release/judge workflow are in
 [`BUILD_WEEK.md`](BUILD_WEEK.md). The copy-ready project story is in
 [`docs/openai-build-week-submission.md`](docs/openai-build-week-submission.md).
 
-On macOS, the same preview boundary is packaged with the native Go Sidecar and
-the unpacked AkuBridge extension. Go, Node.js, npm, and the macOS `zip` tools are
-needed on the build machine; end users only need Codex App/App Server and
-Chrome. Build and smoke-test the host architecture with:
+macOS and Linux packaging are deferred from v0.9.0. Their historical preview
+instructions remain below for reproducibility, but they are not release gates
+for this Windows-only candidate.
+
+On macOS, the historical preview boundary was packaged with the native Go
+Sidecar and the unpacked AkuBridge extension. Go, Node.js, npm, and the macOS
+`zip` tools were needed on the build machine; end users needed Codex App/App
+Server and Chrome. Build and smoke-test the historical host architecture with:
 
 ```sh
 ./scripts/build-macos-preview.sh
@@ -201,7 +223,7 @@ requires clean AkuBrowser, AkuSidecar, and AkuBridge source trees. The artifact
 directory, ZIP, and ZIP checksum are written beneath `artifacts/`. Installation
 and launcher details are in
 [`release/macos/README.md`](release/macos/README.md).
-Build the Chrome Web Store macOS companion separately with
+Build the historical Chrome Web Store macOS companion separately with
 `scripts/build-macos-runtime-installer.sh`; validate its payload with
 `scripts/test-macos-runtime-installer.sh`. The stable `v0.7.9` release uses an
 explicitly disclosed unsigned package, a pinned universal C2PA tool, and an
@@ -216,6 +238,7 @@ never leaves Windows.
 ## Canonical documentation
 
 - [Installed-app distribution target](docs/installed-app-distribution-contract.md)
+- [v0.9.0 Windows release notes](docs/releases/v0.9.0.md)
 - [AkuBrowserLauncher Windows vertical slice](launcher/README.md)
 - [Product contract](docs/product-contract.md)
 - [Runtime contract](docs/runtime-contract.md)

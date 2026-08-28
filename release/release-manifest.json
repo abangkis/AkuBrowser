@@ -1,16 +1,20 @@
 {
   "schemaVersion": 2,
   "product": "AkuBrowser",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "channel": "stable",
   "distribution": {
     "authorityRepository": "AkuBrowser",
     "windows": {
       "architecture": "x64",
-      "format": "portable-zip",
-      "launcher": "Start-AkuBrowser.cmd"
+      "format": "installed-app-installer",
+      "installer": "AkuBrowserSetup-0.9.0-windows-x64.exe",
+      "trustState": "stable-unsigned",
+      "dataDirectory": "%LOCALAPPDATA%\\AkuBrowser\\data",
+      "profileDirectory": "%LOCALAPPDATA%\\AkuBrowser\\browser-profile"
     },
     "macos": {
+      "status": "deferred-after-0.9.0",
       "architectures": [
         "x64",
         "arm64"
@@ -20,6 +24,7 @@
       "dataDirectory": "~/Library/Application Support/AkuBrowser/data"
     },
     "chromeStore": {
+      "status": "frozen-historical",
       "extensionDistribution": "chrome-web-store",
       "bridgeIdentityProfile": "production-store",
       "nativeRuntimeInstallers": {
@@ -55,7 +60,7 @@
       "nativeHost": {
         "name": "com.akubrowser.runtime",
         "role": "internal-update-and-launch-helper",
-        "version": "0.8.0",
+        "version": "0.9.0",
         "protocolVersion": 2,
         "minimumProtocolVersion": 1
       }
@@ -67,13 +72,15 @@
       "installation": "load-unpacked-and-run-bundled-runtime"
     },
     "installedApp": {
-      "status": "staged-builder",
+      "status": "stable-unsigned",
       "bridgeIdentityProfile": "production-app",
       "format": "windows-x64-installed-app-tuple",
       "builder": "scripts/build-windows-installed-app.ps1",
       "installerBuilder": "scripts/build-windows-installed-app-installer.ps1",
-      "installerStatus": "not-shipped",
+      "installerStatus": "release-ready-unsigned",
       "signedInstaller": false,
+      "releaseAsset": "AkuBrowserSetup-0.9.0-windows-x64.exe",
+      "checksumAsset": "AkuBrowserSetup-0.9.0-windows-x64.exe.sha256",
       "database": {
         "currentSchemaVersion": 10,
         "acceptedInputSchemaVersions": [7, 8, 9, 10],
@@ -91,7 +98,7 @@
   },
   "components": {
     "akuSidecar": {
-      "version": "0.8.0",
+        "version": "0.9.0",
       "runtime": "go",
       "runtimeRevision": "source-adapters-v108",
       "update": {
@@ -128,17 +135,24 @@
         },
         "databaseCompatibility": {
           "minSchemaVersion": 7,
-          "maxSchemaVersion": 7,
-          "rollbackSafe": true
+          "maxSchemaVersion": 10,
+          "rollbackSafe": false
         },
         "urgency": "routine"
       }
     },
     "akuBridge": {
-      "version": "0.8.0",
-      "chromeVersion": "0.8.0.0",
+      "version": "0.9.0",
+      "chromeVersion": "0.9.0.0",
       "runtimeRevision": "source-adapters-v108",
       "contractVersion": "aku-browser.bridge.v2"
+    },
+    "chromium": {
+      "version": "152.0.7977.54",
+      "platform": "win64",
+      "sourceUrl": "https://storage.googleapis.com/chrome-for-testing-public/152.0.7977.54/win64/chrome-win64.zip",
+      "executable": "bin/chrome.exe",
+      "executableSha256": "b0123437c55a3893e8988328f576ffcbe68cee7743d3653ffe865c73633b1ef4"
     },
     "c2paTool": {
       "version": "0.26.60",
@@ -170,29 +184,30 @@
   },
   "bundle": {
     "deployables": [
-      "AkuBridge (Chrome Web Store extension or stable-ID offline bundle)",
-      "AkuSidecar (platform installer and signed update archive)"
+      "AkuBrowserSetup-0.9.0-windows-x64.exe"
     ],
     "internalHelpers": [
       "Native Messaging Host for AkuSidecar launch and update handoff"
     ],
     "includes": [
+      "AkuBrowserLauncher",
       "AkuSidecar",
       "Platform-native c2patool 0.26.60 for local image provenance verification",
-      "AkuBridge Chrome Web Store integration metadata",
-      "Stable-ID unpacked AkuBridge for self-contained offline bundles",
+      "Stable-ID unpacked AkuBridge for the installed app",
+      "Pinned Chromium application shell",
       "Windows launcher and release configuration",
-      "macOS launcher and release configuration",
       "Release provenance and SHA-256 checksums"
     ],
     "excludes": [
       "AkuSupervisor",
-      "AkuSupervisorConformance"
+      "AkuSupervisorConformance",
+      "Chrome Web Store distribution",
+      "macOS and Linux installers"
     ]
   },
-  "previewPrerequisites": [
-    "Codex App with Codex App Server installed and locally signed in",
-    "Google Chrome with every enabled source (X, LinkedIn, Facebook, or Instagram) already signed in",
-    "AkuBridge installed from the Chrome Web Store for Store mode, or loaded from the bundled AkuBridge directory for offline mode"
+  "releasePrerequisites": [
+    "Windows x64",
+    "Each enabled source (X, LinkedIn, Facebook, or Instagram) signed in inside AkuBrowser's isolated Chromium profile",
+    "A configured reasoning provider: Codex App Server signed in locally, or a valid Gemini API key"
   ]
 }

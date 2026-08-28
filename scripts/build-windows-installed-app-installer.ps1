@@ -44,8 +44,8 @@ if ([string]::IsNullOrWhiteSpace(($tupleAcceptance | Out-String))) { throw "Inst
 $installManifest = Read-Json (Join-Path $TupleDirectory "install-manifest.json")
 $current = Read-Json (Join-Path $TupleDirectory "runtime\current.json")
 Assert-True ($installManifest.product -eq "AkuBrowser" -and $installManifest.platform -eq "windows-x64") "Tuple platform identity is invalid."
-Assert-True ($installManifest.format -eq "installed-app-tuple" -and $installManifest.status -eq "staged-builder") "Tuple is not a staged installed-app artifact."
-Assert-True ($installManifest.signedInstaller -eq $false -and $installManifest.installerStatus -eq "not-shipped") "Builder accepts only the explicitly unsigned, not-shipped tuple lane."
+Assert-True ($installManifest.format -eq "installed-app-tuple" -and $installManifest.status -eq "stable-unsigned") "Tuple is not an unsigned stable installed-app artifact."
+Assert-True ($installManifest.signedInstaller -eq $false -and $installManifest.installerStatus -eq "release-ready-unsigned") "Builder accepts only the explicitly unsigned release lane."
 Assert-True (@($installManifest.sourceDirty).Count -eq 0) "Unified installer requires a tuple built from clean sources."
 Assert-True ($installManifest.bridgeIdentity.profile -eq "production-app") "Unified installer requires production-app Bridge identity."
 Assert-True ($installManifest.version -eq $current.version) "Install manifest and active pointer versions differ."
@@ -60,7 +60,8 @@ if ([string]::IsNullOrWhiteSpace($OutputRoot)) {
 }
 $OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
 New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
-$outputFile = Join-Path $OutputRoot "AkuBrowserSetup-$version-windows-x64-unsigned.exe"
+$outputFile = Join-Path $OutputRoot "AkuBrowserSetup-$version-windows-x64.exe"
+$checksumFile = "$outputFile.sha256"
 
 $plan = [ordered]@{
     status = if ($VerifyOnly) { "verified" } else { "ready-to-compile" }
@@ -68,8 +69,9 @@ $plan = [ordered]@{
     tupleDirectory = $TupleDirectory
     outputFile = $outputFile
     bridgeIdentity = [string]$installManifest.bridgeIdentity.extensionId
-    signed = $false
-    shipped = $false
+    channel = "stable"
+    trustState = "unsigned"
+    releaseReady = $true
 }
 if ($VerifyOnly) {
     $plan | ConvertTo-Json -Depth 4
@@ -78,6 +80,7 @@ if ($VerifyOnly) {
 
 $compiler = Find-NsisCompiler $NsisPath
 if (Test-Path -LiteralPath $outputFile) { Remove-Item -LiteralPath $outputFile -Force }
+if (Test-Path -LiteralPath $checksumFile) { Remove-Item -LiteralPath $checksumFile -Force }
 $arguments = @(
     "/V2",
     "/WX",
@@ -91,6 +94,8 @@ $arguments = @(
 & $compiler @arguments | Out-Host
 if ($LASTEXITCODE -ne 0) { throw "NSIS installed-app compilation failed." }
 Assert-True (Test-Path -LiteralPath $outputFile -PathType Leaf) "NSIS did not emit the expected installer."
+$installerHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $outputFile).Hash.ToLowerInvariant()
+[IO.File]::WriteAllText($checksumFile, "$installerHash  $([IO.Path]::GetFileName($outputFile))`r`n", [Text.UTF8Encoding]::new($false))
 
 $result = [ordered]@{
     status = "ok"
@@ -98,9 +103,11 @@ $result = [ordered]@{
     tupleDirectory = $TupleDirectory
     outputFile = $outputFile
     bytes = (Get-Item -LiteralPath $outputFile).Length
-    sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $outputFile).Hash.ToLowerInvariant()
+    sha256 = $installerHash
+    checksumFile = $checksumFile
     bridgeIdentity = [string]$installManifest.bridgeIdentity.extensionId
-    signed = $false
-    shipped = $false
+    channel = "stable"
+    trustState = "unsigned"
+    releaseReady = $true
 }
 $result | ConvertTo-Json -Depth 4

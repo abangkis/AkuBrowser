@@ -1,4 +1,35 @@
-# AkuBrowser Windows portable bundle
+# AkuBrowser Windows distribution — v0.9.0
+
+> **Active release path:** v0.9.0 is a Windows x64 stable release delivered
+> through one intentionally unsigned installed-app installer `.exe` plus its
+> SHA-256 checksum. Chrome Web Store publication is frozen;
+> macOS and Linux are deferred.
+
+## Active v0.9.0 release
+
+The installer bundles AkuBrowserLauncher, AkuSidecar, the internal
+`production-app` AkuBridge payload, pinned Chromium, c2patool, configuration,
+and checksums in one tuple. It does not require system Chrome, Developer Mode,
+manual extension loading, or a separate runtime installer. Codex App/App Server
+is an external prerequisite. The optional Gemini provider uses a user-supplied
+key through the Sidecar credential flow. The candidate covers X, LinkedIn,
+Facebook, and opt-in Instagram adapters, provider hot-swap at an idle boundary,
+and schema 10.
+
+Use only the installer and checksum supplied by the v0.9.0 release evidence.
+The installer is intentionally unsigned and may trigger SmartScreen or
+antivirus warnings; verify the checksum before running it. Code signing and
+independent clean-machine certification remain future hardening.
+
+Follow [Windows clean-machine Step 3B](../../docs/windows-clean-machine-3b.md)
+for the pending install, launch, source, provider, migration, repair,
+update/rollback, uninstall, and full-reset acceptance.
+
+## Historical portable recovery bundle
+
+The content below describes the pre-v0.9.0 self-contained offline ZIP. It is
+retained for recovery and reproducibility, not as an active v0.9.0 distribution
+path.
 
 This self-contained offline bundle contains AkuBridge, the Go AkuSidecar
 runtime, and the pinned `c2patool.exe` runtime used for local, image-only
@@ -6,8 +37,9 @@ Content Credentials verification. Its unpacked AkuBridge has a dedicated,
 stable offline-production identity. It does not depend on Chrome Web Store
 installation, install a Windows service, or include AkuSupervisor.
 
-Do not run the offline and Chrome Web Store editions together. Their extension
-identities and trusted runtime configurations are intentionally different.
+Do not run the historical offline and Chrome Web Store editions together. Their
+extension identities and trusted runtime configurations are intentionally
+different.
 
 ## What it demonstrates
 

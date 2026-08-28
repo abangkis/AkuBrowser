@@ -1,0 +1,176 @@
+name: Windows Installed App Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: Existing AkuBrowser release tag that receives the installer
+        required: true
+        default: v0.9.0
+        type: string
+      browser_ref:
+        description: Frozen 40-character AkuBrowser commit SHA
+        required: true
+        type: string
+      bridge_ref:
+        description: Frozen 40-character AkuBridge commit SHA
+        required: true
+        type: string
+      sidecar_ref:
+        description: Frozen 40-character AkuSidecar commit SHA
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  build-unsigned-installer:
+    runs-on: windows-2025
+    env:
+      C2PA_VERSION: "0.26.60"
+      C2PA_SHA256: "90cbcebe30250f8e8c53416d32ed86065dc04a23be86e4a2337f5cd1badfa0b7"
+
+    steps:
+      - name: Check out AkuBrowser
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.browser_ref }}
+          path: AkuWorkspace/AkuBrowser
+
+      - name: Check out AkuBridge
+        uses: actions/checkout@v4
+        with:
+          repository: abangkis/AkuBridge
+          ref: ${{ inputs.bridge_ref }}
+          token: ${{ secrets.AKU_WORKSPACE_READ_TOKEN || github.token }}
+          path: AkuWorkspace/AkuBridge
+
+      - name: Check out AkuSidecar
+        uses: actions/checkout@v4
+        with:
+          repository: abangkis/AkuSidecar
+          ref: ${{ inputs.sidecar_ref }}
+          token: ${{ secrets.AKU_WORKSPACE_READ_TOKEN || github.token }}
+          path: AkuWorkspace/AkuSidecar
+
+      - name: Verify frozen source commits and release identity
+        shell: pwsh
+        env:
+          BROWSER_REF: ${{ inputs.browser_ref }}
+          BRIDGE_REF: ${{ inputs.bridge_ref }}
+          SIDECAR_REF: ${{ inputs.sidecar_ref }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          $expected = [ordered]@{
+            AkuBrowser = $env:BROWSER_REF
+            AkuBridge = $env:BRIDGE_REF
+            AkuSidecar = $env:SIDECAR_REF
+          }
+          foreach ($repository in $expected.Keys) {
+            if ([string]$expected[$repository] -cnotmatch '^[0-9a-f]{40}$') {
+              throw "$repository ref must be one exact lowercase 40-character commit SHA."
+            }
+            $actual = (git -C "AkuWorkspace/$repository" rev-parse HEAD | Out-String).Trim().ToLowerInvariant()
+            if ($LASTEXITCODE -ne 0 -or $actual -ne $expected[$repository]) {
+              throw "$repository resolved to $actual instead of $($expected[$repository])."
+            }
+          }
+          $release = Get-Content .\AkuWorkspace\AkuBrowser\release\release-manifest.json -Raw | ConvertFrom-Json
+          if ($env:RELEASE_TAG -ne "v$($release.version)") {
+            throw "release_tag must exactly match v$($release.version)."
+          }
+
+      - name: Install pinned NSIS compiler
+        shell: pwsh
+        run: |
+          choco install nsis --version 3.12.0 --yes --no-progress
+          $compiler = "C:\Program Files (x86)\NSIS\makensis.exe"
+          if (-not (Test-Path -LiteralPath $compiler -PathType Leaf)) {
+            throw "Pinned NSIS compiler was not installed."
+          }
+          "AKU_NSIS_COMPILER=$compiler" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Download pinned runtime dependencies
+        shell: pwsh
+        working-directory: AkuWorkspace/AkuBrowser
+        run: |
+          $release = Get-Content .\release\release-manifest.json -Raw | ConvertFrom-Json
+          $dependencyRoot = Join-Path $env:RUNNER_TEMP "akubrowser-release-dependencies"
+          $chromiumArchive = Join-Path $dependencyRoot "chromium.zip"
+          $chromiumExtract = Join-Path $dependencyRoot "chromium-extract"
+          $chromiumRoot = Join-Path $dependencyRoot "chromium"
+          New-Item -ItemType Directory -Force -Path $chromiumExtract, (Join-Path $chromiumRoot "bin") | Out-Null
+          Invoke-WebRequest -Uri $release.components.chromium.sourceUrl -OutFile $chromiumArchive
+          Expand-Archive -LiteralPath $chromiumArchive -DestinationPath $chromiumExtract
+          $chrome = Get-ChildItem -LiteralPath $chromiumExtract -Recurse -Filter chrome.exe -File | Select-Object -First 1
+          if ($null -eq $chrome) { throw "Pinned Chromium archive contains no chrome.exe." }
+          $chromiumHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $chrome.FullName).Hash.ToLowerInvariant()
+          if ($chromiumHash -ne $release.components.chromium.executableSha256) { throw "Pinned Chromium hash mismatch." }
+          Copy-Item -Path (Join-Path $chrome.Directory.FullName "*") -Destination (Join-Path $chromiumRoot "bin") -Recurse -Force
+          [ordered]@{
+            schemaVersion = 1
+            component = "AkuBrowserAppShellChromium"
+            channel = "stable"
+            platform = $release.components.chromium.platform
+            version = $release.components.chromium.version
+            sourceUrl = $release.components.chromium.sourceUrl
+            executable = "bin\\chrome.exe"
+            executableSha256 = $release.components.chromium.executableSha256
+          } | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $chromiumRoot "pin.json") -Encoding UTF8
+          "AKU_CHROMIUM_ROOT=$chromiumRoot" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+          $c2paArchive = Join-Path $dependencyRoot "c2patool.zip"
+          $c2paExtract = Join-Path $dependencyRoot "c2patool"
+          $c2paUrl = "https://github.com/contentauth/c2pa-rs/releases/download/c2patool-v$env:C2PA_VERSION/c2patool-v$env:C2PA_VERSION-x86_64-pc-windows-msvc.zip"
+          Invoke-WebRequest -Uri $c2paUrl -OutFile $c2paArchive
+          Expand-Archive -LiteralPath $c2paArchive -DestinationPath $c2paExtract
+          $c2pa = Get-ChildItem -LiteralPath $c2paExtract -Recurse -Filter c2patool.exe -File | Select-Object -First 1
+          if ($null -eq $c2pa) { throw "Pinned c2patool archive contains no executable." }
+          $c2paHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $c2pa.FullName).Hash.ToLowerInvariant()
+          if ($c2paHash -ne $env:C2PA_SHA256) { throw "Pinned c2patool hash mismatch." }
+          "AKU_C2PA_TOOL=$($c2pa.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Validate source and build one installer
+        shell: pwsh
+        working-directory: AkuWorkspace/AkuBrowser
+        run: |
+          .\scripts\check.ps1 -DistributionOnly
+          $tupleRoot = Join-Path $env:RUNNER_TEMP "akubrowser-installed-app"
+          $installerRoot = Join-Path $env:RUNNER_TEMP "akubrowser-installer"
+          .\scripts\build-windows-installed-app.ps1 `
+            -OutputRoot $tupleRoot `
+            -ChromiumRoot $env:AKU_CHROMIUM_ROOT `
+            -C2paToolPath $env:AKU_C2PA_TOOL
+          $tuple = Get-ChildItem -LiteralPath $tupleRoot -Directory | Select-Object -First 1
+          if ($null -eq $tuple) { throw "Installed-app tuple was not produced." }
+          .\scripts\build-windows-installed-app-installer.ps1 `
+            -TupleDirectory $tuple.FullName `
+            -OutputRoot $installerRoot `
+            -NsisPath $env:AKU_NSIS_COMPILER
+          $installer = Get-ChildItem -LiteralPath $installerRoot -Filter "AkuBrowserSetup-*-windows-x64.exe" -File | Select-Object -First 1
+          if ($null -eq $installer) { throw "Installed-app installer was not produced." }
+          .\scripts\test-windows-installed-app-installer.ps1 `
+            -TupleDirectory $tuple.FullName `
+            -InstallerPath $installer.FullName
+          "AKU_INSTALLER=$($installer.FullName)" | Out-File -FilePath $env:GITHUB_ENV -Append
+          "AKU_CHECKSUM=$($installer.FullName).sha256" | Out-File -FilePath $env:GITHUB_ENV -Append
+
+      - name: Upload release candidate artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AkuBrowser-v0.9.0-windows-x64
+          if-no-files-found: error
+          path: |
+            ${{ env.AKU_INSTALLER }}
+            ${{ env.AKU_CHECKSUM }}
+
+      - name: Publish the installer to the existing release
+        shell: pwsh
+        working-directory: AkuWorkspace/AkuBrowser
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.release_tag }}
+        run: |
+          gh release view $env:RELEASE_TAG | Out-Null
+          gh release upload $env:RELEASE_TAG $env:AKU_INSTALLER $env:AKU_CHECKSUM --clobber

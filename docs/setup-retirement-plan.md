@@ -1,13 +1,14 @@
 # AkuBrowser legacy Bridge setup retirement plan
 
-Status: active plan, updated 28 August 2026. Chrome Web Store publication is
-frozen; all future production releases ship through the single signed
-installed-app tuple defined in the
-[installed-app distribution contract](installed-app-distribution-contract.md).
-The Sidecar-owned provider onboarding and local readiness lane are complete.
-Legacy setup deletion and Stage 3 documentation retirement are complete; the
-automated portion of Stage 4 is recorded below, with only clean-machine
-portable acceptance remaining.
+Status: retirement recorded; v0.9.0 Windows x64 stable boundary,
+updated 28 August 2026. Chrome Web Store publication is frozen. The active
+release path is the single installed-app installer defined in the [installed-app
+distribution contract](installed-app-distribution-contract.md). The Sidecar-owned
+provider onboarding and local readiness lane are complete in development,
+including the optional Gemini-key flow and idle-boundary provider hot-swap.
+The release contract covers four adapters and schema 10. Legacy setup deletion
+and Stage 3 documentation retirement are complete; code signing and independent
+Windows clean-machine certification remain post-release hardening.
 
 This plan executes Phase 5 of the installed-app migration: removing the
 legacy Bridge-owned `setup.html` surface after the Sidecar-owned setup path
@@ -24,11 +25,12 @@ retirement touches so the removal is mechanical and reviewable.
   compatible.
 - All future production installation and update authority is the single
   signed installed-app tuple (Phase 4 of the installed-app contract).
-- The portable GitHub ZIP remains a recovery lane until whole-tuple updating
-  ships; its bundled Bridge must not regress when the legacy surface is
+- The portable GitHub ZIP is a historical recovery lane and is not a v0.9.0
+  release output; its bundled Bridge must not regress when the legacy surface is
   removed.
-- No final "last Store build" is cut before Stage 2. `production-store`
-  becomes a retired identity profile at Stage 2 completion.
+- No final "last Store build" is cut before Stage 2. `production-store` remains
+  a retired identity profile and receives no new builds.
+- macOS and Linux are deferred from v0.9.0 and have no active retirement gate.
 
 ## Background: what the legacy surface is
 
@@ -159,10 +161,10 @@ Stage 2 deletion evidence recorded on 28 August 2026:
   profile reset, credential change, source permission change, live runtime
   restart, or model call was performed.
 
-Next action: complete the automated Stage 4 checks, then perform the documented
-clean-machine portable stop/start gesture as a later release gate. No further
-reset, credential, or live development-runtime change is required for the
-retired setup surface.
+Next action: complete the v0.9.0 single-installer signing and Windows
+clean-machine acceptance gate, including the pinned-Chromium app shell and its
+four-adapter/provider/schema-10 checks. No further reset, credential, or live
+development-runtime change is required for the retired setup surface.
 
 ## Stages
 
@@ -255,7 +257,7 @@ Stage 3 evidence recorded on 28 August 2026:
   installed-app target and keeps the portable ZIP as a technical-user/recovery
   lane.
 
-### Stage 4 — Final verification (automated portion complete — 28 August 2026)
+### Stage 4 — Final verification and post-release hardening
 
 - `npm run check` in AkuBridge; `.\scripts\check.ps1` from AkuBrowser for the
   workspace aggregate.
@@ -263,8 +265,8 @@ Stage 3 evidence recorded on 28 August 2026:
   `setup\.html|options_page|OPEN_SETUP|openSetup|setup-favicon|simulateRuntime`
   must match only this plan, superseded banners, and Git history outside
   them.
-- Re-run clean-machine Step 3B-style acceptance for the offline portable
-  lane with the post-deletion Bridge payload.
+- Run Windows clean-machine Step 3B for the v0.9.0 one-installer release with
+  the post-deletion Bridge payload and pinned Chromium app shell.
 - Confirm `store/` submission materials now require no reconciliation, or add
   explicit notes there stating the listing is frozen.
 
@@ -290,11 +292,11 @@ Automated evidence recorded on 28 August 2026:
   relevant HTTP/engine suite had already passed on the unchanged Sidecar
   payload.
 
-The remaining Stage 4 gate is manual and intentionally not run here: on a
-clean machine, stop the active runtime, start the matching portable bundle with
-`Start-AkuBrowser.ps1`, and confirm the Bridge-ready Sidecar shell before
-restoring the normal lane. Signing, shipping, deployment, profile/session
-changes, source-permission changes, and credential changes remain out of scope.
+The remaining Stage 4 hardening pass is manual: on a clean machine, install and
+launch the v0.9.0 `.exe`, confirm the
+Bridge-ready Sidecar shell in pinned Chromium, and complete the lifecycle checks
+in [Windows clean-machine Step 3B](windows-clean-machine-3b.md). Code signing
+and independent certification are not claimed by v0.9.0.
 
 ## Explicit non-goals
 

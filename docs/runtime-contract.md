@@ -1,24 +1,32 @@
 # AkuBrowser runtime contract
 
-Status: canonical implementation boundary, 27 July 2026.
+Status: canonical implementation boundary for the v0.9.0 Windows x64 stable
+release, updated 28 August 2026. The installer is intentionally unsigned;
+independent clean-machine certification remains future hardening.
 
-> **Distribution note:** this remains the component/runtime behavior contract
-> for the current implementation. Installed-app packaging, app-shell startup,
-> and whole-tuple update authority are defined separately in the approved
-> [installed-app distribution contract](installed-app-distribution-contract.md).
-> That target is not implemented yet.
+> **Distribution note:** v0.9.0 is a Windows-only stable release distributed
+> as one installed-app installer `.exe`. The installer bundles AkuBrowserLauncher,
+> AkuSidecar, the internal AkuBridge payload, pinned Chromium, and local support
+> assets. Chrome Web Store publication is frozen; macOS and Linux are deferred.
+> Code signing and independent clean-machine acceptance remain future hardening. The detailed bundle and
+> lifecycle boundary is in the [installed-app distribution
+> contract](installed-app-distribution-contract.md).
 
 ## Components
 
-- AkuBridge is a Manifest V3 Chrome extension. It owns source-specific DOM adapters, bounded read-only capture, freshness recovery, truthful quality reports, and capture-surface cleanup.
+- AkuBridge is a Manifest V3 extension bundled inside the app shell. It owns the
+  X, LinkedIn, Facebook, and Instagram source adapters, bounded read-only
+  capture, freshness recovery, truthful quality reports, and capture-surface
+  cleanup.
 - AkuSidecar is one Go process. It owns the embedded UI, loopback API, SQLite, sessions, reasoning transport, deterministic selection, personalization, and Timeline composition.
 - AkuSupervisor is the visible Rust lifecycle owner. It starts and stops the Sidecar executable; AkuSidecar has no watcher or hidden replacement process.
 - AkuBrowser owns this product contract, the active schemas, and the cross-repository PowerShell check. It has no package runtime.
 
-The production deployment consists only of AkuBridge and AkuSidecar. The
-Native Messaging host is an internal helper packaged with AkuSidecar for launch
-and safe binary handoff; AkuSupervisor is development tooling and is not part
-of installation or automatic update.
+The v0.9.0 Windows deployment consists of AkuBrowserLauncher, pinned Chromium,
+AkuBridge, and AkuSidecar in one installer-owned tuple. The Native Messaging
+host is a transitional internal helper, if retained, for safe binary handoff;
+AkuSupervisor is development tooling and is not part of installation or
+automatic update.
 
 ## Runtime flow
 
@@ -118,11 +126,20 @@ C2PA inspection starts only after Timeline finalization and after image evidence
 
 Reasoning profile IDs are opaque choices resolved by the active provider catalog. The release defaults are Luna High for acquisition planning, candidate evaluation, semantic event resolution, and AI Deep Detection. Luna XHigh and Luna Max remain explicit tuning options. When a provider launches a local runtime, Settings exposes its validated full executable path beside those profiles. The current Codex adapter can rediscover or hot-switch the executable while reasoning is idle; alternate backends can omit this optional provider capability without changing the domain adapters.
 
+## v0.9.0 provider and source boundary
+
+The release candidate exposes four source adapters: X, LinkedIn, Facebook, and
+opt-in Instagram. Codex App/App Server is an external prerequisite and remains
+the authoritative baseline. A user may configure the optional Gemini provider
+with a user-supplied key stored by the Sidecar credential flow; provider
+hot-swaps take effect only at an idle boundary. These capabilities are part of
+the RC acceptance matrix, not evidence that the candidate has shipped.
+
 ## State and recovery
 
 Cross-session fallback-to-native identity promotion is source-generic and occurs before model-backed acquisition planning or Candidate Evaluation. The promotion signature requires the same source, normalized author, and full normalized text; short or missing text is not eligible. Content kind and exact publication time must also be compatible. Source-relative timestamps marked as estimated are treated as unavailable; when either exact timestamp is unavailable, fallback reuse is limited to a 30-minute recovery window. A stable platform ID is authoritative over harmless permalink spelling or tracking-query differences, while a canonical permalink remains authoritative when no platform ID is available. If two observations already expose different valid native identities, they remain separate and the conflict is diagnostic rather than merge authority. This lets a long-form LinkedIn post safely inherit its earlier continuity history when a later capture reveals the canonical identity without turning broad semantic similarity or a later exact-text repost into deduplication.
 
-SQLite schema version 7 is the only accepted Go database boundary. Registered sources are seeded into `source_definitions`, and every source-bearing table references that registry instead of carrying fixed source enums. There is no Node importer and no migration path from an earlier Go schema; a mismatch fails before AkuSidecar creates or alters application tables. Detector output stays in `ai_assessments`, while canonical personal AI evidence lives in the separate append-only `ai_feedback_events` ledger; Undo appends a `clear` event. Personal AI Policy can affect only badge/drawer routing and Deep-review priority, never selection or the preference model. Sessions, feedback, and selection corrections are durable; the Bridge heartbeat is process-epoch scoped and must be refreshed after Sidecar replacement. Every API response carries the current instance epoch. Once a loaded page observes a different epoch, it performs one full-page reload so its embedded JavaScript and CSS match the replacement Sidecar binary rather than merely refreshing JSON state. When a page still holds the prior instance's Bridge token without an epoch transition, one `invalid_bridge_token` response triggers a single automatic bootstrap reload. A repeated mismatch inside the bounded recovery window fails visibly with guidance to check for another Sidecar instance or security software repeatedly restarting the runtime; invalid credentials are never retried indefinitely. Preference feedback remains append-only, while fitting and Update Inbox resolve the latest More/Less or selection-correction event for each canonical source/evidence identity. `Should have selected` is initially the strongest positive taste evidence, but a later More or Less event supersedes it for learning. Reset learning clears Personal AI Policy alongside preference evidence while keeping historical Timeline choices visible.
+SQLite schema version 10 is the active Go database boundary. Startup accepts additive migrations from schemas 7, 8, and 9. Registered sources are seeded into `source_definitions`, and every source-bearing table references that registry instead of carrying fixed source enums. There is no Node importer; an unsupported schema mismatch fails before AkuSidecar creates or alters application tables. Detector output stays in `ai_assessments`, while canonical personal AI evidence lives in the separate append-only `ai_feedback_events` ledger; Undo appends a `clear` event. Personal AI Policy can affect only badge/drawer routing and Deep-review priority, never selection or the preference model. Sessions, feedback, and selection corrections are durable; the Bridge heartbeat is process-epoch scoped and must be refreshed after Sidecar replacement. Every API response carries the current instance epoch. Once a loaded page observes a different epoch, it performs one full-page reload so its embedded JavaScript and CSS match the replacement Sidecar binary rather than merely refreshing JSON state. When a page still holds the prior instance's Bridge token without an epoch transition, one `invalid_bridge_token` response triggers a single automatic bootstrap reload. A repeated mismatch inside the bounded recovery window fails visibly with guidance to check for another Sidecar instance or security software repeatedly restarting the runtime; invalid credentials are never retried indefinitely. Preference feedback remains append-only, while fitting and Update Inbox resolve the latest More/Less or selection-correction event for each canonical source/evidence identity. `Should have selected` is initially the strongest positive taste evidence, but a later More or Less event supersedes it for learning. Reset learning clears Personal AI Policy alongside preference evidence while keeping historical Timeline choices visible.
 
 The data directory also carries a bounded `.runtime-version` marker naming the
 last AkuSidecar application version that opened it successfully. Sidecar and
@@ -205,7 +222,9 @@ fabricated. AkuBridge never performs social writes.
 
 Onboarding uses a monotonic SQLite authority, not page state. `onboarding_status=completed` and its completion timestamp are committed in the same transaction as the chosen active sources and survive a Sidecar restart. The UI recognizes three runtime states: restoring/unknown, explicit `not_started`, and explicit `completed`. A delayed, unavailable, or restarting Sidecar remains in restoring state; only an authoritative `not_started` bootstrap may expose source onboarding. Bootstrap and other JSON API responses are non-cacheable so a pre-completion response cannot be replayed after completion. Full reset is the only product operation that intentionally returns this authority to `not_started`.
 
-The `0.7.9` package assumes Codex App with App Server is installed and locally signed in, while Chrome is already signed in to every enabled source. It bundles AkuBridge as an unpacked payload for manual Developer-mode installation. A cross-platform AkuSidecar probe resolves an explicit override, `AKU_CODEX_PATH`, `PATH`, managed Codex App runtimes, and common CLI locations in that order; a candidate is accepted only when its App Server capability probe succeeds. Setup exposes this probe through the registered Native Messaging Host without returning the executable path or credentials to the extension. A successful capability check is followed by explicit user confirmation that local sign-in is complete; automated sign-in and automated browser-extension distribution remain outside this preview.
+### Historical 0.7.9 preview boundary
+
+The `0.7.9` package assumed Codex App with App Server was installed and locally signed in, while Chrome was already signed in to every enabled source. It bundled AkuBridge as an unpacked payload for manual Developer-mode installation. That paragraph is retained as historical evidence; the v0.9.0 release uses the bundled pinned Chromium app shell described above. A cross-platform AkuSidecar probe resolves an explicit override, `AKU_CODEX_PATH`, `PATH`, managed Codex App runtimes, and common CLI locations in that order; a candidate is accepted only when its App Server capability probe succeeds. Setup exposes this probe through the registered Native Messaging Host without returning the executable path or credentials to the extension. A successful capability check is followed by explicit user confirmation that local sign-in is complete; automated sign-in and automated browser-extension distribution remain outside this preview.
 
 ## Local model-usage ledger
 

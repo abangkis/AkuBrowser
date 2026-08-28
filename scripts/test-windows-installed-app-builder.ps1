@@ -46,7 +46,7 @@ Assert-True (Test-Path -LiteralPath $ArtifactDirectory -PathType Container) "Art
 $current = Read-Json (Join-Path $ArtifactDirectory "runtime\current.json")
 $installManifest = Read-Json (Join-Path $ArtifactDirectory "install-manifest.json")
 Assert-True ($current.schemaVersion -eq 1) "Active pointer schema is unexpected."
-Assert-True ([string]$installManifest.status -eq "staged-builder" -and $installManifest.signedInstaller -eq $false) "Artifact claims a signed or shipped installer."
+Assert-True ([string]$installManifest.status -eq "stable-unsigned" -and [string]$installManifest.installerStatus -eq "release-ready-unsigned" -and $installManifest.signedInstaller -eq $false) "Artifact release trust state is invalid."
 Assert-True ([string]$installManifest.bridgeIdentity.profile -eq "production-app") "Install provenance does not select production-app."
 Assert-True ([int]$installManifest.database.currentSchemaVersion -gt 0 -and [string]$installManifest.database.rollbackStatus -eq "not-implemented") "Install provenance claims an invalid database contract."
 

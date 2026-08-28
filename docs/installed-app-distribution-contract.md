@@ -1,21 +1,21 @@
 # AkuBrowser installed-app distribution contract
 
-Status: approved target architecture. Phase 0 identity, the Windows launcher
-vertical slice, a local Windows tuple builder, and an unsigned NSIS installer
-candidate are staged. The initial Phase 2 Sidecar-owned setup and Phase 3
-per-source broker/readiness loop are implemented in development. One isolated
-fresh-profile X run passed, and the interactive development profile has since
-passed X/LinkedIn source readiness, durable closed-tab session recognition,
-provider selection, secure Gemini credential storage, and a first update on
-Gemini 3.5 Flash Lite. The persistent-profile reset lane has also passed the
-LinkedIn/Facebook deny-to-grant sequence, Sidecar restart, Bridge reload, first
-Codex update, calibration, and Timeline delivery. The complete failure-path
-matrix and legacy Bridge setup retirement have also passed. A signed unified
-installer and shipped migration remain pending.
+Status: **v0.9.0 stable for Windows x64; intentionally unsigned**. Phase 0 identity,
+the Windows launcher vertical slice, the local Windows tuple builder, and the
+single-installer NSIS candidate are staged. The Sidecar-owned setup and
+per-source broker/readiness loop are implemented in development. Development
+acceptance has covered X/LinkedIn source readiness, durable closed-tab session
+recognition, provider selection, secure Gemini credential storage, a first
+Gemini-backed update, provider hot-swap at an idle boundary, and the
+LinkedIn/Facebook deny-to-grant/reset flow. The release contract targets four
+adapters (X, LinkedIn, Facebook, and opt-in Instagram) and AkuSidecar schema
+10. Automated tuple and installer gates are implemented. Code signing,
+independent clean-machine certification, and whole-tuple rollback remain
+explicit post-release hardening.
 
 Chrome Web Store publication is frozen as of 27 August 2026: no further Store
-builds are submitted, and all future production releases ship through this
-contract's single signed installer. The legacy Bridge-owned setup surface is
+builds are submitted, and production releases ship through this contract's
+single installer. The legacy Bridge-owned setup surface is
 retired under the [setup retirement plan](setup-retirement-plan.md).
 
 AkuSidecar now uses database schema 10 and accepts additive startup migration
@@ -24,16 +24,18 @@ schema 10 and accepts inputs 7–10, so the forward-migration tuple metadata is
 reconciled. Database rollback remains explicitly unimplemented until
 whole-tuple activation and rollback are built.
 
-This document is the canonical distribution target for the next AkuBrowser
-product direction. It supersedes the assumption that production is delivered
-through the Chrome Web Store or through a separately installed companion
-runtime. The current implementation remains documented honestly in the
-historical contracts linked below until the migration is complete.
+This document is the canonical distribution contract for the v0.9.0 Windows
+release. It supersedes the assumption that active production is
+delivered through the Chrome Web Store or through a separately installed
+companion runtime. v0.9.0 discloses its unsigned trust state and publishes a
+SHA-256 checksum. macOS and Linux are deferred; their
+historical contracts remain linked below for context.
 
 ## Decision
 
-AkuBrowser production will be distributed as one signed, downloadable
-installer. The installer bundles the complete user-facing tuple:
+The v0.9.0 Windows release is distributed as one intentionally unsigned,
+downloadable installer plus a SHA-256 checksum. The installer bundles the
+complete user-facing tuple:
 
 - `AkuBrowserLauncher`, owned and released by the AkuBrowser repository;
 - AkuSidecar, the Go application and loopback API;
@@ -41,15 +43,18 @@ installer. The installer bundles the complete user-facing tuple:
 - one pinned Chromium build used only by the AkuBrowser app shell;
 - c2patool and other pinned local support assets;
 - projected configuration, exact extension identity, compatibility metadata,
-  checksums, and signed update metadata.
+  checksums, and release metadata.
 
 Chrome Web Store installation and the user's system Chrome are not part of the
 target production path. A normal installation does not ask the user to enable
 Developer Mode, load an extension manually, or install a separate runtime
 companion. The app shell owns the browser profile and the product entry point.
 
-This is a target contract, not a claim about the current artifacts. The current
-Store/companion implementation remains useful historical evidence in the
+For v0.9.0, this contract applies to Windows x64 only. macOS and Linux packaging,
+signing, and acceptance are deferred to a later release and must not appear as
+v0.9.0 assets or gates.
+
+The Store/companion implementation remains useful historical evidence in the
 [Chrome Store distribution contract](chrome-store-distribution-contract.md),
 [Windows runtime installer](windows-runtime-installer.md), and
 [Windows runtime updater](windows-runtime-updater.md).
@@ -58,7 +63,7 @@ Store/companion implementation remains useful historical evidence in the
 
 | Boundary | Target authority | Explicit non-authority |
 | --- | --- | --- |
-| Product entry, install, repair, update, rollback, uninstall | AkuBrowserLauncher and its signed installer/update helper | AkuBridge UI, generic loopback pages |
+| Product entry, install, repair, update, rollback, uninstall | AkuBrowserLauncher and its installer/update helper | AkuBridge UI, generic loopback pages |
 | Setup and onboarding UI | AkuSidecar | AkuBridge full setup page |
 | Durable onboarding, source intent, settings, calibration, Timeline state | AkuSidecar SQLite and API | Chrome extension storage as the product record |
 | Optional source host permissions and content-script registration | AkuBridge permission broker and service worker | AkuSidecar HTTP/JavaScript |
@@ -115,8 +120,8 @@ The legacy runtime installer does not satisfy this layout: it stages the Native
 Host and Sidecar payload but not AkuBridge or pinned Chromium. A separate staged
 NSIS lane now consumes the verified installed-app tuple, writes the active
 pointer last, and preserves data and the isolated profile on ordinary uninstall.
-It remains unsigned and not shipped; see the
-[current implementation gap](#current-implementation-gap).
+It remains intentionally unsigned; see the
+[current release evidence and remaining gaps](#current-release-evidence-and-remaining-gaps).
 
 ## Installed-app identity and trust
 
@@ -353,7 +358,7 @@ validated to remain outside that root before any recursive removal.
 
 ## Security invariants
 
-- Only the signed installer/update authority may introduce executables,
+- Only the installer/update authority may introduce executables,
   extensions, or Chromium builds.
 - The app shell uses a pinned Chromium and a dedicated profile with component
   updates disabled unless a signed AkuBrowser tuple activates them.
@@ -395,16 +400,17 @@ switches, and provider changes apply at an idle boundary without restarting
 Sidecar. Groq remains hidden while endpoint- and provider-specific tuning is a
 separate follow-up, not an installed-app migration gate.
 
-### Current execution checkpoint — 28 August 2026
+### Current execution checkpoint — v0.9.0, 28 August 2026
 
-1. Close the legacy-setup blocking gate in development: the remaining typed
-   failure-path states recorded in the [setup retirement plan](setup-retirement-plan.md)
-   are now contract-tested and accepted.
-2. Rewire Bridge entry points to the Sidecar app shell and remove the retired
-   Bridge setup surface (Stages 1 and 2 are complete).
-3. Return to distribution work: pass pinned-Chromium clean-machine login and
-   launcher acceptance, then implement signed whole-tuple activation, repair,
-   rollback, and uninstall behavior.
+1. Keep the frozen v0.9.0 scope to Windows x64 and one installer `.exe`; do not
+   reopen the retired Store, companion, portable, macOS, or Linux lanes.
+2. Build the tuple and installer, then run the structural/hash/launcher gates
+   from the [stable release checklist](stable-release-checklist.md).
+3. Track code signing and independent clean-machine acceptance for pinned Chromium login,
+   four adapters, Codex readiness, optional Gemini-key use, provider hot-swap,
+   schema-10 data behavior, repair, update/rollback, uninstall, and reset.
+4. Publish the one unsigned installer and checksum after automated release
+   gates pass; do not claim code-signing or whole-tuple rollback support.
 
 UI polish and additional inference-cost tuning are follow-ups. They do not
 replace or block this execution order.
@@ -471,11 +477,12 @@ Gate: clean install, upgrade, repair, Bridge reload, Sidecar restart, denied
 permission, missing login, missing Codex, rollback, and uninstall all have a
 recoverable app-shell path.
 
-## Acceptance matrix
+## v0.9.0 Windows acceptance matrix
 
-The target is not ready until all of these pass on each supported platform:
+The automated release subset is required before publication. The broader matrix
+remains independent clean-machine hardening; macOS and Linux are deferred:
 
-- install from one signed artifact on a clean machine;
+- install from the one checksum-verified artifact on a clean machine;
 - verify complete payload, exact identity, and pinned Chromium hash;
 - launch without system Chrome or Developer Mode;
 - complete first-run Sidecar setup in a fresh isolated profile;
@@ -494,10 +501,10 @@ The target is not ready until all of these pass on each supported platform:
 - verify no credentials, cookies, source content, or arbitrary commands cross
   the launcher, Sidecar, Bridge, or Native Messaging boundaries.
 
-## Current implementation gap
+## Current release evidence and remaining gaps
 
-The approved target is partially implemented in the current repositories. The
-highest-impact remaining gaps are:
+The v0.9.0 target produces one Windows release artifact. The highest-impact
+remaining hardening gaps are:
 
 The 2026-08-25 development acceptance passed the first complete Sidecar-owned
 path with an isolated SharedTemp database and pinned Chromium profile: X
@@ -505,16 +512,17 @@ permission grant, authenticated source readiness, onboarding persistence,
 first bounded update, three-item calibration, and Sidecar/Bridge restart
 recovery all completed without opening the monolithic Bridge setup page. The
 28 August multi-source reset, failure-state matrix, and manual entry-point
-acceptance subsequently closed the development migration gates. Signed
-installer and production-login acceptance remain release gates.
+acceptance subsequently closed the development migration gates. Code signing
+and independent production-login acceptance remain follow-up hardening.
 
 - the Windows launcher verifies a staged tuple and starts the app shell;
   `scripts/build-windows-installed-app.ps1` builds the tuple and
-  `scripts/build-windows-installed-app-installer.ps1` emits a separate unsigned
-  NSIS candidate, but no signed installer has passed clean-machine install and
-  launch acceptance or shipped;
-- current Windows/macOS installer builders package a companion runtime rather
-  than one Bridge + Sidecar + Chromium installer;
+  `scripts/build-windows-installed-app-installer.ps1` emits the Windows
+  one-installer artifact; it is intentionally unsigned and has not received
+  independent clean-machine certification;
+- macOS and Linux packaging are explicitly deferred from v0.9.0; the older
+  Windows/macOS companion and portable builders are historical/recovery tooling,
+  not this release's distribution path;
 - the current interactive development lane uses system Chrome Stable with a
   dedicated AkuBrowser profile and one-time manual unpacked Bridge loading;
   automated acceptance continues to use a fresh pinned Chromium profile;
@@ -529,8 +537,8 @@ installer and production-login acceptance remain release gates.
 - the current runtime updater and Native Messaging lifecycle are Sidecar/
   companion-oriented rather than whole-tuple app-managed;
 - `production-app`, `production-installed-app`, launcher, tuple, and unsigned
-  NSIS builder contracts exist, but signing, atomic same-version repair,
-  whole-tuple rollback, and release publication remain unimplemented;
+  NSIS builder contracts exist, but code signing, atomic same-version repair,
+  and whole-tuple rollback remain unimplemented;
 - Bridge heartbeat and reconnect behavior passed exact protocol 2.0 recovery
   in isolated pinned Chromium and returned healthy after a cooperative reload
   in the active development profile. The persistent-profile LinkedIn/Facebook
@@ -541,13 +549,14 @@ installer and production-login acceptance remain release gates.
   across database migrations remains unavailable until whole-tuple rollback is
   implemented;
 - Sidecar now exposes and enforces provider-specific readiness before
-  activation. Production packaging must still validate the same Codex and
-  Ollama readiness behavior from the installed tuple rather than assuming the
-  development acceptance transfers automatically.
+  activation. The candidate also supports the optional Gemini key flow and
+  provider hot-swap at an idle boundary. Production packaging must still
+  validate Codex readiness, Gemini-key use, and the four source adapters from
+  the installed tuple rather than assuming development acceptance transfers
+  automatically.
 
-Until these gaps are closed, the current Store/companion and portable-preview
-documents describe shipped behavior and must not be silently interpreted as
-the approved target.
+The Store/companion and portable-preview documents describe historical behavior
+and must not be silently interpreted as the active release path.
 
 ## Related documents
 
@@ -559,3 +568,4 @@ the approved target.
 - [Historical Windows runtime updater](windows-runtime-updater.md)
 - [Stable release checklist](stable-release-checklist.md)
 - [Preview release](preview-release.md)
+- [v0.9.0 Windows release notes](releases/v0.9.0.md)

@@ -1,24 +1,57 @@
-# Windows clean-machine Step 3B
+# Windows clean-machine Step 3B — v0.9.0
 
-Use this runbook for the manual Windows acceptance of every stable AkuBrowser
-candidate. Replace `<version>` with the frozen release version. This validates
-the frozen unpacked `acceptance` Bridge identity and its matching local runtime before Store
-publication; it does not validate the production Chrome Web Store package.
+Use this runbook for independent Windows certification of the AkuBrowser v0.9.0
+x64 release. It validates the one installed-app installer `.exe` and its
+complete Bridge + Sidecar + pinned-Chromium tuple. This manual matrix is
+post-release hardening and does not replace the automated release gates.
 
-## Inputs
+## Inputs for the active release lane
 
-- the complete, separate `acceptance/` lane from one unified Windows release kit;
-- the root `release-kit.json` from that same kit;
-- a clean Windows x64 machine or account;
-- Chrome, Codex App signed in locally, and signed-in source accounts.
+- one Windows x64 installer `.exe` and its adjacent SHA-256 checksum;
+- the matching generated tuple/release manifest and source-freeze SHAs;
+- a clean Windows x64 machine or account with no prior AkuBrowser data/process;
+- Codex App with App Server installed and signed in locally;
+- signed-in source accounts for the sources selected during acceptance.
 
-Never use files from `publish/`, a future GitHub URL, the portable bundle, or a
-terminal launcher as Step 3B evidence.
+The installed candidate owns its pinned Chromium profile. Do not use system
+Chrome, Chrome Web Store installation, Developer Mode, a manually loaded
+extension, a portable ZIP, or a separate runtime installer as v0.9.0 evidence.
+Codex remains an external prerequisite. The optional Gemini provider uses a
+user-supplied key stored through the Sidecar credential flow; it is not bundled
+in the installer.
 
-The Windows stable gate is the only producer of this lane. Do not rebuild or
-copy individual files into it after the gate: the unpacked Bridge ZIP, receipt,
-local installer, checksums, and README must remain together and must match the
-root `release-kit.json`. The entire lane is non-publishable.
+## Active RC checklist
+
+- [ ] Verify the installer checksum and record the candidate version, source
+      SHAs, signing state, and SmartScreen/antivirus behavior.
+- [ ] Run the one installer `.exe` on the clean machine. Confirm it installs the
+      launcher, Sidecar, internal production-app Bridge, pinned Chromium,
+      c2patool, configuration, and manifests as one tuple.
+- [ ] Launch from the installed application identity without system Chrome,
+      Developer Mode, or a manually loaded extension. Confirm one app-shell
+      instance and healthy Sidecar/Bridge heartbeat.
+- [ ] Complete first-run setup for the four adapters: X, LinkedIn, Facebook,
+      and opt-in Instagram. Verify source-scoped permission, sign-in readiness,
+      denial/retry, and revocation behavior for each exercised source.
+- [ ] Confirm Codex readiness, then exercise optional Gemini-key setup/use and
+      one provider hot-swap at an idle boundary without restarting Sidecar.
+- [ ] Verify schema 10 startup and the documented additive migration boundary
+      without losing the existing user data fixture.
+- [ ] Exercise install, restart, repair, update/rollback, ordinary uninstall
+      with data preservation, and explicit full reset. Record any unimplemented
+      behavior as a release blocker rather than marking it passed.
+- [ ] Attach screenshots/logs, hashes, Installed Apps evidence, and a final
+      pass/fail decision to the v0.9.0 release evidence.
+
+The RC fails if any required item is unverified. An unsigned local candidate may
+trigger SmartScreen or antivirus warnings; record that behavior and keep the
+warning honest until the final signed artifact is verified.
+
+## Historical pre-v0.9.0 Store/portable procedure
+
+The procedure below is retained as historical evidence for the former acceptance
+lane. It is not a v0.9.0 gate and must not be used to claim the installed-app
+candidate passed.
 
 ## Manual checklist
 

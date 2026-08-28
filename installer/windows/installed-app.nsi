@@ -55,7 +55,7 @@ VIAddVersionKey /LANG=1033 "LegalCopyright" "AkuBrowser contributors"
 
 !define MUI_ABORTWARNING
 !define MUI_WELCOMEPAGE_TITLE "Install ${PRODUCT_NAME}"
-!define MUI_WELCOMEPAGE_TEXT "This staged installer contains AkuBrowserLauncher, AkuSidecar, AkuBridge, and the pinned Chromium build in one isolated application.$\r$\n$\r$\nCodex App remains an external prerequisite.$\r$\n$\r$\nTesting notice: this installer is not code-signed and is not a shipped production release."
+!define MUI_WELCOMEPAGE_TEXT "This installer contains AkuBrowserLauncher, AkuSidecar, AkuBridge, and the pinned Chromium build in one isolated application.$\r$\n$\r$\nUse Codex App Server or configure Gemini as the reasoning provider.$\r$\n$\r$\nThis release is not code-signed. Windows may show a security warning; verify the published SHA-256 checksum before continuing."
 !define MUI_DIRECTORYPAGE_TEXT_TOP "Select the folder for AkuBrowser program files. User data and the isolated browser profile remain under your local application-data folder."
 !define MUI_FINISHPAGE_TITLE "AkuBrowser is installed"
 !define MUI_FINISHPAGE_TEXT "Start AkuBrowser from the Start menu. The first launch uses the bundled Chromium build and isolated AkuBrowser profile."

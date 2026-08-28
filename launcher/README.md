@@ -1,4 +1,8 @@
-# AkuBrowserLauncher Windows vertical slice
+# AkuBrowserLauncher Windows app shell — v0.9.0
+
+Status: stable-release documentation. The v0.9.0 Windows x64 installer is
+intentionally unsigned; independent clean-machine certification remains future
+hardening. The old Store/portable launch paths are historical only.
 
 This module is the installed-app lifecycle entry point defined by
 `../docs/installed-app-distribution-contract.md`. The first slice:
@@ -14,6 +18,12 @@ This module is the installed-app lifecycle entry point defined by
   pinning, icon lookup, and relaunch instead of allowing the Chromium process
   identity to leak into the installed shortcut.
 
+The release tuple is one installed Windows application: the launcher starts the
+bundled AkuSidecar and pinned Chromium with the internal `production-app`
+AkuBridge payload. It does not use system Chrome, Chrome Web Store installation,
+Developer Mode, or a separately installed companion runtime. AkuSupervisor is
+development-only. macOS and Linux are deferred from v0.9.0.
+
 Development app-shell windows use the separate
 `AI4U.AkuBrowser.Development` identity. Their relaunch command calls the same
 launcher with `--development-workspace <root>`, and the launcher delegates the
@@ -26,11 +36,11 @@ actual lifecycle operation to the existing generic Supervisor command:
 The installed identity is `AI4U.AkuBrowser`; its relaunch command uses the
 verified installed tuple instead of AkuSupervisor.
 
-The manifest is not yet a standalone signed update envelope. The staged NSIS
+The manifest is not yet a standalone signed update envelope. The NSIS
 lane validates the tuple before compilation and writes `current.json` last, but
-its current artifact is explicitly unsigned and not shipped. Production
-signing, clean-machine launch acceptance, atomic same-version repair, signed
-update discovery, and rollback remain later phases.
+the v0.9.0 release remains explicitly unsigned. Do not silence
+SmartScreen/antivirus warnings; verify the published SHA-256. Atomic
+same-version repair, signed update discovery, and rollback remain future work.
 
 Run focused tests:
 
@@ -46,9 +56,9 @@ Set-Location launcher
 go build -trimpath -o AkuBrowserLauncher.exe ./cmd/AkuBrowserLauncher
 ```
 
-After changing an existing taskbar identity, unpin the old Chrome-backed item
-and pin the running AkuBrowser window once. Windows then persists the new
-AkuBrowser relaunch tuple and icon resource.
+Historical installations may retain a Chrome-backed taskbar item; unpin that
+old item once and pin the running AkuBrowser window if needed. v0.9.0 uses the
+stable `AI4U.AkuBrowser` application identity and its launcher relaunch tuple.
 
 Use `--verify-only --install-root <path>` to validate a staged fixture without
 starting Sidecar or Chromium.

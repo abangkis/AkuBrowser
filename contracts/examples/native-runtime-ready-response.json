@@ -5,7 +5,7 @@
   "action": "ensure_runtime",
   "status": "ready",
   "runtime": {
-    "version": "0.8.0",
+    "version": "0.9.0",
     "channel": "preview",
     "runtimeRevision": "source-adapters-v108",
     "bridgeContractVersion": "aku-browser.bridge.v2",
@@ -15,7 +15,7 @@
   },
   "update": {
     "phase": "idle",
-    "currentVersion": "0.8.0",
+    "currentVersion": "0.9.0",
     "targetVersion": null,
     "rollbackAvailable": true,
     "urgency": "routine"

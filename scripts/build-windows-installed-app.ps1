@@ -140,10 +140,11 @@ $bridgePackage = Read-Json (Join-Path $bridgeRoot "package.json")
 $bridgeManifest = Read-Json (Join-Path $bridgeRoot "manifest.json")
 $sidecarDomain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
 $installedApp = $release.distribution.installedApp
-Assert-True ($null -ne $installedApp) "The release manifest must declare the staged installed-app builder."
-Assert-True ([string]$installedApp.status -eq "staged-builder") "installedApp must be marked staged-builder, not shipped."
+Assert-True ($null -ne $installedApp) "The release manifest must declare the installed-app release lane."
+Assert-True ([string]$installedApp.status -eq "stable-unsigned") "installedApp must be marked stable-unsigned."
 Assert-True ([string]$installedApp.bridgeIdentityProfile -eq "production-app") "installedApp must select production-app."
-Assert-True ([string]$installedApp.installerStatus -eq "not-shipped") "installedApp must not claim a shipped installer."
+Assert-True ([string]$installedApp.installerStatus -eq "release-ready-unsigned") "installedApp must declare the unsigned release-ready installer state."
+Assert-True ($installedApp.signedInstaller -eq $false) "The v0.9.0 release lane must remain explicitly unsigned."
 Assert-True ([int]$installedApp.database.currentSchemaVersion -gt 0) "installedApp must declare the current Sidecar database schema."
 Assert-True ([string]$installedApp.database.rollbackStatus -eq "not-implemented") "installedApp must not claim database rollback before tuple rollback exists."
 
@@ -442,9 +443,9 @@ try {
         version = [string]$release.version
         platform = "windows-x64"
         format = "installed-app-tuple"
-        status = "staged-builder"
+        status = "stable-unsigned"
         signedInstaller = $false
-        installerStatus = "not-shipped"
+        installerStatus = "release-ready-unsigned"
         sourceCommits = $sourceState.commits
         sourceDirty = @($sourceState.dirty)
         bridgeIdentity = [ordered]@{
