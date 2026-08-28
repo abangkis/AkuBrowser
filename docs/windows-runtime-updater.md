@@ -8,6 +8,9 @@ Status: Stage 7 implementation, 29 July 2026.
 > AkuBrowser tuple and rolls back the whole tuple atomically; see the
 > [installed-app distribution contract](installed-app-distribution-contract.md).
 > Binary/delta patching is not part of that target yet.
+> The Bridge-owned setup page and its Store entry points were retired on 28
+> August 2026. The Sidecar loopback app now owns current onboarding and repair;
+> this updater flow remains historical shipped-lane evidence.
 
 ## Outcome
 

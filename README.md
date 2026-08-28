@@ -3,10 +3,11 @@
 Current shipped release: **`0.7.9`**. The repository also contains an
 unshipped **`0.8.0`** development tuple in
 [`release/release-manifest.json`](release/release-manifest.json). Its installed-
-app schema metadata is reconciled with AkuSidecar schema 10, but whole-tuple
-rollback and the remaining setup failure-path acceptance are still required
-before another release candidate. The canonical bundle boundary and gates are
-in the [installed-app distribution contract](docs/installed-app-distribution-contract.md).
+app schema metadata is reconciled with AkuSidecar schema 10. The legacy Bridge
+setup surface and failure-path gate are complete; whole-tuple rollback, signed
+installer, and clean-machine acceptance remain before another release
+candidate. The canonical bundle boundary and gates are in the
+[installed-app distribution contract](docs/installed-app-distribution-contract.md).
 
 > **Approved target distribution — partially staged, not shipped.** The next production
 > direction is one signed installer containing AkuBrowserLauncher, AkuSidecar,
@@ -14,18 +15,17 @@ in the [installed-app distribution contract](docs/installed-app-distribution-con
 > AkuSidecar inside an isolated app shell. Chrome Web Store and system Chrome
 > are not part of that target. See the canonical
 > [installed-app distribution contract](docs/installed-app-distribution-contract.md).
-> The Store/portable instructions below describe the current shipped state and
-> remain historical evidence until the migration is complete.
+> The Store/portable notes below describe shipped historical lanes only.
 
-> ### Install AkuBrowser from the Chrome Web Store
+> ### Chrome Web Store publication is frozen
 >
-> [**Add AkuBrowser to Chrome →**](https://chromewebstore.google.com/detail/akubrowser/phkaipecbhpgopggbfpcejgngbhddnkk)
+> The existing Chrome Web Store listing remains available to current users, but
+> no new Store builds are published. New production work targets the single
+> signed installed-app tuple, with AkuSidecar owning first-run onboarding in
+> the isolated app shell. See the [installed-app distribution target](docs/installed-app-distribution-contract.md).
 >
-> The Chrome Web Store extension is the supported production installation for
-> AkuBrowser. After installing it, use the guided **Setup** flow to install or
-> update the local AkuSidecar companion runtime. The Windows/macOS portable
-> bundles are a separate, self-contained offline production lane with their
-> own stable unpacked-extension identity.
+> The portable ZIP remains a technical-user and recovery lane with its own
+> matching AkuBridge and AkuSidecar tuple.
 
 ## Latest release downloads
 
@@ -40,7 +40,7 @@ these links without another README change:
 The portable Windows and macOS bundles remain versioned assets on the release
 page. Each contains its matching AkuBridge and AkuSidecar runtime for offline
 installation. Verify the adjacent SHA-256 file before using one, and do not run
-the offline and Chrome Web Store editions together.
+the offline and frozen Store editions together.
 
 AkuBrowser turns bounded samples from the user's chosen social feeds into one finite, source-backed Timeline. The current source registry supports X, LinkedIn, Facebook, and opt-in Instagram. It is designed for people who want to keep up without surrendering their attention to another infinite feed.
 
@@ -121,11 +121,12 @@ reloads use the Sidecar's cooperative `reload_self` contract. AkuSupervisor
 remains only the generic process owner.
 
 The preview assumes Codex App with App Server is installed and signed in
-locally, and that Chrome is already signed in to every enabled source. Store
-users follow the guided extension Setup and install the user-scoped companion
-runtime; the portable ZIP remains available as a self-contained offline lane.
-Its bundled `production-offline` Bridge is distinct from both the Store package
-and the Load unpacked `acceptance` package used for clean-machine Step 3B.
+locally, and that Chrome is already signed in to every enabled source. First-run
+onboarding is owned by the Sidecar loopback app; the AkuBridge popup opens that
+app shell, and its source-permission broker handles each optional host grant.
+The portable ZIP remains available as a self-contained offline lane. Its bundled
+`production-offline` Bridge is distinct from the frozen Store package and the
+Load unpacked `acceptance` package used for clean-machine Step 3B.
 See [Preview release](docs/preview-release.md).
 
 Build and smoke-test the Windows x64 portable preview from this repository:

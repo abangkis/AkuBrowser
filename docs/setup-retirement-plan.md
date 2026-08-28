@@ -5,7 +5,9 @@ frozen; all future production releases ship through the single signed
 installed-app tuple defined in the
 [installed-app distribution contract](installed-app-distribution-contract.md).
 The Sidecar-owned provider onboarding and local readiness lane are complete.
-Legacy setup deletion remains blocked on the acceptance checklist below.
+Legacy setup deletion and Stage 3 documentation retirement are complete; the
+automated portion of Stage 4 is recorded below, with only clean-machine
+portable acceptance remaining.
 
 This plan executes Phase 5 of the installed-app migration: removing the
 legacy Bridge-owned `setup.html` surface after the Sidecar-owned setup path
@@ -74,7 +76,7 @@ passes with current code:
       `login_required` → ready transitions when applicable, restart Sidecar and
       Bridge, and complete calibration to Timeline. Pinned-Chromium login
       compatibility remains a later installed-app release gate.
-- [ ] Failure-path states render from Sidecar without the legacy page:
+- [x] Failure-path states render from Sidecar without the legacy page:
       permission denied, registration missing, login required, Codex
       unavailable/pre-flight blocked, runtime stopped, and portable offline
       lane startup.
@@ -104,9 +106,63 @@ Acceptance progress recorded on 28 August 2026:
   this lane because preserving the authenticated profile is an explicit reset
   requirement.
 
-Next action: run the remaining failure-state matrix without changing the setup
-surfaces. If it passes, proceed to Stage 1 entry-point rewiring; if it fails,
-fix only the failed Sidecar/Bridge state before reconsidering deletion.
+Failure-state matrix evidence recorded on 28 August 2026:
+
+- Permission denial and missing content-script registration are derived from
+  the Bridge heartbeat as separate typed outcomes. Sidecar now preserves that
+  distinction in both onboarding and Settings (`Access: permission required`
+  versus `Access: capture registration missing`).
+- `login_required` remains a bounded source-session observation with a Sidecar
+  `Sign in` action; it is contract-tested and was not forced live because the
+  accepted profile must retain its authenticated sessions.
+- Codex unavailable and failed App Server pre-flight are covered by the
+  cost-free provider-readiness contract. Sidecar keeps onboarding usable,
+  renders `Unavailable`, and blocks activation until readiness succeeds.
+- Runtime stopped/reconnecting and the portable offline recovery lane are
+  covered by the bounded Bridge/native-host lifecycle contracts: stopped
+  runtime state is explicit, offline update discovery remains recoverable, and
+  portable startup probes only the fixed Sidecar loopback health contract.
+  Forcing a live stop or launching a second portable runtime would change the
+  active development lane, so those two states remain contract-tested here;
+  the manual acceptance action is to stop the active runtime, start the
+  matching portable bundle with `Start-AkuBrowser.ps1`, and confirm the
+  Bridge-ready Sidecar shell before restoring the normal lane.
+- Sidecar's embedded failure-state contract asserts all six states and rejects
+  `setup.html`, `AKU_BROWSER_OPEN_BRIDGE_SETUP`, and `AKU_BRIDGE_OPEN_SETUP` in
+  its served UI. Targeted Sidecar HTTP/Node tests, Bridge source/session and
+  native-runtime tests, and native-host lifecycle tests passed without a
+  profile reset, credential change, live restart, or model call.
+
+Stage 1 manual acceptance recorded on 28 August 2026:
+
+- The owner reloaded the unpacked AkuBridge in the existing development lane;
+  no `setup.html` tab opened. The popup presented only **Open AkuBrowser**, and
+  that action opened the Sidecar loopback app shell. No profile, credential,
+  source permission, or runtime reset was performed.
+
+Stage 2 deletion evidence recorded on 28 August 2026:
+
+- Deleted the nine actual legacy setup artifacts: `setup.html`, `setup.css`,
+  `setup.js`, `setup-platform.js`, `setup-runtime-view.js`,
+  `setup-runtime-installer.js`, `setup-runtime-simulation.js`,
+  `setup-codex-view.js`, and `icons/setup-favicon.svg`.
+- Deleted the five dedicated setup tests under `test/setup-*.test.mjs`.
+  The source-permission broker remains present and its favicon now uses the
+  packaged `icons/icon-48.png`, which was the only active reference to the
+  retired setup favicon.
+- Removed the unreachable `AKU_BROWSER_OPEN_BRIDGE_SETUP` relay, removed the
+  package verifier's manifest-options reference, and removed setup-only
+  syntax checks. The Bridge revision advanced to `source-adapters-v107` and
+  Sidecar's expected revision/build tracking was updated to accept it.
+- Targeted Bridge absence/lifecycle/status tests, the canonical Bridge check,
+  package verification, and relevant Sidecar HTTP/engine tests passed. No
+  profile reset, credential change, source permission change, live runtime
+  restart, or model call was performed.
+
+Next action: complete the automated Stage 4 checks, then perform the documented
+clean-machine portable stop/start gesture as a later release gate. No further
+reset, credential, or live development-runtime change is required for the
+retired setup surface.
 
 ## Stages
 
@@ -144,11 +200,11 @@ active code paths, so a revert is trivial.
   and status-view copy expectations.
 - Verification: `npm run check` in AkuBridge plus one manual pass of fresh
  -profile load-unpacked + Sidecar dev runtime confirming no active code path
-  opens `setup.html`.
+  opens `setup.html`. [x] Manual acceptance recorded above.
 
 ### Stage 2 — Deletions
 
-- Delete the ten legacy artifacts listed in the background table.
+- Delete the nine legacy artifacts listed in the background table.
 - Remove the `AKU_BRIDGE_OPEN_SETUP` relay from `aku-browser-tab-bridge.js`
   (already unreachable after Stage 1).
 - Remove the sidecar-host fallback acceptor of that message type if Bridge
@@ -171,23 +227,35 @@ active code paths, so a revert is trivial.
   `bridge-capabilities.js` per existing practice, and confirm Sidecar's
   expected runtime revision tracking accepts the reload.
 
-### Stage 3 — Documentation retirement
+### Stage 3 — Documentation retirement (complete — 28 August 2026)
 
-- AkuBridge README: remove the setup-page walkthrough (runtime simulation
+- [x] AkuBridge README: remove the setup-page walkthrough (runtime simulation
   query parameters, installer retry escalation, manual bundle instructions)
   and document the Sidecar-owned first-run path as the only onboarding.
-- Historical contracts receive superseded banners, not rewrites:
+- [x] Historical contracts receive superseded banners, not rewrites:
   `chrome-store-distribution-contract.md` gains the frozen-publication note,
   and `windows-runtime-installer.md` / `windows-runtime-updater.md` are
   already marked historical — extend their banners only where wording still
   implies future Store work.
-- `BUILD_WEEK.md` and release notes describing shipped `0.7.x` behavior are
+- [x] `BUILD_WEEK.md` and release notes describing shipped `0.7.x` behavior are
   historical evidence and are not edited.
-- AkuBrowser top-level README: replace the "Install from the Chrome Web
+- [x] AkuBrowser top-level README: replace the "Install from the Chrome Web
   Store"   routing block with the frozen-publication statement and installed-app
   target link once Stage 2 is complete. Keep launcher identity docs current.
 
-### Stage 4 — Final verification
+Stage 3 evidence recorded on 28 August 2026:
+
+- AkuBridge README now documents the Sidecar loopback app as the only current
+  first-run/onboarding and repair path; the retired walkthrough, simulation
+  query parameters, installer retry escalation, and manual bundle instructions
+  are absent.
+- The named historical contracts retain their shipped-flow bodies with explicit
+  frozen/superseded banners. `BUILD_WEEK.md` and release notes were not edited.
+- AkuBrowser's top-level README routes the frozen Store listing to the signed
+  installed-app target and keeps the portable ZIP as a technical-user/recovery
+  lane.
+
+### Stage 4 — Final verification (automated portion complete — 28 August 2026)
 
 - `npm run check` in AkuBridge; `.\scripts\check.ps1` from AkuBrowser for the
   workspace aggregate.
@@ -199,6 +267,34 @@ active code paths, so a revert is trivial.
   lane with the post-deletion Bridge payload.
 - Confirm `store/` submission materials now require no reconciliation, or add
   explicit notes there stating the listing is frozen.
+
+Automated evidence recorded on 28 August 2026:
+
+- The zero-live-reference sweep found no forbidden token in active Bridge,
+  Sidecar, or AkuBrowser implementation/release paths. The remaining matches
+  are confined to this plan, the explicitly historical contract bodies, and
+  intentional absence assertions in Bridge/Sidecar tests.
+- The first aggregate run exposed stale v106 release tracking after the
+  intentional Bridge/Sidecar v107 revision bump. The release manifest, Bridge
+  contract, and five runtime examples were reconciled to v107; the focused
+  identity verifier then passed with build ID
+  `aku-bridge-0.8.0-source-adapters-v107`.
+- `AkuBridge\npm run package:verify` passed and listed no deleted setup
+  artifact. The aggregate `AkuBrowser\scripts\check.ps1` reached and passed
+  its identity, Sidecar, Bridge (292 JS tests plus native tests), and installer
+  stages. Its launcher stage was blocked by the sandbox default temp-path ACL
+  (`resolve install root: Access is denied`) before any launcher assertion ran;
+  the same canonical launcher package passed with `TEMP`/`TMP` redirected to
+  the task-owned `.tmp-stage3` directory and repo-local Go cache.
+- No Sidecar tests were rerun after the documentation-only changes; the
+  relevant HTTP/engine suite had already passed on the unchanged Sidecar
+  payload.
+
+The remaining Stage 4 gate is manual and intentionally not run here: on a
+clean machine, stop the active runtime, start the matching portable bundle with
+`Start-AkuBrowser.ps1`, and confirm the Bridge-ready Sidecar shell before
+restoring the normal lane. Signing, shipping, deployment, profile/session
+changes, source-permission changes, and credential changes remain out of scope.
 
 ## Explicit non-goals
 

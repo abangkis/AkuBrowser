@@ -11,6 +11,8 @@ Status: implemented distribution authority, 31 July 2026. Publication frozen
 > This document preserves the Chrome Web Store plus companion-runtime design
 > that shipped artifacts implement and remains useful historical evidence for
 > the migration; it is not the forward-looking distribution authority.
+> The Bridge-owned setup page and Store entry points were retired on 28 August
+> 2026; current first-run onboarding belongs to the Sidecar loopback app.
 > Legacy setup-surface removal is tracked in the
 > [setup retirement plan](setup-retirement-plan.md).
 

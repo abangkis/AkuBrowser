@@ -7,6 +7,10 @@ Status: Stage 4 implementation, 28 July 2026.
 > installer and remains accurate for that shipped lane. The target replaces it
 > with one signed installer that also owns AkuBridge, pinned Chromium, and
 > AkuBrowserLauncher. See the [installed-app distribution contract](installed-app-distribution-contract.md).
+> The Bridge-owned setup page was retired on 28 August 2026; the Sidecar
+> loopback app is the only current onboarding and repair entry point. The
+> installer and setup-page details below are retained as historical shipped-lane
+> evidence.
 
 ## Outcome
 

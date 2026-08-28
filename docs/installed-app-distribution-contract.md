@@ -10,8 +10,8 @@ provider selection, secure Gemini credential storage, and a first update on
 Gemini 3.5 Flash Lite. The persistent-profile reset lane has also passed the
 LinkedIn/Facebook deny-to-grant sequence, Sidecar restart, Bridge reload, first
 Codex update, calibration, and Timeline delivery. The complete failure-path
-matrix remains before signed-installer work resumes. A signed unified installer
-and shipped migration remain pending.
+matrix and legacy Bridge setup retirement have also passed. A signed unified
+installer and shipped migration remain pending.
 
 Chrome Web Store publication is frozen as of 27 August 2026: no further Store
 builds are submitted, and all future production releases ship through this
@@ -199,8 +199,8 @@ the runtime can prove a stronger, machine-verifiable state.
 
 ## Setup UI and permission broker
 
-`setup.html` is not part of the target product UI. Sidecar owns the complete
-setup/onboarding experience. The extension must retain only a minimal,
+The retired Bridge-owned setup page is not part of the target product UI.
+Sidecar owns the complete setup/onboarding experience. The extension must retain only a minimal,
 extension-owned permission broker (for example, a small `permissions.html`)
 until Chrome permission user-gesture behavior is proven through the pinned
 Chromium integration.
@@ -215,8 +215,9 @@ It must not accept arbitrary origins, executable paths, URLs, commands, or
 Native Messaging actions. Sidecar may render Bridge state and request a broker
 operation, but it cannot call Chrome Extensions APIs directly.
 
-The current `setup.html`, `setup.js`, popup route, service-worker setup route,
-and setup-specific tests are therefore migration inputs, not target ownership.
+The former full Bridge setup surface, popup route, service-worker setup route,
+and setup-specific tests were migration inputs, not target ownership; Stage 2
+has removed them.
 
 The extension retains one narrow UI responsibility that cannot move into the
 loopback application: Chrome's source-scoped optional host permission prompt.
@@ -232,7 +233,7 @@ come only from the packaged allowlist.
 
 The pinned Chromium profile is intentionally separate from every system Chrome
 profile. This provides isolation and makes the installed app reproducible, but
-it means a new user must sign in within the AkuBrowser profile. The setup flow
+it means a new user must sign in within the AkuBrowser profile. The first-run flow
 must provide a clear per-source “open sign-in” action and report:
 
 - permission not granted;
@@ -396,11 +397,11 @@ separate follow-up, not an installed-app migration gate.
 
 ### Current execution checkpoint — 28 August 2026
 
-1. Close the legacy-setup blocking gate in development: complete the remaining
-   typed failure-path states recorded in the
-   [setup retirement plan](setup-retirement-plan.md).
-2. Rewire Bridge entry points to the Sidecar app shell, then delete the legacy
-   `setup.html` surface only after that gate is recorded as passed.
+1. Close the legacy-setup blocking gate in development: the remaining typed
+   failure-path states recorded in the [setup retirement plan](setup-retirement-plan.md)
+   are now contract-tested and accepted.
+2. Rewire Bridge entry points to the Sidecar app shell and remove the retired
+   Bridge setup surface (Stages 1 and 2 are complete).
 3. Return to distribution work: pass pinned-Chromium clean-machine login and
    launcher acceptance, then implement signed whole-tuple activation, repair,
    rollback, and uninstall behavior.
@@ -435,7 +436,8 @@ Developer Mode, system Chrome, or a separate runtime installer.
 - Move runtime/Codex presentation and durable source intent to Sidecar.
 - Add source sign-in actions for the isolated profile.
 
-Gate: Sidecar can render all readiness states without relying on `setup.html`.
+Gate: Sidecar can render all readiness states without relying on the retired
+Bridge setup surface.
 
 ### Phase 3 — Bridge broker and heartbeat
 
@@ -459,9 +461,9 @@ Gate: failed candidates never leave a mixed Bridge/Sidecar/Chromium tuple.
 
 ### Phase 5 — Remove the old setup surface
 
-- Route popup and all lifecycle actions to Sidecar setup or the broker.
-- Remove `setup.html` and setup-specific full UI only after the broker and
-  fallback acceptance gates pass.
+- [x] Route popup and all lifecycle actions to Sidecar setup or the broker.
+- [x] Remove the retired Bridge setup surface and setup-specific full UI after
+  the broker and fallback acceptance gates passed.
 - Retire Store/companion production wording from active release guidance while
   preserving historical documents with superseded banners.
 
@@ -501,9 +503,10 @@ The 2026-08-25 development acceptance passed the first complete Sidecar-owned
 path with an isolated SharedTemp database and pinned Chromium profile: X
 permission grant, authenticated source readiness, onboarding persistence,
 first bounded update, three-item calibration, and Sidecar/Bridge restart
-recovery all completed without opening the monolithic Bridge setup page. This
-proves the migrated flow for one source; it does not yet close the multi-source,
-permission denial/revocation, Codex preflight, or production-login gates.
+recovery all completed without opening the monolithic Bridge setup page. The
+28 August multi-source reset, failure-state matrix, and manual entry-point
+acceptance subsequently closed the development migration gates. Signed
+installer and production-login acceptance remain release gates.
 
 - the Windows launcher verifies a staged tuple and starts the app shell;
   `scripts/build-windows-installed-app.ps1` builds the tuple and
@@ -516,13 +519,13 @@ permission denial/revocation, Codex preflight, or production-login gates.
   dedicated AkuBrowser profile and one-time manual unpacked Bridge loading;
   automated acceptance continues to use a fresh pinned Chromium profile;
 - `AkuBridge/manifest.json`, `popup.js`, `service-worker.js`, and extension
-  contract tests still treat `setup.html` as the setup surface;
+  contract tests now route to the Sidecar app shell; the retired setup surface
+  is absent from the active package;
 - Sidecar first-run and the normal source-open path now use the narrow
   extension-owned permission broker and require at least one selected source
   to reach effective ready state before onboarding completes. Fresh-profile
-  deny/grant, sign-in, restart, and calibration acceptance must pass before the
-  legacy monolithic extension setup surface and its duplicate source-selection
-  controls can be removed;
+  deny/grant, sign-in, restart, calibration, and failure-path acceptance have
+  passed; duplicate Bridge setup/source-selection controls are removed;
 - the current runtime updater and Native Messaging lifecycle are Sidecar/
   companion-oriented rather than whole-tuple app-managed;
 - `production-app`, `production-installed-app`, launcher, tuple, and unsigned
@@ -532,8 +535,8 @@ permission denial/revocation, Codex preflight, or production-login gates.
   in isolated pinned Chromium and returned healthy after a cooperative reload
   in the active development profile. The persistent-profile LinkedIn/Facebook
   reset, deny-to-grant, recovery, first-update, calibration, and Timeline lane
-  has also passed. The failure-path matrix remains before end-to-end setup
-  migration can be declared complete;
+  has also passed. The failure-path matrix and end-to-end entry-point migration
+  are complete for the development lane;
 - the installed-app schema metadata is reconciled at schema 10, but rollback
   across database migrations remains unavailable until whole-tuple rollback is
   implemented;
