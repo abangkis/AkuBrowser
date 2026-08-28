@@ -60,7 +60,7 @@ Run this sequence from a clean AkuBrowser/AkuBridge/AkuSidecar source tuple:
       provider hot-swap at an idle boundary; schema 10 startup/migration; and
       install, repair, update/rollback, uninstall, preserve-data, and full-reset
       behavior.
-- [ ] Publish after the unsigned installer, checksum, release manifest, release
+- [x] Publish after the unsigned installer, checksum, release manifest, release
       notes, and automated release evidence agree. Publish one installer
       binary plus its checksum; do not publish a Chrome Web Store update.
 
