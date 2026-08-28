@@ -232,13 +232,13 @@ try {
         }
         Push-Location $sidecarRoot
         try {
-            & go build -trimpath -ldflags "-s -w" -o (Join-Path $versionRoot "AkuSidecar.exe") .\cmd\akusidecar
+            & go build -buildvcs=false -trimpath -ldflags "-s -w" -o (Join-Path $versionRoot "AkuSidecar.exe") .\cmd\akusidecar
             if ($LASTEXITCODE -ne 0) { throw "AkuSidecar release build failed." }
         }
         finally { Pop-Location }
         Push-Location $launcherRoot
         try {
-            & go build -trimpath -ldflags "-s -w" -o (Join-Path $artifactRoot "AkuBrowserLauncher.exe") .\cmd\AkuBrowserLauncher
+            & go build -buildvcs=false -trimpath -ldflags "-s -w" -o (Join-Path $artifactRoot "AkuBrowserLauncher.exe") .\cmd\AkuBrowserLauncher
             if ($LASTEXITCODE -ne 0) { throw "AkuBrowserLauncher release build failed." }
         }
         finally { Pop-Location }
