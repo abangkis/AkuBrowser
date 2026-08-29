@@ -3,8 +3,9 @@
 This document is the canonical contract for the Personal Memory and Library foundation.
 It defines durable local memory independently from the operational Timeline,
 Inbox, preference learning, and semantic event resolver. The local Library
-surface includes deterministic FTS5 search, GET-only reads, and two explicit
-local actions: Remove and Forget permanently. Ingestion from
+surface includes deterministic FTS5 search, GET-only reads, and explicit
+local lifecycle actions: Keep full copy, Release full copy, Remove, and Forget
+permanently. Ingestion from
 `ComposeSession` and broader Library mutations remain later milestones.
 
 ## Product boundary
@@ -18,9 +19,10 @@ local actions: Remove and Forget permanently. Ingestion from
 
 `More` remains a preference signal. A routine `More` action may guarantee a
 recall stub, but it does not imply a full copy. `Keep full copy` is the explicit
-decision that retains text. `Release full copy` removes the text payload while
-keeping the recall stub. Neutral Timeline results and calibration corrections
-do not become durable memory automatically.
+Timeline decision that retains bounded text copied from authoritative persisted
+evidence; the browser sends only the Timeline id. `Release full copy` removes
+the text payload while keeping the recall stub. Neutral Timeline results and
+calibration corrections do not become durable memory automatically.
 
 The guarantee is narrow: only an explicit routine `More` submitted for a
 Timeline item that still exists after composition and belongs to a terminal
@@ -165,6 +167,17 @@ The HTTP contract is:
 - `GET /api/library/items?query=&source=&tier=&publishedFrom=&publishedTo=&limit=&cursor=` lists or searches active items;
 - `GET /api/library/items/{id}` returns one active item, including explicitly
   retained full text when present.
+- `POST /api/timeline/{timelineId}/keep-full-copy` keeps the bounded text from
+  the final persisted Timeline evidence. It accepts no body or client content
+  and returns only `{kept:true,alreadyKept,retentionTier}`; the internal
+  Personal Memory id is not exposed at the Timeline boundary. The Sidecar
+  rejects missing/non-final items, unavailable text, and tombstoned identities
+  without calling a provider or recapturing the source.
+- `POST /api/library/items/{id}/release-full-copy` releases the retained text
+  and preserves the searchable recall metadata and identity. It accepts no
+  body or client content and returns only
+  `{released:true,id,retentionTier:"recall"}`. The operation is safe to repeat
+  for an already-recall item; tombstoned or missing items return 404.
 - `DELETE /api/library/items/{id}` performs the normal local Remove. It
   accepts no memory content and returns only `{removed:true,id}`. The
   Sidecar physically removes the active item and its local rows without a
@@ -184,16 +197,19 @@ audit/provenance internals, credentials, or provider payloads. The delete
 responses do not return the removed item.
 
 The top-level Library view in the AkuBrowser web app is a local search client
-with two explicit actions. It uses explicit local search,
+with explicit lifecycle actions. It uses explicit local search,
 source/tier/date filters, stable cursor-based Load more pagination, and a
 detail pane. The detail pane may show only the returned full text and safe
 HTTPS source/media metadata references; it does not infer a reason such as
 “remembered because More” when that reason is not present in the public API.
-Remove uses a normal native confirmation and states that a later More may
-recreate the local copy. Forget permanently uses stronger confirmation,
-disables both actions while either request is in flight, removes the item from
-the current list after a confirmed response, and keeps errors visible without
-accepting client-supplied memory content.
+Release full copy uses a clear confirmation and updates the selected detail to
+the recall tier without a full page reload. Remove uses a normal native
+confirmation and states that a later More may recreate the local copy. Forget
+permanently uses stronger confirmation, disables all Library actions while a
+request is in flight, removes the item from the current list after a confirmed
+response, and keeps errors visible without accepting client-supplied memory
+content. Timeline Keep reports a successful or already-kept state and restores
+the tier from the server's small `personalMemory` projection after reload.
 
 ## Media and privacy limits
 
@@ -236,6 +252,10 @@ surviving Timeline item.
   mutations;
 - migration failure leaves the source schema/version unchanged;
 - equivalent identities deduplicate while ambiguous fingerprints do not merge;
+- Keep from a final Timeline item derives text server-side, then changes the
+  tier and payload bytes without accepting client content or calling a provider;
+- Keep is idempotent for an existing full copy, while blank/non-final,
+  unavailable, and tombstoned Timeline evidence fails closed;
 - Keep then Release changes the tier and payload bytes without losing the stub;
 - retention/session deletion leaves active memory intact;
 - Less after routine More removes only a recall stub with no independent
