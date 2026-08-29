@@ -1,10 +1,11 @@
 # Personal Memory and Library Contract
 
-This document is the canonical contract for the Personal Memory foundation.
+This document is the canonical contract for the Personal Memory and Library foundation.
 It defines durable local memory independently from the operational Timeline,
-Inbox, preference learning, and semantic event resolver. The first shipped
-foundation is storage and store APIs only; HTTP, FTS/search, ingestion from
-`ComposeSession`, and Library UI remain later milestones.
+Inbox, preference learning, and semantic event resolver. The local read-only
+Library surface includes deterministic FTS5 search and GET-only HTTP reads.
+Mutation HTTP APIs, ingestion from `ComposeSession`, and Library UI remain
+later milestones.
 
 ## Product boundary
 
@@ -64,9 +65,13 @@ The final fingerprint is a hint, not a primary key: ambiguous fingerprint
 matches never merge two active memories. Equivalent aliases update one item and
 append provenance/action evidence instead of creating a duplicate.
 
-## Storage contract (AkuSidecar schema 12)
+## Storage contract (AkuSidecar schema 13)
 
-The additive v11 to v12 migration creates these independent tables and indexes.
+The additive v11 to v12 migration creates the memory tables and the additive
+v12 to v13 migration creates/backfills the local search index. Both migrations
+are transactional and update `meta.schema_version` only after all objects and
+backfill rows succeed. The v13 index is provider-free and has no foreign key to
+operational data.
 The local `memory_tombstone_key_v1` metadata value is generated randomly and
 used only for keyed deletion suppression digests:
 
@@ -132,6 +137,36 @@ No Personal Memory table has a foreign key to `sessions`, `runs`, or
 `timeline_items`; operational deletion and `EnforceRetention` therefore cannot
 delete a durable memory as a side effect.
 
+### `memory_search_fts`
+
+This FTS5 virtual table contains one logical row for every active memory item:
+`memory_item_id` (unindexed), `title`, `summary`, `author`, `tags`, `facets`,
+and `full_content`. It is rebuilt transactionally on recall create/update,
+Keep, Release, and Delete. Tombstones are never indexed; Release clears the
+full-copy field and Delete removes the row. Existing active v12 items are
+backfilled during migration.
+
+Search uses deterministic FTS5 BM25 with weights in column order
+`title=10`, `summary=5`, `author=2`, `tags=3`, `facets=3`, and
+`full_content=1` (lower scores rank first), then stable tie-breakers
+`updated_at DESC, id DESC`. Empty queries use the same stable recent ordering
+without touching FTS. The opaque keyset cursor is bound to the query and
+filters; a cursor cannot be reused for another query.
+
+The read-only HTTP contract is:
+
+- `GET /api/library/items?query=&source=&tier=&publishedFrom=&publishedTo=&limit=&cursor=` lists or searches active items;
+- `GET /api/library/items/{id}` returns one active item, including explicitly
+  retained full text when present.
+
+`limit` is 1--50 (default 24), query text is capped at 200 Unicode characters,
+and cursors are capped at 512 characters. `publishedFrom` and `publishedTo`
+accept RFC3339 timestamps or `YYYY-MM-DD`; a date-only `publishedTo` includes
+the entire UTC day. The response exposes bounded recall
+metadata and optional user-kept full text, but never tombstones, HMAC digests,
+audit/provenance internals, credentials, or provider payloads. There are no
+Library mutation routes.
+
 ## Media and privacy limits
 
 The foundation stores UTF-8 text and at most 16 bounded HTTPS media metadata
@@ -153,14 +188,19 @@ For an eligible routine `More`, the canonical `feedback_events` row and its
 recall-stub projection, provenance, and action share one SQLite transaction;
 if projection fails, the preference row is rolled back and retry is safe.
 Schema migration is forward-only and additive: it runs in a transaction,
-creates the v12 tables/indexes, updates `meta.schema_version` only after all
-objects succeed, and leaves v11 operational rows untouched. There is no
-`ComposeSession` ingestion in this foundation; the projection is an explicit
-feedback boundary over the final surviving Timeline item.
+creates the v12 tables/indexes, creates and backfills the v13 search index,
+updates `meta.schema_version` only after all objects succeed, and leaves v11
+operational rows untouched. There is no `ComposeSession` ingestion in this
+foundation; the projection is an explicit feedback boundary over the final
+surviving Timeline item.
 
 ## Required acceptance checks
 
-- fresh databases and v11 databases open at schema 12 with the exact objects above;
+- fresh databases and v11 databases open at schema 13 with the exact objects above;
+- v12 databases backfill active memory into FTS5 and leave failed migration/version state unchanged;
+- local lexical ranking, source/tier/date filters, stable keyset cursors, empty-query recency, and restart persistence work without a provider;
+- release and delete scrub their FTS rows as well as their stored payloads;
+- Library HTTP reads validate bounds, hide internal fields, return 404 for tombstones, and expose no mutation route;
 - migration failure leaves the source schema/version unchanged;
 - equivalent identities deduplicate while ambiguous fingerprints do not merge;
 - Keep then Release changes the tier and payload bytes without losing the stub;
