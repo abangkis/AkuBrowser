@@ -21,6 +21,14 @@ decision that retains text. `Release full copy` removes the text payload while
 keeping the recall stub. Neutral Timeline results and calibration corrections
 do not become durable memory automatically.
 
+The guarantee is narrow: only an explicit routine `More` submitted for a
+Timeline item that still exists after composition and belongs to a terminal
+`completed` or `partial` session may project a recall stub. `Less`/
+`Not interested`, neutral choices, calibration, selection corrections, AI
+feedback, and non-surviving candidates are memory-neutral. A later `Less` or
+undo changes preference authority only; it does not delete user-owned recall
+history.
+
 ## State model
 
 Each `memory_items` row has two independent dimensions:
@@ -141,11 +149,14 @@ later milestones.
 
 Memory creation/update, aliases, optional provenance, and the corresponding
 action are committed atomically. Keep, release, and delete are also atomic.
+For an eligible routine `More`, the canonical `feedback_events` row and its
+recall-stub projection, provenance, and action share one SQLite transaction;
+if projection fails, the preference row is rolled back and retry is safe.
 Schema migration is forward-only and additive: it runs in a transaction,
 creates the v12 tables/indexes, updates `meta.schema_version` only after all
 objects succeed, and leaves v11 operational rows untouched. There is no
-ComposeSession ingestion in this foundation; the eventual ingestion boundary
-is the final surviving item after composition, not `CompleteRun`.
+`ComposeSession` ingestion in this foundation; the projection is an explicit
+feedback boundary over the final surviving Timeline item.
 
 ## Required acceptance checks
 
