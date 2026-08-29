@@ -4,9 +4,11 @@ This document is the canonical contract for the Personal Memory and Library foun
 It defines durable local memory independently from the operational Timeline,
 Inbox, preference learning, and semantic event resolver. The local Library
 surface includes deterministic FTS5 search, GET-only reads, and explicit
-local lifecycle actions: Keep full copy, Release full copy, Remove, and Forget
-permanently. Ingestion from
-`ComposeSession` and broader Library mutations remain later milestones.
+local lifecycle actions: Read later, Keep in Library, Done, Release full copy,
+Remove, and Forget permanently. Ingestion from `ComposeSession` remains a
+later milestone. Read later is a bounded local retention action over persisted
+Timeline evidence; it creates current Saved membership, while Keep in Library
+is the separate permanent full-copy decision made after reading.
 
 ## Product boundary
 
@@ -15,14 +17,18 @@ permanently. Ingestion from
 | Timeline | Selected results prepared for the current update | Operational; subject to retention |
 | Preference ledger | Compact evidence for More/Less taste learning | Durable, but not content archive |
 | Knowledge/events | Reasoning structures used by the update pipeline | Operational/semantic retention |
-| Personal Memory | User-owned recall stubs and explicitly kept text | Independent of sessions/runs/Timeline |
+| Personal Memory | User-owned recall stubs and explicitly retained text | Independent of sessions/runs/Timeline |
 
-`More` remains a preference signal. A routine `More` action may guarantee a
-recall stub, but it does not imply a full copy. `Keep full copy` is the explicit
-Timeline decision that retains bounded text copied from authoritative persisted
-evidence; the browser sends only the Timeline id. `Release full copy` removes
-the text payload while keeping the recall stub. Neutral Timeline results and
-calibration corrections do not become durable memory automatically.
+`More` and `Less` remain preference signals. A routine `More` action may
+guarantee a recall stub, but it does not imply Saved membership or a full copy.
+`Read later` copies the best bounded text available in authoritative persisted
+Timeline evidence (or stores a truthful source-dependent recall item when text
+is unavailable) and creates current Saved membership. After reading, `Keep in
+Library` creates permanent full-copy ownership without duplicating content and
+resolves Saved membership. `Done` resolves Saved membership; without an
+independent Keep claim it releases the temporary full copy and leaves a recall
+stub. Neutral Timeline results and calibration corrections do not become
+durable memory automatically.
 
 The guarantee is narrow: only an explicit routine `More` submitted for a
 Timeline item that still exists after composition and belongs to a terminal
@@ -30,20 +36,31 @@ Timeline item that still exists after composition and belongs to a terminal
 `Not interested` for the same final survivor retracts a recall stub that is
 proven to exist only because of that routine `More`; it does not create a
 tombstone, so a later `More` can recreate the stub. Full copies, independent
-captured/imported/manual provenance, and independent retention actions remain
-untouched. Neutral choices, calibration, selection corrections, AI feedback,
-and non-surviving candidates are memory-neutral.
+captured/imported/manual provenance, current Saved membership, and permanent
+Keep ownership remain untouched. Less consults these current ownership claims
+rather than historical `read_later`/`mark_read` rows; after Done without Keep,
+the item may again behave as a normal recall stub. Neutral choices, calibration,
+selection corrections, AI feedback, and non-surviving candidates are
+memory-neutral.
 
 ## State model
 
-Each `memory_items` row has two independent dimensions:
+Each `memory_items` row has a recall/full-copy tier plus independent current
+Saved and Keep claims:
 
 ```text
 active + recall       -- metadata, source pointer, bounded labels
 active + full_copy    -- recall data plus one or more text versions
+active + saved        -- current Saved membership claim (may also have text)
+active + keep         -- independent permanent Keep ownership claim
 tombstone             -- opaque deletion marker; no URL, text, author, or provenance
 absent                -- local removal; no memory or suppression marker remains
 ```
+
+Saved and Keep are materialized current claims, not inferred from action
+history. A full-copy item present during migration is treated as permanently
+Kept; historical `read_later` or `mark_read` actions never create Saved
+membership.
 
 Normal Remove physically deletes the active item, search row, content versions,
 provenance, actions, and aliases without writing a tombstone. A later routine
@@ -74,13 +91,16 @@ The final fingerprint is a hint, not a primary key: ambiguous fingerprint
 matches never merge two active memories. Equivalent aliases update one item and
 append provenance/action evidence instead of creating a duplicate.
 
-## Storage contract (AkuSidecar schema 13)
+## Storage contract (AkuSidecar schema 14)
 
 The additive v11 to v12 migration creates the memory tables and the additive
-v12 to v13 migration creates/backfills the local search index. Both migrations
+v12 to v13 migration creates/backfills the local search index. The additive v13
+to v14 migration creates current retention claims and materializes a permanent
+`keep` claim for every active legacy `full_copy` item. It does not infer Saved
+membership from historical actions. All migrations
 are transactional and update `meta.schema_version` only after all objects and
-backfill rows succeed. The v13 index is provider-free and has no foreign key to
-operational data.
+backfill rows succeed. The v13 FTS index and v14 claim indexes are
+provider-free and have no foreign key to operational data.
 The local `memory_tombstone_key_v1` metadata value is generated randomly and
 used only for keyed deletion suppression digests:
 
@@ -142,6 +162,16 @@ actions are `create_stub`, `update_stub`, `keep_full_copy`,
 
 Indexes: `memory_actions_item_created` and `memory_actions_action_created`.
 
+### `memory_retention_claims`
+
+`memory_item_id`, `claim_kind` (`saved` or `keep`), `claimed_at`, and nullable
+`resolved_at`. The primary key is `(memory_item_id, claim_kind)`, so each item
+has at most one current claim of each kind. Active membership/ownership is
+represented by a null `resolved_at`; resolving a claim is idempotent and keeps
+the audit-safe timestamps without relying on action rows.
+
+Indexes: `memory_retention_claims_active` and `memory_retention_claims_item`.
+
 No Personal Memory table has a foreign key to `sessions`, `runs`, or
 `timeline_items`; operational deletion and `EnforceRetention` therefore cannot
 delete a durable memory as a side effect.
@@ -151,7 +181,8 @@ delete a durable memory as a side effect.
 This FTS5 virtual table contains one logical row for every active memory item:
 `memory_item_id` (unindexed), `title`, `summary`, `author`, `tags`, `facets`,
 and `full_content`. It is rebuilt transactionally on recall create/update,
-Keep, Release, Remove, and Forget permanently. Tombstones are never indexed;
+Read later, Keep in Library, Done, Release, Remove, and Forget permanently.
+Tombstones are never indexed;
 Release clears the full-copy field and both removal actions remove the row.
 Existing active v12 items are backfilled during migration.
 
@@ -165,6 +196,7 @@ filters; a cursor cannot be reused for another query.
 The HTTP contract is:
 
 - `GET /api/library/items?query=&source=&tier=&publishedFrom=&publishedTo=&limit=&cursor=` lists or searches active items;
+- `GET /api/library/saved?query=&source=&tier=&publishedFrom=&publishedTo=&limit=&cursor=` lists only items with a current Saved claim. The equivalent `saved=true` filter on the general Library endpoint is also supported.
 - `GET /api/library/items/{id}` returns one active item, including explicitly
   retained full text when present.
 - `GET /api/library/storage?limit=` returns a logical local-storage estimate
@@ -186,12 +218,27 @@ The HTTP contract is:
   auto-cleans. Its recommendations only open the existing Library detail for
   user review. Any lifecycle mutation remains an explicit detail action with
   its own endpoint and confirmation.
-- `POST /api/timeline/{timelineId}/keep-full-copy` keeps the bounded text from
-  the final persisted Timeline evidence. It accepts no body or client content
-  and returns only `{kept:true,alreadyKept,retentionTier}`; the internal
-  Personal Memory id is not exposed at the Timeline boundary. The Sidecar
-  rejects missing/non-final items, unavailable text, and tombstoned identities
-  without calling a provider or recapturing the source.
+- `POST /api/timeline/{timelineId}/read-later` stores the best bounded local
+  text available from final persisted Timeline evidence and creates current
+  Saved membership. It accepts no body or client content and returns
+  `{saved:true,alreadySaved,retentionTier,permanentKeep}`; the internal
+  Personal Memory id is not exposed at the Timeline boundary. Missing or
+  unavailable text remains a truthful source-dependent Saved recall item. The
+  Sidecar rejects missing/non-final items and tombstoned identities without a
+  provider call, browser recapture, or media download. Repeating the request
+  while Saved is active is idempotent. The legacy
+  `POST /api/timeline/{timelineId}/keep-full-copy` compatibility endpoint may
+  remain for existing clients, but it is not a visible Timeline action.
+- `POST /api/library/items/{id}/keep-in-library` converts the current Saved
+  item to permanent Keep ownership, reuses the existing active full-copy
+  version, resolves Saved membership, and returns
+  `{kept:true,id,saved:false,permanentKeep:true,retentionTier}`. It returns a
+  bounded unavailable-text error when a full copy cannot be established.
+- `POST /api/library/items/{id}/done` resolves Saved membership and returns
+  `{done:true,id,saved:false,permanentKeep,retentionTier}`. Without a Keep
+  claim, temporary Read Later text is released and the item becomes a recall
+  stub; an existing Keep claim leaves its full copy intact. Both mutations are
+  idempotent and accept no body or client content.
 - `POST /api/library/items/{id}/release-full-copy` releases the retained text
   and preserves the searchable recall metadata and identity. It accepts no
   body or client content and returns only
@@ -216,19 +263,22 @@ audit/provenance internals, credentials, or provider payloads. The delete
 responses do not return the removed item.
 
 The top-level Library view in the AkuBrowser web app is a local search client
-with explicit lifecycle actions. It uses explicit local search,
-source/tier/date filters, stable cursor-based Load more pagination, and a
-detail pane. The detail pane may show only the returned full text and safe
-HTTPS source/media metadata references; it does not infer a reason such as
-“remembered because More” when that reason is not present in the public API.
-Release full copy uses a clear confirmation and updates the selected detail to
-the recall tier without a full page reload. Remove uses a normal native
-confirmation and states that a later More may recreate the local copy. Forget
-permanently uses stronger confirmation, disables all Library actions while a
-request is in flight, removes the item from the current list after a confirmed
-response, and keeps errors visible without accepting client-supplied memory
-content. Timeline Keep reports a successful or already-kept state and restores
-the tier from the server's small `personalMemory` projection after reload.
+with distinct `Saved`, `Library`, and lazy-loaded read-only `Spring Cleaning`
+tabs. Saved lists only current Read Later membership; Library lists all active
+recall/full-copy items. Both use explicit local search, source/tier/date filters,
+stable cursor-based Load more pagination, and a detail pane. The detail pane may
+show only the returned full text and safe HTTPS source/media metadata
+references; it does not infer a reason such as “remembered because More” when
+that reason is not present in the public API.
+
+Saved detail offers exactly `Keep in Library` and `Done` for the Saved lifecycle.
+Keep uses a clear confirmation and preserves one existing full-copy version;
+Done uses a clear confirmation and releases only temporary Read Later text.
+Existing Release full copy, Remove, and Forget permanently actions remain
+available where applicable as independent Library actions. Timeline exposes one
+retention action, `Read later`, which changes to `Saved` after success; it never
+shows a separate full-copy Keep control. All actions are keyboard/mobile/
+accessibility compatible and do not accept client-supplied memory content.
 
 ## Media and privacy limits
 
@@ -250,22 +300,26 @@ database-size claim is part of this surface.
 ## Transaction and migration rules
 
 Memory creation/update, aliases, optional provenance, and the corresponding
-action are committed atomically. Keep, release, Remove, and Forget permanently
-are also atomic.
+action are committed atomically. Read later, Keep in Library, Done, Release,
+Remove, and Forget permanently are also atomic. Retention claims are updated in
+the same transaction as their lifecycle mutation and are never reconstructed
+from historical action rows.
 For an eligible routine `More`, the canonical `feedback_events` row and its
 recall-stub projection, provenance, and action share one SQLite transaction;
 if projection fails, the preference row is rolled back and retry is safe.
 Schema migration is forward-only and additive: it runs in a transaction,
 creates the v12 tables/indexes, creates and backfills the v13 search index,
-updates `meta.schema_version` only after all objects succeed, and leaves v11
+creates the v14 retention claims and legacy full-copy Keep claims, updates
+`meta.schema_version` only after all objects succeed, and leaves v11
 operational rows untouched. There is no `ComposeSession` ingestion in this
 foundation; the projection is an explicit feedback boundary over the final
 surviving Timeline item.
 
 ## Required acceptance checks
 
-- fresh databases and v11 databases open at schema 13 with the exact objects above;
+- fresh databases and v11 databases open at schema 14 with the exact objects above;
 - v12 databases backfill active memory into FTS5 and leave failed migration/version state unchanged;
+- v13 databases migrate to v14 with active legacy full copies materialized as permanent Keep claims, without inferring Saved from historical actions;
 - local lexical ranking, source/tier/date filters, stable keyset cursors, empty-query recency, and restart persistence work without a provider;
 - release, routine-Less retraction, Remove, and Forget permanently scrub their
   FTS rows as well as
@@ -279,10 +333,15 @@ surviving Timeline item.
   documented safe fields, and has no mutation method or provider path;
 - migration failure leaves the source schema/version unchanged;
 - equivalent identities deduplicate while ambiguous fingerprints do not merge;
-- Keep from a final Timeline item derives text server-side, then changes the
-  tier and payload bytes without accepting client content or calling a provider;
-- Keep is idempotent for an existing full copy, while blank/non-final,
-  unavailable, and tombstoned Timeline evidence fails closed;
+- Read later from a final Timeline item derives only persisted text server-side,
+  creates current Saved membership, and is idempotent while that membership is
+  active without accepting client content or calling a provider;
+- Read later remains truthful for unavailable text, and non-final or tombstoned
+  Timeline evidence fails closed;
+- Keep in Library reuses the Read Later full-copy version, resolves Saved, and
+  creates permanent Keep ownership without duplicating content;
+- Done resolves Saved, releases temporary Read Later content without Keep, and
+  preserves full copy when permanent Keep ownership exists;
 - Keep then Release changes the tier and payload bytes without losing the stub;
 - retention/session deletion leaves active memory intact;
 - Less after routine More removes only a recall stub with no independent
