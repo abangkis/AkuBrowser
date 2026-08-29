@@ -167,6 +167,25 @@ The HTTP contract is:
 - `GET /api/library/items?query=&source=&tier=&publishedFrom=&publishedTo=&limit=&cursor=` lists or searches active items;
 - `GET /api/library/items/{id}` returns one active item, including explicitly
   retained full text when present.
+- `GET /api/library/storage?limit=` returns a logical local-storage estimate
+  plus bounded review-only recommendations. The default recommendation limit
+  is 6 and the accepted range is 1--12. Usage includes active items,
+  tombstones, recall/full-copy counts, and content, metadata, provenance, and
+  action byte estimates; it is not the physical SQLite or WAL file size.
+  Recommendations include only `id`, `source`, public `title`/`author` when
+  present, `contentBytes`, `reclaimableBytes`, `updatedAt`, `reasonCode`, and
+  `reviewAction`. They select active `full_copy` items with positive content
+  bytes and rank them by reclaimable content bytes descending, then
+  `updatedAt` descending and `id` descending. The current reason code is
+  `largest_full_copy` and the existing review action is `review_full_copy`.
+  Tombstones count in usage but are never recommended. An empty set returns a
+  successful response with `recommendations: []`.
+- The storage surface is strictly non-mutating: `GET /api/library/storage`
+  never deletes, releases, downgrades, tombstones, rewrites, or changes
+  retention state; it accepts no memory content, calls no provider, and never
+  auto-cleans. Its recommendations only open the existing Library detail for
+  user review. Any lifecycle mutation remains an explicit detail action with
+  its own endpoint and confirmation.
 - `POST /api/timeline/{timelineId}/keep-full-copy` keeps the bounded text from
   the final persisted Timeline evidence. It accepts no body or client content
   and returns only `{kept:true,alreadyKept,retentionTier}`; the internal
@@ -221,8 +240,12 @@ context and audit details are separately bounded.
 
 Logical storage usage reports content, metadata, provenance, and action bytes;
 it is not a claim about SQLite file or WAL size. An explicit full copy must not
-be silently removed by pressure. Pressure/bucket UI and Spring Cleaning are
-later milestones.
+be silently removed by pressure. The Library Spring Cleaning section is a
+read-only view of the bounded full-copy recommendations from
+`GET /api/library/storage`; it states that nothing is removed automatically
+and offers only `Review` navigation to existing Library detail. No automatic
+cleanup, retention mutation, provider call, schema migration, or physical
+database-size claim is part of this surface.
 
 ## Transaction and migration rules
 
@@ -250,6 +273,10 @@ surviving Timeline item.
 - Library HTTP reads validate bounds, hide internal fields, return 404 for
   tombstones, and expose distinct narrow Remove and Forget permanently
   mutations;
+- the Library storage GET validates its 1--12 recommendation bound, returns
+  usage plus `recommendations: []` when no positive full copies exist, ranks
+  recommendations deterministically, excludes tombstones, exposes only its
+  documented safe fields, and has no mutation method or provider path;
 - migration failure leaves the source schema/version unchanged;
 - equivalent identities deduplicate while ambiguous fingerprints do not merge;
 - Keep from a final Timeline item derives text server-side, then changes the
