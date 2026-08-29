@@ -2,10 +2,10 @@
 
 This document is the canonical contract for the Personal Memory and Library foundation.
 It defines durable local memory independently from the operational Timeline,
-Inbox, preference learning, and semantic event resolver. The local read-only
-Library surface includes deterministic FTS5 search and GET-only HTTP reads.
-Mutation HTTP APIs, ingestion from `ComposeSession`, and Library UI remain
-later milestones.
+Inbox, preference learning, and semantic event resolver. The local Library
+surface includes deterministic FTS5 search, GET-only reads, and two explicit
+local actions: Remove and Forget permanently. Ingestion from
+`ComposeSession` and broader Library mutations remain later milestones.
 
 ## Product boundary
 
@@ -25,10 +25,12 @@ do not become durable memory automatically.
 The guarantee is narrow: only an explicit routine `More` submitted for a
 Timeline item that still exists after composition and belongs to a terminal
 `completed` or `partial` session may project a recall stub. `Less`/
-`Not interested`, neutral choices, calibration, selection corrections, AI
-feedback, and non-surviving candidates are memory-neutral. A later `Less` or
-undo changes preference authority only; it does not delete user-owned recall
-history.
+`Not interested` for the same final survivor retracts a recall stub that is
+proven to exist only because of that routine `More`; it does not create a
+tombstone, so a later `More` can recreate the stub. Full copies, independent
+captured/imported/manual provenance, and independent retention actions remain
+untouched. Neutral choices, calibration, selection corrections, AI feedback,
+and non-surviving candidates are memory-neutral.
 
 ## State model
 
@@ -38,11 +40,16 @@ Each `memory_items` row has two independent dimensions:
 active + recall       -- metadata, source pointer, bounded labels
 active + full_copy    -- recall data plus one or more text versions
 tombstone             -- opaque deletion marker; no URL, text, author, or provenance
+absent                -- local removal; no memory or suppression marker remains
 ```
 
-The delete transition removes raw aliases, provenance, and content versions,
-then clears all identifying fields. It preserves only the opaque item id,
-lifecycle state, timestamps, and keyed digests in `memory_tombstone_aliases`.
+Normal Remove physically deletes the active item, search row, content versions,
+provenance, actions, and aliases without writing a tombstone. A later routine
+`More` may therefore recreate the same source identity. Forget permanently
+uses the opaque Forget permanently transition: it removes raw aliases, provenance, and
+content versions, then clears all identifying fields. It preserves only the
+opaque item id, lifecycle state, timestamps, and keyed digests in
+`memory_tombstone_aliases`.
 The per-install HMAC key is held in local metadata and is never exposed as an
 alias value; a plain SHA-256 of a known URL is not treated as non-reversible.
 Every matching future create is rejected as tombstoned, even when it carries
@@ -121,7 +128,7 @@ Indexes: `memory_content_versions_item_created` and
 `id`, `memory_item_id`, `provenance_kind`, `source`,
 `canonical_evidence_key`, `source_url`, `capture_context_json`, `reason`,
 `created_at`. Provenance is append-only while an item is active and is removed
-by the delete privacy transition.
+by the Forget permanently privacy transition.
 
 Index: `memory_provenance_item_created`.
 
@@ -142,9 +149,9 @@ delete a durable memory as a side effect.
 This FTS5 virtual table contains one logical row for every active memory item:
 `memory_item_id` (unindexed), `title`, `summary`, `author`, `tags`, `facets`,
 and `full_content`. It is rebuilt transactionally on recall create/update,
-Keep, Release, and Delete. Tombstones are never indexed; Release clears the
-full-copy field and Delete removes the row. Existing active v12 items are
-backfilled during migration.
+Keep, Release, Remove, and Forget permanently. Tombstones are never indexed;
+Release clears the full-copy field and both removal actions remove the row.
+Existing active v12 items are backfilled during migration.
 
 Search uses deterministic FTS5 BM25 with weights in column order
 `title=10`, `summary=5`, `author=2`, `tags=3`, `facets=3`, and
@@ -153,26 +160,40 @@ Search uses deterministic FTS5 BM25 with weights in column order
 without touching FTS. The opaque keyset cursor is bound to the query and
 filters; a cursor cannot be reused for another query.
 
-The read-only HTTP contract is:
+The HTTP contract is:
 
 - `GET /api/library/items?query=&source=&tier=&publishedFrom=&publishedTo=&limit=&cursor=` lists or searches active items;
 - `GET /api/library/items/{id}` returns one active item, including explicitly
   retained full text when present.
+- `DELETE /api/library/items/{id}` performs the normal local Remove. It
+  accepts no memory content and returns only `{removed:true,id}`. The
+  Sidecar physically removes the active item and its local rows without a
+  tombstone, so matching future automatic `More` projections may recreate it.
+- `POST /api/library/items/{id}/forget-permanently` performs the explicit
+  permanent Forget action. It accepts no memory content and returns only
+  `{forgotten:true,id}`. The Sidecar writes opaque keyed tombstone
+  aliases, removes the item from search, and makes matching future automatic
+  `More` projections fail closed.
 
 `limit` is 1--50 (default 24), query text is capped at 200 Unicode characters,
 and cursors are capped at 512 characters. `publishedFrom` and `publishedTo`
 accept RFC3339 timestamps or `YYYY-MM-DD`; a date-only `publishedTo` includes
 the entire UTC day. The response exposes bounded recall
 metadata and optional user-kept full text, but never tombstones, HMAC digests,
-audit/provenance internals, credentials, or provider payloads. There are no
-Library mutation routes.
+audit/provenance internals, credentials, or provider payloads. The delete
+responses do not return the removed item.
 
-The top-level Library view in the AkuBrowser web app is a read-only client of
-these routes. It uses explicit local search, source/tier/date filters, stable
-cursor-based Load more pagination, and a detail pane. The detail pane may show
-only the returned full text and safe HTTPS source/media metadata references; it
-does not infer a reason such as “remembered because More” when that reason is
-not present in the public API.
+The top-level Library view in the AkuBrowser web app is a local search client
+with two explicit actions. It uses explicit local search,
+source/tier/date filters, stable cursor-based Load more pagination, and a
+detail pane. The detail pane may show only the returned full text and safe
+HTTPS source/media metadata references; it does not infer a reason such as
+“remembered because More” when that reason is not present in the public API.
+Remove uses a normal native confirmation and states that a later More may
+recreate the local copy. Forget permanently uses stronger confirmation,
+disables both actions while either request is in flight, removes the item from
+the current list after a confirmed response, and keeps errors visible without
+accepting client-supplied memory content.
 
 ## Media and privacy limits
 
@@ -190,7 +211,8 @@ later milestones.
 ## Transaction and migration rules
 
 Memory creation/update, aliases, optional provenance, and the corresponding
-action are committed atomically. Keep, release, and delete are also atomic.
+action are committed atomically. Keep, release, Remove, and Forget permanently
+are also atomic.
 For an eligible routine `More`, the canonical `feedback_events` row and its
 recall-stub projection, provenance, and action share one SQLite transaction;
 if projection fails, the preference row is rolled back and retry is safe.
@@ -206,12 +228,22 @@ surviving Timeline item.
 - fresh databases and v11 databases open at schema 13 with the exact objects above;
 - v12 databases backfill active memory into FTS5 and leave failed migration/version state unchanged;
 - local lexical ranking, source/tier/date filters, stable keyset cursors, empty-query recency, and restart persistence work without a provider;
-- release and delete scrub their FTS rows as well as their stored payloads;
-- Library HTTP reads validate bounds, hide internal fields, return 404 for tombstones, and expose no mutation route;
+- release, routine-Less retraction, Remove, and Forget permanently scrub their
+  FTS rows as well as
+  their stored payloads;
+- Library HTTP reads validate bounds, hide internal fields, return 404 for
+  tombstones, and expose distinct narrow Remove and Forget permanently
+  mutations;
 - migration failure leaves the source schema/version unchanged;
 - equivalent identities deduplicate while ambiguous fingerprints do not merge;
 - Keep then Release changes the tier and payload bytes without losing the stub;
 - retention/session deletion leaves active memory intact;
-- Delete clears URL/text/provenance and leaves only an opaque tombstone;
+- Less after routine More removes only a recall stub with no independent
+  provenance/retention intent, creates no tombstone, and permits a later More
+  to recreate it;
+- Remove clears local rows without a tombstone and allows a later More to
+  recreate the identity;
+- Forget permanently clears URL/text/provenance and leaves only an opaque
+  tombstone that suppresses later automatic recapture;
 - Full Reset removes active memory, content, provenance, actions, aliases, and tombstones;
 - SQLite integrity and foreign-key checks pass after fresh open and recovery.
