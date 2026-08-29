@@ -212,6 +212,28 @@ The HTTP contract is:
   `largest_full_copy` and the existing review action is `review_full_copy`.
   Tombstones count in usage but are never recommended. An empty set returns a
   successful response with `recommendations: []`.
+- Current Saved items are excluded from the general full-copy recommendations,
+  so temporary Saved text is not presented as ordinary releasable Keep storage.
+  The same storage response adds the read-only `savedPressure` fact snapshot
+  and bounded `savedRecommendations` array. `savedPressure` contains only
+  `activeItems`, `localCopyItems`, `sourceDependentItems`, `contentBytes`, and
+  `oldestClaimedAt`; `localCopyItems` counts Saved items with a positive local
+  full-text byte count, while `sourceDependentItems` contains every other
+  active Saved item, including recall stubs and zero-byte media-metadata-only
+  `full_copy` rows. The two counts sum to `activeItems`. The oldest timestamp
+  is an empty string when no active Saved claim exists. It is a current-schema
+  count/byte snapshot, not a pressure score, warning threshold, hard limit, or
+  capacity decision.
+  `savedRecommendations` reuses the storage recommendation limit (default 6,
+  accepted range 1--12), selects only active unresolved Saved claims, and
+  orders them strictly FIFO by current `savedAt`/claim time ascending, then
+  `id` ascending. Each entry contains only `id`, `source`, public `title` and
+  `author` when present, `savedAt`, `retentionTier`, `contentBytes`,
+  `sourceDependent`, `reasonCode`, and navigation-only `reviewAction`.
+  `sourceDependent` is false only for a `full_copy` item with positive local
+  text bytes; it is true for recall and zero-byte full-copy items. It never
+  includes content, provenance, audit details, claim internals, or
+  provider data. Empty responses always return non-null arrays.
 - The storage surface is strictly non-mutating: `GET /api/library/storage`
   never deletes, releases, downgrades, tombstones, rewrites, or changes
   retention state; it accepts no memory content, calls no provider, and never
@@ -293,9 +315,13 @@ it is not a claim about SQLite file or WAL size. An explicit full copy must not
 be silently removed by pressure. The Library Spring Cleaning section is a
 read-only view of the bounded full-copy recommendations from
 `GET /api/library/storage`; it states that nothing is removed automatically
-and offers only `Review` navigation to existing Library detail. No automatic
-cleanup, retention mutation, provider call, schema migration, or physical
-database-size claim is part of this surface.
+and offers only `Review` navigation to existing Library detail. Its lazy-loaded
+`Saved backlog` subsection reports the current Saved fact snapshot and FIFO
+review cards; `Review` switches to the Saved tab and opens that item. Search,
+filters, and item content remain in the Saved/Library surfaces, and Library's
+storage snapshot and full-copy section remain intact. No automatic cleanup,
+retention mutation, provider call, schema migration, or physical database-size
+claim is part of this surface.
 
 ## Transaction and migration rules
 
@@ -331,6 +357,14 @@ surviving Timeline item.
   usage plus `recommendations: []` when no positive full copies exist, ranks
   recommendations deterministically, excludes tombstones, exposes only its
   documented safe fields, and has no mutation method or provider path;
+- the storage GET returns an empty, non-null Saved snapshot and recommendation
+  array when no current Saved claim exists, computes populated Saved counts and
+  bytes from active unresolved claims, classifies positive-byte full copies as
+  local-copy and all other Saved items (including zero-byte full-copy media
+  metadata) as source-dependent, orders Saved recommendations FIFO with
+  deterministic id tie-breaking, excludes resolved/tombstoned/non-Saved items,
+  excludes current Saved items from general full-copy recommendations, and
+  exposes no content, provenance, audit, claim-internal, or provider fields;
 - migration failure leaves the source schema/version unchanged;
 - equivalent identities deduplicate while ambiguous fingerprints do not merge;
 - Read later from a final Timeline item derives only persisted text server-side,
