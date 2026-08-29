@@ -167,6 +167,13 @@ metadata and optional user-kept full text, but never tombstones, HMAC digests,
 audit/provenance internals, credentials, or provider payloads. There are no
 Library mutation routes.
 
+The top-level Library view in the AkuBrowser web app is a read-only client of
+these routes. It uses explicit local search, source/tier/date filters, stable
+cursor-based Load more pagination, and a detail pane. The detail pane may show
+only the returned full text and safe HTTPS source/media metadata references; it
+does not infer a reason such as “remembered because More” when that reason is
+not present in the public API.
+
 ## Media and privacy limits
 
 The foundation stores UTF-8 text and at most 16 bounded HTTPS media metadata
