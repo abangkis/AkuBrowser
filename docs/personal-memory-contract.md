@@ -91,13 +91,14 @@ The final fingerprint is a hint, not a primary key: ambiguous fingerprint
 matches never merge two active memories. Equivalent aliases update one item and
 append provenance/action evidence instead of creating a duplicate.
 
-## Storage contract (AkuSidecar schema 14)
+## Storage contract (AkuSidecar schema 15)
 
 The additive v11 to v12 migration creates the memory tables and the additive
 v12 to v13 migration creates/backfills the local search index. The additive v13
 to v14 migration creates current retention claims and materializes a permanent
 `keep` claim for every active legacy `full_copy` item. It does not infer Saved
-membership from historical actions. All migrations
+membership from historical actions. The additive v14 to v15 migration creates
+the append-only Content Context feedback ledger. All migrations
 are transactional and update `meta.schema_version` only after all objects and
 backfill rows succeed. The v13 FTS index and v14 claim indexes are
 provider-free and have no foreign key to operational data.
@@ -171,6 +172,20 @@ represented by a null `resolved_at`; resolving a claim is idempotent and keeps
 the audit-safe timestamps without relying on action rows.
 
 Indexes: `memory_retention_claims_active` and `memory_retention_claims_item`.
+
+### `content_context_feedback_events`
+
+`id`, `timeline_id`, internal stable `context_key`, `memory_item_id`, `verdict`
+(`relevant`, `not_relevant`, or `clear`), `engine_version`, server-derived
+`result_rank`, server-derived `match_reason`, nullable `supersedes_id`, and
+`created_at`. Events are append-only pairwise evidence about the relationship
+between one Timeline context and one Memory item; they never classify the
+Memory item globally. The table deliberately has no foreign key to operational
+Timeline or Personal Memory rows, and its internal context key never crosses
+the public API.
+
+Indexes: `content_context_feedback_pair_created` and
+`content_context_feedback_timeline_created`.
 
 No Personal Memory table has a foreign key to `sessions`, `runs`, or
 `timeline_items`; operational deletion and `EnforceRetention` therefore cannot
@@ -316,6 +331,23 @@ provenance, audit rows, identity digests, or provider payloads. An empty result
 is successful. The operation opens no Saved/Keep state and performs no memory,
 Timeline, preference, action, or provenance write.
 
+Each returned match may expose its current pairwise feedback state. Explicit
+feedback uses
+`POST /api/timeline/{timelineId}/content-context-feedback` with only
+`memoryItemId` and a `relevant` or `not_relevant` verdict. The Sidecar accepts
+feedback only when the current engine can reproduce that surfaced match; it
+derives the stable context identity, result rank, match reason, and engine
+version server-side. Undo is
+`POST /api/content-context-feedback/{feedbackId}/undo` and appends a `clear`
+event only when the referenced event remains the latest decision for the pair.
+
+On later retrieval, `not_relevant` suppresses only that exact pair. `relevant`
+adds a strong deterministic boost to an otherwise admitted pair but never
+admits a candidate rejected by the current relevance policy. Feedback is
+independent of More/Less, Saved, Keep, Timeline selection, and global Memory
+quality. Reset
+Learning removes this learning ledger; ordinary retrieval remains read-only.
+
 The Timeline UI exposes one compact, accessible `Related context` right-edge
 tab on every eligible rendered post and performs a lookup only after that
 post's action. A collapsed duplicate report has no tab until `Show report`
@@ -340,6 +372,11 @@ drawer remains an accessible overlay/bottom sheet with Close, Escape, focus
 return, internal scrolling, and reduced-motion handling. It renders bounded
 loading, empty, error, and result states with the returned reasons; it does not
 prefetch context for every post.
+Selecting either feedback action does not remove or reorder the current drawer.
+A `not_relevant` row becomes visually subdued and both verdicts show an inline
+Undo action. The current result set remains stable until the drawer closes or
+switches to another post; its cached result is then discarded so the next
+lookup applies the latest pairwise verdict.
 Content Context does not add More/Less, Read later, Keep, or import behavior,
 and its presentation does not reuse the AI Signals side-pane follow-scroll
 behavior.
@@ -395,17 +432,20 @@ recall-stub projection, provenance, and action share one SQLite transaction;
 if projection fails, the preference row is rolled back and retry is safe.
 Schema migration is forward-only and additive: it runs in a transaction,
 creates the v12 tables/indexes, creates and backfills the v13 search index,
-creates the v14 retention claims and legacy full-copy Keep claims, updates
-`meta.schema_version` only after all objects succeed, and leaves v11
+creates the v14 retention claims and legacy full-copy Keep claims, creates the
+v15 Content Context feedback ledger, updates `meta.schema_version` only after
+all objects succeed, and leaves v11
 operational rows untouched. There is no `ComposeSession` ingestion in this
 foundation; the projection is an explicit feedback boundary over the final
 surviving Timeline item.
 
 ## Required acceptance checks
 
-- fresh databases and v11 databases open at schema 14 with the exact objects above;
+- fresh databases and v11 databases open at schema 15 with the exact objects above;
 - v12 databases backfill active memory into FTS5 and leave failed migration/version state unchanged;
 - v13 databases migrate to v14 with active legacy full copies materialized as permanent Keep claims, without inferring Saved from historical actions;
+- v14 databases create the Content Context feedback ledger transactionally and
+  preserve schema 14 when a conflicting object makes migration fail;
 - local lexical ranking, source/tier/date filters, stable keyset cursors, empty-query recency, and restart persistence work without a provider;
 - release, routine-Less retraction, Remove, and Forget permanently scrub their
   FTS rows as well as
@@ -421,6 +461,13 @@ surviving Timeline item.
   reports own none, only one drawer can be active globally, downward crossing
   of the 20% viewport line closes it, and `contentContextUpScrollMode` validates
   and persists the default `close_offscreen` and optional `preserve` behaviors;
+- Content Context feedback accepts only currently surfaced pairs, records
+  append-only server-derived rank/reason/version evidence, suppresses a
+  negative pair only on later retrieval, projects positive state, and permits
+  only the latest decision to be undone with a `clear` event;
+- the open drawer never removes or reorders a just-rated row, visually subdues
+  `not_relevant`, exposes inline Undo, and invalidates its cached result only
+  after close or a switch to another post;
 - the Library storage GET validates its 1--12 recommendation bound, returns
   usage plus `recommendations: []` when no positive full copies exist, ranks
   recommendations deterministically, excludes tombstones, exposes only its
