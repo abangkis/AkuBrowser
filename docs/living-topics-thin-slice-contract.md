@@ -1,5 +1,10 @@
 # Living Topics Thin Slice Contract
 
+> **Graduated foundation.** This contract remains the historical and technical
+> foundation for automatic new-post routing and material-only understanding.
+> The active local activation and candidate-review boundary is now defined by
+> [Living Topics Full Stage 1](living-topics-full-stage-1-contract.md).
+
 This document defines the implemented first bounded Living Topics vertical
 slice. Its schema, API, UI, and acceptance checks ship as one contract. Product
 sequencing and the deliberately deferred Full concept remain governed by the

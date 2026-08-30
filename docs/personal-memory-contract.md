@@ -11,8 +11,9 @@ Timeline evidence; it creates current Saved membership, while Keep in Library
 is the separate permanent full-copy decision made after reading.
 Future product sequencing is defined separately in the
 [Personal Memory product roadmap](personal-memory-roadmap.md), which keeps the
-Living Topics Thin Slice, Bookmark Import and Management, and Living Topics
-Full boundaries from being mistaken for implemented behavior in this contract.
+graduated Living Topics stages, Bookmark Import and Management, and later
+external-discovery boundaries from being mistaken for foundation behavior in
+this contract.
 
 ## Product boundary
 
@@ -95,7 +96,7 @@ The final fingerprint is a hint, not a primary key: ambiguous fingerprint
 matches never merge two active memories. Equivalent aliases update one item and
 append provenance/action evidence instead of creating a duplicate.
 
-## Storage contract (AkuSidecar schema 18)
+## Storage contract (AkuSidecar schema 19)
 
 The additive v11 to v12 migration creates the memory tables and the additive
 v12 to v13 migration creates/backfills the local search index. The additive v13
@@ -108,7 +109,11 @@ migration creates the bounded Living Topics tables defined by the
 additive v16 to v17 migration activates bounded topic criteria, routing jobs,
 membership provenance, and feedback examples. The additive v17 to v18 migration
 adds durable, coalesced automatic understanding work and the last evaluated state
-without changing Saved, Keep, or preference ownership. All migrations
+without changing Saved, Keep, or preference ownership. The additive v18 to v19
+migration adds the revisioned local activation and candidate-review ledger
+defined by the
+[Living Topics Full Stage 1 contract](living-topics-full-stage-1-contract.md),
+again without creating membership or retention ownership. All migrations
 are transactional and update `meta.schema_version` only after all objects and
 backfill rows succeed. The v13 FTS index and v14 claim indexes are
 provider-free and have no foreign key to operational data.
@@ -445,18 +450,21 @@ creates the v12 tables/indexes, creates and backfills the v13 search index,
 creates the v14 retention claims and legacy full-copy Keep claims, creates the
 v15 Content Context feedback ledger, creates the v16 Living Topics tables,
 adds v17 Living Topics criteria, feedback, explainable membership, and routing queue,
-and adds v18 automatic understanding state and its durable secondary queue,
+adds v18 automatic understanding state and its durable secondary queue, and
+adds v19 revisioned criteria, activation work, and candidate review receipts,
 updates `meta.schema_version` only after all objects succeed, and leaves v11
 operational rows untouched. The Personal Memory foundation itself still has no
 generic `ComposeSession` ingestion. Living Topics v17 adds one narrower boundary:
 only final surviving non-duplicate Timeline items may be asynchronously projected
 as topic-owned recall stubs after a matching decision. Living Topics v18 may then
 synthesize already-local topic evidence asynchronously; it publishes history only
-for a material semantic change and never blocks Timeline publication.
+for a material semantic change and never blocks Timeline publication. Living
+Topics v19 may propose already-local Memory through a bounded activation scan,
+but only explicit Accept creates candidate-owned membership.
 
 ## Required acceptance checks
 
-- fresh databases and v11 databases open at schema 18 with the exact objects above;
+- fresh databases and v11 databases open at schema 19 with the exact objects above;
 - v12 databases backfill active memory into FTS5 and leave failed migration/version state unchanged;
 - v13 databases migrate to v14 with active legacy full copies materialized as permanent Keep claims, without inferring Saved from historical actions;
 - v14 databases create the Content Context feedback ledger transactionally and
@@ -466,6 +474,9 @@ for a material semantic change and never blocks Timeline publication.
 - v16 databases add Living Topics routing columns and ledgers transactionally;
 - v17 databases add automatic understanding state and work transactionally and
   preserve schema 17 when a conflicting object makes migration fail;
+- v18 databases add revisioned activation/candidate state transactionally,
+  queue existing topics without changing membership, and preserve schema 18
+  when a conflicting object makes migration fail;
 - local lexical ranking, source/tier/date filters, stable keyset cursors, empty-query recency, and restart persistence work without a provider;
 - release, routine-Less retraction, Remove, and Forget permanently scrub their
   FTS rows as well as

@@ -1,8 +1,8 @@
 # Personal Memory Product Roadmap
 
 This document is the sequencing authority for product work built on Personal
-Memory. It deliberately separates the next bounded Living Topics experiment
-from bookmark ingestion and from the eventual full Living Topics product. The
+Memory. It separates the graduated local Living Topics stages from bookmark
+ingestion and from later external discovery. The
 implemented behavior remains governed by the
 [Personal Memory and Library contract](personal-memory-contract.md); a roadmap
 phase does not become an active contract until its own design and acceptance
@@ -17,15 +17,18 @@ Personal Memory foundation
 Living Topics Thin Slice
         |
         v
+Living Topics Full Stage 1 — local activation and review
+        |
+        v
 Bookmark Import and Management
         |
         v
-Living Topics Full
+Living Topics Full — broader discovery and Keep Up
 ```
 
 ## Phase 1: Living Topics Thin Slice
 
-The active design and acceptance boundary for this phase is the
+The completed design and acceptance boundary for this phase is the
 [Living Topics Thin Slice contract](living-topics-thin-slice-contract.md).
 
 The thin slice tests whether existing and newly confirmed Timeline evidence can become useful,
@@ -46,12 +49,27 @@ Saved ownership, treat topic membership as a taste signal, or become an
 infinite feed. Synthesis is event-driven by evidence or criteria changes; `Refresh now` remains an explicit
 secondary control. It does not poll or discover external sources.
 
-This phase is now implemented. A manually created topic can be revisited,
+This phase is implemented and graduated. A manually created topic can be revisited,
 learns from auditable membership corrections, automatically maintains a bounded source-cited current understanding,
 and publishes history only for material semantic changes. Exact no-change and insufficient-evidence evaluations do
 not create noisy versions. The next
-product phase remains Bookmark Import and Management; thin-slice completion
-does not activate any deferred Full behavior.
+graduated local stage is Full Stage 1; thin-slice completion does not activate
+external discovery.
+
+## Phase 1B: Living Topics Full Stage 1
+
+The active design and acceptance boundary is the
+[Living Topics Full Stage 1 contract](living-topics-full-stage-1-contract.md).
+This stage adds revisioned purpose, aliases, include/exclude criteria, a durable
+bounded scan over already-local Memory, suggested evidence, and explicit
+Accept/Reject/Undo feedback. New final non-duplicate Timeline posts retain the
+thin-slice automatic routing path; retroactive activation remains proposal-only
+until Accept.
+
+This stage is implemented without waiting for Bookmark Import because it reads
+only the existing local Memory pool and does not invent broader acquisition or
+retention authority. It deliberately excludes browser discovery, continuous
+capture, clustering, schedules, and notifications.
 
 ## Phase 2: Bookmark Import and Management
 
@@ -75,7 +93,7 @@ or provenance.
 
 ## Phase 3: Living Topics Full
 
-Living Topics Full turns the proven topic model and the broader imported
+Later Living Topics Full stages turn the proven topic model and the broader imported
 evidence pool into a bounded Keep Up capability. It may add opt-in evidence
 discovery, candidate topic suggestions, versioned claim evolution,
 contradiction and freshness assessment, coverage gaps, scheduled refresh, and
@@ -87,9 +105,9 @@ Full Living Topics must not become another infinite feed or silently convert
 external activity into preference learning. Automatic discovery proposes
 evidence; it does not automatically Keep content, promote Timeline items, or
 rewrite user-approved claims without an auditable version. Work on this phase
-starts only after the thin slice proves the topic interaction and Bookmark
-Import proves identity, deduplication, provenance, and lifecycle behavior at a
-larger scale.
+starts only after local activation proves candidate review and Bookmark Import
+proves identity, deduplication, provenance, and lifecycle behavior at a larger
+scale.
 
 ## Shared boundaries
 

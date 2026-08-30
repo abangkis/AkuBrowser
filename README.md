@@ -246,6 +246,7 @@ never leaves Windows.
 - [Personal Memory and Library contract](docs/personal-memory-contract.md)
 - [Personal Memory product roadmap](docs/personal-memory-roadmap.md)
 - [Living Topics Thin Slice contract](docs/living-topics-thin-slice-contract.md)
+- [Living Topics Full Stage 1 contract](docs/living-topics-full-stage-1-contract.md)
 - [Preview release](docs/preview-release.md)
 - [Stable release checklist](docs/stable-release-checklist.md)
 - [Windows clean-machine Step 3B](docs/windows-clean-machine-3b.md)
