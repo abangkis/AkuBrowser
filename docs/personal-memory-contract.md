@@ -284,6 +284,35 @@ metadata and optional user-kept full text, but never tombstones, HMAC digests,
 audit/provenance internals, credentials, or provider payloads. The delete
 responses do not return the removed item.
 
+## Content Context v1
+
+Content Context is an explicit, read-only lookup from one currently visible
+Timeline item into local Personal Memory. The contract is
+`GET /api/timeline/{timelineId}/content-context?limit=` with a default limit of
+3 and an accepted range of 1--5. The Sidecar accepts only a final item from a
+completed or partial session whose Timeline batch is visible; missing,
+running, expired, or prepared items cannot request context.
+
+The Sidecar derives a bounded lexical query locally from the persisted
+Timeline `WhatChanged` (title-like text), source evidence text, `WhyItMatters`
+(summary), and topic tags/facets. It searches the existing local FTS5 index
+with no provider, browser, media, or Bridge call. Exact source/evidence-key,
+permalink, and platform-id matches are excluded when deterministically
+available, so the current item does not recommend itself.
+
+The response contains at most five existing public Library projections and a
+deterministic `matchReason` naming only matching public fields such as title,
+summary, author, tags, facets, or retained text. It never returns full content,
+provenance, audit rows, identity digests, or provider payloads. An empty result
+is successful. The operation opens no Saved/Keep state and performs no memory,
+Timeline, preference, action, or provenance write.
+
+The Timeline UI exposes one accessible `Find related context` action per
+visible item and performs the lookup only after that action. It renders bounded
+loading, empty, error, and result states with the returned reasons; it does not
+prefetch context for every post. Content Context does not add More/Less,
+Read later, Keep, or import behavior.
+
 The top-level Library view in the AkuBrowser web app is a local search client
 with distinct `Saved`, `Library`, and lazy-loaded read-only `Spring Cleaning`
 tabs. Saved lists only current Read Later membership; Library lists all active
