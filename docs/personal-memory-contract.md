@@ -96,7 +96,7 @@ The final fingerprint is a hint, not a primary key: ambiguous fingerprint
 matches never merge two active memories. Equivalent aliases update one item and
 append provenance/action evidence instead of creating a duplicate.
 
-## Storage contract (AkuSidecar schema 21)
+## Storage contract (AkuSidecar schema 22)
 
 The additive v11 to v12 migration creates the memory tables and the additive
 v12 to v13 migration creates/backfills the local search index. The additive v13
@@ -519,7 +519,7 @@ allows only current supported topic knowledge to enter Related Context.
 
 ## Required acceptance checks
 
-- fresh databases and v11 databases open at schema 21 with the exact objects above;
+- fresh databases and supported older databases open at schema 22 with the exact objects above;
 - v12 databases backfill active memory into FTS5 and leave failed migration/version state unchanged;
 - v13 databases migrate to v14 with active legacy full copies materialized as permanent Keep claims, without inferring Saved from historical actions;
 - v14 databases create the Content Context feedback ledger transactionally and

@@ -33,7 +33,7 @@ not required for bounded activation over current local Memory; it remains the
 provenance and lifecycle prerequisite before later Full stages can safely widen
 the evidence pool.
 
-## Storage contract (AkuSidecar schema 21)
+## Storage contract (AkuSidecar schema 22)
 
 The additive v18 to v19 migration:
 
@@ -182,8 +182,8 @@ does not mutate topic membership or feedback.
 
 ## Acceptance checks
 
-- fresh and supported older databases reach schema 21 transactionally; a
-  conflicting v18, v19, or v20 migration preserves its prior version and rows;
+- fresh and supported older databases reach schema 22 transactionally; a
+  conflicting v18, v19, v20, or v21 migration preserves its prior version and rows;
 - migrated topics queue activation without changing membership;
 - a bounded scan examines at most 100 active local items and semantically
   classifies at most 12 shortlisted items;
@@ -213,8 +213,11 @@ does not mutate topic membership or feedback.
 
 ## Implementation status
 
-Implemented in AkuSidecar schema 21 and the AkuBrowser Living Topics, Library
+Implemented in AkuSidecar schema 22 and the AkuBrowser Living Topics, Library
 Search, and Related Context surfaces.
+Schema 22 also records content-free provider receipts for semantic topic
+routing and understanding. Retained published snapshot receipts are backfilled;
+historical calls with no durable receipt remain unknown.
 External discovery, automatic topic clustering, Bookmark Import, scheduled
 refresh, alerts, and operating-system notifications remain deferred to separately approved
 stages.
