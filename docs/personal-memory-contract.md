@@ -307,11 +307,18 @@ provenance, audit rows, identity digests, or provider payloads. An empty result
 is successful. The operation opens no Saved/Keep state and performs no memory,
 Timeline, preference, action, or provenance write.
 
-The Timeline UI exposes one accessible `Find related context` action per
-visible item and performs the lookup only after that action. It renders bounded
-loading, empty, error, and result states with the returned reasons; it does not
-prefetch context for every post. Content Context does not add More/Less,
-Read later, Keep, or import behavior.
+The Timeline UI exposes one compact, accessible `Find related context` action
+near each visible post's upper-right toolbar and performs the lookup only after
+that action. One item-scoped right-side drawer is used at a time: on desktop it
+can transition into the active post's right rail when a safe gutter is
+available, while upward scrolling retracts it toward the post and downward
+scrolling may re-expose it only while that post remains the active anchor. On
+narrow viewports it becomes an accessible overlay/bottom sheet with Close,
+Escape, focus return, internal scrolling, and reduced-motion handling. It
+renders bounded loading, empty, error, and result states with the returned
+reasons; it does not prefetch context for every post. Content Context does not
+add More/Less, Read later, Keep, or import behavior, and its presentation does
+not reuse the AI Signals side-pane follow-scroll behavior.
 
 The top-level Library view in the AkuBrowser web app is a local search client
 with distinct `Saved`, `Library`, and lazy-loaded read-only `Spring Cleaning`
