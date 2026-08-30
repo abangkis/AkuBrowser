@@ -20,6 +20,9 @@ Living Topics Thin Slice
 Living Topics Full Stage 1 — local activation and review
         |
         v
+Living Topics local knowledge use — move, lifecycle, Related Context
+        |
+        v
 Bookmark Import and Management
         |
         v
@@ -72,6 +75,13 @@ retention authority. It deliberately excludes browser discovery, continuous
 capture, clustering, schedules, and system notifications. A bounded in-app
 badge reports newly auto-routed evidence in the menu and affected topic; explicit
 topic selection acknowledges only the visible evidence generation.
+
+The graduated local continuation adds reversible Move/Undo between topics,
+explicit current-vs-historical knowledge authority, and current supported topic
+insights in Timeline Related Context. It still uses only existing local Memory,
+does not broaden acquisition, and does not authorize Bookmark work. Generic
+Library Search already retrieves active Memory. A future Ask this topic path
+remains unimplemented and requires its own cited, read-only answer contract.
 
 ## Phase 2: Bookmark Import and Management
 

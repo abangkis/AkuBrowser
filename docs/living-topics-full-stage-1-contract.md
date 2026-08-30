@@ -33,7 +33,7 @@ not required for bounded activation over current local Memory; it remains the
 provenance and lifecycle prerequisite before later Full stages can safely widen
 the evidence pool.
 
-## Storage contract (AkuSidecar schema 20)
+## Storage contract (AkuSidecar schema 21)
 
 The additive v18 to v19 migration:
 
@@ -64,6 +64,28 @@ changes do not. Unread totals are derived from active memberships rather than a
 denormalized topic counter, so concurrent evidence cannot be lost and removing
 or forgetting evidence also removes its unread contribution.
 
+The additive v20 to v21 migration adds nullable `move_id` ownership to topic
+membership and a durable `living_topic_membership_moves` receipt. A
+receipt preserves the exact source origin, match mode, confidence, reason,
+added time, unread marker, and earlier move lineage. Moving evidence does not
+copy, delete, upgrade, or recreate its Personal Memory recall stub. It appends
+an exclude example for the source topic and an include example for the target;
+Undo appends clear events and restores the exact source membership. Undo may
+remove a target membership only while that membership is still owned by the
+move. A later explicit Add clears move ownership, so Undo cannot remove an
+independently claimed target.
+
+Published understanding is divided into **current supported knowledge** and
+**historical understanding**. A snapshot is current only when it is the newest
+published version, its input digest equals the topic's last completed
+understanding digest, and at least one cited evidence item remains active in
+the topic. Every snapshot exposes active evidence count and `available`,
+`partial`, or `unavailable` evidence availability. Moving, removing, or
+forgetting evidence immediately demotes an older version to history while the
+coalesced worker prepares a new current understanding. Historical derived
+statements remain for audit, but are not eligible for Related Context or a
+future default answer path.
+
 ## HTTP contract
 
 - `POST /api/living-topics` and `PATCH /api/living-topics/{id}` accept
@@ -81,6 +103,10 @@ or forgetting evidence also removes its unread contribution.
 - `POST /api/living-topics/{id}/seen` accepts `{seenThrough}` and acknowledges
   only unread memberships at or before that RFC3339 timestamp. Evidence routed
   after the visible projection remains unread.
+- `POST /api/living-topics/{fromTopicId}/members/{memoryItemId}/move` accepts
+  `{toTopicId}` and returns a reversible move receipt.
+- `POST /api/living-topic-moves/{moveId}/undo` accepts an empty body and may
+  undo only the latest active move for that Memory item.
 
 Names remain 1--120 Unicode characters. Purpose/include/exclude values are each
 at most 1,200 Unicode characters. A topic accepts at most 12 case-insensitive
@@ -122,10 +148,33 @@ selecting a topic acknowledges the currently visible unread generation; this
 keeps the signal discoverable while preventing a newer concurrent route from
 being acknowledged accidentally.
 
+Each attached evidence row also offers a destination selector and **Move**.
+After success the source view shows a bounded confirmation with **Undo** while
+both source and destination understandings refresh. Moving does not create a
+`New` badge in the destination because it is an explicit correction rather
+than newly discovered evidence.
+
+The Understanding tab renders a current card only when `isCurrent` is true.
+During refresh, insufficient evidence, or evidence loss it shows the truthful
+current-state message and moves every older version under historical audit,
+including its current evidence availability.
+
+Timeline Related Context may render a **Current Living Topic understanding**
+section before individual Memory matches. It uses the same bounded local
+relevance engine and includes at most two current topic insights with overview,
+up to three supported claims, active evidence count, version, and deterministic
+match reason. A multi-token topic also requires at least two matching identity
+tokens from its name, unless an explicit single-token alias matches; this
+prevents a narrow sibling such as `Codex Reset` from matching an unrelated
+general `Codex` post on one word alone. Mixed/uncertain claims and historical,
+partial, or unavailable
+snapshots are excluded. The lookup remains lazy, read-only, provider-free, and
+does not mutate topic membership or feedback.
+
 ## Acceptance checks
 
-- fresh and supported older databases reach schema 20 transactionally; a
-  conflicting v18 or v19 migration preserves its prior version and rows;
+- fresh and supported older databases reach schema 21 transactionally; a
+  conflicting v18, v19, or v20 migration preserves its prior version and rows;
 - migrated topics queue activation without changing membership;
 - a bounded scan examines at most 100 active local items and semantically
   classifies at most 12 shortlisted items;
@@ -143,10 +192,17 @@ being acknowledged accidentally.
 - automatic new membership increments the in-app unread projection exactly
   once; duplicate/manual/candidate membership does not; acknowledgment is
   bounded by the visible evidence timestamp.
+- Move and Undo preserve source provenance and unread state, learn a
+  contrastive topic correction, never mutate the recall stub, and cannot delete
+  independently owned destination membership.
+- a snapshot loses current authority as soon as its active evidence support or
+  completed digest no longer matches; only current supported claims can enter
+  Related Context.
 
 ## Implementation status
 
-Implemented in AkuSidecar schema 20 and the AkuBrowser Living Topics surface.
+Implemented in AkuSidecar schema 21 and the AkuBrowser Living Topics and Related
+Context surfaces.
 External discovery, automatic topic clustering, Bookmark Import, scheduled
 refresh, alerts, and operating-system notifications remain deferred to separately approved
 stages.

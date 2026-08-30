@@ -96,7 +96,7 @@ The final fingerprint is a hint, not a primary key: ambiguous fingerprint
 matches never merge two active memories. Equivalent aliases update one item and
 append provenance/action evidence instead of creating a duplicate.
 
-## Storage contract (AkuSidecar schema 20)
+## Storage contract (AkuSidecar schema 21)
 
 The additive v11 to v12 migration creates the memory tables and the additive
 v12 to v13 migration creates/backfills the local search index. The additive v13
@@ -117,7 +117,12 @@ again without creating membership or retention ownership. The additive v19 to
 v20 migration adds per-membership unread state for newly automatic Living Topic
 evidence and a topic acknowledgment receipt. Existing memberships are backfilled
 as already seen, and no Saved, Keep, More/Less, Timeline, or Content Context
-state is inferred. All migrations
+state is inferred. The additive v20 to v21 migration adds reversible
+cross-topic membership move receipts and membership move ownership. It does not
+move or duplicate the underlying Memory item. Current-vs-historical snapshot
+authority is computed from the completed understanding digest and active topic
+evidence, so snapshot rows do not need rewriting when evidence leaves a topic.
+All migrations
 are transactional and update `meta.schema_version` only after all objects and
 backfill rows succeed. The v13 FTS index and v14 claim indexes are
 provider-free and have no foreign key to operational data.
@@ -345,7 +350,12 @@ bounded and deterministic for the same stored state.
 
 The response contains at most five existing public Library projections and a
 deterministic `matchReason` naming only matching public fields such as title,
-summary, author, tags, facets, or retained text. It never returns full content,
+summary, author, tags, facets, or retained text. It may additionally contain at
+most two Living Topic insights. Each topic insight must come from the newest
+`isCurrent` snapshot, contain only supported claims, and report active evidence
+count, version, update time, and a deterministic match reason. Historical,
+partial, unavailable, mixed, and uncertain topic knowledge is not eligible. It
+never returns full content,
 provenance, audit rows, identity digests, or provider payloads. An empty result
 is successful. The operation opens no Saved/Keep state and performs no memory,
 Timeline, preference, action, or provenance write.
@@ -399,6 +409,15 @@ lookup applies the latest pairwise verdict.
 Content Context does not add More/Less, Read later, Keep, or import behavior,
 and its presentation does not reuse the AI Signals side-pane follow-scroll
 behavior.
+
+Library Search and a future **Ask this topic** remain separate read paths.
+Library Search is provider-free retrieval over active Personal Memory; it does
+not interpret a snapshot as an answer. Ask this topic is not implemented by
+this contract. Its default answer context must be limited to current supported
+topic claims and active cited evidence, with historical versions included only
+when the user explicitly asks about change over time. Asking must not create
+new knowledge, change membership, or persist an answer unless a later explicit
+contract authorizes that mutation.
 
 The top-level Library view in the AkuBrowser web app is a local search client
 with distinct `Saved`, `Library`, and lazy-loaded read-only `Spring Cleaning`
@@ -457,7 +476,8 @@ adds v17 Living Topics criteria, feedback, explainable membership, and routing q
 adds v18 automatic understanding state and its durable secondary queue, and
 adds v19 revisioned criteria, activation work, and candidate review receipts,
 adds v20 durable per-membership Living Topics unread markers and topic
-acknowledgment state,
+acknowledgment state, and adds v21 reversible topic-membership moves plus
+current-vs-historical snapshot authority,
 updates `meta.schema_version` only after all objects succeed, and leaves v11
 operational rows untouched. The Personal Memory foundation itself still has no
 generic `ComposeSession` ingestion. Living Topics v17 adds one narrower boundary:
@@ -469,10 +489,12 @@ Topics v19 may propose already-local Memory through a bounded activation scan,
 but only explicit Accept creates candidate-owned membership.
 Living Topics v20 marks only newly inserted automatic membership as unread;
 manual Add, candidate Accept, and duplicate routing remain notification-neutral.
+Living Topics v21 preserves exact membership provenance across Move/Undo and
+allows only current supported topic knowledge to enter Related Context.
 
 ## Required acceptance checks
 
-- fresh databases and v11 databases open at schema 20 with the exact objects above;
+- fresh databases and v11 databases open at schema 21 with the exact objects above;
 - v12 databases backfill active memory into FTS5 and leave failed migration/version state unchanged;
 - v13 databases migrate to v14 with active legacy full copies materialized as permanent Keep claims, without inferring Saved from historical actions;
 - v14 databases create the Content Context feedback ledger transactionally and
@@ -488,6 +510,8 @@ manual Add, candidate Accept, and duplicate routing remain notification-neutral.
 - v19 databases add Living Topics unread state transactionally, treat existing
   evidence as already seen, and preserve schema 19 when a conflicting object
   makes migration fail;
+- v20 databases add reversible Living Topic move ownership and receipts
+  transactionally and preserve schema 20 when a conflicting object prevents migration;
 - local lexical ranking, source/tier/date filters, stable keyset cursors, empty-query recency, and restart persistence work without a provider;
 - release, routine-Less retraction, Remove, and Forget permanently scrub their
   FTS rows as well as
