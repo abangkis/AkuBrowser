@@ -284,7 +284,7 @@ metadata and optional user-kept full text, but never tombstones, HMAC digests,
 audit/provenance internals, credentials, or provider payloads. The delete
 responses do not return the removed item.
 
-## Content Context v1
+## Content Context v2
 
 Content Context is an explicit, read-only lookup from one currently visible
 Timeline item into local Personal Memory. The contract is
@@ -293,12 +293,21 @@ Timeline item into local Personal Memory. The contract is
 completed or partial session whose Timeline batch is visible; missing,
 running, expired, or prepared items cannot request context.
 
-The Sidecar derives a bounded lexical query locally from the persisted
-Timeline `WhatChanged` (title-like text), source evidence text, `WhyItMatters`
-(summary), and topic tags/facets. It searches the existing local FTS5 index
-with no provider, browser, media, or Bridge call. Exact source/evidence-key,
-permalink, and platform-id matches are excluded when deterministically
-available, so the current item does not recommend itself.
+The Sidecar derives bounded query features locally from the persisted Timeline
+`WhatChanged` (title-like text), source evidence text, `WhyItMatters` (summary),
+and topic tags/facets. FTS5 is only the bounded candidate generator and may
+over-fetch a small local pool. A deterministic relevance engine then extracts
+structured topic anchors, admits substantively related candidates, ranks them,
+and produces the public match reason. Generic one-token overlap, common prose,
+and generic phrases cannot admit a candidate by themselves; BM25 candidate
+order may break ties but is not the relevance decision. Returning zero matches
+is valid and preferable to filling the drawer with weak context.
+
+The complete path remains local and makes no provider, browser, media, or
+Bridge call. Exact source/evidence-key, permalink, and platform-id matches are
+excluded when deterministically available, so the current item does not
+recommend itself. Candidate generation, admission, ranking, and reasons are
+bounded and deterministic for the same stored state.
 
 The response contains at most five existing public Library projections and a
 deterministic `matchReason` naming only matching public fields such as title,
@@ -308,17 +317,29 @@ is successful. The operation opens no Saved/Keep state and performs no memory,
 Timeline, preference, action, or provenance write.
 
 The Timeline UI exposes one compact, accessible `Related context` right-edge
-tab for the current eligible, visible post and performs the lookup only after
-that action. The tab is shown only when the actual horizontal gap between the
-post and the Back to top control (or viewport edge) can fit it safely. One
-item-scoped right-side drawer is used at a time: on desktop it can transition
-into the active post's right rail when a safe gutter is available, while upward
-scrolling retracts it toward the post and downward scrolling may re-expose it
-only while that post remains the active anchor. On narrow viewports it may hide
-when there is no safe tab room, while the drawer remains an accessible
-overlay/bottom sheet with Close, Escape, focus return, internal scrolling, and
-reduced-motion handling. It renders bounded loading, empty, error, and result
-states with the returned reasons; it does not prefetch context for every post.
+tab on every eligible rendered post and performs a lookup only after that
+post's action. A collapsed duplicate report has no tab until `Show report`
+reveals its post, and `Hide report` removes the tab again. The tab is shown only
+when the actual horizontal gap between the post and the Back to top control (or
+viewport edge) can fit it safely; the Back to top control yields or repositions
+instead of hiding the tab for the next readable post.
+
+Only one item-scoped drawer can be open globally. Activating another post
+atomically closes the previous drawer and anchors the same right-side surface
+to the newly selected post. The rail is positioned relative to its post and
+does not float or follow the viewport like AI Signals. Downward scrolling
+closes and clears the drawer when its active post's bottom crosses the 20%
+viewport line. Upward behavior is controlled by
+`contentContextUpScrollMode`: the default `close_offscreen` closes and clears
+the drawer when the active post exits below the viewport, while `preserve`
+retains its item state so the drawer can return with that anchored post; it
+still never becomes a floating drawer.
+
+On narrow viewports the tab may hide when there is no safe room, while the
+drawer remains an accessible overlay/bottom sheet with Close, Escape, focus
+return, internal scrolling, and reduced-motion handling. It renders bounded
+loading, empty, error, and result states with the returned reasons; it does not
+prefetch context for every post.
 Content Context does not add More/Less, Read later, Keep, or import behavior,
 and its presentation does not reuse the AI Signals side-pane follow-scroll
 behavior.
@@ -392,6 +413,14 @@ surviving Timeline item.
 - Library HTTP reads validate bounds, hide internal fields, return 404 for
   tombstones, and expose distinct narrow Remove and Forget permanently
   mutations;
+- Content Context uses FTS5 only for bounded candidate generation, rejects
+  generic single-term or generic-phrase matches, permits a successful empty
+  result, and returns deterministic ordering and substantive public reasons
+  for the same stored state without provider or write activity;
+- every eligible rendered post owns a Related context tab, collapsed duplicate
+  reports own none, only one drawer can be active globally, downward crossing
+  of the 20% viewport line closes it, and `contentContextUpScrollMode` validates
+  and persists the default `close_offscreen` and optional `preserve` behaviors;
 - the Library storage GET validates its 1--12 recommendation bound, returns
   usage plus `recommendations: []` when no positive full copies exist, ranks
   recommendations deterministically, excludes tombstones, exposes only its
