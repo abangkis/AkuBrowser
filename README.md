@@ -245,6 +245,7 @@ never leaves Windows.
 - [AI Feedback Engine contract](docs/ai-feedback-contract.md)
 - [Personal Memory and Library contract](docs/personal-memory-contract.md)
 - [Personal Memory product roadmap](docs/personal-memory-roadmap.md)
+- [Living Topics Thin Slice contract](docs/living-topics-thin-slice-contract.md)
 - [Preview release](docs/preview-release.md)
 - [Stable release checklist](docs/stable-release-checklist.md)
 - [Windows clean-machine Step 3B](docs/windows-clean-machine-3b.md)

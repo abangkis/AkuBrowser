@@ -25,6 +25,9 @@ Living Topics Full
 
 ## Phase 1: Living Topics Thin Slice
 
+The active design and acceptance boundary for this phase is the
+[Living Topics Thin Slice contract](living-topics-thin-slice-contract.md).
+
 The thin slice tests whether existing local Memory can become useful,
 source-backed understanding instead of another collection of links. A user
 creates and names a topic explicitly, attaches or removes existing Library
@@ -42,9 +45,11 @@ Saved ownership, treat topic membership as a taste signal, or become an
 infinite feed. Refresh and synthesis are explicit, bounded user actions over
 already available local evidence.
 
-The phase is complete when one manually created topic can be revisited,
+This phase is now implemented. One manually created topic can be revisited,
 maintains stable evidence membership, produces a bounded source-cited snapshot,
-and shows a truthful empty/no-change state without inventing a delta.
+and shows truthful empty/no-change states without inventing a delta. The next
+product phase remains Bookmark Import and Management; thin-slice completion
+does not activate any deferred Full behavior.
 
 ## Phase 2: Bookmark Import and Management
 

@@ -95,14 +95,16 @@ The final fingerprint is a hint, not a primary key: ambiguous fingerprint
 matches never merge two active memories. Equivalent aliases update one item and
 append provenance/action evidence instead of creating a duplicate.
 
-## Storage contract (AkuSidecar schema 15)
+## Storage contract (AkuSidecar schema 16)
 
 The additive v11 to v12 migration creates the memory tables and the additive
 v12 to v13 migration creates/backfills the local search index. The additive v13
 to v14 migration creates current retention claims and materializes a permanent
 `keep` claim for every active legacy `full_copy` item. It does not infer Saved
 membership from historical actions. The additive v14 to v15 migration creates
-the append-only Content Context feedback ledger. All migrations
+the append-only Content Context feedback ledger. The additive v15 to v16
+migration creates the bounded Living Topics tables defined by the
+[Living Topics Thin Slice contract](living-topics-thin-slice-contract.md). All migrations
 are transactional and update `meta.schema_version` only after all objects and
 backfill rows succeed. The v13 FTS index and v14 claim indexes are
 provider-free and have no foreign key to operational data.
@@ -437,19 +439,21 @@ if projection fails, the preference row is rolled back and retry is safe.
 Schema migration is forward-only and additive: it runs in a transaction,
 creates the v12 tables/indexes, creates and backfills the v13 search index,
 creates the v14 retention claims and legacy full-copy Keep claims, creates the
-v15 Content Context feedback ledger, updates `meta.schema_version` only after
-all objects succeed, and leaves v11
+v15 Content Context feedback ledger, creates the v16 Living Topics tables,
+updates `meta.schema_version` only after all objects succeed, and leaves v11
 operational rows untouched. There is no `ComposeSession` ingestion in this
 foundation; the projection is an explicit feedback boundary over the final
 surviving Timeline item.
 
 ## Required acceptance checks
 
-- fresh databases and v11 databases open at schema 15 with the exact objects above;
+- fresh databases and v11 databases open at schema 16 with the exact objects above;
 - v12 databases backfill active memory into FTS5 and leave failed migration/version state unchanged;
 - v13 databases migrate to v14 with active legacy full copies materialized as permanent Keep claims, without inferring Saved from historical actions;
 - v14 databases create the Content Context feedback ledger transactionally and
   preserve schema 14 when a conflicting object makes migration fail;
+- v15 databases create the Living Topics tables transactionally and preserve
+  schema 15 when a conflicting object makes migration fail;
 - local lexical ranking, source/tier/date filters, stable keyset cursors, empty-query recency, and restart persistence work without a provider;
 - release, routine-Less retraction, Remove, and Forget permanently scrub their
   FTS rows as well as
