@@ -243,6 +243,8 @@ never leaves Windows.
 - [Product contract](docs/product-contract.md)
 - [Runtime contract](docs/runtime-contract.md)
 - [AI Feedback Engine contract](docs/ai-feedback-contract.md)
+- [Personal Memory and Library contract](docs/personal-memory-contract.md)
+- [Personal Memory product roadmap](docs/personal-memory-roadmap.md)
 - [Preview release](docs/preview-release.md)
 - [Stable release checklist](docs/stable-release-checklist.md)
 - [Windows clean-machine Step 3B](docs/windows-clean-machine-3b.md)

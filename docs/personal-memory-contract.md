@@ -9,6 +9,10 @@ Remove, and Forget permanently. Ingestion from `ComposeSession` remains a
 later milestone. Read later is a bounded local retention action over persisted
 Timeline evidence; it creates current Saved membership, while Keep in Library
 is the separate permanent full-copy decision made after reading.
+Future product sequencing is defined separately in the
+[Personal Memory product roadmap](personal-memory-roadmap.md), which keeps the
+Living Topics Thin Slice, Bookmark Import and Management, and Living Topics
+Full boundaries from being mistaken for implemented behavior in this contract.
 
 ## Product boundary
 
