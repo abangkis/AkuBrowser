@@ -110,7 +110,7 @@ material change are truthful evaluation states rather than errors.
 ## UI contract
 
 Living Topics is a distinct top-level local surface. It provides topic creation,
-selection, criteria editing, Library evidence search/selection, current evidence removal,
+selection, criteria editing, an existing-Memory evidence picker, current evidence removal,
 and a secondary `Refresh now` action. The default Understanding tab shows one current
 source-backed understanding, separates supported claims from uncertainty/conflicts, shows true material deltas only
 after a baseline exists, collapses supporting evidence and generation metadata, and keeps earlier material versions

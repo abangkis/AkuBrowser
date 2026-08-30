@@ -159,6 +159,15 @@ During refresh, insufficient evidence, or evidence loss it shows the truthful
 current-state message and moves every older version under historical audit,
 including its current evidence availability.
 
+Top-level Library Search may surface at most three matching **Current Living
+Topic knowledge** cards above individual Memory results. An explicit query is
+matched locally against topic name, description, aliases, current overview,
+and supported claims. These cards omit evidence ids and uncertain/mixed claims;
+historical, partial, and unavailable understanding is ineligible. Source,
+tier, and date filters apply only to the individual Memory results because a
+topic understanding may span several sources. The lookup never invokes a
+provider or changes topic state.
+
 Timeline Related Context may render a **Current Living Topic understanding**
 section before individual Memory matches. It uses the same bounded local
 relevance engine and includes at most two current topic insights with overview,
@@ -198,11 +207,14 @@ does not mutate topic membership or feedback.
 - a snapshot loses current authority as soon as its active evidence support or
   completed digest no longer matches; only current supported claims can enter
   Related Context.
+- explicit Library queries can return bounded current supported topic knowledge
+  separately from filtered Memory items without exposing evidence ids or
+  mutating Library or Living Topic state.
 
 ## Implementation status
 
-Implemented in AkuSidecar schema 21 and the AkuBrowser Living Topics and Related
-Context surfaces.
+Implemented in AkuSidecar schema 21 and the AkuBrowser Living Topics, Library
+Search, and Related Context surfaces.
 External discovery, automatic topic clustering, Bookmark Import, scheduled
 refresh, alerts, and operating-system notifications remain deferred to separately approved
 stages.

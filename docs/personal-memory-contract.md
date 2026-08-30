@@ -323,6 +323,30 @@ metadata and optional user-kept full text, but never tombstones, HMAC digests,
 audit/provenance internals, credentials, or provider payloads. The delete
 responses do not return the removed item.
 
+## Library Search with Living Topic knowledge
+
+The top-level **Library** tab searches both active Personal Memory and current
+supported Living Topic understanding. Its first-page request uses
+`GET /api/library/items?...&includeTopicKnowledge=true`; a non-empty explicit
+query may return `topicKnowledge` separately from the ordinary `items` and
+stable `nextCursor`. Saved never requests topic knowledge, and later cursor
+pages do not repeat it.
+
+At most three topic results are returned. Each contains the topic identity,
+current overview, up to three supported claims, active evidence count,
+snapshot version and update time, plus a deterministic match reason. Evidence
+ids, uncertain or mixed claims, historical/partial/unavailable snapshots,
+provider payloads, and retained source text are excluded. Explicit search
+terms become bounded relevance anchors; generic-only queries produce no topic
+result. Topic knowledge may span sources, so source/tier/date filters continue
+to constrain only individual Memory items and the UI states that distinction.
+
+This remains one provider-free, read-only discovery path. It does not refresh
+an understanding, attach evidence, acknowledge notifications, create Saved or
+Keep state, or alter topic feedback. The **Add existing Memory** picker inside
+Living Topics Manage evidence remains an attachment control, not a second
+Library Search surface, and requests only Memory items.
+
 ## Content Context v2
 
 Content Context is an explicit, read-only lookup from one currently visible
@@ -411,13 +435,14 @@ and its presentation does not reuse the AI Signals side-pane follow-scroll
 behavior.
 
 Library Search and a future **Ask this topic** remain separate read paths.
-Library Search is provider-free retrieval over active Personal Memory; it does
-not interpret a snapshot as an answer. Ask this topic is not implemented by
-this contract. Its default answer context must be limited to current supported
-topic claims and active cited evidence, with historical versions included only
-when the user explicitly asks about change over time. Asking must not create
-new knowledge, change membership, or persist an answer unless a later explicit
-contract authorizes that mutation.
+Library Search now discovers active Personal Memory plus matching current
+supported topic knowledge, but it still presents stored understanding rather
+than generating an answer. Ask this topic is not implemented by this contract.
+Its default answer context must be limited to current supported topic claims
+and active cited evidence, with historical versions included only when the user
+explicitly asks about change over time. Asking must not create new knowledge,
+change membership, or persist an answer unless a later explicit contract
+authorizes that mutation.
 
 The top-level Library view in the AkuBrowser web app is a local search client
 with distinct `Saved`, `Library`, and lazy-loaded read-only `Spring Cleaning`

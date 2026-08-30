@@ -78,10 +78,12 @@ topic selection acknowledges only the visible evidence generation.
 
 The graduated local continuation adds reversible Move/Undo between topics,
 explicit current-vs-historical knowledge authority, and current supported topic
-insights in Timeline Related Context. It still uses only existing local Memory,
-does not broaden acquisition, and does not authorize Bookmark work. Generic
-Library Search already retrieves active Memory. A future Ask this topic path
-remains unimplemented and requires its own cited, read-only answer contract.
+insights in both Library Search and Timeline Related Context. Library Search
+keeps topic knowledge separate from individual Memory results and remains
+provider-free and read-only. This still uses only existing local Memory, does
+not broaden acquisition, and does not authorize Bookmark work. A future Ask
+this topic path remains unimplemented and requires its own cited, read-only
+answer contract.
 
 ## Phase 2: Bookmark Import and Management
 
