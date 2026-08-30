@@ -27,12 +27,13 @@ input is provider-free, a semantic no-change publishes no noisy version, and
 insufficient evidence is shown truthfully as **Needs evidence**.
 
 This stage has no external discovery, browser capture, automatic topic creation,
-clustering, schedule, notification, or Timeline promotion. Bookmark Import is
+clustering, schedule, system notification, or Timeline promotion. Its bounded
+notification is an in-app unread projection over newly auto-routed evidence. Bookmark Import is
 not required for bounded activation over current local Memory; it remains the
 provenance and lifecycle prerequisite before later Full stages can safely widen
 the evidence pool.
 
-## Storage contract (AkuSidecar schema 19)
+## Storage contract (AkuSidecar schema 20)
 
 The additive v18 to v19 migration:
 
@@ -55,6 +56,14 @@ hold references and bounded routing receipts, not copied full content or provide
 prompts. Remove, Forget permanently, and Full Reset preserve the existing Memory
 scrubbing rules; Full Reset also removes activation jobs and candidate rows.
 
+The additive v19 to v20 migration adds `evidence_seen_at` to each topic and
+`new_evidence` plus `new_evidence_at` to each membership. Existing memberships
+migrate as already seen. Only a newly inserted **automatic** membership receives
+an unread marker; manual Add, candidate Accept, duplicate routing, and criteria
+changes do not. Unread totals are derived from active memberships rather than a
+denormalized topic counter, so concurrent evidence cannot be lost and removing
+or forgetting evidence also removes its unread contribution.
+
 ## HTTP contract
 
 - `POST /api/living-topics` and `PATCH /api/living-topics/{id}` accept
@@ -67,6 +76,11 @@ scrubbing rules; Full Reset also removes activation jobs and candidate rows.
   bounded local rescan.
 - `POST /api/living-topics/{id}/candidates/{memoryItemId}/accept`, `/reject`,
   and `/undo` accept empty bodies and return updated public topic detail.
+- `GET /api/living-topics/notifications` returns the total unread evidence,
+  number of affected topics, and latest unread evidence timestamp.
+- `POST /api/living-topics/{id}/seen` accepts `{seenThrough}` and acknowledges
+  only unread memberships at or before that RFC3339 timestamp. Evidence routed
+  after the visible projection remains unread.
 
 Names remain 1--120 Unicode characters. Purpose/include/exclude values are each
 at most 1,200 Unicode characters. A topic accepts at most 12 case-insensitive
@@ -101,10 +115,17 @@ status, **Accept**, **Reject**, inline **Undo**, and a secondary **Scan again**
 control. Suggestions never masquerade as evidence before acceptance, and an item
 already attached manually is not duplicated in the suggestion list.
 
+The Living Topics menu shows the total unread auto-routed evidence count. Each
+affected topic shows **New** or **New N**. Entering the Living Topics surface and
+its default topic is read-only and does not clear either badge. Explicitly
+selecting a topic acknowledges the currently visible unread generation; this
+keeps the signal discoverable while preventing a newer concurrent route from
+being acknowledged accidentally.
+
 ## Acceptance checks
 
-- fresh and supported older databases reach schema 19 transactionally; a
-  conflicting v18 migration preserves schema 18 and prior rows;
+- fresh and supported older databases reach schema 20 transactionally; a
+  conflicting v18 or v19 migration preserves its prior version and rows;
 - migrated topics queue activation without changing membership;
 - a bounded scan examines at most 100 active local items and semantically
   classifies at most 12 shortlisted items;
@@ -119,10 +140,13 @@ already attached manually is not duplicated in the suggestion list.
   Timeline publication;
 - zero suggestions, insufficient evidence, no change, and provider failure are
   represented truthfully.
+- automatic new membership increments the in-app unread projection exactly
+  once; duplicate/manual/candidate membership does not; acknowledgment is
+  bounded by the visible evidence timestamp.
 
 ## Implementation status
 
-Implemented in AkuSidecar schema 19 and the AkuBrowser Living Topics surface.
+Implemented in AkuSidecar schema 20 and the AkuBrowser Living Topics surface.
 External discovery, automatic topic clustering, Bookmark Import, scheduled
-refresh, alerts, and notifications remain deferred to separately approved
+refresh, alerts, and operating-system notifications remain deferred to separately approved
 stages.

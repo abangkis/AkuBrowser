@@ -69,9 +69,15 @@ until Accept.
 This stage is implemented without waiting for Bookmark Import because it reads
 only the existing local Memory pool and does not invent broader acquisition or
 retention authority. It deliberately excludes browser discovery, continuous
-capture, clustering, schedules, and notifications.
+capture, clustering, schedules, and system notifications. A bounded in-app
+badge reports newly auto-routed evidence in the menu and affected topic; explicit
+topic selection acknowledges only the visible evidence generation.
 
 ## Phase 2: Bookmark Import and Management
+
+This phase is frozen until the user explicitly authorizes Bookmark Import or
+Management work. Completion of any Living Topics stage does not implicitly
+start it.
 
 Import begins as a read-only preview over bookmarks or history selected by the
 user. It normalizes identity, reports supported, duplicate, skipped, and invalid

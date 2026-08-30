@@ -96,7 +96,7 @@ The final fingerprint is a hint, not a primary key: ambiguous fingerprint
 matches never merge two active memories. Equivalent aliases update one item and
 append provenance/action evidence instead of creating a duplicate.
 
-## Storage contract (AkuSidecar schema 19)
+## Storage contract (AkuSidecar schema 20)
 
 The additive v11 to v12 migration creates the memory tables and the additive
 v12 to v13 migration creates/backfills the local search index. The additive v13
@@ -113,7 +113,11 @@ without changing Saved, Keep, or preference ownership. The additive v18 to v19
 migration adds the revisioned local activation and candidate-review ledger
 defined by the
 [Living Topics Full Stage 1 contract](living-topics-full-stage-1-contract.md),
-again without creating membership or retention ownership. All migrations
+again without creating membership or retention ownership. The additive v19 to
+v20 migration adds per-membership unread state for newly automatic Living Topic
+evidence and a topic acknowledgment receipt. Existing memberships are backfilled
+as already seen, and no Saved, Keep, More/Less, Timeline, or Content Context
+state is inferred. All migrations
 are transactional and update `meta.schema_version` only after all objects and
 backfill rows succeed. The v13 FTS index and v14 claim indexes are
 provider-free and have no foreign key to operational data.
@@ -452,6 +456,8 @@ v15 Content Context feedback ledger, creates the v16 Living Topics tables,
 adds v17 Living Topics criteria, feedback, explainable membership, and routing queue,
 adds v18 automatic understanding state and its durable secondary queue, and
 adds v19 revisioned criteria, activation work, and candidate review receipts,
+adds v20 durable per-membership Living Topics unread markers and topic
+acknowledgment state,
 updates `meta.schema_version` only after all objects succeed, and leaves v11
 operational rows untouched. The Personal Memory foundation itself still has no
 generic `ComposeSession` ingestion. Living Topics v17 adds one narrower boundary:
@@ -461,10 +467,12 @@ synthesize already-local topic evidence asynchronously; it publishes history onl
 for a material semantic change and never blocks Timeline publication. Living
 Topics v19 may propose already-local Memory through a bounded activation scan,
 but only explicit Accept creates candidate-owned membership.
+Living Topics v20 marks only newly inserted automatic membership as unread;
+manual Add, candidate Accept, and duplicate routing remain notification-neutral.
 
 ## Required acceptance checks
 
-- fresh databases and v11 databases open at schema 19 with the exact objects above;
+- fresh databases and v11 databases open at schema 20 with the exact objects above;
 - v12 databases backfill active memory into FTS5 and leave failed migration/version state unchanged;
 - v13 databases migrate to v14 with active legacy full copies materialized as permanent Keep claims, without inferring Saved from historical actions;
 - v14 databases create the Content Context feedback ledger transactionally and
@@ -477,6 +485,9 @@ but only explicit Accept creates candidate-owned membership.
 - v18 databases add revisioned activation/candidate state transactionally,
   queue existing topics without changing membership, and preserve schema 18
   when a conflicting object makes migration fail;
+- v19 databases add Living Topics unread state transactionally, treat existing
+  evidence as already seen, and preserve schema 19 when a conflicting object
+  makes migration fail;
 - local lexical ranking, source/tier/date filters, stable keyset cursors, empty-query recency, and restart persistence work without a provider;
 - release, routine-Less retraction, Remove, and Forget permanently scrub their
   FTS rows as well as
