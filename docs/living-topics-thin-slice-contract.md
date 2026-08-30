@@ -10,8 +10,8 @@ sequencing and the deliberately deferred Full concept remain governed by the
 A Living Topic is a user-named container for understanding one subject through
 criteria-routed and explicitly selected Personal Memory evidence. It is not a bookmark folder, a
 Timeline lane, or a preference signal. The user creates and renames topics,
-defines a bounded description, adds or removes existing active Library items, and explicitly requests a
-bounded snapshot. Topic actions do not create Saved or Keep ownership and do
+defines a bounded description, and adds or removes existing active Library items. The Sidecar automatically
+maintains a bounded current understanding after topic evidence changes. Topic actions do not create Saved or Keep ownership and do
 not write More/Less or Content Context feedback.
 
 After final Timeline composition, each surviving non-duplicate post is queued
@@ -31,24 +31,27 @@ The semantic sorter uses the distinct execution identity
 profile. A provider failure degrades to deterministic decisions and never
 blocks Timeline publication.
 
-The thin slice still has no automatic topic discovery or clustering, scheduled
-snapshot refresh, alerts, source subscription, or browser capture. A snapshot invocation
-may call the currently selected reasoning provider only after an explicit user
-action. It uses the Candidate Evaluation model/profile selection during this
+The thin slice still has no automatic topic discovery or clustering, periodic
+scheduled refresh, alerts, source subscription, or browser capture. Understanding refresh is event-driven by
+local membership or criteria changes; an explicit `Refresh now` action is a secondary retry or re-evaluation path.
+Refresh uses the Candidate Evaluation model/profile selection during this
 thin slice while retaining the distinct execution identity
 `akusidecar.living_topic_snapshot`.
 
-## Storage contract (AkuSidecar schema 17)
+## Storage contract (AkuSidecar schema 18)
 
 The additive v15 to v16 migration creates the topic foundation; v16 to v17
-adds active routing:
+adds active routing; v17 to v18 adds automatic understanding state and work:
 
-- `living_topics`: `id`, bounded `name`, bounded `description`, `created_at`, and `updated_at`;
+- `living_topics`: `id`, bounded `name`, bounded `description`, current understanding status,
+  last evaluated input digest/time, trigger/error receipts, `created_at`, and `updated_at`;
 - `living_topic_memberships`: the unique topic/item pair plus `added_at`,
   `origin`, `match_mode`, `confidence`, and public `reason`;
 - `living_topic_feedback_events`: append-only manual include/exclude examples;
 - `living_topic_routing_jobs`: a durable per-Timeline-item async queue with
   terminal result or failure receipts;
+- `living_topic_understanding_jobs`: a durable, coalescing secondary queue. A pending job is
+  reused for repeated changes, while a new pending job may follow running work so evidence is not lost;
 - `living_topic_snapshots`: append-only `id`, `topic_id`, `version`, `status`
   (`ready`, `insufficient_evidence`, or `no_change`), `overview`, bounded
   claims/deltas/evidence JSON, `input_digest`, provider/model/effort, bounded
@@ -60,7 +63,7 @@ while its session is terminal and it is not a `duplicate_report`. Normal Remove 
 affected membership in the same transaction so deleted Memory cannot remain
 cited by a topic. Existing append-only snapshots retain only the already
 bounded public evidence ids, not copied Memory text, URLs, provenance payloads,
-or provider prompts. Full Reset removes topics, memberships, and snapshots.
+or provider prompts. Full Reset removes topics, memberships, routing/understanding jobs, and snapshots.
 
 ## HTTP contract
 
@@ -74,8 +77,8 @@ or provider prompts. Full Reset removes topics, memberships, and snapshots.
   idempotent for an existing active pair.
 - `DELETE /api/living-topics/{id}/members/{memoryItemId}` removes only that
   membership and is idempotent.
-- `POST /api/living-topics/{id}/snapshots` accepts no content and creates an
-  on-demand snapshot from the topic's current active evidence.
+- `POST /api/living-topics/{id}/snapshots` accepts no content and queues a
+  background `Refresh now` evaluation from current active evidence. It returns the pending topic detail.
 
 Names are trimmed, 1--120 Unicode characters, descriptions are trimmed and at
 most 1,200 Unicode characters, and topics contain at most 20
@@ -93,45 +96,47 @@ Memory ids; the host rejects unknown ids, empty citations, invalid assessment
 or delta kinds, oversized text, and malformed output before storage.
 
 Claims use `supported`, `mixed`, or `uncertain`. Deltas use `new`, `updated`,
-`contradicted`, or `resolved`. With no active members, the host writes a
-provider-free `insufficient_evidence` snapshot. When the normalized evidence
-input digest equals the previous snapshot, the host writes a provider-free
-`no_change` snapshot that reuses the previous claims and cites no invented
-delta. Zero claims, insufficient evidence, and no change are truthful success
-states rather than errors.
+`contradicted`, or `resolved`. The normalized input digest includes topic criteria and current evidence. An exact
+already-evaluated digest is a provider-free no-op. Evidence changes are coalesced; if structured synthesis reports
+no material delta, the Sidecar records the evaluated digest but does not publish another history version. The first
+published understanding is a baseline with no artificial `new` deltas. Zero claims, insufficient evidence, and no
+material change are truthful evaluation states rather than errors.
 
 ## UI contract
 
 Living Topics is a distinct top-level local surface. It provides topic creation,
 selection, criteria editing, Library evidence search/selection, current evidence removal,
-and an explicit `Create snapshot` action. The topic view shows bounded loading,
-empty, insufficient-evidence, no-change, error, claims, deltas, citations,
-provider identity, and timestamp states. Automatic evidence cards expose their
+and a secondary `Refresh now` action. The default Understanding tab shows one current
+source-backed understanding, separates supported claims from uncertainty/conflicts, shows true material deltas only
+after a baseline exists, collapses supporting evidence and generation metadata, and keeps earlier material versions
+in a bounded history disclosure. Automatic evidence cards expose their
 confidence, decision mode, and reason. Opening the view itself remains read-only.
 
 ## Acceptance checks
 
-- fresh and v16 databases reach schema 17 transactionally; a conflicting
-  object leaves schema version 15 unchanged;
+- fresh and older supported databases reach schema 18 transactionally; conflicting
+  v15, v16, or v17 migrations preserve their previous version;
 - topic names and the 20-member bound are enforced server-side;
 - only active Memory can be attached and duplicate attachment is idempotent;
 - Remove/Forget scrubs current membership without copying or exposing private
   Memory payloads in snapshot rows;
-- empty and unchanged snapshots do not invoke a provider;
+- exact already-evaluated inputs do not invoke a provider; insufficient evidence publishes no history version;
+- pending changes coalesce, a change arriving during a running evaluation is preserved, and provider work never blocks Timeline publication;
+- the first understanding is a delta-free baseline and a later zero-delta evaluation publishes no new version;
 - structured output cannot cite an unknown Memory id or store a claim without
   evidence;
 - list/detail projections expose only documented public fields and bounded
   history;
-- opening Living Topics performs reads only; snapshot generation is explicit and
-  only one active Sidecar operation owns it;
+- opening Living Topics performs reads only; automatic refresh is driven only by evidence/criteria mutations or
+  `Refresh now`, and one durable worker owns provider synthesis;
 - no topic action changes Saved, Keep, More/Less, Timeline, Content Context, or
   Content Context feedback state.
 
 ## Implementation status
 
-Implemented in AkuSidecar schema 17 with the top-level AkuBrowser `Living Topics`
-surface. The shipped tests cover fresh/open migrations, atomic v16 migration,
-criteria validation, manual feedback, explainable membership, append-only snapshots,
-provider-free empty/no-change behavior, citation alias validation, HTTP
-privacy, and the bounded UI contract. Automatic topic discovery, Bookmark Import,
-scheduled snapshot refresh, alerts, and notifications remain deferred.
+Implemented in AkuSidecar schema 18 with the top-level AkuBrowser `Living Topics`
+surface. The shipped tests cover fresh/open migrations, atomic v16/v17 migrations,
+criteria validation, manual feedback, explainable membership, coalesced automatic evaluation,
+material-only history, provider-free exact no-change behavior, baseline delta suppression,
+citation alias validation, HTTP privacy, and the bounded UI contract. Automatic topic discovery,
+Bookmark Import, periodic scheduled refresh, alerts, and notifications remain deferred.

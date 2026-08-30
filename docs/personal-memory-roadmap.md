@@ -30,25 +30,26 @@ The active design and acceptance boundary for this phase is the
 
 The thin slice tests whether existing and newly confirmed Timeline evidence can become useful,
 source-backed understanding instead of another collection of links. A user
-creates and names a topic explicitly, supplies routing criteria, corrects
-automatic membership by adding or removing evidence, and requests a bounded topic snapshot. The snapshot may organize
-versioned claims, assessments, cited evidence, timestamps, and deltas from the
-previous user-requested snapshot. Every statement must retain visible links to
+creates and names a topic explicitly, supplies routing criteria, and corrects
+automatic membership by adding or removing evidence. Evidence changes trigger a coalesced background refresh of the
+topic's current understanding. Material versions organize claims, assessments, cited evidence, timestamps, and deltas
+from the previous materially different understanding. Every statement must retain visible links to
 the Memory evidence that supports it. Topic membership is independent from
 Saved, Keep, More/Less, and Content Context feedback.
 
 This phase is intentionally not the full Living Topics concept. It has no
-automatic topic discovery or clustering, scheduled snapshot refresh, alerts,
+automatic topic discovery or clustering, periodic scheduled refresh, alerts,
 source subscription, browser capture, or automatic Timeline insertion. Its one
-background action is bounded routing of final non-duplicate Timeline posts into
-existing user-defined topics. It cannot silently create Keep or
+background actions are bounded routing of final non-duplicate Timeline posts into
+existing user-defined topics and secondary synthesis over already-local evidence. It cannot silently create Keep or
 Saved ownership, treat topic membership as a taste signal, or become an
-infinite feed. Refresh and synthesis are explicit, bounded user actions over
-already available local evidence.
+infinite feed. Synthesis is event-driven by evidence or criteria changes; `Refresh now` remains an explicit
+secondary control. It does not poll or discover external sources.
 
 This phase is now implemented. A manually created topic can be revisited,
-learns from auditable membership corrections, produces a bounded source-cited snapshot,
-and shows truthful empty/no-change states without inventing a delta. The next
+learns from auditable membership corrections, automatically maintains a bounded source-cited current understanding,
+and publishes history only for material semantic changes. Exact no-change and insufficient-evidence evaluations do
+not create noisy versions. The next
 product phase remains Bookmark Import and Management; thin-slice completion
 does not activate any deferred Full behavior.
 
