@@ -28,25 +28,26 @@ Living Topics Full
 The active design and acceptance boundary for this phase is the
 [Living Topics Thin Slice contract](living-topics-thin-slice-contract.md).
 
-The thin slice tests whether existing local Memory can become useful,
+The thin slice tests whether existing and newly confirmed Timeline evidence can become useful,
 source-backed understanding instead of another collection of links. A user
-creates and names a topic explicitly, attaches or removes existing Library
-items, and requests a bounded topic snapshot. The snapshot may organize
+creates and names a topic explicitly, supplies routing criteria, corrects
+automatic membership by adding or removing evidence, and requests a bounded topic snapshot. The snapshot may organize
 versioned claims, assessments, cited evidence, timestamps, and deltas from the
 previous user-requested snapshot. Every statement must retain visible links to
 the Memory evidence that supports it. Topic membership is independent from
 Saved, Keep, More/Less, and Content Context feedback.
 
 This phase is intentionally not the full Living Topics concept. It has no
-automatic topic discovery or clustering, background monitoring, scheduled
-refresh, alerts, autonomous membership changes, source subscription, browser
-capture, or automatic Timeline insertion. It cannot silently create Keep or
+automatic topic discovery or clustering, scheduled snapshot refresh, alerts,
+source subscription, browser capture, or automatic Timeline insertion. Its one
+background action is bounded routing of final non-duplicate Timeline posts into
+existing user-defined topics. It cannot silently create Keep or
 Saved ownership, treat topic membership as a taste signal, or become an
 infinite feed. Refresh and synthesis are explicit, bounded user actions over
 already available local evidence.
 
-This phase is now implemented. One manually created topic can be revisited,
-maintains stable evidence membership, produces a bounded source-cited snapshot,
+This phase is now implemented. A manually created topic can be revisited,
+learns from auditable membership corrections, produces a bounded source-cited snapshot,
 and shows truthful empty/no-change states without inventing a delta. The next
 product phase remains Bookmark Import and Management; thin-slice completion
 does not activate any deferred Full behavior.
