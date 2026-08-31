@@ -406,18 +406,24 @@ independent of More/Less, Saved, Keep, Timeline selection, and global Memory
 quality. Reset
 Learning removes this learning ledger; ordinary retrieval remains read-only.
 
-The Timeline UI exposes one compact, accessible `Related context` right-edge
-tab on every eligible rendered post and performs a lookup only after that
-post's action. A collapsed duplicate report has no tab until `Show report`
-reveals its post, and `Hide report` removes the tab again. The tab is shown only
-when the actual horizontal gap between the post and the Back to top control (or
-viewport edge) can fit it safely; the Back to top control yields or repositions
-instead of hiding the tab for the next readable post.
+The Timeline UI exposes one compact, accessible, viewport-scoped
+`Related context` right-edge tab at a time and performs a lookup only after its
+action. The owner is the eligible post crossing the 20% reading line, or the
+next post after it has substantially entered the viewport and leaves at least
+320 px for the drawer; a small hysteresis band prevents flicker at post
+boundaries. A collapsed duplicate report cannot
+own the tab until `Show report` reveals its post, and `Hide report` removes it
+again. The tab is shown only when the horizontal gap between the post and the
+viewport edge can fit it safely.
 
 Only one item-scoped drawer can be open globally. Activating another post
 atomically closes the previous drawer and anchors the same right-side surface
-to the newly selected post. The rail is positioned relative to its post and
-does not float or follow the viewport like AI Signals. Downward scrolling
+to the newly selected post. Its ownership and horizontal edge remain tied to
+that post, while the single trigger and open rail use safe viewport coordinates
+so a tall post cannot leave either surface stranded offscreen. This is a
+bounded reading control, not an alternate feed like AI Signals. The rail can
+use the safe vertical viewport space below its opening top instead of being
+capped to the post's height. Downward scrolling
 closes and clears the drawer when its active post's bottom crosses the 20%
 viewport line. Upward behavior is controlled by
 `contentContextUpScrollMode`: the default `close_offscreen` closes and clears
@@ -553,8 +559,9 @@ allows only current supported topic knowledge to enter Related Context.
   generic single-term or generic-phrase matches, permits a successful empty
   result, and returns deterministic ordering and substantive public reasons
   for the same stored state without provider or write activity;
-- every eligible rendered post owns a Related context tab, collapsed duplicate
-  reports own none, only one drawer can be active globally, downward crossing
+- only one eligible post owns the viewport-scoped Related context tab at a
+  time, collapsed duplicate reports own none, only one drawer can be active
+  globally, downward crossing
   of the 20% viewport line closes it, and `contentContextUpScrollMode` validates
   and persists the default `close_offscreen` and optional `preserve` behaviors;
 - Content Context feedback accepts only currently surfaced pairs, records
