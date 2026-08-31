@@ -431,6 +431,14 @@ the drawer when the active post exits below the viewport, while `preserve`
 retains its item state so the drawer can return with that anchored post; it
 still never becomes a floating drawer.
 
+The rail's natural height is capped to the owning post. Short result sets stay
+short, while longer result sets scroll internally. When genuine content
+overflow exists and at least 180 px of additional safe viewport height remains,
+a sticky `Expand context` action can extend the rail without moving its post
+anchor; `Collapse context` restores the post-height cap. The expansion state
+resets when the drawer closes or switches items, and overflow continues to
+scroll when expanded space is still insufficient.
+
 On narrow viewports the tab may hide when there is no safe room, while the
 drawer remains an accessible overlay/bottom sheet with Close, Escape, focus
 return, internal scrolling, and reduced-motion handling. It renders bounded
