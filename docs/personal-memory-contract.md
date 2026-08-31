@@ -431,13 +431,16 @@ the drawer when the active post exits below the viewport, while `preserve`
 retains its item state so the drawer can return with that anchored post; it
 still never becomes a floating drawer.
 
-The rail's natural height is capped to the owning post. Short result sets stay
-short, while longer result sets scroll internally. When genuine content
-overflow exists and at least 180 px of additional safe viewport height remains,
-a sticky `Expand context` action can extend the rail without moving its post
-anchor; `Collapse context` restores the post-height cap. The expansion state
-resets when the drawer closes or switches items, and overflow continues to
-scroll when expanded space is still insufficient.
+The rail's natural height is capped to the owning post's full rendered height,
+including the portion below the current viewport. It is never shortened to the
+remaining visible viewport; page scrolling reveals the anchored post and rail
+together. Short result sets stay short, while content longer than the full post
+scrolls internally. The viewport is used only to decide whether genuine content
+overflow may extend beyond the post: when at least 180 px of additional safe
+viewport height remains, a sticky `Expand context` action can extend the rail
+without moving its post anchor. `Collapse context` restores the full-post cap.
+The expansion state resets when the drawer closes or switches items, and
+overflow continues to scroll when expanded space is still insufficient.
 The open drawer observes its owning post for late layout growth (including
 media, quoted-post content, and user-expanded text) and remeasures its height
 limits automatically. Closing and reopening the post is never required, and
