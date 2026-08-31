@@ -136,5 +136,10 @@ scale.
 - Saved and Keep remain explicit, independent retention decisions.
 - Zero matches, no change, insufficient evidence, and unknown assessment are
   valid states and are never rewritten as success or certainty.
+- Every model-backed roadmap addition must extend the
+  [LLM Invocation and Token Cost Reference](llm-invocation-and-token-cost.md)
+  with its trigger, provider-free alternative, durable usage receipt, and a
+  dated observed baseline before it is treated as part of normal operating
+  cost.
 - Every mutating phase begins behind an explicit preview or user action and
   receives a separate contract before implementation.

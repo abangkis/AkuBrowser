@@ -347,6 +347,11 @@ Keep state, or alter topic feedback. The **Add existing Memory** picker inside
 Living Topics Manage evidence remains an attachment control, not a second
 Library Search surface, and requests only Memory items.
 
+Personal Memory storage, lifecycle actions, Library FTS search, and this
+Living Topic knowledge projection do not invoke a model. Their place in the
+complete runtime cost boundary is recorded in the
+[LLM Invocation and Token Cost Reference](llm-invocation-and-token-cost.md).
+
 ## Content Context v2
 
 Content Context is an explicit, read-only lookup from one currently visible

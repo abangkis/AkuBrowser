@@ -132,6 +132,14 @@ Changing any routing criterion increments the revision. New candidates and
 counts are scoped to that revision; previous review receipts remain auditable
 but do not appear as current suggestions.
 
+Living Topic cost remains conditional. Clear deterministic routing consumes no
+provider tokens, semantic routing records one asynchronous usage receipt for an
+ambiguous item, and understanding records a receipt only for a changed evidence
+digest that reaches synthesis. Unchanged digests remain provider-free and
+evidence changes are coalesced. The dated observed averages and their
+limitations are maintained in the
+[LLM Invocation and Token Cost Reference](llm-invocation-and-token-cost.md).
+
 ## UI contract
 
 The top-level menu is **Living Topics**. The default Understanding tab remains

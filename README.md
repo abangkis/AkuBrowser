@@ -242,6 +242,7 @@ never leaves Windows.
 - [AkuBrowserLauncher Windows vertical slice](launcher/README.md)
 - [Product contract](docs/product-contract.md)
 - [Runtime contract](docs/runtime-contract.md)
+- [LLM invocation and token cost reference](docs/llm-invocation-and-token-cost.md)
 - [AI Feedback Engine contract](docs/ai-feedback-contract.md)
 - [Personal Memory and Library contract](docs/personal-memory-contract.md)
 - [Personal Memory product roadmap](docs/personal-memory-roadmap.md)

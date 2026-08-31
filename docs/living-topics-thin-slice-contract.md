@@ -42,6 +42,8 @@ local membership or criteria changes; an explicit `Refresh now` action is a seco
 Refresh uses the Candidate Evaluation model/profile selection during this
 thin slice while retaining the distinct execution identity
 `akusidecar.living_topic_snapshot`.
+The canonical cross-pipeline call map and dated usage baseline live in the
+[LLM Invocation and Token Cost Reference](llm-invocation-and-token-cost.md).
 
 ## Storage contract (AkuSidecar schema 18)
 

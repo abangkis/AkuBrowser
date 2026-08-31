@@ -244,6 +244,12 @@ and asynchronous AI Deep usage may update after Timeline publication. Aggregate
 usage is explicitly local AkuBrowser history, not account-wide Codex usage;
 database reset, retention expiry, or storage trimming can narrow it.
 
+The end-to-end distinction between mandatory, conditional, asynchronous, and
+provider-free work plus the dated observed per-stage averages is canonical in
+the [LLM Invocation and Token Cost Reference](llm-invocation-and-token-cost.md).
+Runtime and provider changes must update that dated snapshot from retained
+receipts rather than duplicating token estimates in this contract.
+
 ## Lifecycle and validation
 
 Normal rebuild/restart:

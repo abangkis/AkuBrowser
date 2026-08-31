@@ -163,6 +163,9 @@ Personal Memory storage, and deterministic Related Context remain local and add
 no provider invocation. Schema-22 migration backfills retained published
 understanding receipts; earlier semantic no-change and routing calls without a
 durable receipt remain unknown rather than being reported as zero.
+The complete model-call sequence, invocation conditions, dated token baseline,
+and interpretation rules are maintained in the
+[LLM Invocation and Token Cost Reference](llm-invocation-and-token-cost.md).
 
 An ordinarily evaluated candidate that was not automatically selected exposes `Should have selected`. A typed `prior_knowledge_overlap` instead exposes `Select despite overlap`, so the user sees that the candidate repeated retained information before creating a high-authority correction. An unchanged native replay skipped before reasoning is labeled `Resurfaced · unchanged`, remains reviewable in Captured flow, and exposes no selection correction because it has no current evaluation to bypass. Its trusted native evidence link remains available whenever the adapter captured one, because fail-fast processing must not prevent a user from reviewing the original source. Choosing an available correction immediately restores that candidate to the current Timeline and records an append-only, undoable selection correction. Explicit restoration may exceed the automatic per-source allocation for that check, but the visible Timeline remains subject to its retained-capacity boundary. The restored item then passes through item-scoped semantic-event resolution and knowledge continuity; AI Fast and Deep Detection run only when the AI Detection master setting is enabled. If reasoning failed after capture, `Re-evaluate run` reuses the durable observation without opening the browser or capturing again. If the evidence itself is incomplete, the existing Recapture contract remains the recovery path.
 
