@@ -418,12 +418,12 @@ viewport edge can fit it safely.
 
 Only one item-scoped drawer can be open globally. Activating another post
 atomically closes the previous drawer and anchors the same right-side surface
-to the newly selected post. Its ownership and horizontal edge remain tied to
-that post, while the single trigger and open rail use safe viewport coordinates
-so a tall post cannot leave either surface stranded offscreen. This is a
-bounded reading control, not an alternate feed like AI Signals. The rail can
-use the safe vertical viewport space below its opening top instead of being
-capped to the post's height. Downward scrolling
+to the newly selected post. Both the tab and rail use document coordinates
+owned by that post: they move only with the post itself and never follow the
+viewport like AI Signals. Viewport scope chooses which one post may expose its
+stationary tab; when that post's top anchor leaves the viewport the tab retracts
+instead of being repositioned. The rail can use the safe vertical space below
+its anchored top instead of being capped to the post's height. Downward scrolling
 closes and clears the drawer when its active post's bottom crosses the 20%
 viewport line. Upward behavior is controlled by
 `contentContextUpScrollMode`: the default `close_offscreen` closes and clears
