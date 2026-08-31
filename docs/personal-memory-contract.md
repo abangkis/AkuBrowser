@@ -438,6 +438,11 @@ a sticky `Expand context` action can extend the rail without moving its post
 anchor; `Collapse context` restores the post-height cap. The expansion state
 resets when the drawer closes or switches items, and overflow continues to
 scroll when expanded space is still insufficient.
+The open drawer observes its owning post for late layout growth (including
+media, quoted-post content, and user-expanded text) and remeasures its height
+limits automatically. Closing and reopening the post is never required, and
+the observer is disconnected with the drawer so it cannot become a floating
+or cross-item layout dependency.
 
 On narrow viewports the tab may hide when there is no safe room, while the
 drawer remains an accessible overlay/bottom sheet with Close, Escape, focus
