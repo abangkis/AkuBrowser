@@ -18,9 +18,9 @@ builds are submitted, and production releases ship through this contract's
 single installer. The legacy Bridge-owned setup surface is
 retired under the [setup retirement plan](setup-retirement-plan.md).
 
-AkuSidecar now uses database schema 10 and accepts additive startup migration
-from schemas 7, 8, and 9. The staged installed-app release manifest records
-schema 10 and accepts inputs 7–10, so the forward-migration tuple metadata is
+AkuSidecar now uses database schema 22 and accepts additive startup migration
+from schemas 7 through 21. The staged installed-app release manifest records
+schema 22 and accepts inputs 7–22, so the forward-migration tuple metadata is
 reconciled. Database rollback remains explicitly unimplemented until
 whole-tuple activation and rollback are built.
 
@@ -408,7 +408,7 @@ separate follow-up, not an installed-app migration gate.
    from the [stable release checklist](stable-release-checklist.md).
 3. Track code signing and independent clean-machine acceptance for pinned Chromium login,
    four adapters, Codex readiness, optional Gemini-key use, provider hot-swap,
-   schema-10 data behavior, repair, update/rollback, uninstall, and reset.
+   schema-22 data behavior, repair, update/rollback, uninstall, and reset.
 4. Publish the one unsigned installer and checksum after automated release
    gates pass; do not claim code-signing or whole-tuple rollback support.
 
@@ -545,7 +545,7 @@ and independent production-login acceptance remain follow-up hardening.
   reset, deny-to-grant, recovery, first-update, calibration, and Timeline lane
   has also passed. The failure-path matrix and end-to-end entry-point migration
   are complete for the development lane;
-- the installed-app schema metadata is reconciled at schema 10, but rollback
+- the installed-app schema metadata is reconciled at schema 22, but rollback
   across database migrations remains unavailable until whole-tuple rollback is
   implemented;
 - Sidecar now exposes and enforces provider-specific readiness before

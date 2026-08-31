@@ -6,7 +6,7 @@ release path is the single installed-app installer defined in the [installed-app
 distribution contract](installed-app-distribution-contract.md). The Sidecar-owned
 provider onboarding and local readiness lane are complete in development,
 including the optional Gemini-key flow and idle-boundary provider hot-swap.
-The release contract covers four adapters and schema 10. Legacy setup deletion
+The release contract covers four adapters and schema 22. Legacy setup deletion
 and Stage 3 documentation retirement are complete; code signing and independent
 Windows clean-machine certification remain post-release hardening.
 
@@ -163,7 +163,7 @@ Stage 2 deletion evidence recorded on 28 August 2026:
 
 Next action: complete the v0.9.0 single-installer signing and Windows
 clean-machine acceptance gate, including the pinned-Chromium app shell and its
-four-adapter/provider/schema-10 checks. No further reset, credential, or live
+four-adapter/provider/schema-22 checks. No further reset, credential, or live
 development-runtime change is required for the retired setup surface.
 
 ## Stages

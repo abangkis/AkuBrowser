@@ -122,7 +122,7 @@ Server remains an external prerequisite and must be installed and signed in
 locally. An optional Gemini provider accepts a user-supplied key through the
 Sidecar credential flow; provider hot-swaps apply at an idle boundary. The four
 source adapters are X, LinkedIn, Facebook, and opt-in Instagram. AkuSidecar
-uses schema 10 and owns first-run onboarding, source readiness, and Timeline
+uses schema 22 and owns first-run onboarding, source readiness, and Timeline
 state. See [Preview/release candidate notes](docs/preview-release.md).
 
 The portable ZIP and Chrome Web Store package are historical/recovery lanes and

@@ -14,7 +14,7 @@ The release contract covers four source adapters: X, LinkedIn, Facebook, and
 opt-in Instagram. Codex App/App Server remains an external prerequisite. The
 optional Gemini provider accepts a user-supplied key through the Sidecar
 credential flow, and provider hot-swaps apply at an idle boundary. AkuSidecar
-schema 10 is the active database boundary. These are v0.9.0 capabilities and
+schema 22 is the active database boundary. These are v0.9.0 capabilities and
 acceptance targets.
 
 ## v0.9.0 prerequisites and acceptance
@@ -27,7 +27,7 @@ source in the pinned Chromium profile during onboarding.
 
 The coordinator must record install, launch, Bridge heartbeat, four-adapter
 source readiness, Codex readiness, optional Gemini-key use, idle-boundary
-provider hot-swap, schema-10 migration behavior, repair, update/rollback,
+provider hot-swap, schema-22 migration behavior, repair, update/rollback,
 uninstall, preserve-data, and full-reset evidence in
 [Windows clean-machine Step 3B](windows-clean-machine-3b.md) as post-release
 hardening evidence. The unsigned installer may trigger SmartScreen or antivirus

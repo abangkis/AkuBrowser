@@ -14,7 +14,7 @@ manual extension loading, or a separate runtime installer. Codex App/App Server
 is an external prerequisite. The optional Gemini provider uses a user-supplied
 key through the Sidecar credential flow. The candidate covers X, LinkedIn,
 Facebook, and opt-in Instagram adapters, provider hot-swap at an idle boundary,
-and schema 10.
+and schema 22.
 
 Use only the installer and checksum supplied by the v0.9.0 release evidence.
 The installer is intentionally unsigned and may trigger SmartScreen or

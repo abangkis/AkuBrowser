@@ -35,7 +35,7 @@ in the installer.
       denial/retry, and revocation behavior for each exercised source.
 - [ ] Confirm Codex readiness, then exercise optional Gemini-key setup/use and
       one provider hot-swap at an idle boundary without restarting Sidecar.
-- [ ] Verify schema 10 startup and the documented additive migration boundary
+- [ ] Verify schema 22 startup and the documented additive migration boundary
       without losing the existing user data fixture.
 - [ ] Exercise install, restart, repair, update/rollback, ordinary uninstall
       with data preservation, and explicit full reset. Record any unimplemented

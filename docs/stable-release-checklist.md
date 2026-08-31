@@ -24,7 +24,7 @@ Run this sequence from a clean AkuBrowser/AkuBridge/AkuSidecar source tuple:
   ```
 
 - [x] Verify the tuple's hashes, exact `production-app` identity, pinned
-      Chromium payload, c2patool, schema 10 metadata, and launcher:
+      Chromium payload, c2patool, schema 22 metadata, and launcher:
 
   ```powershell
   .\scripts\test-windows-installed-app-builder.ps1 `
@@ -57,7 +57,7 @@ Run this sequence from a clean AkuBrowser/AkuBridge/AkuSidecar source tuple:
 - [ ] Confirm the clean-machine flow covers launch without Developer Mode or
       system Chrome; Codex App/App Server as an external prerequisite; optional
       Gemini key storage/use; X, LinkedIn, Facebook, and Instagram adapters;
-      provider hot-swap at an idle boundary; schema 10 startup/migration; and
+      provider hot-swap at an idle boundary; schema 22 startup/migration; and
       install, repair, update/rollback, uninstall, preserve-data, and full-reset
       behavior.
 - [x] Publish after the unsigned installer, checksum, release manifest, release
