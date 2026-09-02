@@ -36,7 +36,7 @@ not required for bounded activation over current local Memory; it remains the
 provenance and lifecycle prerequisite before later Full stages can safely widen
 the evidence pool.
 
-## Storage contract (AkuSidecar schema 23)
+## Storage contract (AkuSidecar schema 24)
 
 The additive v18 to v19 migration:
 
@@ -106,6 +106,21 @@ confidence, evidence role, claim centrality, epistemic status, and availability
 are independent dimensions. The host builds the overview only from central,
 supported claims; peripheral observations may remain visible but cannot lead
 the topic conclusion.
+
+The additive v23 to v24 migration introduces Current Projection V3. It queues
+a lazy rebaseline without treating the contract transition as Material History.
+Each claim carries a normalized `materialValue`; the host reconciles reworded
+claims with their prior stable identity before comparing material value,
+assessment, centrality, and subtopic. Semantically equivalent rewrites no
+longer appear as noisy new/resolved pairs, while genuine value changes still
+publish history.
+
+V3 classifies evidence as `primary`, `attributed_secondary`, `unattributed`,
+or `speculative`. The host downgrades a claim supported only by unattributed or
+speculative evidence to uncertain. Topic coverage is now explicitly separate
+from source diversity: snapshots expose platform count, independent source
+count, independent event/source-cluster count, and a `single_platform`,
+`limited`, or `diverse` source-diversity state.
 
 ## HTTP contract
 
@@ -209,14 +224,17 @@ up to three supported claims, active evidence count, version, and deterministic
 match reason. A multi-token topic also requires at least two matching identity
 tokens from its name, unless an explicit single-token alias matches; this
 prevents a narrow sibling such as `Codex Reset` from matching an unrelated
-general `Codex` post on one word alone. Mixed/uncertain claims and historical,
+general `Codex` post on one word alone. In explicit Library search, a complete
+topic identity outranks and suppresses a less-specific parent or sibling;
+`Codex reset` selects `Codex Reset`, while `Codex performance` selects `Codex`.
+Mixed/uncertain claims and historical,
 partial, or unavailable
 snapshots are excluded. The lookup remains lazy, read-only, provider-free, and
 does not mutate topic membership or feedback.
 
 ## Acceptance checks
 
-- fresh and supported older databases reach schema 23 transactionally; a
+- fresh and supported older databases reach schema 24 transactionally; a
   conflicting v18, v19, v20, or v21 migration preserves its prior version and rows;
 - migrated topics queue activation without changing membership;
 - a bounded scan examines at most 100 active local items and semantically
@@ -241,7 +259,7 @@ does not mutate topic membership or feedback.
 - a snapshot loses current authority as soon as its active evidence support or
   completed digest no longer matches; only current supported claims can enter
   Related Context.
-- previous prose never enters fresh V2 synthesis; a valid no-material-change
+- previous prose never enters fresh V3 synthesis; a valid no-material-change
   rebuild replaces Current Projection, leaves Material History untouched, and
   remains visible in Evaluation Audit.
 - legacy or contract-stale projections, peripheral/mixed/uncertain/unavailable
@@ -253,13 +271,16 @@ does not mutate topic membership or feedback.
 
 ## Implementation status
 
-Implemented in AkuSidecar schema 23 and the AkuBrowser Living Topics, Library
+Implemented in AkuSidecar schema 24 and the AkuBrowser Living Topics, Library
 Search, and Related Context surfaces.
 Schema 22 introduced content-free provider receipts for semantic topic
 routing and understanding. Retained published snapshot receipts are backfilled;
 historical calls with no durable receipt remain unknown.
 Schema 23 adds Current Projection V2, material-history classification,
 topic-relative evidence roles, coverage state, and lazy legacy rebaselining.
+Schema 24 adds Current Projection V3 claim reconciliation, normalized material
+values, provenance-aware epistemic classes, sibling-topic suppression in
+Library Search, and separate topic-coverage/source-diversity projections.
 External discovery, automatic topic clustering, Bookmark Import, scheduled
 refresh, alerts, and operating-system notifications remain deferred to separately approved
 stages.

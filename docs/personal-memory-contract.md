@@ -96,7 +96,7 @@ The final fingerprint is a hint, not a primary key: ambiguous fingerprint
 matches never merge two active memories. Equivalent aliases update one item and
 append provenance/action evidence instead of creating a duplicate.
 
-## Storage contract (AkuSidecar schema 22)
+## Storage contract (AkuSidecar schema 24)
 
 The additive v11 to v12 migration creates the memory tables and the additive
 v12 to v13 migration creates/backfills the local search index. The additive v13
@@ -528,8 +528,10 @@ adds v17 Living Topics criteria, feedback, explainable membership, and routing q
 adds v18 automatic understanding state and its durable secondary queue, and
 adds v19 revisioned criteria, activation work, and candidate review receipts,
 adds v20 durable per-membership Living Topics unread markers and topic
-acknowledgment state, and adds v21 reversible topic-membership moves plus
-current-vs-historical snapshot authority,
+acknowledgment state, adds v21 reversible topic-membership moves plus
+current-vs-historical snapshot authority, v22 model-usage receipts, v23 Current
+Projection V2, and v24 Current Projection V3 claim reconciliation, epistemic
+quality, and source-diversity fields,
 updates `meta.schema_version` only after all objects succeed, and leaves v11
 operational rows untouched. The Personal Memory foundation itself still has no
 generic `ComposeSession` ingestion. Living Topics v17 adds one narrower boundary:
@@ -542,11 +544,14 @@ but only explicit Accept creates candidate-owned membership.
 Living Topics v20 marks only newly inserted automatic membership as unread;
 manual Add, candidate Accept, and duplicate routing remain notification-neutral.
 Living Topics v21 preserves exact membership provenance across Move/Undo and
-allows only current supported topic knowledge to enter Related Context.
+allows only current supported topic knowledge to enter Related Context. Living
+Topics v24 keeps topic coverage distinct from source diversity, prevents
+unsupported rumor repetition from becoming supported knowledge, and suppresses
+weaker sibling-topic matches in explicit Library search.
 
 ## Required acceptance checks
 
-- fresh databases and supported older databases open at schema 22 with the exact objects above;
+- fresh databases and supported older databases open at schema 24 with the exact objects above;
 - v12 databases backfill active memory into FTS5 and leave failed migration/version state unchanged;
 - v13 databases migrate to v14 with active legacy full copies materialized as permanent Keep claims, without inferring Saved from historical actions;
 - v14 databases create the Content Context feedback ledger transactionally and
@@ -564,6 +569,8 @@ allows only current supported topic knowledge to enter Related Context.
   makes migration fail;
 - v20 databases add reversible Living Topic move ownership and receipts
   transactionally and preserve schema 20 when a conflicting object prevents migration;
+- v23 databases add Current Projection V3 source-diversity fields
+  transactionally and queue a lazy rebaseline without rewriting older snapshots;
 - local lexical ranking, source/tier/date filters, stable keyset cursors, empty-query recency, and restart persistence work without a provider;
 - release, routine-Less retraction, Remove, and Forget permanently scrub their
   FTS rows as well as
