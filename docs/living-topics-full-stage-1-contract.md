@@ -22,9 +22,12 @@ its suggested state. These decisions are local signals for this topic, not
 provider training and not More/Less feedback.
 
 Accepted evidence triggers the existing coalesced understanding worker.
-Understanding remains an evidence-backed, material-only history: an unchanged
-input is provider-free, a semantic no-change publishes no noisy version, and
-insufficient evidence is shown truthfully as **Needs evidence**.
+Understanding uses three separate concerns: a replaceable **Current
+Projection**, append-only **Material History**, and an append-only **Evaluation
+Audit**. An unchanged input is provider-free unless the user explicitly asks
+for refresh. A valid semantic no-change replaces Current Projection without
+adding Material History, while the job and model receipts still record the
+evaluation. Insufficient evidence is shown truthfully as **Needs evidence**.
 
 This stage has no external discovery, browser capture, automatic topic creation,
 clustering, schedule, system notification, or Timeline promotion. Its bounded
@@ -33,7 +36,7 @@ not required for bounded activation over current local Memory; it remains the
 provenance and lifecycle prerequisite before later Full stages can safely widen
 the evidence pool.
 
-## Storage contract (AkuSidecar schema 22)
+## Storage contract (AkuSidecar schema 23)
 
 The additive v18 to v19 migration:
 
@@ -86,6 +89,24 @@ coalesced worker prepares a new current understanding. Historical derived
 statements remain for audit, but are not eligible for Related Context or a
 future default answer path.
 
+The additive v22 to v23 migration introduces the Current Projection V2
+contract. Existing snapshots remain immutable and are marked `legacy-v1`.
+Every existing topic is queued for a lazy `migration_rebaseline`; legacy prose
+is never supplied as synthesis input. Each valid V2 evaluation stores its
+contract version, topic-relative evidence roles, coverage state, and whether
+the result is a material semantic change. The newest valid V2 row is Current
+Projection. Only rows marked as material changes join historical understanding;
+understanding jobs and model invocations form Evaluation Audit.
+
+The V2 input digest is order-independent and includes the topic criteria
+revision, active evidence content and availability, and understanding contract
+version. Evidence is classified as `core`, `supporting`, `peripheral`, or
+`undetermined`, with an observed subtopic and source/event cluster. Routing
+confidence, evidence role, claim centrality, epistemic status, and availability
+are independent dimensions. The host builds the overview only from central,
+supported claims; peripheral observations may remain visible but cannot lead
+the topic conclusion.
+
 ## HTTP contract
 
 - `POST /api/living-topics` and `PATCH /api/living-topics/{id}` accept
@@ -136,7 +157,9 @@ Living Topic cost remains conditional. Clear deterministic routing consumes no
 provider tokens, semantic routing records one asynchronous usage receipt for an
 ambiguous item, and understanding records a receipt only for a changed evidence
 digest that reaches synthesis. Unchanged digests remain provider-free and
-evidence changes are coalesced. The dated observed averages and their
+evidence changes are coalesced. **Refresh now** bypasses the unchanged-input
+fast path but still requires validation and creates Material History only when
+the normalized claim set changes. The dated observed averages and their
 limitations are maintained in the
 [LLM Invocation and Token Cost Reference](llm-invocation-and-token-cost.md).
 
@@ -163,6 +186,9 @@ both source and destination understandings refresh. Moving does not create a
 than newly discovered evidence.
 
 The Understanding tab renders a current card only when `isCurrent` is true.
+It separates central understanding from supporting/peripheral observations and
+shows bounded coverage plus independent evidence origins rather than implying
+global topic completeness.
 During refresh, insufficient evidence, or evidence loss it shows the truthful
 current-state message and moves every older version under historical audit,
 including its current evidence availability.
@@ -190,7 +216,7 @@ does not mutate topic membership or feedback.
 
 ## Acceptance checks
 
-- fresh and supported older databases reach schema 22 transactionally; a
+- fresh and supported older databases reach schema 23 transactionally; a
   conflicting v18, v19, v20, or v21 migration preserves its prior version and rows;
 - migrated topics queue activation without changing membership;
 - a bounded scan examines at most 100 active local items and semantically
@@ -215,17 +241,25 @@ does not mutate topic membership or feedback.
 - a snapshot loses current authority as soon as its active evidence support or
   completed digest no longer matches; only current supported claims can enter
   Related Context.
+- previous prose never enters fresh V2 synthesis; a valid no-material-change
+  rebuild replaces Current Projection, leaves Material History untouched, and
+  remains visible in Evaluation Audit.
+- legacy or contract-stale projections, peripheral/mixed/uncertain/unavailable
+  claims, and projections whose digest no longer matches active evidence are
+  excluded from Library Search and Related Context.
 - explicit Library queries can return bounded current supported topic knowledge
   separately from filtered Memory items without exposing evidence ids or
   mutating Library or Living Topic state.
 
 ## Implementation status
 
-Implemented in AkuSidecar schema 22 and the AkuBrowser Living Topics, Library
+Implemented in AkuSidecar schema 23 and the AkuBrowser Living Topics, Library
 Search, and Related Context surfaces.
-Schema 22 also records content-free provider receipts for semantic topic
+Schema 22 introduced content-free provider receipts for semantic topic
 routing and understanding. Retained published snapshot receipts are backfilled;
 historical calls with no durable receipt remain unknown.
+Schema 23 adds Current Projection V2, material-history classification,
+topic-relative evidence roles, coverage state, and lazy legacy rebaselining.
 External discovery, automatic topic clustering, Bookmark Import, scheduled
 refresh, alerts, and operating-system notifications remain deferred to separately approved
 stages.
