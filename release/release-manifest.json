@@ -82,8 +82,8 @@
       "releaseAsset": "AkuBrowserSetup-0.9.0-windows-x64.exe",
       "checksumAsset": "AkuBrowserSetup-0.9.0-windows-x64.exe.sha256",
       "database": {
-        "currentSchemaVersion": 22,
-        "acceptedInputSchemaVersions": [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22],
+        "currentSchemaVersion": 25,
+        "acceptedInputSchemaVersions": [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25],
         "rollbackStatus": "not-implemented"
       }
     },
