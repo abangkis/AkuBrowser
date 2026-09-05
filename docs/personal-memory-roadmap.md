@@ -80,7 +80,11 @@ The graduated local continuation adds reversible Move/Undo between topics,
 explicit current-vs-historical knowledge authority, and current supported topic
 insights in both Library Search and Timeline Related Context. Library Search
 keeps topic knowledge separate from individual Memory results and remains
-provider-free and read-only. This still uses only existing local Memory, does
+provider-free and read-only. Current insights exclude historical and temporally
+unknown claims, and distinguish evidence publication time from projection
+refresh time. Lifecycle proof V5 additionally requires retained-source support
+for completed or cancelled claims; older projections require refresh before
+regaining current authority. This still uses only existing local Memory, does
 not broaden acquisition, and does not authorize Bookmark work. A future Ask
 this topic path remains unimplemented and requires its own cited, read-only
 answer contract.

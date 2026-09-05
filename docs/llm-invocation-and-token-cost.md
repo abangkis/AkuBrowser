@@ -2,8 +2,9 @@
 
 This document is the canonical reference for where the current AkuBrowser
 pipeline may call a model and how locally retained token receipts should be
-interpreted. It describes shipped schema-22 behavior, not a provider price
-guarantee or a future Bookmark Import contract.
+interpreted. It describes local invocation boundaries; dated measurements below
+remain tied to their recorded versions. It is not a provider price guarantee or
+a future Bookmark Import contract.
 
 ## End-to-end invocation map
 
@@ -49,6 +50,14 @@ per durable AkuBrowser invocation receipt, not necessarily per provider HTTP
 request.
 
 ## Observed token baseline — 2026-08-31
+
+Lifecycle proof V5 keeps the existing Living Topic understanding invocation and
+adds bounded proof fields to its structured response. Proof checking is local;
+it adds no verification-model call and does not fetch or retain additional source
+text. Existing invocation receipts remain the usage record. The response contract
+can change output token volume, so the historical baseline below is not a V5
+measurement; no new provider run or V5 operating-cost baseline was produced by
+the implementation tests.
 
 This snapshot was calculated from the development runtime's locally retained
 30-day model-usage ledgers. The window contained 130 sessions and 480
