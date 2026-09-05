@@ -36,7 +36,7 @@ not required for bounded activation over current local Memory; it remains the
 provenance and lifecycle prerequisite before later Full stages can safely widen
 the evidence pool.
 
-## Storage contract (AkuSidecar schema 24)
+## Storage contract (AkuSidecar schema 25)
 
 The additive v18 to v19 migration:
 
@@ -122,6 +122,15 @@ from source diversity: snapshots expose platform count, independent source
 count, independent event/source-cluster count, and a `single_platform`,
 `limited`, or `diverse` source-diversity state.
 
+The additive v24 to v25 migration introduces Current Projection V4 and queues
+a lazy rebaseline while preserving earlier projections as history. Claims
+separate temporal applicability (`current`, `historical`, `unknown`) from event
+lifecycle (`announced`, `ongoing`, `completed`, `cancelled`, `unknown`). Publication
+coverage is shown separately from evaluation time. Semantic routing receives
+bounded context from five recent attached sources to follow concrete event
+developments without weakening topic exclusions. Active membership and evidence
+citation capacity increase to 30; historical snapshot capacity remains 20.
+
 ## HTTP contract
 
 - `POST /api/living-topics` and `PATCH /api/living-topics/{id}` accept
@@ -146,7 +155,7 @@ count, independent event/source-cluster count, and a `single_platform`,
 
 Names remain 1--120 Unicode characters. Purpose/include/exclude values are each
 at most 1,200 Unicode characters. A topic accepts at most 12 case-insensitive
-unique aliases of 1--80 Unicode characters and at most 20 active members.
+unique aliases of 1--80 Unicode characters and at most 30 active members.
 
 ## Routing and review semantics
 
@@ -234,7 +243,7 @@ does not mutate topic membership or feedback.
 
 ## Acceptance checks
 
-- fresh and supported older databases reach schema 24 transactionally; a
+- fresh and supported older databases reach schema 25 transactionally; a
   conflicting v18, v19, v20, or v21 migration preserves its prior version and rows;
 - migrated topics queue activation without changing membership;
 - a bounded scan examines at most 100 active local items and semantically
@@ -271,7 +280,7 @@ does not mutate topic membership or feedback.
 
 ## Implementation status
 
-Implemented in AkuSidecar schema 24 and the AkuBrowser Living Topics, Library
+Implemented in AkuSidecar schema 25 and the AkuBrowser Living Topics, Library
 Search, and Related Context surfaces.
 Schema 22 introduced content-free provider receipts for semantic topic
 routing and understanding. Retained published snapshot receipts are backfilled;
