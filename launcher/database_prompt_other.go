@@ -8,5 +8,5 @@ func promptDatabaseChoice(databaseCompatibilityReport, string) (databaseChoice, 
 	return choiceKeep, errors.New("database recovery requires the interactive Windows installed-app launcher")
 }
 
-func showDatabasePreflightError(error)            {}
-func showDatabasePrepared(databaseChoice, string) {}
+func showDatabasePreflightError(error, string, error) {}
+func showDatabasePrepared(databaseChoice, string)     {}

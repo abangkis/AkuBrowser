@@ -3,6 +3,7 @@ package launcher
 import (
 	"context"
 	"errors"
+	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -76,5 +77,20 @@ func TestDatabasePreflightProbeFailureStopsBeforePrompt(t *testing.T) {
 	started, err := prepareInstalledDatabaseWith(context.Background(), Tuple{}, LaunchPaths{}, command, prompt, func(databaseChoice, string) {})
 	if started || prompted || err == nil || !strings.Contains(err.Error(), "probe failed") {
 		t.Fatalf("started=%v prompted=%v err=%v", started, prompted, err)
+	}
+}
+
+func TestDatabaseDiagnosticIsPersistedWithoutReset(t *testing.T) {
+	directory := t.TempDir()
+	path, err := writeDatabaseDiagnostic(directory, errors.New("database changed during inspection"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	contents, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(contents), "database changed during inspection") {
+		t.Fatalf("diagnostic log omitted the failure: %s", contents)
 	}
 }

@@ -31,6 +31,30 @@ func TestQuoteWindowsCommandArgument(t *testing.T) {
 	}
 }
 
+func TestInstalledRelaunchCommandOmitsRedundantInstallRoot(t *testing.T) {
+	root := `C:\Program Files\AkuBrowser`
+	executable := root + `\AkuBrowserLauncher.exe`
+	got, err := installedRelaunchCommandForExecutable(executable, root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := `"C:\Program Files\AkuBrowser\AkuBrowserLauncher.exe"`; got != want {
+		t.Fatalf("relaunch command=%q, want %q", got, want)
+	}
+}
+
+func TestInstalledRelaunchCommandKeepsExplicitAlternateRoot(t *testing.T) {
+	executable := `C:\Test\AkuBrowserLauncher.exe`
+	root := `D:\Tuple`
+	got, err := installedRelaunchCommandForExecutable(executable, root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := `"C:\Test\AkuBrowserLauncher.exe" --install-root "D:\Tuple"`; got != want {
+		t.Fatalf("relaunch command=%q, want %q", got, want)
+	}
+}
+
 func TestNewControlTokenMatchesSidecarContract(t *testing.T) {
 	token, err := newControlToken()
 	if err != nil {

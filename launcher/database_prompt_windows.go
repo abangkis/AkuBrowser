@@ -70,8 +70,15 @@ func confirmFreshDatabase() (databaseChoice, error) {
 	return choiceKeep, fmt.Errorf("unexpected fresh database dialog response %d", response)
 }
 
-func showDatabasePreflightError(err error) {
-	_, _ = databaseMessageBox("AkuBrowser could not safely prepare its database. No automatic reset was performed.\n\n"+err.Error(), windows.MB_OK|windows.MB_ICONERROR)
+func showDatabasePreflightError(err error, logPath string, logErr error) {
+	message := "AkuBrowser could not safely prepare its database. No automatic reset was performed.\n\n" + err.Error()
+	if logErr == nil && logPath != "" {
+		message += "\n\nDiagnostic log: " + logPath
+	} else {
+		message += "\n\nThe diagnostic log could not be saved."
+	}
+	message += "\n\nPress Ctrl+C while this dialog is focused to copy its details."
+	_, _ = databaseMessageBox(message, windows.MB_OK|windows.MB_ICONERROR)
 }
 
 func showDatabasePrepared(choice databaseChoice, backupPath string) {

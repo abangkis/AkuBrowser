@@ -91,7 +91,8 @@ func Run(ctx context.Context, options RunOptions) error {
 	defer release()
 	proceed, err := prepareInstalledDatabase(ctx, tuple, paths)
 	if err != nil {
-		showDatabasePreflightError(err)
+		logPath, logErr := writeDatabaseDiagnostic(paths.DataDirectory, err)
+		showDatabasePreflightError(err, logPath, logErr)
 		return err
 	}
 	if !proceed {
@@ -187,9 +188,19 @@ func installedRelaunchCommand(installRoot string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("resolve launcher executable for relaunch: %w", err)
 	}
+	return installedRelaunchCommandForExecutable(executable, installRoot)
+}
+
+func installedRelaunchCommandForExecutable(executable, installRoot string) (string, error) {
 	quotedExecutable, err := quoteWindowsCommandArgument(executable)
 	if err != nil {
 		return "", err
+	}
+	// The installed launcher resolves its own directory when --install-root is
+	// omitted. Avoid repeating a potentially long install path in the Windows
+	// relaunch property, which can make app-shell identity setup fail.
+	if strings.EqualFold(filepath.Clean(filepath.Dir(executable)), filepath.Clean(installRoot)) {
+		return quotedExecutable, nil
 	}
 	quotedRoot, err := quoteWindowsCommandArgument(installRoot)
 	if err != nil {

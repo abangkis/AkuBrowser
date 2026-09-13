@@ -5,8 +5,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
+	"time"
 )
 
 // databaseCompatibilityReport is emitted by the active Sidecar binary. The
@@ -127,4 +130,25 @@ func validateDatabaseReport(report databaseCompatibilityReport) error {
 		return errors.New("database inspection returned a negative schema version")
 	}
 	return nil
+}
+
+func writeDatabaseDiagnostic(dataDirectory string, failure error) (string, error) {
+	path := filepath.Join(dataDirectory, "database-recovery.log")
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_APPEND|os.O_WRONLY, 0o600)
+	if err != nil {
+		return "", err
+	}
+	message := failure.Error()
+	if len(message) > 4096 {
+		message = message[:4096] + "..."
+	}
+	_, writeErr := fmt.Fprintf(file, "%s %s\n", time.Now().UTC().Format(time.RFC3339), message)
+	closeErr := file.Close()
+	if writeErr != nil {
+		return "", writeErr
+	}
+	if closeErr != nil {
+		return "", closeErr
+	}
+	return path, nil
 }
