@@ -89,6 +89,14 @@ func Run(ctx context.Context, options RunOptions) error {
 		return err
 	}
 	defer release()
+	proceed, err := prepareInstalledDatabase(ctx, tuple, paths)
+	if err != nil {
+		showDatabasePreflightError(err)
+		return err
+	}
+	if !proceed {
+		return nil
+	}
 	return runSidecar(ctx, tuple, paths)
 }
 

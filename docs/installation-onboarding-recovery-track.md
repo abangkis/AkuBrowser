@@ -1,6 +1,6 @@
 # Jalur khusus: instalasi, pemulihan, dan onboarding pengguna baru
 
-Status: **tercatat untuk ditangani; belum diimplementasikan**.
+Status: **INST-01 sudah memiliki implementasi kode generik; belum dikemas atau diterima lewat uji instalasi. INST-02–05 tetap terbuka.**
 Tanggal laporan: 5 September 2026. Konteks: pengujian instalasi AkuBrowser v0.9.0 RC3 pada lingkungan pengguna.
 
 ## Tujuan
@@ -30,6 +30,8 @@ Dokumen ini mencatat laporan, bukti, kebutuhan mitigasi, dan kriteria penerimaan
 ## INST-01 — Residu dan schema lama: kegagalan harus bisa dipulihkan
 
 Prioritas: tinggi, menghalangi penggunaan.
+
+Implementasi kode setelah laporan RC3 (belum menjadi bukti penerimaan pada instalasi pengguna): launcher meminta Sidecar aktif menginspeksi database yang ada sebelum startup. Sidecar yang sama mengklasifikasikan database sebagai tidak ada, kompatibel, dapat dimigrasikan melalui rantai migrasi lengkap, tidak didukung, lebih baru, atau tidak dapat diverifikasi. Database kompatibel dipertahankan; keadaan lain menawarkan hanya tindakan yang sesuai. Migrasi dan mulai baru membutuhkan keputusan eksplisit serta identitas database yang tidak berubah sejak inspeksi. Migrasi dilakukan pada salinan bertahap; mulai baru mengarsipkan database lama dan file SQLite terkait, tanpa menghapus profil browser. Jika pemeriksaan, penguncian, cadangan, atau migrasi gagal, aplikasi tidak melakukan reset otomatis. Jalur persiapan saat ini hanya tersedia pada Windows; perilaku non-Windows gagal tertutup. Uji unit dan CLI terbatas lulus, tetapi alur installer/launcher dalam paket RC dan pemulihan arsip oleh pengguna belum divalidasi.
 
 Masalah: pengguna hanya mengalami kegagalan/keluar tanpa pesan yang membantu dan harus menemukan residu sendiri. Binary baru tidak otomatis berarti database lama kompatibel.
 
