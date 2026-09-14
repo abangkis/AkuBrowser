@@ -2,11 +2,22 @@ package launcher
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os/exec"
 	"strings"
 	"testing"
 )
+
+func TestSidecarExitAfterHealth(t *testing.T) {
+	if err := sidecarExitAfterHealth(nil, nil); err != nil {
+		t.Fatalf("normal Sidecar exit after health should succeed: %v", err)
+	}
+	if err := sidecarExitAfterHealth(&exec.Cmd{}, errors.New("sidecar failed")); err == nil {
+		t.Fatal("failed Sidecar exit after health should still fail")
+	}
+}
 
 func TestDevelopmentWorkspaceRejectsInstalledOptions(t *testing.T) {
 	err := Run(context.Background(), RunOptions{

@@ -153,11 +153,18 @@ func runSidecar(ctx context.Context, tuple Tuple, paths LaunchPaths) error {
 	}
 	select {
 	case err := <-waitResult:
-		return sidecarExitError(command, err, "exited after health became ready")
+		return sidecarExitAfterHealth(command, err)
 	case <-ctx.Done():
 		stopOwnedProcess(command, waitResult, client, healthURL, controlToken)
 		return nil
 	}
+}
+
+func sidecarExitAfterHealth(command *exec.Cmd, waitErr error) error {
+	if waitErr == nil {
+		return nil
+	}
+	return sidecarExitError(command, waitErr, "exited after health became ready")
 }
 
 func runDevelopmentSupervisor(ctx context.Context, workspace string) error {
