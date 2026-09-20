@@ -1,4 +1,4 @@
-# AkuBrowser v0.9.0 Windows release
+# AkuBrowser v0.9.1 Windows release
 
 Status: **stable, intentionally unsigned**. This document is the active release guide
 for the Windows x64 single-installer path. The candidate is one installer
@@ -6,7 +6,7 @@ for the Windows x64 single-installer path. The candidate is one installer
 payload, pinned Chromium, c2patool, configuration, and checksums. Code signing
 and independent clean-machine certification remain future hardening.
 
-Chrome Web Store publication is frozen and is not an active v0.9.0 path. The
+Chrome Web Store publication is frozen and is not an active v0.9.1 path. The
 candidate does not require system Chrome, Developer Mode, manual extension
 loading, or a separate runtime installer. macOS and Linux are deferred.
 
@@ -14,10 +14,10 @@ The release contract covers four source adapters: X, LinkedIn, Facebook, and
 opt-in Instagram. Codex App/App Server remains an external prerequisite. The
 optional Gemini provider accepts a user-supplied key through the Sidecar
 credential flow, and provider hot-swaps apply at an idle boundary. AkuSidecar
-schema 22 is the active database boundary. These are v0.9.0 capabilities and
+schema 22 is the active database boundary. These are v0.9.1 capabilities and
 acceptance targets.
 
-## v0.9.0 prerequisites and acceptance
+## v0.9.1 prerequisites and acceptance
 
 Before testing, obtain the installer, matching checksum, generated
 manifest, and frozen source-commit evidence. Use a clean Windows x64 machine
@@ -36,7 +36,7 @@ warnings; verify its published SHA-256 before running it.
 ## Historical 0.7.9 preview
 
 The sections below preserve the previous cross-platform Store/portable preview
-as historical evidence. They are not v0.9.0 instructions or release gates.
+as historical evidence. They are not v0.9.1 instructions or release gates.
 
 Windows has two coordinated delivery paths: the portable x64 ZIP remains the
 manual fallback, while the Chrome Web Store flow uses a user-scoped companion

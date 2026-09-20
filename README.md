@@ -1,6 +1,6 @@
 # AkuBrowser
 
-Current release: **`v0.9.0` for Windows x64**. It is distributed as one
+Current release target: **`v0.9.1` for Windows x64**. It is distributed as one
 unsigned installer `.exe` containing AkuBrowserLauncher,
 AkuSidecar, the internal AkuBridge payload, pinned Chromium, c2patool, and the
 release configuration/checksums needed by the isolated app shell. The release
@@ -10,7 +10,7 @@ hardening. The canonical
 bundle boundary and gates are in the [installed-app distribution
 contract](docs/installed-app-distribution-contract.md).
 
-> **v0.9.0 distribution boundary.** The active release path is
+> **v0.9.1 distribution boundary.** The active release path is
 > one Windows x64 installed-app installer. It does not require the Chrome Web
 > Store, system Chrome, Developer Mode, a manually loaded extension, or a
 > separate runtime installer. The current candidate still carries an honest
@@ -23,12 +23,12 @@ contract](docs/installed-app-distribution-contract.md).
 > no new Store builds are published. New production work targets the single
 > installed-app tuple, with AkuSidecar owning first-run onboarding in the
 > isolated app shell. The listing and portable ZIP are historical/recovery
-> lanes, not v0.9.0 release outputs. See the [installed-app distribution
+> lanes, not v0.9.1 release outputs. See the [installed-app distribution
 > target](docs/installed-app-distribution-contract.md).
 
 ## Release downloads
 
-The [AkuBrowser v0.9.0 release](https://github.com/abangkis/AkuBrowser/releases/tag/v0.9.0)
+The next AkuBrowser `v0.9.1` release
 exposes one Windows x64 installer `.exe` and its SHA-256 checksum as the
 supported download. It is intentionally unsigned, so Windows may show a
 SmartScreen warning. Verify the checksum and do not run it alongside the frozen
@@ -36,7 +36,7 @@ Store edition.
 
 The old Windows/macOS runtime installers and portable bundles remain versioned
 historical/recovery assets. macOS and Linux downloads are explicitly deferred
-from v0.9.0.
+from v0.9.1.
 
 AkuBrowser turns bounded samples from the user's chosen social feeds into one finite, source-backed Timeline. The current source registry supports four adapters: X, LinkedIn, Facebook, and opt-in Instagram. It is designed for people who want to keep up without surrendering their attention to another infinite feed.
 
@@ -94,7 +94,7 @@ development tooling and is never required or shipped to Store users.
 
 Only AkuBridge uses npm, because it is the Chrome extension. AkuSidecar is fully Go. In development AkuSupervisor may start Sidecar; production installation and update do not depend on Supervisor.
 
-## Development and v0.9.0 release build
+## Development and v0.9.1 release build
 
 Run the workspace check from this repository:
 
@@ -116,7 +116,7 @@ Open `http://127.0.0.1:11122` (or `http://localhost:11122`). Load
 reloads use the Sidecar's cooperative `reload_self` contract. AkuSupervisor
 remains only the generic process owner.
 
-The v0.9.0 installed app uses the bundled pinned Chromium profile and
+The v0.9.1 installed app uses the bundled pinned Chromium profile and
 does not require system Chrome or manual extension loading. Codex App with App
 Server remains an external prerequisite and must be installed and signed in
 locally. An optional Gemini provider accepts a user-supplied key through the
@@ -126,7 +126,7 @@ uses schema 22 and owns first-run onboarding, source readiness, and Timeline
 state. See [Preview/release candidate notes](docs/preview-release.md).
 
 The portable ZIP and Chrome Web Store package are historical/recovery lanes and
-are not v0.9.0 distribution paths.
+are not v0.9.1 distribution paths.
 
 Build and validate the Windows installed-app release from this repository:
 
@@ -139,7 +139,7 @@ Build and validate the Windows installed-app release from this repository:
   -NsisPath "C:\Program Files (x86)\NSIS\makensis.exe"
 .\scripts\test-windows-installed-app-installer.ps1 `
   -TupleDirectory .\artifacts\AkuBrowser-<version>-windows-x64-installed-app `
-  -InstallerPath .\artifacts\installed-app-installer\AkuBrowserSetup-0.9.0-windows-x64.exe
+  -InstallerPath .\artifacts\installed-app-installer\AkuBrowserSetup-0.9.1-windows-x64.exe
 ```
 
 These commands produce the intentionally unsigned release artifact and matching
