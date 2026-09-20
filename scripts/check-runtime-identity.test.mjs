@@ -130,6 +130,7 @@ test("local release reconciliation requires the exact Bridge release identity", 
   assert.match(script, /function Test-BridgeMatchesRelease/);
   assert.match(script, /actual\.runtimeRevision/);
   assert.match(script, /actual\.buildId/);
+  assert.match(script, /actual\.focusPolicyRevision/);
   assert.match(script, /actual\.contractVersion/);
   assert.match(script, /Wait-ReleaseBridge/);
   assert.doesNotMatch(script, /Wait-CompatibleBridge/);

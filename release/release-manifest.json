@@ -145,6 +145,7 @@
       "version": "0.9.0",
       "chromeVersion": "0.9.0.0",
       "runtimeRevision": "source-adapters-v108",
+      "focusPolicyRevision": "mutable-focus-authority-v1",
       "contractVersion": "aku-browser.bridge.v2"
     },
     "chromium": {

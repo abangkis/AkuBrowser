@@ -44,6 +44,7 @@ function Test-BridgeMatchesRelease($Status) {
     return [string]$actual.extensionVersion -eq [string]$expected.version `
         -and [string]$actual.runtimeRevision -eq [string]$expected.runtimeRevision `
         -and [string]$actual.buildId -eq $expectedBuildId `
+        -and [string]$actual.focusPolicyRevision -eq [string]$expected.focusPolicyRevision `
         -and [string]$actual.contractVersion -eq [string]$expected.contractVersion
 }
 

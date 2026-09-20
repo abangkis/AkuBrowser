@@ -82,6 +82,7 @@ Assert-True ($releaseManifest.distribution.macos.status -eq "deferred-after-0.9.
 Assert-True ($bridgePackage.version -eq $bridgeManifest.version_name) "AkuBridge package and manifest version name differ."
 Assert-True ($bridgePackage.version -eq $releaseManifest.components.akuBridge.version) "AkuBridge product version drifted from the release manifest."
 Assert-True ($bridgeManifest.version -eq $releaseManifest.components.akuBridge.chromeVersion) "AkuBridge Chrome version drifted from the release manifest."
+Assert-True ($bridgeCapabilities -match ('FOCUS_POLICY_REVISION\s*=\s*"' + [regex]::Escape([string]$releaseManifest.components.akuBridge.focusPolicyRevision) + '"')) "AkuBridge focus policy revision drifted from the release manifest."
 $developmentIdentityText = & node (Join-Path $PSScriptRoot "bridge-extension-identity.mjs") $bridgeIdentityRegistryPath (Join-Path $bridgeRoot "manifest.json") "development"
 Assert-True ($LASTEXITCODE -eq 0) "AkuBridge development manifest key does not match the identity registry."
 $developmentIdentity = ($developmentIdentityText | Out-String) | ConvertFrom-Json
