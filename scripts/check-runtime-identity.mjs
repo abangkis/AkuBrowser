@@ -56,6 +56,7 @@ export async function verifyRuntimeIdentity(workspaceRoot) {
     productVersion: release.components?.akuBridge?.version,
     chromeVersion: release.components?.akuBridge?.chromeVersion,
     runtimeRevision: release.components?.akuBridge?.runtimeRevision,
+    focusPolicyRevision: release.components?.akuBridge?.focusPolicyRevision,
     contractVersion: release.components?.akuBridge?.contractVersion,
     sidecarVersion: release.components?.akuSidecar?.version,
     sidecarRuntimeRevision: release.components?.akuSidecar?.runtimeRevision,
@@ -82,6 +83,8 @@ export async function verifyRuntimeIdentity(workspaceRoot) {
     mismatches,
   );
   compare("AkuBridge capability revision", capabilityRevision, canonical.runtimeRevision, mismatches);
+  compare("AkuBridge focus policy", capture(bridgeCapabilities, /FOCUS_POLICY_REVISION\s*=\s*"([^"]+)"/, "AkuBridge focus policy", mismatches), canonical.focusPolicyRevision, mismatches);
+  compare("AkuSidecar focus policy", capture(sidecarReloadActions, /ExpectedBridgeFocusPolicyRevision\s*=\s*"([^"]+)"/, "AkuSidecar focus policy", mismatches), canonical.focusPolicyRevision, mismatches);
   compare("AkuBridge capability contract", capabilityContract, canonical.contractVersion, mismatches);
   compare("AkuBridge Sidecar bootstrap version", sidecarBootstrapVersion, canonical.sidecarVersion, mismatches);
   requireText(

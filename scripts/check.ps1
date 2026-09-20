@@ -11,9 +11,9 @@ $sidecarRoot = Join-Path $workspaceRoot "AkuSidecar"
 $installerRoot = Join-Path $browserRoot "installer\windows"
 $launcherRoot = Join-Path $browserRoot "launcher"
 $cacheRoot = Join-Path $workspaceRoot ".go-cache"
-$env:GOCACHE = Join-Path $cacheRoot "build"
-$env:GOMODCACHE = Join-Path $cacheRoot "mod"
-$env:GOTMPDIR = Join-Path $cacheRoot "tmp"
+if ([string]::IsNullOrWhiteSpace($env:GOCACHE)) { $env:GOCACHE = Join-Path $cacheRoot "build" }
+if ([string]::IsNullOrWhiteSpace($env:GOMODCACHE)) { $env:GOMODCACHE = Join-Path $cacheRoot "mod" }
+if ([string]::IsNullOrWhiteSpace($env:GOTMPDIR)) { $env:GOTMPDIR = Join-Path $cacheRoot "tmp" }
 foreach ($directory in @($env:GOCACHE, $env:GOMODCACHE, $env:GOTMPDIR)) {
     New-Item -ItemType Directory -Force -Path $directory | Out-Null
 }
@@ -151,6 +151,7 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "AkuSidecar tests failed." }
     & node --test --test-isolation=none `
         (Join-Path $sidecarRoot "test\capture-surface-release-barrier.test.mjs") `
+        (Join-Path $sidecarRoot "test\bridge-recovery-state.test.mjs") `
         (Join-Path $sidecarRoot "test\timeline-media-carousel.test.mjs")
     if ($LASTEXITCODE -ne 0) { throw "AkuSidecar browser lifecycle tests failed." }
 }

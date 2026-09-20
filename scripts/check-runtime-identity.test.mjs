@@ -10,6 +10,7 @@ const identity = {
   version: "0.9.0",
   chromeVersion: "0.9.0.0",
   revision: "source-adapters-v106",
+  focusPolicy: "quiet-containment-only-v2",
   contract: "aku-browser.bridge.v2",
   bridgeID: "aku-bridge-chrome-mv3-v0",
 };
@@ -30,6 +31,7 @@ async function createFixture() {
         version: identity.version,
         chromeVersion: identity.chromeVersion,
         runtimeRevision: identity.revision,
+        focusPolicyRevision: identity.focusPolicy,
         contractVersion: identity.contract,
       },
       akuSidecar: { version: identity.version, runtimeRevision: identity.revision },
@@ -57,6 +59,7 @@ async function createFixture() {
   await writeFile(root, "AkuBridge/manifest.json", JSON.stringify({ version: identity.chromeVersion, version_name: identity.version }));
   await writeFile(root, "AkuBridge/bridge-capabilities.js", [
     `export const BRIDGE_RUNTIME_REVISION = "${identity.revision}";`,
+    `export const FOCUS_POLICY_REVISION = "${identity.focusPolicy}";`,
     `export const BRIDGE_ID = "${identity.bridgeID}";`,
     `export const BRIDGE_CONTRACT_VERSION = "${identity.contract}";`,
     `export const SIDECAR_BOOTSTRAP_VERSION = "${identity.version}";`,
@@ -69,7 +72,7 @@ async function createFixture() {
     `const ExpectedBridgeRevision = "${identity.revision}"`,
     `const ExpectedBridgeID = "${identity.bridgeID}"`,
   ].join("\n"));
-  await writeFile(root, "AkuSidecar/internal/engine/reload_actions.go", `const ExpectedBridgeBuildID = "${buildID}"`);
+  await writeFile(root, "AkuSidecar/internal/engine/reload_actions.go", `const ExpectedBridgeBuildID = "${buildID}"\nconst ExpectedBridgeFocusPolicyRevision = "${identity.focusPolicy}"`);
   await writeFile(root, "AkuSidecar/internal/domain/types.go", [
     `const ApplicationVersion = "${identity.version}"`,
     `const BridgeContractVersion = "${identity.contract}"`,
@@ -134,4 +137,14 @@ test("local release reconciliation requires the exact Bridge release identity", 
   assert.match(script, /actual\.contractVersion/);
   assert.match(script, /Wait-ReleaseBridge/);
   assert.doesNotMatch(script, /Wait-CompatibleBridge/);
+});
+
+test("fails exact integration identity when Sidecar expects a different focus policy", async (t) => {
+  const root = await createFixture();
+  t.after(() => fs.rm(root, { recursive: true, force: true }));
+  await writeFile(root, "AkuSidecar/internal/engine/reload_actions.go", [
+    `const ExpectedBridgeBuildID = "aku-bridge-${identity.version}-${identity.revision}"`,
+    'const ExpectedBridgeFocusPolicyRevision = "mutable-focus-authority-v1"',
+  ].join("\n"));
+  await assert.rejects(verifyRuntimeIdentity(root), /AkuSidecar focus policy: found "mutable-focus-authority-v1"/);
 });
