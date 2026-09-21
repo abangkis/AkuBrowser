@@ -100,7 +100,7 @@
     "akuSidecar": {
         "version": "0.9.1",
       "runtime": "go",
-      "runtimeRevision": "source-adapters-v110",
+      "runtimeRevision": "source-adapters-v111",
       "update": {
         "minHostVersion": "0.7.9",
         "bridgeCompatibility": {
@@ -142,9 +142,9 @@
       }
     },
     "akuBridge": {
-      "version": "0.9.1",
-      "chromeVersion": "0.9.1.2",
-      "runtimeRevision": "source-adapters-v110",
+      "version": "0.9.2",
+      "chromeVersion": "0.9.2.0",
+      "runtimeRevision": "source-adapters-v111",
       "focusPolicyRevision": "quiet-containment-only-v2",
       "contractVersion": "aku-browser.bridge.v2"
     },

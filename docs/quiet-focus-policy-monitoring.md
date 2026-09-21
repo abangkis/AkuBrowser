@@ -1,7 +1,7 @@
 # Quiet capture focus policy monitoring
 
-Product family remains 0.9.1. The new tuple is Chrome 0.9.1.1,
-runtime source-adapters-v110, policy quiet-containment-only-v2.
+AkuBridge is 0.9.2; the installed app and Sidecar remain 0.9.1. The new tuple is Chrome 0.9.2.0,
+runtime source-adapters-v111, policy quiet-containment-only-v2.
 Source changes do not establish that a running worker has loaded this tuple.
 
 Background capture never foregrounds a previous window or tab as focus repair.

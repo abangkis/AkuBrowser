@@ -29,6 +29,7 @@ ${StrStr}
 !define PRODUCT_UNINSTALL_KEY "Software\Microsoft\Windows\CurrentVersion\Uninstall\AkuBrowser"
 !define SETUP_MUTEX_NAME "Local\AkuBrowserInstalledAppSetup"
 !define ERROR_ALREADY_EXISTS 183
+!define READER_HOST "com.akubrowser.reader_activation"
 
 Var SetupMutexHandle
 Var UninstallFullReset
@@ -130,6 +131,23 @@ Section "AkuBrowser" InstallSection
   SectionIn RO
   SetOverwrite on
   Call EnsureAkuBrowserStopped
+  ; An unrelated development/alternate install registration must not be overwritten.
+  ReadRegStr $0 HKCU "Software\Google\Chrome\NativeMessagingHosts\${READER_HOST}" ""
+  ${If} $0 != ""
+    ${StrStr} $1 $0 "$INSTDIR\runtime\versions\"
+    ${If} $1 != $0
+      MessageBox MB_OK|MB_ICONSTOP "Reader activation is registered to another AkuBrowser location. Remove that registration through its owner before installing here."
+      Abort
+    ${EndIf}
+  ${EndIf}
+  ReadRegStr $0 HKCU "Software\Chromium\NativeMessagingHosts\${READER_HOST}" ""
+  ${If} $0 != ""
+    ${StrStr} $1 $0 "$INSTDIR\runtime\versions\"
+    ${If} $1 != $0
+      MessageBox MB_OK|MB_ICONSTOP "Reader activation is registered to another AkuBrowser location. Remove that registration through its owner before installing here."
+      Abort
+    ${EndIf}
+  ${EndIf}
 
   ; Stage every immutable component before changing the active pointer.
   SetOutPath "$INSTDIR"
@@ -138,6 +156,17 @@ Section "AkuBrowser" InstallSection
   CreateDirectory "$INSTDIR\runtime\versions\${APP_VERSION}"
   SetOutPath "$INSTDIR\runtime\versions\${APP_VERSION}"
   File /r "${PAYLOAD_ROOT}\runtime\versions\${APP_VERSION}\*"
+
+  ; Only the UI broker origin is allowlisted; this is not the runtime host.
+  WriteRegStr HKCU "Software\Google\Chrome\NativeMessagingHosts\${READER_HOST}" "" "$INSTDIR\runtime\versions\${APP_VERSION}\${READER_HOST}.json"
+  WriteRegStr HKCU "Software\Chromium\NativeMessagingHosts\${READER_HOST}" "" "$INSTDIR\runtime\versions\${APP_VERSION}\${READER_HOST}.json"
+  ReadRegStr $0 HKCU "Software\Google\Chrome\NativeMessagingHosts\${READER_HOST}" ""
+  ReadRegStr $1 HKCU "Software\Chromium\NativeMessagingHosts\${READER_HOST}" ""
+  ${If} $0 != "$INSTDIR\runtime\versions\${APP_VERSION}\${READER_HOST}.json"
+  ${OrIf} $1 != "$INSTDIR\runtime\versions\${APP_VERSION}\${READER_HOST}.json"
+    MessageBox MB_OK|MB_ICONSTOP "Reader activation registration could not be verified. The new runtime was not activated."
+    Abort
+  ${EndIf}
 
   SetOutPath "$INSTDIR"
   File /oname=install-manifest.json "${PAYLOAD_ROOT}\install-manifest.json"
@@ -173,6 +202,15 @@ Section "AkuBrowser" InstallSection
 SectionEnd
 
 Section "Uninstall"
+  ; Do not remove a registration replaced by another installation/development run.
+  ReadRegStr $0 HKCU "Software\Google\Chrome\NativeMessagingHosts\${READER_HOST}" ""
+  ${If} $0 == "$INSTDIR\runtime\versions\${APP_VERSION}\${READER_HOST}.json"
+    DeleteRegKey HKCU "Software\Google\Chrome\NativeMessagingHosts\${READER_HOST}"
+  ${EndIf}
+  ReadRegStr $0 HKCU "Software\Chromium\NativeMessagingHosts\${READER_HOST}" ""
+  ${If} $0 == "$INSTDIR\runtime\versions\${APP_VERSION}\${READER_HOST}.json"
+    DeleteRegKey HKCU "Software\Chromium\NativeMessagingHosts\${READER_HOST}"
+  ${EndIf}
   DeleteRegKey HKCU "${PRODUCT_UNINSTALL_KEY}"
   DeleteRegKey HKCU "${PRODUCT_REGISTRY_KEY}"
   Delete "$SMPROGRAMS\AkuBrowser\AkuBrowser.lnk"

@@ -190,6 +190,9 @@ $chromiumHash = Get-Sha256 $chromiumExecutablePath
 Assert-True ($chromiumHash -eq ([string]$pin.executableSha256).ToLowerInvariant()) "Pinned Chromium executable SHA-256 does not match pin.json."
 $chromiumVersionInfo = (Get-Item -LiteralPath $chromiumExecutablePath -Force).VersionInfo
 Assert-True ([string]$chromiumVersionInfo.FileVersion -eq [string]$pin.version) "Pinned Chromium executable version differs from pin.json."
+Assert-True ([string]$chromiumVersionInfo.ProductName -eq 'Google Chrome for Testing') 'The pinned UI browser must be Chrome for Testing; branded Chrome cannot load the UI broker via --load-extension.'
+$expectedCfTSource = "https://storage.googleapis.com/chrome-for-testing-public/$($pin.version)/win64/chrome-win64.zip"
+Assert-True ([string]$pin.sourceUrl -eq $expectedCfTSource) 'Pinned UI Chromium must declare the exact official Chrome for Testing source URL.'
 $chromiumSourceFiles = @(Get-ChildItem -LiteralPath $ChromiumRoot -Recurse -File -Force)
 Assert-True ($chromiumSourceFiles.Count -gt 0) "Pinned Chromium source is empty."
 
@@ -234,6 +237,8 @@ try {
         try {
             & go build -buildvcs=false -trimpath -ldflags "-s -w" -o (Join-Path $versionRoot "AkuSidecar.exe") .\cmd\akusidecar
             if ($LASTEXITCODE -ne 0) { throw "AkuSidecar release build failed." }
+            & go build -buildvcs=false -trimpath -ldflags "-s -w" -o (Join-Path $versionRoot "aku-reader-broker.exe") .\cmd\aku-reader-broker
+            if ($LASTEXITCODE -ne 0) { throw "Windows reader activation broker release build failed." }
         }
         finally { Pop-Location }
         Push-Location $launcherRoot
@@ -314,6 +319,24 @@ try {
     Assert-NoReparsePoints $bridgeOutput "Staged Bridge"
     $stagedBridgeManifest = Read-Json (Join-Path $bridgeOutput "manifest.json")
     Assert-True ([string]$stagedBridgeManifest.key -eq [string]$identity.publicKey) "Projected Bridge manifest key differs from production-app identity."
+
+    $readerBrokerSource = Join-Path $sidecarRoot "ui-reader-broker"
+    $readerBrokerOutput = Join-Path $versionRoot "ui-reader-broker"
+    New-Item -ItemType Directory -Force -Path $readerBrokerOutput | Out-Null
+    foreach ($relative in @("manifest.json", "content.js", "service-worker.js")) {
+        Copy-VerifiedFile $readerBrokerSource $readerBrokerOutput $relative
+    }
+    Assert-NoReparsePoints $readerBrokerOutput "Staged UI reader broker"
+    # Windows resolves this executable relative to the manifest directory.
+    # Keeping it relative preserves immutable tuple hashes after installation.
+    $readerHostManifest = [ordered]@{
+        name = "com.akubrowser.reader_activation"
+        description = "AkuBrowser explicit reader activation"
+        path = "aku-reader-broker.exe"
+        type = "stdio"
+        allowed_origins = @("chrome-extension://dlibmmlopdahibfniinemhnghlifiple/")
+    }
+    Write-Utf8NoBom (Join-Path $versionRoot "com.akubrowser.reader_activation.json") ($readerHostManifest | ConvertTo-Json -Depth 4)
 
     $chromiumOutput = Join-Path $versionRoot "chromium"
     Copy-Item -LiteralPath $ChromiumRoot -Destination $chromiumOutput -Recurse -Force

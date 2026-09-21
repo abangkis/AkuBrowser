@@ -4,7 +4,7 @@
   "platform": "windows-x64",
   "version": "0.9.1",
   "chromiumVersion": "140.0.7339.185",
-  "bridgeVersion": "0.9.1",
+  "bridgeVersion": "0.9.2",
   "bridgeContract": "aku-browser.bridge.v2",
   "sidecarPath": "AkuSidecar.exe",
   "configPath": "config/sidecar.json",

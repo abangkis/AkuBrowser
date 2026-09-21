@@ -26,7 +26,11 @@ $manifestIndex = $source.IndexOf('File /oname=install-manifest.json')
 $currentIndex = $source.IndexOf('File /oname=current.json')
 Assert-True ($launcherIndex -ge 0 -and $versionIndex -gt $launcherIndex -and $manifestIndex -gt $versionIndex -and $currentIndex -gt $manifestIndex) "NSIS source does not activate the complete tuple in the required order."
 Assert-True ($source.Contains('CreateShortcut "$SMPROGRAMS\AkuBrowser\AkuBrowser.lnk" "$INSTDIR\AkuBrowserLauncher.exe"')) "NSIS source does not create the launcher shortcut."
-Assert-True (-not $source.Contains('NativeMessagingHosts')) "Installed-app NSIS source must not register the transitional Native Messaging host."
+Assert-True (-not $source.Contains('com.akubrowser.runtime')) "Installed-app NSIS source must not register the transitional Native Messaging runtime host."
+Assert-True ($source.Contains('!define READER_HOST "com.akubrowser.reader_activation"')) "Installer must register only the dedicated reader activation host."
+Assert-True ($source.Contains('${If} $0 == "$INSTDIR\runtime\versions\${APP_VERSION}\${READER_HOST}.json"')) "Uninstall must preserve registrations owned by another runtime."
+Assert-True ($source.Contains('${StrStr} $1 $0 "$INSTDIR\runtime\versions\"')) "Installer must reject registration collisions outside its own runtime tree."
+Assert-True ($source.Contains('Reader activation registration could not be verified. The new runtime was not activated.')) "Installer must verify registry readback before runtime activation."
 Assert-True (-not $source.Contains('taskkill.exe')) "Installed-app NSIS source must not forcibly terminate AkuBrowser processes."
 Assert-True ($source.Contains('RMDir /r /REBOOTOK "$INSTDIR\runtime"')) "Uninstaller does not own the installed runtime tree."
 Assert-True ($source.Contains('RMDir /r /REBOOTOK "$LOCALAPPDATA\AkuBrowser\browser-profile"')) "Explicit full reset does not cover the isolated browser profile."

@@ -51,6 +51,13 @@ Assert-True ([string]$installManifest.bridgeIdentity.profile -eq "production-app
 Assert-True ([int]$installManifest.database.currentSchemaVersion -gt 0 -and [string]$installManifest.database.rollbackStatus -eq "not-implemented") "Install provenance claims an invalid database contract."
 
 $versionRoot = Join-Path $ArtifactDirectory (Join-Path "runtime\versions" ([string]$current.version))
+$readerHost = Read-Json (Join-Path $versionRoot "com.akubrowser.reader_activation.json")
+Assert-True ($readerHost.name -eq "com.akubrowser.reader_activation" -and $readerHost.type -eq "stdio" -and $readerHost.path -eq "aku-reader-broker.exe") "Reader host must resolve only the bundled sibling helper."
+Assert-True (@($readerHost.allowed_origins).Count -eq 1 -and $readerHost.allowed_origins[0] -eq "chrome-extension://dlibmmlopdahibfniinemhnghlifiple/") "Reader host must allow only the isolated UI extension."
+Assert-True (Test-Path -LiteralPath (Join-Path $versionRoot "aku-reader-broker.exe") -PathType Leaf) "Reader helper is missing."
+foreach ($relative in @("manifest.json", "content.js", "service-worker.js")) {
+    Assert-True (Test-Path -LiteralPath (Join-Path $versionRoot "ui-reader-broker\$relative") -PathType Leaf) "Reader extension file is missing: $relative"
+}
 $manifestPath = Join-Path $ArtifactDirectory ([string]$current.manifestPath).Replace("/", [IO.Path]::DirectorySeparatorChar)
 Assert-True ([IO.Path]::GetFullPath($manifestPath) -eq [IO.Path]::GetFullPath((Join-Path $versionRoot "manifest.json"))) "Active pointer does not select the version manifest."
 $manifest = Read-Json $manifestPath

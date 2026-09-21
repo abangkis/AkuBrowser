@@ -33,12 +33,21 @@ is installed.
 The capture host reports its handshake state. An unsupported/stale worker,
 rejected bootstrap, or disconnected extension now becomes a visible failure
 after six attempts (each bounded to eight seconds), rather than silent retries
-forever. Chrome manifest version 0.9.1.2 uses a new thin worker entrypoint to
-replace the pre-split registration on extension upgrade; product version stays
-0.9.1. Browser restart alone had retained the old 0.9.1.1 worker cache during
+forever. Chrome manifest version 0.9.2.0 uses a new thin worker entrypoint to
+replace the pre-split registration on extension upgrade; AkuBridge product
+version is 0.9.2, while the installed app and Sidecar remain 0.9.1.
+Browser restart alone had retained the old 0.9.1.1 worker cache during
 the first Windows acceptance attempt. No cache/profile deletion is required.
 Actual upgrade/readiness still needs confirmation after the next authorized
 restart; these source changes do not reload the currently running extension.
+
+The explicit-reader generation is `source-adapters-v111` with entrypoint
+`service-worker-entry-v3.js`; the Sidecar expects its distinct build ID before
+reporting reload completion. A successful `open_native_post` result additionally
+requires successful native foreground readback for that same action. A stale
+worker returning success without that handshake receives a terminal failure
+in the UI instructing an AkuBridge reload, rather than false success or a queue
+timeout. Native prepare, foreground and final-result outcomes are logged.
 
 ## Transport and supported actions
 
