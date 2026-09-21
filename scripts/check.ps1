@@ -152,6 +152,7 @@ try {
     & node --test --test-isolation=none `
         (Join-Path $sidecarRoot "test\capture-surface-release-barrier.test.mjs") `
         (Join-Path $sidecarRoot "test\bridge-recovery-state.test.mjs") `
+        (Join-Path $sidecarRoot "test\split-ui-bridge.test.mjs") `
         (Join-Path $sidecarRoot "test\timeline-media-carousel.test.mjs")
     if ($LASTEXITCODE -ne 0) { throw "AkuSidecar browser lifecycle tests failed." }
 }

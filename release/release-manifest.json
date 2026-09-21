@@ -143,7 +143,7 @@
     },
     "akuBridge": {
       "version": "0.9.1",
-      "chromeVersion": "0.9.1.1",
+      "chromeVersion": "0.9.1.2",
       "runtimeRevision": "source-adapters-v110",
       "focusPolicyRevision": "quiet-containment-only-v2",
       "contractVersion": "aku-browser.bridge.v2"

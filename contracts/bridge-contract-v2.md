@@ -28,7 +28,7 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 
 The active pair is exact:
 
-- AkuBridge product version `0.9.1` / Chrome manifest version `0.9.1.1`;
+- AkuBridge product version `0.9.1` / Chrome manifest version `0.9.1.2`;
 - runtime revision `source-adapters-v110`;
 - focus policy revision `quiet-containment-only-v2`;
 - build id `aku-bridge-0.9.1-source-adapters-v110`; and
