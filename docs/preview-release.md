@@ -1,13 +1,17 @@
 # AkuBrowser v0.9.0-rc.8 Windows release candidate
 
-Status: **v0.9.0-rc.8 source candidate, intentionally unsigned**.
+Status: **v0.9.0-rc.8 published prerelease, intentionally unsigned**.
 Use the [release version policy](release-version-policy.md) to reconcile the
 product, Sidecar, native host, and separately versioned Bridge before freeze.
 This document is the release guide for the Windows x64 single-installer path.
 The candidate is one installer
 `.exe` containing AkuBrowserLauncher, AkuSidecar, the internal AkuBridge
 payload, pinned Chromium, c2patool, configuration, and checksums. Code signing
-remains future hardening; clean-machine acceptance for this candidate is pending.
+remains future hardening; clean-machine acceptance for this published
+prerelease is pending. The
+[installed-app receipt](../acceptance/windows-installed-app-rc8-2026-09-23.md)
+records partial testing on an existing Windows account, including an initial
+Avast One AutoSandbox block.
 
 Chrome Web Store publication is frozen and is not an active v0.9.0 RC8 path. The
 candidate does not require system Chrome, Developer Mode, manual extension

@@ -1,8 +1,10 @@
 # Windows clean-machine Step 3B
 
-## Current v0.9.0 RC8 source candidate
+## Published v0.9.0 RC8 baseline and next RC
 
-Run the installed-app checks below against a frozen v0.9.0 RC8 tuple. Read the
+The published RC8 has only [partial installed-app evidence](../acceptance/windows-installed-app-rc8-2026-09-23.md).
+Run the installed-app checks below against the frozen tuple of the candidate
+being evaluated. Read the
 database schema and accepted input versions from that tuple's generated
 manifest; the source manifest is only a build input. Record a fresh install
 and an upgrade from a preserved-data fixture separately. For the capture split,
@@ -49,7 +51,7 @@ Codex remains an external prerequisite. The optional Gemini provider uses a
 user-supplied key stored through the Sidecar credential flow; it is not bundled
 in the installer.
 
-## Active RC checklist
+## Historical v0.9.0 release checklist
 
 - [ ] Verify the installer checksum and record the candidate version, source
       SHAs, signing state, and SmartScreen/antivirus behavior.
@@ -64,7 +66,7 @@ in the installer.
       denial/retry, and revocation behavior for each exercised source.
 - [ ] Confirm Codex readiness, then exercise optional Gemini-key setup/use and
       one provider hot-swap at an idle boundary without restarting Sidecar.
-- [ ] Verify schema 22 startup and the documented additive migration boundary
+- [ ] Verify the historical schema 22 startup and additive migration boundary
       without losing the existing user data fixture.
 - [ ] Exercise install, restart, repair, update/rollback, ordinary uninstall
       with data preservation, and explicit full reset. Record any unimplemented
@@ -150,6 +152,7 @@ not silently change the frozen candidate.
 
 | Release | Date | Environment | Result | Evidence and observations |
 | --- | --- | --- | --- | --- |
+| v0.9.0-rc.8 | 2026-09-23 | Existing Windows account, fresh installed-app state | Partial; clean-machine and source gates open | [Installed-app receipt](../acceptance/windows-installed-app-rc8-2026-09-23.md): initial unsigned launch blocked by Avast One; local exception enabled healthy startup, preserve-data reinstall, repair, and packaged legacy-mode switch. Four source grants were ready; the first update completed X, LinkedIn, and Instagram, while Facebook returned `login_required`. |
 | 0.8.0 | 2026-08-14 | Windows clean-machine flow | Passed before lifecycle UX fix | Development Bridge and local unsigned runtime completed the flow; AkuBrowser Runtime 0.8.0 appeared in Installed apps. The stale repair label was fixed afterward and requires Windows re-verification. |
 
 Keep release-specific screenshots and logs with the release evidence. Refine
