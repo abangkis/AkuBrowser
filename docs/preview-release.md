@@ -1,19 +1,21 @@
-# AkuBrowser v0.9.0-rc.8 Windows release candidate
+# AkuBrowser v0.9.0-rc.9 Windows release candidate
 
-Status: **v0.9.0-rc.8 published prerelease, intentionally unsigned**.
+Status: **v0.9.0-rc.9 published prerelease, intentionally unsigned**.
 Use the [release version policy](release-version-policy.md) to reconcile the
 product, Sidecar, native host, and separately versioned Bridge before freeze.
 This document is the release guide for the Windows x64 single-installer path.
 The candidate is one installer
 `.exe` containing AkuBrowserLauncher, AkuSidecar, the internal AkuBridge
 payload, pinned Chromium, c2patool, configuration, and checksums. Code signing
-remains future hardening; clean-machine acceptance for this published
-prerelease is pending. The
-[installed-app receipt](../acceptance/windows-installed-app-rc8-2026-09-23.md)
-records partial testing on an existing Windows account, including an initial
-Avast One AutoSandbox block.
+remains future hardening; independent clean-machine acceptance for this
+published prerelease is pending. The
+[RC9 installed-app receipt](../acceptance/windows-installed-app-rc9-2026-09-23.md)
+records healthy local startup and a completed four-source update on an existing
+Windows account. The [RC8 receipt](../acceptance/windows-installed-app-rc8-2026-09-23.md)
+records the earlier Avast One AutoSandbox block. See the
+[RC9 release notes](../release/windows/v0.9.0-rc.9-notes.md) for open gates.
 
-Chrome Web Store publication is frozen and is not an active v0.9.0 RC8 path. The
+Chrome Web Store publication is frozen and is not an active v0.9.0 RC9 path. The
 candidate does not require system Chrome, Developer Mode, manual extension
 loading, or a separate runtime installer. macOS and Linux are deferred.
 
@@ -22,11 +24,10 @@ opt-in Instagram. Codex App/App Server remains an external prerequisite. The
 optional Gemini provider accepts a user-supplied key through the Sidecar
 credential flow, and provider hot-swaps apply at an idle boundary. The current
 source manifest declares AkuSidecar schema 29 and accepts input schemas 7–29;
-this describes the source candidate, not a previously published installer.
-Freeze and verify the generated tuple before attributing this schema to a
-release asset. These are v0.9.0 RC8 capabilities and acceptance targets.
+the RC9 generated tuple and installed manifest were verified at schema 29.
+These are v0.9.0 RC9 capabilities and acceptance targets.
 
-## v0.9.0 RC8 prerequisites and acceptance
+## v0.9.0 RC9 prerequisites and acceptance
 
 Before testing, obtain the installer, matching checksum, generated
 manifest, and frozen source-commit evidence. Use a clean Windows x64 machine
@@ -45,7 +46,7 @@ warnings; verify its published SHA-256 before running it.
 ## Historical 0.7.9 preview
 
 The sections below preserve the previous cross-platform Store/portable preview
-as historical evidence. They are not v0.9.0 RC8 instructions or release gates.
+as historical evidence. They are not v0.9.0 RC9 instructions or release gates.
 
 Windows has two coordinated delivery paths: the portable x64 ZIP remains the
 manual fallback, while the Chrome Web Store flow uses a user-scoped companion

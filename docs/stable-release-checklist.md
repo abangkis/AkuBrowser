@@ -1,11 +1,13 @@
 # Stable release checklist
 
-The most recent published prerelease is **v0.9.0-rc.8 Windows x64**. Its exact
+The most recent published prerelease is **v0.9.0-rc.9 Windows x64**. Its exact
 Sidecar database schema and accepted input versions come from its generated
 installed-app manifest at the frozen source commits. The
-[RC8 installed-app receipt](../acceptance/windows-installed-app-rc8-2026-09-23.md)
-is partial; do not carry historical v0.9.0 checkmarks or the v0.9.1 development
-canary forward as acceptance for a newer RC. Follow the [release version policy](release-version-policy.md)
+[RC9 installed-app receipt](../acceptance/windows-installed-app-rc9-2026-09-23.md)
+records a healthy local four-source retest, while independent clean-machine
+acceptance remains open. Do not carry historical v0.9.0 checkmarks or the
+v0.9.1 development canary forward as acceptance for a newer RC. Follow the
+[release version policy](release-version-policy.md)
 before changing the product line or creating a tag.
 Chrome Web Store publication remains frozen; macOS/Linux remain deferred.
 
@@ -16,7 +18,7 @@ Chrome Web Store publication remains frozen; macOS/Linux remain deferred.
       product and Sidecar stay 0.9.0; Bridge 0.9.2 / Chrome 0.9.2.0 is a
       separately versioned component.
 - [ ] Name the next RC tag and confirm it does not exist locally or remotely.
-      Treat the published `v0.9.0-rc.8` and existing `v0.9.0` release/tags
+      Treat the published `v0.9.0-rc.8`, `v0.9.0-rc.9`, and existing `v0.9.0` release/tags
       as immutable; do not reuse or move either tag.
 - [ ] Build and verify one Windows installed-app tuple, installer, checksum,
       pinned Chromium, c2patool, reader broker, and production-app Bridge.

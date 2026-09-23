@@ -52,3 +52,14 @@ An automated tuple check or local build does not prove this installed upgrade.
 Do not edit this table to imply that a historical `0.9.1` development canary
 was tested as RC8. Freeze and record the actual three source SHAs and artifact
 SHA-256 after the candidate build succeeds.
+
+## RC9 identity
+
+RC9 keeps the same product and component versions as RC8. Its installed
+Launcher and Sidecar binaries have the same SHA-256 as RC8; the new commit
+records development recovery guidance and acceptance evidence. The published
+prerelease tag is `v0.9.0-rc.9`, with installer
+`AkuBrowserSetup-0.9.0-windows-x64.exe` at SHA-256
+`eb251704166d0e8261549794090adfbc507a6ea7ecf66fe9e0ff28c83ef94cd2`.
+The frozen source commits and remaining acceptance gates are recorded in the
+[RC9 receipt](../acceptance/windows-installed-app-rc9-2026-09-23.md).
