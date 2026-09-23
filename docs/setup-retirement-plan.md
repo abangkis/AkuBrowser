@@ -1,6 +1,6 @@
 # AkuBrowser legacy Bridge setup retirement plan
 
-> Historical v0.9.0 decision record. The current v0.9.1 source candidate uses
+> Historical v0.9.0 decision record. The current v0.9.0-rc.8 source candidate uses
 > the schema and tuple declared in [the release manifest](../release/release-manifest.json)
 > and follows [the current checklist](stable-release-checklist.md).
 

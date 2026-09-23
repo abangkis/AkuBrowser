@@ -1,11 +1,11 @@
-# AkuBrowser Windows distribution — v0.9.1
+# AkuBrowser Windows distribution — v0.9.0-rc.8
 
-> **Release target:** v0.9.1 is a Windows x64 candidate intended for delivery
+> **Release target:** v0.9.0-rc.8 is a Windows x64 candidate intended for delivery
 > through one intentionally unsigned installed-app installer `.exe` plus its
 > SHA-256 checksum. Chrome Web Store publication is frozen;
 > macOS and Linux are deferred.
 
-## v0.9.1 source candidate
+## v0.9.0 RC8 source candidate
 
 The installer bundles AkuBrowserLauncher, AkuSidecar, the internal
 `production-app` AkuBridge payload, pinned Chromium, c2patool, configuration,
@@ -16,7 +16,7 @@ key through the Sidecar credential flow. The candidate covers X, LinkedIn,
 Facebook, and opt-in Instagram adapters, provider hot-swap at an idle boundary,
 and the Sidecar schema declared in the frozen release manifest.
 
-Use only the installer and checksum supplied by the v0.9.1 release evidence.
+Use only the installer and checksum supplied by the v0.9.0 RC8 release evidence.
 The installer is intentionally unsigned and may trigger SmartScreen or
 antivirus warnings; verify the checksum before running it. Code signing remains
 future hardening; clean-machine acceptance for this candidate is pending.

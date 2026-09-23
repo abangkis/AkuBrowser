@@ -1,8 +1,8 @@
 # AkuBrowser installed-app distribution contract
 
-> Current source-candidate note: this contract records the v0.9.0 Windows
-> release. The v0.9.1 source manifest and Sidecar schema have advanced; use
-> [the v0.9.1 release guide](preview-release.md) and
+> Current source-candidate note: this contract records the earlier v0.9.0 Windows
+> release. The v0.9.0-rc.8 source candidate has since advanced its Sidecar schema;
+> use [the RC8 release guide](preview-release.md) and
 > [stable release checklist](stable-release-checklist.md) for current candidate
 > gates. Do not attribute source-candidate metadata to a published installer
 > until the generated tuple and artifact have been verified.

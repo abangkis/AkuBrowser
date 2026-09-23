@@ -44,7 +44,7 @@ rejected bootstrap, or disconnected extension now becomes a visible failure
 after six attempts (each bounded to eight seconds), rather than silent retries
 forever. Chrome manifest version 0.9.2.0 uses a new thin worker entrypoint to
 replace the pre-split registration on extension upgrade; AkuBridge product
-version is 0.9.2, while the installed app and Sidecar remain 0.9.1.
+version is 0.9.2, while the then-current installed app and Sidecar were 0.9.1.
 Browser restart alone had retained the old 0.9.1.1 worker cache during
 the first Windows acceptance attempt. No cache/profile deletion was required;
 the later development runtime reported exact v111 identity and healthy Bridge

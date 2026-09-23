@@ -42,11 +42,12 @@ $sidecarConfig = Read-Json (Join-Path $sidecarRoot "config\sidecar.json")
 $domain = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\domain\types.go") -Raw
 $sidecarSchema = Get-Content -LiteralPath (Join-Path $sidecarRoot "internal\store\schema.go") -Raw
 $bridgeCapabilities = Get-Content -LiteralPath (Join-Path $bridgeRoot "bridge-capabilities.js") -Raw
+$nativeHostManifestSource = Get-Content -LiteralPath (Join-Path $bridgeRoot "native-host\update_manifest.go") -Raw
 $sourceCatalog = Get-Content -LiteralPath (Join-Path $bridgeRoot "source-catalog.js") -Raw
 $responseEvidenceAdapter = Get-Content -LiteralPath (Join-Path $bridgeRoot "x-response-evidence-adapter.js") -Raw
 $windowsPreviewTest = Get-Content -LiteralPath (Join-Path $browserRoot "scripts\test-windows-preview.ps1") -Raw
 
-Assert-True ($releaseManifest.version -eq "0.9.1") "AkuBrowser release version is unexpected."
+Assert-True ($releaseManifest.version -eq "0.9.0") "AkuBrowser release line is unexpected; advance it only after closing the v0.9.0 RC series."
 Assert-True ($releaseManifest.channel -eq "stable") "AkuBrowser release manifest must declare the stable channel for the stable candidate."
 Assert-True ($lifecycleAcceptance.version -eq $releaseManifest.version) "Lifecycle acceptance version drifted from the release manifest."
 $expectedLifecycleScenarios = @(
@@ -67,7 +68,10 @@ foreach ($scenario in $expectedLifecycleScenarios) {
 }
 Assert-True ($releaseManifest.distribution.authorityRepository -eq "AkuBrowser") "AkuBrowser must remain the distribution authority."
 Assert-True ($releaseManifest.distribution.windows.format -eq "installed-app-installer") "Windows stable distribution must be one installed-app installer."
-Assert-True ($releaseManifest.distribution.windows.installer -eq "AkuBrowserSetup-0.9.1-windows-x64.exe" -and $releaseManifest.distribution.windows.trustState -eq "stable-unsigned") "Windows stable installer identity is unexpected."
+Assert-True ($releaseManifest.distribution.windows.installer -eq "AkuBrowserSetup-$($releaseManifest.version)-windows-x64.exe" -and $releaseManifest.distribution.windows.trustState -eq "stable-unsigned") "Windows stable installer identity is unexpected."
+Assert-True ($releaseManifest.distribution.installedApp.releaseAsset -eq $releaseManifest.distribution.windows.installer) "Installed-app release asset differs from the Windows installer."
+Assert-True ($releaseManifest.distribution.installedApp.checksumAsset -eq "$($releaseManifest.distribution.windows.installer).sha256") "Installed-app checksum asset differs from the Windows installer."
+Assert-True (@($releaseManifest.bundle.deployables).Count -eq 1 -and $releaseManifest.bundle.deployables[0] -eq $releaseManifest.distribution.windows.installer) "Deployable list differs from the Windows installer."
 Assert-True ($releaseManifest.distribution.installedApp.status -eq "stable-unsigned" -and $releaseManifest.distribution.installedApp.installerStatus -eq "release-ready-unsigned" -and $releaseManifest.distribution.installedApp.signedInstaller -eq $false) "Installed-app release must remain explicitly unsigned and release-ready."
 Assert-True ($releaseManifest.distribution.installedApp.bridgeIdentityProfile -eq "production-app") "Installed-app builder must select production-app."
 Assert-True ($releaseManifest.distribution.installedApp.installerBuilder -eq "scripts/build-windows-installed-app-installer.ps1") "Installed-app installer builder metadata is unexpected."
@@ -78,7 +82,7 @@ Assert-True (Test-Path -LiteralPath (Join-Path $browserRoot "scripts\test-window
 Assert-True ($sidecarSchema -match ('const SchemaVersion = ' + [regex]::Escape([string]$releaseManifest.distribution.installedApp.database.currentSchemaVersion) + '(?:\r?\n|$)')) "Installed-app database schema drifted from AkuSidecar."
 Assert-True ($releaseManifest.distribution.installedApp.database.rollbackStatus -eq "not-implemented") "Installed-app builder must not claim database rollback before tuple rollback exists."
 Assert-True ($releaseManifest.distribution.chromeStore.status -eq "frozen-historical") "Chrome Web Store distribution must remain historical."
-Assert-True ($releaseManifest.distribution.macos.status -eq "deferred-after-0.9.1") "macOS distribution must remain deferred after v0.9.1."
+Assert-True ($releaseManifest.distribution.macos.status -eq "deferred-after-$($releaseManifest.version)") "macOS distribution must remain deferred after the current release line."
 Assert-True ($bridgePackage.version -eq $bridgeManifest.version_name) "AkuBridge package and manifest version name differ."
 Assert-True ($bridgePackage.version -eq $releaseManifest.components.akuBridge.version) "AkuBridge product version drifted from the release manifest."
 Assert-True ($bridgeManifest.version -eq $releaseManifest.components.akuBridge.chromeVersion) "AkuBridge Chrome version drifted from the release manifest."
@@ -115,8 +119,10 @@ Assert-True ($activeProviderConfig.semanticEvent.minReasoningTier -eq "high") "S
 Assert-True ($activeProviderConfig.aiDetection.minReasoningTier -eq "high") "AI Deep Detection must default to Luna High."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $sidecarRoot "package.json"))) "AkuSidecar must not contain a Node package."
 Assert-True (-not (Test-Path -LiteralPath (Join-Path $browserRoot "package.json"))) "AkuBrowser must not contain a Node package."
-Assert-True ($domain -match 'ApplicationVersion\s*=\s*"0\.9\.1"') "AkuSidecar version boundary is unexpected."
-Assert-True ($releaseManifest.components.akuSidecar.version -eq "0.9.1") "AkuSidecar release manifest version is unexpected."
+Assert-True ($domain -match ('ApplicationVersion\s*=\s*"' + [regex]::Escape([string]$releaseManifest.version) + '"')) "AkuSidecar version boundary differs from the AkuBrowser release line."
+Assert-True ($releaseManifest.components.akuSidecar.version -eq $releaseManifest.version) "AkuSidecar release manifest version differs from the AkuBrowser release line."
+Assert-True ($releaseManifest.distribution.chromeStore.nativeHost.version -eq $releaseManifest.version) "Native host manifest version differs from the AkuBrowser release line."
+Assert-True ($nativeHostManifestSource -match ('runtimeHostVersion\s*=\s*"' + [regex]::Escape([string]$releaseManifest.version) + '"')) "AkuBridge native host source version differs from the AkuBrowser release line."
 Assert-True ($releaseManifest.components.chromium.version -eq "152.0.7977.54" -and $releaseManifest.components.chromium.executableSha256 -eq "b0123437c55a3893e8988328f576ffcbe68cee7743d3653ffe865c73633b1ef4") "Pinned Chromium identity is unexpected."
 Assert-True ($releaseManifest.components.c2paTool.version -eq "0.26.60") "Pinned c2patool version is unexpected."
 Assert-True ($releaseManifest.components.c2paTool.sha256 -eq "90cbcebe30250f8e8c53416d32ed86065dc04a23be86e4a2337f5cd1badfa0b7") "Pinned c2patool SHA-256 is unexpected."
@@ -185,7 +191,7 @@ finally { Pop-Location }
     release = $releaseManifest.version
     AkuBridge = $bridgePackage.version
     AkuBridgeRuntime = $bridgePackage.akuRuntimeRevision
-    AkuSidecar = "0.9.1"
+    AkuSidecar = $releaseManifest.components.akuSidecar.version
     provider = $activeProvider
     preferenceAuthority = $sidecarConfig.preference.mode
     boundedLoadDefault = $sidecarConfig.capture.profile

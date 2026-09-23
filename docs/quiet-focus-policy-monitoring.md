@@ -1,6 +1,6 @@
 # Quiet capture focus policy monitoring
 
-AkuBridge is 0.9.2; the installed app and Sidecar remain 0.9.1. The new tuple is Chrome 0.9.2.0,
+AkuBridge is 0.9.2; the v0.9.0 RC8 installed app and Sidecar use 0.9.0. The new tuple is Chrome 0.9.2.0,
 runtime source-adapters-v111, policy quiet-containment-only-v2.
 Source changes do not establish that a running worker has loaded this tuple.
 

@@ -1,20 +1,20 @@
 {
   "schemaVersion": 2,
   "product": "AkuBrowser",
-  "version": "0.9.1",
+  "version": "0.9.0",
   "channel": "stable",
   "distribution": {
     "authorityRepository": "AkuBrowser",
     "windows": {
       "architecture": "x64",
       "format": "installed-app-installer",
-      "installer": "AkuBrowserSetup-0.9.1-windows-x64.exe",
+      "installer": "AkuBrowserSetup-0.9.0-windows-x64.exe",
       "trustState": "stable-unsigned",
       "dataDirectory": "%LOCALAPPDATA%\\AkuBrowser\\data",
       "profileDirectory": "%LOCALAPPDATA%\\AkuBrowser\\browser-profile"
     },
     "macos": {
-      "status": "deferred-after-0.9.1",
+      "status": "deferred-after-0.9.0",
       "architectures": [
         "x64",
         "arm64"
@@ -60,7 +60,7 @@
       "nativeHost": {
         "name": "com.akubrowser.runtime",
         "role": "internal-update-and-launch-helper",
-        "version": "0.9.1",
+        "version": "0.9.0",
         "protocolVersion": 2,
         "minimumProtocolVersion": 1
       }
@@ -79,8 +79,8 @@
       "installerBuilder": "scripts/build-windows-installed-app-installer.ps1",
       "installerStatus": "release-ready-unsigned",
       "signedInstaller": false,
-      "releaseAsset": "AkuBrowserSetup-0.9.1-windows-x64.exe",
-      "checksumAsset": "AkuBrowserSetup-0.9.1-windows-x64.exe.sha256",
+      "releaseAsset": "AkuBrowserSetup-0.9.0-windows-x64.exe",
+      "checksumAsset": "AkuBrowserSetup-0.9.0-windows-x64.exe.sha256",
       "database": {
         "currentSchemaVersion": 29,
         "acceptedInputSchemaVersions": [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29],
@@ -98,7 +98,7 @@
   },
   "components": {
     "akuSidecar": {
-        "version": "0.9.1",
+        "version": "0.9.0",
       "runtime": "go",
       "runtimeRevision": "source-adapters-v111",
       "update": {
@@ -185,7 +185,7 @@
   },
   "bundle": {
     "deployables": [
-      "AkuBrowserSetup-0.9.1-windows-x64.exe"
+      "AkuBrowserSetup-0.9.0-windows-x64.exe"
     ],
     "internalHelpers": [
       "Native Messaging Host for AkuSidecar launch and update handoff"

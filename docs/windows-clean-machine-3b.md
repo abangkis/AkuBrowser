@@ -1,13 +1,13 @@
 # Windows clean-machine Step 3B
 
-## Current v0.9.1 source candidate
+## Current v0.9.0 RC8 source candidate
 
-Run the installed-app checks below against a frozen v0.9.1 tuple. Read the
+Run the installed-app checks below against a frozen v0.9.0 RC8 tuple. Read the
 database schema and accepted input versions from that tuple's generated
 manifest; the source manifest is only a build input. Record a fresh install
 and an upgrade from a preserved-data fixture separately. For the capture split,
-complete the [graduation matrix](windows-capture-split-graduation.md) with the
-experimental flag enabled before changing its default. Attach the observed
+use the [graduation matrix](windows-capture-split-graduation.md) to record the
+remaining split-default evidence. Attach the observed
 process tree, reader activation, background batches, recovery, shutdown,
 rollback, and any covering-window samples to the acceptance receipt. An
 unchecked item remains unverified.

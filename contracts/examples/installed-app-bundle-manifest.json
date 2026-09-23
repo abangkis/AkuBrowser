@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "product": "AkuBrowser",
   "platform": "windows-x64",
-  "version": "0.9.1",
+  "version": "0.9.0",
   "chromiumVersion": "140.0.7339.185",
   "bridgeVersion": "0.9.2",
   "bridgeContract": "aku-browser.bridge.v2",

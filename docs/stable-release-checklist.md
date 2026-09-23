@@ -1,22 +1,29 @@
 # Stable release checklist
 
-The current source candidate is **v0.9.1 Windows x64**. Its exact Sidecar
+The current source candidate is **v0.9.0-rc.8 Windows x64**. Its exact Sidecar
 database schema and accepted input versions come from
 [`release-manifest.json`](../release/release-manifest.json) at the frozen source
-commit. Do not carry the v0.9.0 checkmarks below forward as v0.9.1 acceptance.
+commit. Do not carry historical v0.9.0 checkmarks or the v0.9.1 development
+canary forward as RC8 acceptance. Follow the [release version policy](release-version-policy.md)
+before changing the product line or creating a tag.
 Chrome Web Store publication remains frozen; macOS/Linux remain deferred.
 
-## v0.9.1 candidate gates
+## v0.9.0 RC8 candidate gates
 
 - [ ] Freeze clean AkuBrowser, AkuBridge, and AkuSidecar commits and reconcile
-      Bridge identity, Sidecar schema, source tuple, and release manifest.
+      Bridge identity, Sidecar schema, source tuple, and release manifest. The
+      product and Sidecar stay 0.9.0; Bridge 0.9.2 / Chrome 0.9.2.0 is a
+      separately versioned component.
+- [ ] Confirm `v0.9.0-rc.8` does not exist. Treat the existing `v0.9.0`
+      release/tag as immutable; do not overwrite it to promote RC8.
 - [ ] Build and verify one Windows installed-app tuple, installer, checksum,
       pinned Chromium, c2patool, reader broker, and production-app Bridge.
 - [ ] Complete [Windows clean-machine Step 3B](windows-clean-machine-3b.md),
-      including real fresh-install and upgrade database behavior.
-- [ ] Complete the separate [Windows capture split graduation](windows-capture-split-graduation.md)
-      gates before enabling split by default. Preserve the ordinary launch path
-      as an RC rollback option.
+      including real fresh-install and same-version upgrade database behavior;
+      record this as an open post-RC gate if no clean environment is available.
+- [ ] Record the open [Windows capture split graduation](windows-capture-split-graduation.md)
+      gates in RC notes. Split is already the source default; preserve the
+      ordinary launch path as an RC rollback option.
 - [ ] Reconcile the generated manifest, frozen SHAs, acceptance receipts, and
       release notes before publishing an installer and its checksum.
 

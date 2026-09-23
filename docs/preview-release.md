@@ -1,13 +1,15 @@
-# AkuBrowser v0.9.1 Windows release
+# AkuBrowser v0.9.0-rc.8 Windows release candidate
 
-Status: **v0.9.1 source candidate targeting stable, intentionally unsigned distribution**.
+Status: **v0.9.0-rc.8 source candidate, intentionally unsigned**.
+Use the [release version policy](release-version-policy.md) to reconcile the
+product, Sidecar, native host, and separately versioned Bridge before freeze.
 This document is the release guide for the Windows x64 single-installer path.
 The candidate is one installer
 `.exe` containing AkuBrowserLauncher, AkuSidecar, the internal AkuBridge
 payload, pinned Chromium, c2patool, configuration, and checksums. Code signing
 remains future hardening; clean-machine acceptance for this candidate is pending.
 
-Chrome Web Store publication is frozen and is not an active v0.9.1 path. The
+Chrome Web Store publication is frozen and is not an active v0.9.0 RC8 path. The
 candidate does not require system Chrome, Developer Mode, manual extension
 loading, or a separate runtime installer. macOS and Linux are deferred.
 
@@ -18,9 +20,9 @@ credential flow, and provider hot-swaps apply at an idle boundary. The current
 source manifest declares AkuSidecar schema 29 and accepts input schemas 7–29;
 this describes the source candidate, not a previously published installer.
 Freeze and verify the generated tuple before attributing this schema to a
-release asset. These are v0.9.1 capabilities and acceptance targets.
+release asset. These are v0.9.0 RC8 capabilities and acceptance targets.
 
-## v0.9.1 prerequisites and acceptance
+## v0.9.0 RC8 prerequisites and acceptance
 
 Before testing, obtain the installer, matching checksum, generated
 manifest, and frozen source-commit evidence. Use a clean Windows x64 machine
@@ -39,7 +41,7 @@ warnings; verify its published SHA-256 before running it.
 ## Historical 0.7.9 preview
 
 The sections below preserve the previous cross-platform Store/portable preview
-as historical evidence. They are not v0.9.1 instructions or release gates.
+as historical evidence. They are not v0.9.0 RC8 instructions or release gates.
 
 Windows has two coordinated delivery paths: the portable x64 ZIP remains the
 manual fallback, while the Chrome Web Store flow uses a user-scoped companion
