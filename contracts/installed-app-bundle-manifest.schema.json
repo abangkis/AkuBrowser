@@ -20,6 +20,7 @@
     "sidecarPath": { "$ref": "#/$defs/relativePath" },
     "configPath": { "$ref": "#/$defs/relativePath" },
     "chromiumPath": { "$ref": "#/$defs/relativePath" },
+    "windowsCaptureSplit": { "type": "boolean" },
     "bridgeExtensionPath": { "$ref": "#/$defs/relativePath" },
     "bridgeIdentity": {
       "type": "object",

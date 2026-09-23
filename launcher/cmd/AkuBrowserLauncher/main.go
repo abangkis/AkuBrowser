@@ -14,6 +14,7 @@ func main() {
 	installRoot := flag.String("install-root", "", "installed AkuBrowser root (defaults to the launcher directory)")
 	developmentWorkspace := flag.String("development-workspace", "", "development workspace containing AkuSupervisor")
 	verifyOnly := flag.Bool("verify-only", false, "verify the active tuple and exit without starting AkuSidecar")
+	legacySingleProcess := flag.Bool("legacy-single-process", false, "use the original single-Chromium launch path for this installed-app session")
 	flag.Parse()
 	ctx, cancel := launcher.SignalContext(context.Background())
 	defer cancel()
@@ -21,6 +22,7 @@ func main() {
 		InstallRoot:          *installRoot,
 		DevelopmentWorkspace: *developmentWorkspace,
 		VerifyOnly:           *verifyOnly,
+		LegacySingleProcess:  *legacySingleProcess,
 	})
 	if err == nil {
 		return

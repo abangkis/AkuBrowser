@@ -386,6 +386,7 @@ try {
         sidecarPath = "AkuSidecar.exe"
         configPath = "config/sidecar.json"
         chromiumPath = $chromiumExecutableRelative
+        windowsCaptureSplit = $true
         bridgeExtensionPath = "AkuBridge"
         bridgeIdentity = [ordered]@{
             profile = "production-app"

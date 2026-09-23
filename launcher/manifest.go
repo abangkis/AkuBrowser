@@ -82,6 +82,7 @@ type BundleManifest struct {
 	SidecarPath         string         `json:"sidecarPath"`
 	ConfigPath          string         `json:"configPath"`
 	ChromiumPath        string         `json:"chromiumPath"`
+	WindowsCaptureSplit bool           `json:"windowsCaptureSplit,omitempty"`
 	BridgeExtensionPath string         `json:"bridgeExtensionPath"`
 	BridgeIdentity      BridgeIdentity `json:"bridgeIdentity"`
 	Storage             StoragePolicy  `json:"storage"`
@@ -247,6 +248,16 @@ func (m BundleManifest) validate() error {
 	} {
 		if _, ok := seen[strings.ToLower(required)]; !ok {
 			return fmt.Errorf("required %s path %q is not declared in payload", label, required)
+		}
+	}
+	if m.WindowsCaptureSplit {
+		if m.Health.Port != 11122 {
+			return errors.New("Windows capture split requires loopback port 11122")
+		}
+		for _, required := range []string{"chromium/pin.json", "ui-reader-broker/manifest.json", "ui-reader-broker/content.js", "ui-reader-broker/service-worker.js", "aku-reader-broker.exe", "com.akubrowser.reader_activation.json"} {
+			if _, ok := seen[required]; !ok {
+				return fmt.Errorf("Windows capture split requires declared payload %q", required)
+			}
 		}
 	}
 	return nil
@@ -499,4 +510,17 @@ func (t Tuple) SidecarArgs(paths LaunchPaths) []string {
 		"--bridge-extension-origin", t.Manifest.BridgeIdentity.Origin,
 		"--browser-profile", paths.BrowserProfile,
 	}
+}
+
+func (t Tuple) SidecarRuntimeArgs(paths LaunchPaths, legacySingleProcess bool) []string {
+	args := t.SidecarArgs(paths)
+	if t.Manifest.WindowsCaptureSplit {
+		if legacySingleProcess {
+			// Override a leftover development environment opt-in as well.
+			args = append(args, "--experimental-windows-capture-split=false")
+		} else {
+			args = append(args, "--windows-capture-split")
+		}
+	}
+	return args
 }

@@ -1,8 +1,9 @@
 # Windows capture split graduation
 
-Status: **experimental; default off**. This is the acceptance record for
-promoting the Windows split UI/capture path. The source implementation and unit
-checks do not by themselves authorize changing the default. Use one frozen
+Status: **owner-approved default for new Windows tuples; packaging acceptance
+still open**. On 2026-09-23 the owner accepted the remaining development
+uncertainty and approved the launcher default change. This is the acceptance
+record for the Windows split UI/capture path. Use one frozen
 AkuBrowser/AkuBridge/AkuSidecar source tuple and record its full commit SHAs,
 generated installer hash, pinned UI Chromium hash, and database schema before
 starting. Keep the ordinary single-process launch available for rollback.
@@ -14,7 +15,7 @@ AkuBridge. Do not copy profiles, cookies, or credentials between them. See the
 [containment contract](../../AkuSidecar/docs/windows-capture-containment.md), and
 [reader-broker packaging contract](windows-reader-broker-packaging.md).
 
-## Evidence required before changing the default
+## Acceptance evidence and open gates
 
 | Gate | Evidence to record | Pass condition |
 | --- | --- | --- |
@@ -29,8 +30,9 @@ AkuBridge. Do not copy profiles, cookies, or credentials between them. See the
 Treat missing observations as **unverified**, not passed. The clean-machine
 installer/upgrade checks belong to the current [Step 3B](windows-clean-machine-3b.md)
 lane. A development-runtime canary may establish a narrower fact, but cannot
-substitute for packaged install/upgrade evidence. Do not switch the default or
-publish an RC with a failed or unverified required gate. Record screenshots and
+substitute for packaged install/upgrade evidence. The owner approved changing
+the source default with these gaps visible; release publication remains a
+separate decision. Record screenshots and
 bounded telemetry with the acceptance artifact; do not include post bodies,
 URLs, cookies, or credentials.
 
@@ -105,7 +107,8 @@ the tuple and installer verifiers passed, and the installer SHA-256 is recorded
 in the development receipt. This proves package structure and hashes, not
 installation or upgrade behavior. Repeated
 visible-workflow acceptance, live automatic startup recovery, capture host UX,
-and packaged shutdown/rollback checks also remain open. The split
-stays experimental until an acceptance record closes each gate above. The
+and packaged shutdown/rollback checks also remain open. The split is now the
+source default for new Windows tuples, while these acceptance gaps remain
+explicitly open. The
 [development canary receipt](../acceptance/windows-capture-split-dev-2026-09-23.json)
 records the current failed and unverified gates without post content or URLs.

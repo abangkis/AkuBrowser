@@ -41,6 +41,64 @@ func TestLoadActiveTupleValidFixtureAndArguments(t *testing.T) {
 	if strings.Join(args, "\x00") != strings.Join(want, "\x00") {
 		t.Fatalf("args=%q want=%q", args, want)
 	}
+	if got := tuple.SidecarRuntimeArgs(paths, false); got[len(got)-1] != "--windows-capture-split" {
+		t.Fatalf("split runtime args=%q", got)
+	}
+	if got := tuple.SidecarRuntimeArgs(paths, true); got[len(got)-1] != "--experimental-windows-capture-split=false" {
+		t.Fatalf("rollback runtime args=%q", got)
+	}
+}
+
+func TestLegacyTupleKeepsOriginalLaunchPath(t *testing.T) {
+	root := writeFixture(t)
+	manifestPath := filepath.Join(root, "runtime", "versions", "1.2.3", manifestFileName)
+	var manifest BundleManifest
+	readJSON(t, manifestPath, &manifest)
+	manifest.WindowsCaptureSplit = false
+	versionRoot := filepath.Dir(manifestPath)
+	legacyPayload := make([]PayloadFile, 0, len(manifest.Payload))
+	for _, file := range manifest.Payload {
+		if strings.HasPrefix(file.Path, "ui-reader-broker/") || file.Path == "aku-reader-broker.exe" || file.Path == "com.akubrowser.reader_activation.json" {
+			if err := os.Remove(filepath.Join(versionRoot, filepath.FromSlash(file.Path))); err != nil {
+				t.Fatal(err)
+			}
+			continue
+		}
+		legacyPayload = append(legacyPayload, file)
+	}
+	if err := os.Remove(filepath.Join(versionRoot, "ui-reader-broker")); err != nil {
+		t.Fatal(err)
+	}
+	manifest.Payload = legacyPayload
+	writeJSON(t, manifestPath, manifest)
+	tuple, err := LoadActiveTuple(root)
+	if err != nil {
+		t.Fatal(err)
+	}
+	paths, err := tuple.LaunchPaths(filepath.Join(filepath.Dir(root), "local-app-data"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := tuple.SidecarRuntimeArgs(paths, false); strings.Contains(strings.Join(got, " "), "--windows-capture-split") {
+		t.Fatalf("legacy tuple unexpectedly enabled split: %q", got)
+	}
+}
+
+func TestSplitTupleRequiresBrokerPayload(t *testing.T) {
+	root := writeFixture(t)
+	manifestPath := filepath.Join(root, "runtime", "versions", "1.2.3", manifestFileName)
+	var manifest BundleManifest
+	readJSON(t, manifestPath, &manifest)
+	for index, file := range manifest.Payload {
+		if file.Path == "ui-reader-broker/manifest.json" {
+			manifest.Payload = append(manifest.Payload[:index], manifest.Payload[index+1:]...)
+			break
+		}
+	}
+	writeJSON(t, manifestPath, manifest)
+	if _, err := LoadActiveTuple(root); err == nil || !strings.Contains(err.Error(), "requires declared payload") {
+		t.Fatalf("missing broker payload was accepted: %v", err)
+	}
 }
 
 func TestLaunchPathsRejectInstallRootStorage(t *testing.T) {
@@ -160,10 +218,19 @@ func writeFixture(t *testing.T) string {
 		}
 	}
 	files := map[string][]byte{
-		"AkuSidecar.exe":          []byte("sidecar-fixture"),
-		"config/sidecar.json":     []byte(`{"version":1}`),
-		"chromium/chrome.exe":     []byte("chromium-fixture"),
-		"AkuBridge/manifest.json": []byte(`{"manifest_version":3}`),
+		"AkuSidecar.exe":                        []byte("sidecar-fixture"),
+		"config/sidecar.json":                   []byte(`{"version":1}`),
+		"chromium/chrome.exe":                   []byte("chromium-fixture"),
+		"chromium/pin.json":                     []byte(`{"schemaVersion":1}`),
+		"AkuBridge/manifest.json":               []byte(`{"manifest_version":3}`),
+		"ui-reader-broker/manifest.json":        []byte(`{"manifest_version":3}`),
+		"ui-reader-broker/content.js":           []byte("content-fixture"),
+		"ui-reader-broker/service-worker.js":    []byte("worker-fixture"),
+		"aku-reader-broker.exe":                 []byte("reader-fixture"),
+		"com.akubrowser.reader_activation.json": []byte(`{"name":"com.akubrowser.reader_activation"}`),
+	}
+	if err := os.MkdirAll(filepath.Join(versionRoot, "ui-reader-broker"), 0o700); err != nil {
+		t.Fatal(err)
 	}
 	files["AkuBridge/manifest.json"] = []byte(`{"manifest_version":3,"key":"` + fixturePublicKey + `","version":"1.2.3.0","version_name":"1.2.3"}`)
 	payload := make([]PayloadFile, 0, len(files))
@@ -186,6 +253,7 @@ func writeFixture(t *testing.T) string {
 		SidecarPath:         "AkuSidecar.exe",
 		ConfigPath:          "config/sidecar.json",
 		ChromiumPath:        "chromium/chrome.exe",
+		WindowsCaptureSplit: true,
 		BridgeExtensionPath: "AkuBridge",
 		BridgeIdentity: BridgeIdentity{
 			Profile:            "production-app",

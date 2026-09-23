@@ -22,6 +22,7 @@ type RunOptions struct {
 	InstallRoot          string
 	DevelopmentWorkspace string
 	VerifyOnly           bool
+	LegacySingleProcess  bool
 }
 
 const (
@@ -47,8 +48,8 @@ func DefaultInstallRoot() (string, error) {
 
 func Run(ctx context.Context, options RunOptions) error {
 	if workspace := strings.TrimSpace(options.DevelopmentWorkspace); workspace != "" {
-		if options.InstallRoot != "" || options.VerifyOnly {
-			return errors.New("--development-workspace cannot be combined with --install-root or --verify-only")
+		if options.InstallRoot != "" || options.VerifyOnly || options.LegacySingleProcess {
+			return errors.New("--development-workspace cannot be combined with --install-root, --verify-only, or --legacy-single-process")
 		}
 		if err := setCurrentApplicationID(developmentApplicationID); err != nil {
 			return err
@@ -98,19 +99,19 @@ func Run(ctx context.Context, options RunOptions) error {
 	if !proceed {
 		return nil
 	}
-	return runSidecar(ctx, tuple, paths)
+	return runSidecar(ctx, tuple, paths, options.LegacySingleProcess)
 }
 
-func runSidecar(ctx context.Context, tuple Tuple, paths LaunchPaths) error {
+func runSidecar(ctx context.Context, tuple Tuple, paths LaunchPaths, legacySingleProcess bool) error {
 	controlToken, err := newControlToken()
 	if err != nil {
 		return fmt.Errorf("create runtime control token: %w", err)
 	}
-	relaunchCommand, err := installedRelaunchCommand(tuple.InstallRoot)
+	relaunchCommand, err := installedRelaunchCommand(tuple.InstallRoot, legacySingleProcess)
 	if err != nil {
 		return err
 	}
-	args := append(tuple.SidecarArgs(paths),
+	args := append(tuple.SidecarRuntimeArgs(paths, legacySingleProcess),
 		"--app-user-model-id", installedApplicationID,
 		"--app-relaunch-command", relaunchCommand,
 		"--app-relaunch-display-name", "AkuBrowser",
@@ -190,15 +191,15 @@ func runDevelopmentSupervisor(ctx context.Context, workspace string) error {
 	return nil
 }
 
-func installedRelaunchCommand(installRoot string) (string, error) {
+func installedRelaunchCommand(installRoot string, legacySingleProcess bool) (string, error) {
 	executable, err := os.Executable()
 	if err != nil {
 		return "", fmt.Errorf("resolve launcher executable for relaunch: %w", err)
 	}
-	return installedRelaunchCommandForExecutable(executable, installRoot)
+	return installedRelaunchCommandForExecutable(executable, installRoot, legacySingleProcess)
 }
 
-func installedRelaunchCommandForExecutable(executable, installRoot string) (string, error) {
+func installedRelaunchCommandForExecutable(executable, installRoot string, legacySingleProcess bool) (string, error) {
 	quotedExecutable, err := quoteWindowsCommandArgument(executable)
 	if err != nil {
 		return "", err
@@ -207,13 +208,20 @@ func installedRelaunchCommandForExecutable(executable, installRoot string) (stri
 	// omitted. Avoid repeating a potentially long install path in the Windows
 	// relaunch property, which can make app-shell identity setup fail.
 	if strings.EqualFold(filepath.Clean(filepath.Dir(executable)), filepath.Clean(installRoot)) {
+		if legacySingleProcess {
+			return quotedExecutable + " --legacy-single-process", nil
+		}
 		return quotedExecutable, nil
 	}
 	quotedRoot, err := quoteWindowsCommandArgument(installRoot)
 	if err != nil {
 		return "", err
 	}
-	return quotedExecutable + " --install-root " + quotedRoot, nil
+	result := quotedExecutable + " --install-root " + quotedRoot
+	if legacySingleProcess {
+		result += " --legacy-single-process"
+	}
+	return result, nil
 }
 
 func quoteWindowsCommandArgument(value string) (string, error) {

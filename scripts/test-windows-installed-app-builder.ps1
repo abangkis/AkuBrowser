@@ -62,6 +62,7 @@ $manifestPath = Join-Path $ArtifactDirectory ([string]$current.manifestPath).Rep
 Assert-True ([IO.Path]::GetFullPath($manifestPath) -eq [IO.Path]::GetFullPath((Join-Path $versionRoot "manifest.json"))) "Active pointer does not select the version manifest."
 $manifest = Read-Json $manifestPath
 Assert-True ($manifest.schemaVersion -eq 1 -and $manifest.product -eq "AkuBrowser" -and $manifest.platform -eq "windows-x64") "Bundle manifest identity is unexpected."
+Assert-True ($manifest.windowsCaptureSplit -eq $true -and $manifest.health.port -eq 11122) "New Windows bundle must select capture split on the Bridge loopback port."
 Assert-True ($manifest.version -eq $current.version) "Active pointer and bundle manifest versions differ."
 Assert-True ($manifest.bridgeIdentity.profile -eq "production-app" -and $manifest.bridgeIdentity.distribution -eq "installed-app") "Bundle manifest Bridge identity is not production-app installed-app."
 Assert-True ($manifest.bridgeIdentity.runtimeLifecycle -eq "managed" -and $manifest.bridgeIdentity.runtimeAcquisition -eq "bundled-installer") "Bundle manifest Bridge lifecycle metadata is unexpected."

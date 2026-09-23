@@ -24,6 +24,14 @@ AkuBridge payload. It does not use system Chrome, Chrome Web Store installation,
 Developer Mode, or a separately installed companion runtime. AkuSupervisor is
 development-only. macOS and Linux are deferred from v0.9.0.
 
+New Windows tuples declare `windowsCaptureSplit: true` and start separate
+capture and UI Chromium processes by default. Older tuples without that
+capability keep their original launch path. For a scoped rollback, start
+`AkuBrowserLauncher.exe --legacy-single-process` after closing AkuBrowser.
+The launcher passes this choice through the app-shell relaunch command; it
+does not copy or delete either browser profile. This is a launcher option,
+not a user-facing capture visibility setting.
+
 Development app-shell windows use the separate
 `AI4U.AkuBrowser.Development` identity. Their relaunch command calls the same
 launcher with `--development-workspace <root>`, and the launcher delegates the

@@ -1,11 +1,14 @@
-# Windows headful capture split (experimental, default off)
+# Windows headful capture split
 
-Enable only in an explicitly selected test run with Sidecar's
-`--app-shell --experimental-windows-capture-split`, or inherit
-`AKUBROWSER_EXPERIMENTAL_WINDOWS_CAPTURE_SPLIT=1` into the normal launcher.
-The loopback port must be 11122. No installed runtime is switched by building
-the code. On macOS/Linux the flag is ignored and the existing single-process
-launch/extension path is retained. Normal Windows launches remain unchanged.
+New installed Windows tuples declare `windowsCaptureSplit: true`; their launcher
+passes `--windows-capture-split` by default. Older tuples remain on the original
+launch path. Start the installed launcher with `--legacy-single-process` after
+normal shutdown to use the original path with the same data and capture profile.
+The development `--experimental-windows-capture-split` flag and environment
+variable remain accepted as compatibility aliases. The loopback port must be
+11122. macOS/Linux retain the existing launch/extension path. A source change
+alone does not switch an already installed runtime; a verified new tuple must
+be installed and activated.
 
 The original `--browser-profile` (or runtime `app-profile`) stays exclusively
 owned by capture Chromium. Source cookies, sign-ins and extension permissions
@@ -23,7 +26,7 @@ verifies Job Object membership, requests `SW_SHOWMINNOACTIVE` once, and verifies
 `IsIconic`. Unverified minimization aborts capture launch and cleans up its
 owned tree. There is no `SetForegroundWindow`, normal-show request, or change
 to unrelated windows. Chromium may display/promote its window before this
-observation; the experiment does **not** promise zero startup focus changes.
+observation; the implementation does **not** promise zero startup focus changes.
 `--start-minimized` is not assumed to exist. `--no-startup-window` was not used:
 an MV3 worker alone is not a verified browser-lifetime guarantee here.
 
@@ -94,14 +97,14 @@ bounded queue, typed worker dispatch, reader-broker authorization, containment,
 and epoch mismatch. It does not establish real Chromium lifetime or focus
 behavior. Development acceptance has observed healthy split Bridge readiness,
 background batches without focus writes, and explicit native-post foreground
-readback. Graduation still requires a fresh installed tuple and upgrade,
-repeated normal batches while another app is in use, clean shutdown with no
-orphan processes, a live automatic white-screen recovery, and a decision on
-the visible capture-host window. Record capture and app-shell outcomes
-separately; retain the legacy launch path as a rollback switch for the first RC.
+readback. The owner approved the Windows source default after development
+canaries, while packaged fresh install and upgrade, live automatic white-screen
+recovery, and capture-host UX remain unverified. Record capture and app-shell
+outcomes separately; retain the legacy launch path as a rollback switch.
 
-Fallback reference: `pre-headful-capture-split-2026-09-21`. To stop experimenting,
-launch without the flag/environment variable after normal shutdown. The original
-authenticated profile resumes the ordinary single-process role; the separate UI
-profile is left intact. No profile deletion, copy-back, or automatic Git reset
-is part of fallback.
+Fallback reference: `pre-headful-capture-split-2026-09-21`. For an installed
+split tuple, use `AkuBrowserLauncher.exe --legacy-single-process` after normal
+shutdown. For a development launch, omit both split flags and the compatibility
+environment variable. The original authenticated profile resumes the ordinary
+single-process role; the separate UI profile is left intact. No profile
+deletion, copy-back, or automatic Git reset is part of fallback.
