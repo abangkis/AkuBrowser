@@ -9,7 +9,7 @@
     "uiProfile": "isolated-ui-split-cft",
     "uiBrowser": "pinned-chrome-for-testing"
   },
-  "liveIdentityReadback": {
+  "preRestartIdentityReadback": {
     "uiRootPid": 22136,
     "captureRootPid": 23852,
     "sameSidecarParent": true,
@@ -20,6 +20,26 @@
     "captureExtension": "AkuBridge",
     "captureHostVisibleAndMinimized": true,
     "scope": "development-runtime-readback; Job Object separation and packaged first launch not independently verified"
+  },
+  "packagedCandidate": {
+    "version": "0.9.1",
+    "sourceCommits": {
+      "akuBrowser": "7b1d693374a9b0162bf969759a3a53ec8135a8d0",
+      "akuSidecar": "4b74396a07ab2388be7bfefaf086cb21f6e750ab",
+      "akuBridge": "d36fda48b39c21cb64579c0c5b995fea6421320a"
+    },
+    "sourceDirty": false,
+    "databaseSchema": 29,
+    "acceptedInputSchemas": "7-29",
+    "pinnedUiChromiumVersion": "152.0.7977.54",
+    "pinnedUiExecutableSha256": "b0123437c55a3893e8988328f576ffcbe68cee7743d3653ffe865c73633b1ef4",
+    "installerPath": "artifacts/schema29-candidate-20260923/installer/AkuBrowserSetup-0.9.1-windows-x64.exe",
+    "installerBytes": 161914520,
+    "installerSha256": "142428565aac41eeb3fcd1ad958808e64fe18e71af94cd752b0f76f880edb903",
+    "tupleBuilder": "passed",
+    "tupleVerifier": "passed",
+    "installerVerifier": "passed",
+    "scope": "local package structure and hashes; no fresh install or upgrade run"
   },
   "developmentShutdownReadback": {
     "path": "Supervisor normal Sidecar stop during idle development rebuild",

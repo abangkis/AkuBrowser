@@ -66,7 +66,12 @@ Supervisor's normal Sidecar stop: it sent a graceful signal, reported no forced
 termination, and found no owned PIDs afterward. The rebuilt runtime returned
 healthy on schema 29. Separate UI-close and capture-root-close shutdown runs,
 and packaged rollback, remain unverified. No clean Windows x64 VM/account is
-currently available for fresh install and upgrade acceptance. Repeated
+currently available for fresh install and upgrade acceptance. A local
+v0.9.1 installed-app tuple and unsigned installer were built from clean
+AkuBrowser `7b1d693`, AkuSidecar `4b74396`, and AkuBridge `d36fda4` commits;
+the tuple and installer verifiers passed, and the installer SHA-256 is recorded
+in the development receipt. This proves package structure and hashes, not
+installation or upgrade behavior. Repeated
 visible-workflow acceptance, live automatic startup recovery, capture host UX,
 shutdown/orphan checks, and packaged rollback also remain open. The split
 stays experimental until an acceptance record closes each gate above. The
