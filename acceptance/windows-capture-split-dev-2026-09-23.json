@@ -49,7 +49,31 @@
     "restartHealth": "ok",
     "restartDatabaseSchema": 29,
     "restartDatabaseHealth": "healthy",
-    "scope": "one normal Sidecar-stop scenario; separate UI-close, capture-root-close, and packaged rollback scenarios remain unverified"
+    "scope": "one normal Sidecar-stop scenario; see developmentLifecycleCanary for later UI-close, capture-host-close, and ordinary-path rollback results; packaged rollback remains unverified"
+  },
+  "developmentLifecycleCanary": {
+    "preTestBackup": {
+      "path": "AkuSidecar/runtime/backups/pre-capture-split-lifecycle-20260923T010620Z.db",
+      "bytes": 41848832,
+      "sha256": "8f01018d75e484920e38669cff57efa3bfc04fbe2a08e828b04eb9911e0c5790",
+      "integrityCheck": "ok",
+      "timelineItems": 277
+    },
+    "uiClose": "WM_CLOSE sent to the sole visible Chrome_WidgetWin_1 owned by the UI root after idle readback; five seconds later Sidecar, both Chromium trees, reader broker and port 11122 had zero owned processes/listeners.",
+    "captureHostClose": "After a healthy split restart, WM_CLOSE sent to the sole capture-host titled Chrome_WidgetWin_1 owned by the capture root; five seconds later Sidecar, both Chromium trees, reader broker and port 11122 had zero owned processes/listeners.",
+    "ordinaryPathRollback": "After an idle split shutdown, the same development Sidecar binary started with split and UI-path arguments removed. One Chrome root used the original profile, schema 29 and SQLite quick_check were healthy, 277 Timeline items were retained, and the exact Bridge build became compatible with all four granted sources. One four-source comparison batch completed. This is a development-path rollback, not a packaged installer rollback.",
+    "ordinaryPathComparison": {
+      "sessionDurationSeconds": 71.48,
+      "sourceResults": {"facebook": "completed", "instagram": "completed", "linkedin": "completed", "x": "completed"},
+      "quality": {"facebook": "usable_degraded", "instagram": "usable_degraded", "linkedin": "complete", "x": "complete"},
+      "scope": "one same-day ordinary-path sample; cannot establish duration or source-quality parity by itself"
+    },
+    "configurationRestore": {
+      "sha256BeforeAndAfter": "d7478fd0c65ba066e536bcb84fb7c1f6f357ed39e25d3364565a68d059afcfa6",
+      "exactBytesRestored": true,
+      "splitRuntimeRestored": "healthy-schema29-bridge-compatible-two-distinct-profiles"
+    },
+    "captureHostStartup": "One split restart readback found the capture-host window visible but not minimized; the later restoration restart found the host visible and minimized. No source of the first state was proven. Packaged startup and noninterference remain unverified."
   },
   "backgroundBatches": [
     {
@@ -91,15 +115,78 @@
       "result": "clean-background-canary-passed",
       "sourceResults": {"facebook": "completed", "instagram": "completed", "linkedin": "completed", "x": "completed"},
       "evidence": "UI remained open while an external window held foreground before capture. Across 150 seconds the probe sampled capture=0 and UI=0, with 1473 samples on external windows. Sixteen native traces had no capture-foreground classification, Bridge attempted zero focused writes, and the split action audit had no new action."
+    },
+    {
+      "windowUTC": "2026-09-23T00:39:31Z/2026-09-23T00:41:11Z",
+      "result": "ui-foreground-overlapped-user-interaction",
+      "sourceResults": {"facebook": "completed", "instagram": "completed", "linkedin": "completed", "x": "completed"},
+      "evidence": "The 150-second probe sampled UI foreground 202 times. The user later corrected their answer and confirmed interacting with AkuBrowser during the 00:39–00:45 UTC tests. Ordinary UI clicks are outside the open_native_post audit; this batch is excluded from clean-background acceptance."
+    },
+    {
+      "windowUTC": "2026-09-23T00:42:09Z/2026-09-23T00:43:40Z",
+      "result": "ui-foreground-overlapped-user-interaction",
+      "sourceResults": {"facebook": "completed", "instagram": "completed", "linkedin": "completed", "x": "completed"},
+      "evidence": "The 150-second probe sampled UI foreground 260 times. The user confirmed interacting with AkuBrowser during this interval; this batch is excluded from clean-background acceptance. One native trace classified an AkuBrowser window above unchanged external focus, without a Bridge focused write."
+    },
+    {
+      "windowUTC": "2026-09-23T00:44:47Z/2026-09-23T00:46:11Z",
+      "result": "ui-foreground-unattributed-excluded",
+      "sourceResults": {"facebook": "completed", "instagram": "completed", "linkedin": "completed", "x": "completed"},
+      "evidence": "The 150-second probe sampled UI foreground 311 times, mainly after the session completed. The user confirmed interacting with AkuBrowser during the 00:39–00:45 UTC tests but did not establish the precise cause of this later focus interval. This batch is excluded from clean-background acceptance."
+    },
+    {
+      "windowUTC": "2026-09-23T00:49:26Z/2026-09-23T00:51:01Z",
+      "result": "clean-background-canary-passed",
+      "sourceResults": {"facebook": "completed", "instagram": "completed", "linkedin": "completed", "x": "completed"},
+      "evidence": "The 150-second probe kept all 1494 samples on the external foreground app, with capture=0 and UI=0. Thirteen native traces had no capture-foreground or covering classification; Bridge attempted zero focused writes and the split action audit had no action. Session duration was 94.75 seconds."
+    },
+    {
+      "windowUTC": "2026-09-23T00:52:05Z/2026-09-23T00:53:34Z",
+      "result": "clean-background-canary-passed",
+      "sourceResults": {"facebook": "completed", "instagram": "completed", "linkedin": "completed", "x": "completed"},
+      "evidence": "The 150-second probe kept all 1495 samples on the external foreground app, with capture=0 and UI=0. Seventeen native traces included two no_unchanged_focus_covering_signature classifications and no positive covering or capture-foreground classification; Bridge attempted zero focused writes and the split action audit had no action. Session duration was 89.73 seconds."
+    },
+    {
+      "windowUTC": "2026-09-23T00:54:43Z/2026-09-23T00:56:07Z",
+      "result": "excluded-external-app-switch",
+      "sourceResults": {"facebook": "completed", "instagram": "completed", "linkedin": "completed", "x": "completed"},
+      "evidence": "The user confirmed switching apps or using the taskbar. Probe sampled UI foreground for 1.9 seconds at 00:56:31 UTC after the session ended, then Windows Explorer became foreground. This interval is excluded from clean-background acceptance."
+    },
+    {
+      "windowUTC": "2026-09-23T00:58:25Z/2026-09-23T00:59:56Z",
+      "result": "clean-background-canary-passed",
+      "sourceResults": {"facebook": "completed", "instagram": "completed", "linkedin": "completed", "x": "completed"},
+      "evidence": "The 150-second probe kept all 1496 samples on the external foreground app, with capture=0 and UI=0. Thirteen native traces had no capture-foreground or covering classification; Bridge attempted zero focused writes and the split action audit had no action. Session duration was 90.26 seconds."
     }
   ],
   "gates": {
-    "startupAndProfileIsolation": "partial-live-readback",
-    "backgroundNonactivation": "unverified-two-of-five-clean-batches",
-    "foregroundAttribution": "two-recent-batches-attributed-to-confirmed-user-action; older-traces-unresolved",
+    "startupAndProfileIsolation": "partial-live-readback; capture-host-not-minimized-on-one-restart",
+    "backgroundNonactivation": "five-of-five-clean-development-batches; quality-parity-unverified",
+    "foregroundAttribution": "two-recent-batches-overlap-confirmed-user-interaction; one-later-ui-foreground-interval-and-older-traces-unresolved",
     "freshInstallAndUpgrade": "unverified-no-clean-environment",
     "explicitReaderAndRecovery": "partial-explicit-reader-accepted; recovery-unverified",
-    "shutdownAndRollback": "partial-normal-sidecar-stop; other-shutdown-and-rollback-unverified"
+    "shutdownAndRollback": "development-ui-close-capture-close-normal-stop-and-ordinary-path-rollback-passed; packaged-unverified"
+  },
+  "fiveBatchSummary": {
+    "allFourSourcesCompleted": true,
+    "sessionDurationSeconds": [119.81, 87.13, 94.75, 89.73, 90.26],
+    "foregroundProbeSecondsPerBatch": 150,
+    "captureForegroundSamples": 0,
+    "uiForegroundSamples": 0,
+    "bridgeFocusedWriteAttempts": 0,
+    "splitActionsDuringSessions": 0,
+    "bridgeReadbackAfterBatches": "healthy-compatible",
+    "qualityReadback": "Facebook and Instagram remained usable_degraded as in the first two clean batches; LinkedIn remained complete; X was usable_degraded in one of the three added clean batches and complete in the other four. This development series alone cannot establish parity with an ordinary non-split baseline."
+  },
+  "captureDurationComparison": {
+    "xFirstRoundSourceReadinessWaitMsSplit": [12067, 12041, 12115, 12080, 12147],
+    "xFirstRoundSourceReadinessWaitMsOrdinary": 1830,
+    "xFirstRoundSplitVisualHydrationReady": [false, false, false, false, false],
+    "xFirstRoundSplitCaptureWindowState": "minimized",
+    "xFirstRoundOrdinaryVisualHydrationReady": true,
+    "xFirstRoundOrdinaryCaptureWindowState": "normal",
+    "diagnosis": "X readiness requires visual hydration during round 1. With external focus, split containment keeps the capture window minimized; all five samples exhausted the 12000 ms hydration wait while feed readiness succeeded. The ordinary-path sample reached visual readiness with a visible document in 1830 ms. This is a visual-readiness timeout, not measured transport latency.",
+    "scope": "Five split batches versus one same-day ordinary-path batch on the same original profile. Shortening the wait could admit incomplete media, while restoring the window could violate quiet focus. A validated policy and repeated comparison are needed before claiming performance parity."
   },
   "decision": "keep-experimental-default-off"
 }

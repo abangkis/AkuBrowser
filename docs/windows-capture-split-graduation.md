@@ -60,12 +60,44 @@ classification, Bridge attempted zero focused writes, and the split-action
 audit contained no new action. A second batch at 00:11–00:13 UTC kept the UI
 open while another application held foreground; it also completed all four
 sources, with capture=0 and UI=0 across 150 seconds, no focused write, and no
-new explicit-action audit row. These are two of the five required ordinary
-background batches, not a complete gate. One idle development restart used
-Supervisor's normal Sidecar stop: it sent a graceful signal, reported no forced
-termination, and found no owned PIDs afterward. The rebuilt runtime returned
-healthy on schema 29. Separate UI-close and capture-root-close shutdown runs,
-and packaged rollback, remain unverified. No clean Windows x64 VM/account is
+new explicit-action audit row. Three further clean batches at 00:49–00:51,
+00:52–00:54, and 00:58–01:00 UTC each completed all four sources with the UI
+open, no capture or UI foreground probe sample, no focused write, and no
+split-action audit row. Thus five ordinary development-runtime background
+batches meet the repeated nonactivation sample count. Their session durations
+were 119.81, 87.13, 94.75, 89.73, and 90.26 seconds. Facebook and Instagram
+were `usable_degraded` in all five, matching the first two clean batches;
+LinkedIn was `complete` throughout; X was `usable_degraded` in one later batch
+and `complete` in the other four. This series does not prove quality parity
+against a contemporary ordinary-path baseline. Other attempted batches were
+excluded after UI interaction or an external app switch; see the development
+receipt for the exact windows and attribution limits. The bounded
+[foreground probe samples](../acceptance/windows-capture-split-foreground-probes-2026-09-23.json)
+retain seven later attempts with session/run status, native classifications,
+focused-write counts, and foreground transitions, without captured content.
+
+One idle development restart used Supervisor's normal Sidecar stop: it sent a
+graceful signal, reported no forced termination, and found no owned PIDs
+afterward. Separate development-runtime UI-close and capture-host-close runs
+also ended Sidecar, both Chromium trees, reader broker, and the port without
+orphan processes. An ordinary-path rollback used the same Sidecar binary,
+original browser profile, and schema-29 data after normal split shutdown. It
+started one Chrome root, retained 277 Timeline items, passed SQLite
+`quick_check`, and returned a compatible Bridge with access to all four sources.
+Its four-source comparison batch completed in 71.48 seconds with Facebook and
+Instagram `usable_degraded` and LinkedIn and X `complete`. One ordinary-path
+sample does not establish duration parity. X first-round source readiness
+waited about 12 seconds in each split batch versus 1.83 seconds in this one
+ordinary-path sample. The five split windows were minimized with incomplete
+visual hydration; the ordinary-path window was normal and visually ready.
+The current X readiness policy waits up to 12 seconds for hydrated media, then
+allows a `feed_ready` capture. Shortening that wait may admit incomplete media;
+restoring the capture window may violate quiet focus. This tradeoff needs a
+validated policy and repeated comparison. The original Supervisor
+configuration was restored byte-for-byte and split mode returned healthy.
+One split restart exposed the capture host visible but not minimized; a later
+restart showed it minimized. The cause is unresolved, so startup-host behavior
+remains an open gate. Packaged rollback is still unverified. No clean Windows x64 VM/account is
 currently available for fresh install and upgrade acceptance. A local
 v0.9.1 installed-app tuple and unsigned installer were built from clean
 AkuBrowser `7b1d693`, AkuSidecar `4b74396`, and AkuBridge `d36fda4` commits;
@@ -73,7 +105,7 @@ the tuple and installer verifiers passed, and the installer SHA-256 is recorded
 in the development receipt. This proves package structure and hashes, not
 installation or upgrade behavior. Repeated
 visible-workflow acceptance, live automatic startup recovery, capture host UX,
-shutdown/orphan checks, and packaged rollback also remain open. The split
+and packaged shutdown/rollback checks also remain open. The split
 stays experimental until an acceptance record closes each gate above. The
 [development canary receipt](../acceptance/windows-capture-split-dev-2026-09-23.json)
 records the current failed and unverified gates without post content or URLs.

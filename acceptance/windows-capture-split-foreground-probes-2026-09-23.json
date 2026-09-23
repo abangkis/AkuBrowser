@@ -1,0 +1,438 @@
+{
+  "schemaVersion": 1,
+  "scope": "Development-runtime foreground probes only; no post bodies, URLs, credentials, or screenshots",
+  "sourceCommits": {
+    "akuBrowser": "8133766ce1673ca560e6b8d21c4a3b7c5ec2852c",
+    "akuSidecar": "4b74396a07ab2388be7bfefaf086cb21f6e750ab",
+    "akuBridge": "d36fda48b39c21cb64579c0c5b995fea6421320a"
+  },
+  "captureRootPid": 35424,
+  "uiRootPid": 7948,
+  "attempts": [
+    {
+      "probeStartedAt": "2026-09-23T00:39:31.538Z",
+      "probeEndedAt": "2026-09-23T00:42:01.698Z",
+      "probeSeconds": 150.08,
+      "initialForegroundPid": 34324,
+      "foregroundSamples": 1496,
+      "foregroundCounts": {
+        "external": 1294,
+        "ui": 202
+      },
+      "session": {
+        "id": "session_624361d0c0d7a8cea99a19834c9e32ea",
+        "status": "completed",
+        "createdAt": "2026-09-23T00:39:31.6197196Z",
+        "completedAt": "2026-09-23T00:41:11.4557314Z"
+      },
+      "runs": [
+        {
+          "source": "facebook",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:39:31.6203938Z",
+          "completedAt": "2026-09-23T00:40:08.4308172Z"
+        },
+        {
+          "source": "instagram",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:40:00.9516252Z",
+          "completedAt": "2026-09-23T00:40:03.0964317Z"
+        },
+        {
+          "source": "linkedin",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:40:03.0937432Z",
+          "completedAt": "2026-09-23T00:40:17.5311709Z"
+        },
+        {
+          "source": "x",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:40:03.0985079Z",
+          "completedAt": "2026-09-23T00:40:55.3087993Z"
+        }
+      ],
+      "nativeTraceCount": 15,
+      "nativeClassifications": {
+        "insufficient_evidence": 15
+      },
+      "nativeStatuses": {
+        "available": 15
+      },
+      "focusedWriteAttempts": 0,
+      "focusEventCount": 21,
+      "splitActionAudit": [],
+      "disposition": "excluded-ui-interaction"
+    },
+    {
+      "probeStartedAt": "2026-09-23T00:42:09.711Z",
+      "probeEndedAt": "2026-09-23T00:44:39.905Z",
+      "probeSeconds": 150.03,
+      "initialForegroundPid": 34324,
+      "foregroundSamples": 1495,
+      "foregroundCounts": {
+        "external": 1235,
+        "ui": 260
+      },
+      "session": {
+        "id": "session_9f55531e8dc3b6eed5b012fea96c73dd",
+        "status": "completed",
+        "createdAt": "2026-09-23T00:42:09.8671957Z",
+        "completedAt": "2026-09-23T00:43:40.0144854Z"
+      },
+      "runs": [
+        {
+          "source": "facebook",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:42:09.8677283Z",
+          "completedAt": "2026-09-23T00:42:40.2168924Z"
+        },
+        {
+          "source": "instagram",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:42:31.7671791Z",
+          "completedAt": "2026-09-23T00:42:33.6010452Z"
+        },
+        {
+          "source": "linkedin",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:42:33.598892Z",
+          "completedAt": "2026-09-23T00:42:48.0645172Z"
+        },
+        {
+          "source": "x",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:42:33.6036711Z",
+          "completedAt": "2026-09-23T00:43:27.1877695Z"
+        }
+      ],
+      "nativeTraceCount": 49,
+      "nativeClassifications": {
+        "insufficient_evidence": 35,
+        "no_unchanged_focus_covering_signature": 13,
+        "akubrowser_above_external_with_sampled_focus_unchanged": 1
+      },
+      "nativeStatuses": {
+        "available": 49
+      },
+      "focusedWriteAttempts": 0,
+      "focusEventCount": 21,
+      "splitActionAudit": [],
+      "disposition": "excluded-ui-interaction"
+    },
+    {
+      "probeStartedAt": "2026-09-23T00:44:47.916Z",
+      "probeEndedAt": "2026-09-23T00:47:18.156Z",
+      "probeSeconds": 150.09,
+      "initialForegroundPid": 34324,
+      "foregroundSamples": 1495,
+      "foregroundCounts": {
+        "external": 1184,
+        "ui": 311
+      },
+      "session": {
+        "id": "session_fa6c756bdbaa767c19fd7c53d298abae",
+        "status": "completed",
+        "createdAt": "2026-09-23T00:44:48.0534676Z",
+        "completedAt": "2026-09-23T00:46:11.6030183Z"
+      },
+      "runs": [
+        {
+          "source": "facebook",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:44:48.0553412Z",
+          "completedAt": "2026-09-23T00:45:11.1672076Z"
+        },
+        {
+          "source": "instagram",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:45:02.431172Z",
+          "completedAt": "2026-09-23T00:45:08.2018106Z"
+        },
+        {
+          "source": "linkedin",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:45:08.1991718Z",
+          "completedAt": "2026-09-23T00:45:22.6304172Z"
+        },
+        {
+          "source": "x",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:45:08.2033527Z",
+          "completedAt": "2026-09-23T00:45:58.2093133Z"
+        }
+      ],
+      "nativeTraceCount": 30,
+      "nativeClassifications": {
+        "insufficient_evidence": 22,
+        "no_unchanged_focus_covering_signature": 8
+      },
+      "nativeStatuses": {
+        "available": 30
+      },
+      "focusedWriteAttempts": 0,
+      "focusEventCount": 21,
+      "splitActionAudit": [],
+      "disposition": "excluded-ui-foreground-attribution-open"
+    },
+    {
+      "probeStartedAt": "2026-09-23T00:49:26.665Z",
+      "probeEndedAt": "2026-09-23T00:51:56.795Z",
+      "probeSeconds": 150.0,
+      "initialForegroundPid": 34324,
+      "foregroundSamples": 1494,
+      "foregroundCounts": {
+        "external": 1494
+      },
+      "foregroundTransitions": [
+        {
+          "at": "2026-09-23T00:49:26.800Z",
+          "elapsedSeconds": 0.0,
+          "category": "external",
+          "pid": 34324
+        }
+      ],
+      "session": {
+        "id": "session_aafc80a60982de7dcfa92a4b77e6e181",
+        "status": "completed",
+        "createdAt": "2026-09-23T00:49:26.7931424Z",
+        "completedAt": "2026-09-23T00:51:01.5453171Z"
+      },
+      "runs": [
+        {
+          "source": "facebook",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:49:26.7938494Z",
+          "completedAt": "2026-09-23T00:50:08.1240831Z"
+        },
+        {
+          "source": "instagram",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:49:58.5844348Z",
+          "completedAt": "2026-09-23T00:50:00.9516651Z"
+        },
+        {
+          "source": "linkedin",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:50:00.9492199Z",
+          "completedAt": "2026-09-23T00:50:14.5149688Z"
+        },
+        {
+          "source": "x",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:50:00.9537729Z",
+          "completedAt": "2026-09-23T00:50:54.3500448Z"
+        }
+      ],
+      "nativeTraceCount": 13,
+      "nativeClassifications": {
+        "insufficient_evidence": 13
+      },
+      "nativeStatuses": {
+        "available": 13
+      },
+      "focusedWriteAttempts": 0,
+      "focusEventCount": 20,
+      "splitActionAudit": [],
+      "disposition": "clean-background-canary"
+    },
+    {
+      "probeStartedAt": "2026-09-23T00:52:04.823Z",
+      "probeEndedAt": "2026-09-23T00:54:35.062Z",
+      "probeSeconds": 150.05,
+      "initialForegroundPid": 6176,
+      "foregroundSamples": 1495,
+      "foregroundCounts": {
+        "external": 1495
+      },
+      "foregroundTransitions": [
+        {
+          "at": "2026-09-23T00:52:05.007Z",
+          "elapsedSeconds": 0.0,
+          "category": "external",
+          "pid": 6176
+        }
+      ],
+      "session": {
+        "id": "session_d616a732e0fcdf7dd556ab97ae4aaf8e",
+        "status": "completed",
+        "createdAt": "2026-09-23T00:52:05.0011299Z",
+        "completedAt": "2026-09-23T00:53:34.7294832Z"
+      },
+      "runs": [
+        {
+          "source": "facebook",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:52:05.0017817Z",
+          "completedAt": "2026-09-23T00:53:06.9022135Z"
+        },
+        {
+          "source": "instagram",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:52:59.1481685Z",
+          "completedAt": "2026-09-23T00:53:01.5290962Z"
+        },
+        {
+          "source": "linkedin",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:53:01.526303Z",
+          "completedAt": "2026-09-23T00:53:16.3125817Z"
+        },
+        {
+          "source": "x",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:53:01.5307947Z",
+          "completedAt": "2026-09-23T00:53:34.7255866Z"
+        }
+      ],
+      "nativeTraceCount": 17,
+      "nativeClassifications": {
+        "insufficient_evidence": 15,
+        "no_unchanged_focus_covering_signature": 2
+      },
+      "nativeStatuses": {
+        "available": 17
+      },
+      "focusedWriteAttempts": 0,
+      "focusEventCount": 16,
+      "splitActionAudit": [],
+      "disposition": "clean-background-canary"
+    },
+    {
+      "probeStartedAt": "2026-09-23T00:54:43.091Z",
+      "probeEndedAt": "2026-09-23T00:57:13.332Z",
+      "probeSeconds": 150.11,
+      "initialForegroundPid": 6176,
+      "foregroundSamples": 1495,
+      "foregroundCounts": {
+        "external": 1476,
+        "ui": 19
+      },
+      "foregroundTransitions": [
+        {
+          "at": "2026-09-23T00:54:43.233Z",
+          "elapsedSeconds": 0.0,
+          "category": "external",
+          "pid": 6176
+        },
+        {
+          "at": "2026-09-23T00:56:31.883Z",
+          "elapsedSeconds": 108.66,
+          "category": "ui",
+          "pid": 7948
+        },
+        {
+          "at": "2026-09-23T00:56:33.793Z",
+          "elapsedSeconds": 110.56,
+          "category": "external",
+          "pid": 13412
+        }
+      ],
+      "session": {
+        "id": "session_751aea8767f5cf7ece381dde9b56bfeb",
+        "status": "completed",
+        "createdAt": "2026-09-23T00:54:43.223726Z",
+        "completedAt": "2026-09-23T00:56:07.7719961Z"
+      },
+      "runs": [
+        {
+          "source": "facebook",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:54:43.2273138Z",
+          "completedAt": "2026-09-23T00:55:07.1810739Z"
+        },
+        {
+          "source": "instagram",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:54:57.9152521Z",
+          "completedAt": "2026-09-23T00:55:00.0108006Z"
+        },
+        {
+          "source": "linkedin",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:55:00.0086583Z",
+          "completedAt": "2026-09-23T00:55:24.1413465Z"
+        },
+        {
+          "source": "x",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:55:00.0140579Z",
+          "completedAt": "2026-09-23T00:55:53.9300122Z"
+        }
+      ],
+      "nativeTraceCount": 24,
+      "nativeClassifications": {
+        "insufficient_evidence": 21,
+        "no_unchanged_focus_covering_signature": 2,
+        "akubrowser_above_external_with_sampled_focus_unchanged": 1
+      },
+      "nativeStatuses": {
+        "available": 24
+      },
+      "focusedWriteAttempts": 0,
+      "focusEventCount": 21,
+      "splitActionAudit": [],
+      "disposition": "excluded-external-app-switch"
+    },
+    {
+      "probeStartedAt": "2026-09-23T00:58:25.762Z",
+      "probeEndedAt": "2026-09-23T01:00:55.990Z",
+      "probeSeconds": 150.08,
+      "initialForegroundPid": 34324,
+      "foregroundSamples": 1496,
+      "foregroundCounts": {
+        "external": 1496
+      },
+      "foregroundTransitions": [
+        {
+          "at": "2026-09-23T00:58:25.916Z",
+          "elapsedSeconds": 0.0,
+          "category": "external",
+          "pid": 34324
+        }
+      ],
+      "session": {
+        "id": "session_e341731ee3c54fd176ffd86c5b1778f7",
+        "status": "completed",
+        "createdAt": "2026-09-23T00:58:25.9123049Z",
+        "completedAt": "2026-09-23T00:59:56.1768115Z"
+      },
+      "runs": [
+        {
+          "source": "facebook",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:58:25.9140725Z",
+          "completedAt": "2026-09-23T00:59:08.3188419Z"
+        },
+        {
+          "source": "instagram",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:58:58.3017412Z",
+          "completedAt": "2026-09-23T00:59:00.471745Z"
+        },
+        {
+          "source": "linkedin",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:59:00.4695508Z",
+          "completedAt": "2026-09-23T00:59:22.4646557Z"
+        },
+        {
+          "source": "x",
+          "status": "completed",
+          "startedAt": "2026-09-23T00:59:00.4735631Z",
+          "completedAt": "2026-09-23T00:59:43.1205128Z"
+        }
+      ],
+      "nativeTraceCount": 13,
+      "nativeClassifications": {
+        "insufficient_evidence": 13
+      },
+      "nativeStatuses": {
+        "available": 13
+      },
+      "focusedWriteAttempts": 0,
+      "focusEventCount": 21,
+      "splitActionAudit": [],
+      "disposition": "clean-background-canary"
+    }
+  ]
+}
