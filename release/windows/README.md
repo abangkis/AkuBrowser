@@ -1,11 +1,11 @@
 # AkuBrowser Windows distribution — v0.9.1
 
-> **Active release path:** v0.9.1 is a Windows x64 release target delivered
+> **Release target:** v0.9.1 is a Windows x64 candidate intended for delivery
 > through one intentionally unsigned installed-app installer `.exe` plus its
 > SHA-256 checksum. Chrome Web Store publication is frozen;
 > macOS and Linux are deferred.
 
-## Active v0.9.1 release
+## v0.9.1 source candidate
 
 The installer bundles AkuBrowserLauncher, AkuSidecar, the internal
 `production-app` AkuBridge payload, pinned Chromium, c2patool, configuration,
@@ -14,12 +14,12 @@ manual extension loading, or a separate runtime installer. Codex App/App Server
 is an external prerequisite. The optional Gemini provider uses a user-supplied
 key through the Sidecar credential flow. The candidate covers X, LinkedIn,
 Facebook, and opt-in Instagram adapters, provider hot-swap at an idle boundary,
-and schema 22.
+and the Sidecar schema declared in the frozen release manifest.
 
 Use only the installer and checksum supplied by the v0.9.1 release evidence.
 The installer is intentionally unsigned and may trigger SmartScreen or
-antivirus warnings; verify the checksum before running it. Code signing and
-independent clean-machine certification remain future hardening.
+antivirus warnings; verify the checksum before running it. Code signing remains
+future hardening; clean-machine acceptance for this candidate is pending.
 
 Follow [Windows clean-machine Step 3B](../../docs/windows-clean-machine-3b.md)
 for the pending install, launch, source, provider, migration, repair,

@@ -1,20 +1,19 @@
 # AkuBrowser
 
-Current release target: **`v0.9.1` for Windows x64**. It is distributed as one
+Current release target: **`v0.9.1` for Windows x64**. Its planned distribution is one
 unsigned installer `.exe` containing AkuBrowserLauncher,
 AkuSidecar, the internal AkuBridge payload, pinned Chromium, c2patool, and the
 release configuration/checksums needed by the isolated app shell. The release
-publishes a SHA-256 checksum and explicitly discloses the unsigned SmartScreen
-trust state. Independent clean-machine coverage remains tracked as post-release
-hardening. The canonical
+must publish a SHA-256 checksum and explicitly disclose the unsigned SmartScreen
+trust state. Independent clean-machine acceptance is still pending. The canonical
 bundle boundary and gates are in the [installed-app distribution
 contract](docs/installed-app-distribution-contract.md).
 
-> **v0.9.1 distribution boundary.** The active release path is
+> **v0.9.1 distribution boundary.** The target release path is
 > one Windows x64 installed-app installer. It does not require the Chrome Web
 > Store, system Chrome, Developer Mode, a manually loaded extension, or a
 > separate runtime installer. The current candidate still carries an honest
-> unsigned/SmartScreen warning; users should verify the published checksum.
+> unsigned/SmartScreen warning; users should verify the checksum of any published installer.
 > macOS and Linux are deferred and are not part of this release.
 
 > ### Chrome Web Store publication is frozen
@@ -29,7 +28,7 @@ contract](docs/installed-app-distribution-contract.md).
 ## Release downloads
 
 The next AkuBrowser `v0.9.1` release
-exposes one Windows x64 installer `.exe` and its SHA-256 checksum as the
+will expose one Windows x64 installer `.exe` and its SHA-256 checksum as the
 supported download. It is intentionally unsigned, so Windows may show a
 SmartScreen warning. Verify the checksum and do not run it alongside the frozen
 Store edition.
@@ -122,7 +121,8 @@ Server remains an external prerequisite and must be installed and signed in
 locally. An optional Gemini provider accepts a user-supplied key through the
 Sidecar credential flow; provider hot-swaps apply at an idle boundary. The four
 source adapters are X, LinkedIn, Facebook, and opt-in Instagram. AkuSidecar
-uses schema 22 and owns first-run onboarding, source readiness, and Timeline
+uses the schema declared in the current [release manifest](release/release-manifest.json)
+and owns first-run onboarding, source readiness, and Timeline
 state. See [Preview/release candidate notes](docs/preview-release.md).
 
 The portable ZIP and Chrome Web Store package are historical/recovery lanes and

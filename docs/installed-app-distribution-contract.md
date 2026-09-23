@@ -1,5 +1,12 @@
 # AkuBrowser installed-app distribution contract
 
+> Current source-candidate note: this contract records the v0.9.0 Windows
+> release. The v0.9.1 source manifest and Sidecar schema have advanced; use
+> [the v0.9.1 release guide](preview-release.md) and
+> [stable release checklist](stable-release-checklist.md) for current candidate
+> gates. Do not attribute source-candidate metadata to a published installer
+> until the generated tuple and artifact have been verified.
+
 Status: **v0.9.0 stable for Windows x64; intentionally unsigned**. Phase 0 identity,
 the Windows launcher vertical slice, the local Windows tuple builder, and the
 single-installer NSIS candidate are staged. The Sidecar-owned setup and
@@ -18,8 +25,8 @@ builds are submitted, and production releases ship through this contract's
 single installer. The legacy Bridge-owned setup surface is
 retired under the [setup retirement plan](setup-retirement-plan.md).
 
-AkuSidecar now uses database schema 22 and accepts additive startup migration
-from schemas 7 through 21. The staged installed-app release manifest records
+At the v0.9.0 boundary, AkuSidecar used database schema 22 and accepted additive startup migration
+from schemas 7 through 21. That installed-app release manifest recorded
 schema 22 and accepts inputs 7–22, so the forward-migration tuple metadata is
 reconciled. Database rollback remains explicitly unimplemented until
 whole-tuple activation and rollback are built.

@@ -1,9 +1,31 @@
 # Stable release checklist
 
-For the current milestone, this is the source of truth for the **v0.9.0 Windows
+The current source candidate is **v0.9.1 Windows x64**. Its exact Sidecar
+database schema and accepted input versions come from
+[`release-manifest.json`](../release/release-manifest.json) at the frozen source
+commit. Do not carry the v0.9.0 checkmarks below forward as v0.9.1 acceptance.
+Chrome Web Store publication remains frozen; macOS/Linux remain deferred.
+
+## v0.9.1 candidate gates
+
+- [ ] Freeze clean AkuBrowser, AkuBridge, and AkuSidecar commits and reconcile
+      Bridge identity, Sidecar schema, source tuple, and release manifest.
+- [ ] Build and verify one Windows installed-app tuple, installer, checksum,
+      pinned Chromium, c2patool, reader broker, and production-app Bridge.
+- [ ] Complete [Windows clean-machine Step 3B](windows-clean-machine-3b.md),
+      including real fresh-install and upgrade database behavior.
+- [ ] Complete the separate [Windows capture split graduation](windows-capture-split-graduation.md)
+      gates before enabling split by default. Preserve the ordinary launch path
+      as an RC rollback option.
+- [ ] Reconcile the generated manifest, frozen SHAs, acceptance receipts, and
+      release notes before publishing an installer and its checksum.
+
+## Historical v0.9.0 release record
+
+For that milestone, this was the source of truth for the **v0.9.0 Windows
 x64 release**. Replace `<release-version>` and `<sidecar-version>` with
-the frozen values and record the exact source commits before starting. The
-release records. v0.9.0 is intentionally unsigned; signing is future hardening,
+the frozen values and record the exact source commits before starting.
+v0.9.0 was intentionally unsigned; signing is future hardening,
 not a release gate.
 
 > **Current-lane notice:** v0.9.0 has one Windows installed-app installer `.exe`.

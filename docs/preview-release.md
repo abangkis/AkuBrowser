@@ -1,10 +1,11 @@
 # AkuBrowser v0.9.1 Windows release
 
-Status: **stable, intentionally unsigned**. This document is the active release guide
-for the Windows x64 single-installer path. The candidate is one installer
+Status: **v0.9.1 source candidate targeting stable, intentionally unsigned distribution**.
+This document is the release guide for the Windows x64 single-installer path.
+The candidate is one installer
 `.exe` containing AkuBrowserLauncher, AkuSidecar, the internal AkuBridge
 payload, pinned Chromium, c2patool, configuration, and checksums. Code signing
-and independent clean-machine certification remain future hardening.
+remains future hardening; clean-machine acceptance for this candidate is pending.
 
 Chrome Web Store publication is frozen and is not an active v0.9.1 path. The
 candidate does not require system Chrome, Developer Mode, manual extension
@@ -13,9 +14,11 @@ loading, or a separate runtime installer. macOS and Linux are deferred.
 The release contract covers four source adapters: X, LinkedIn, Facebook, and
 opt-in Instagram. Codex App/App Server remains an external prerequisite. The
 optional Gemini provider accepts a user-supplied key through the Sidecar
-credential flow, and provider hot-swaps apply at an idle boundary. AkuSidecar
-schema 22 is the active database boundary. These are v0.9.1 capabilities and
-acceptance targets.
+credential flow, and provider hot-swaps apply at an idle boundary. The current
+source manifest declares AkuSidecar schema 29 and accepts input schemas 7–29;
+this describes the source candidate, not a previously published installer.
+Freeze and verify the generated tuple before attributing this schema to a
+release asset. These are v0.9.1 capabilities and acceptance targets.
 
 ## v0.9.1 prerequisites and acceptance
 
@@ -27,7 +30,7 @@ source in the pinned Chromium profile during onboarding.
 
 The coordinator must record install, launch, Bridge heartbeat, four-adapter
 source readiness, Codex readiness, optional Gemini-key use, idle-boundary
-provider hot-swap, schema-22 migration behavior, repair, update/rollback,
+provider hot-swap, schema-29 migration behavior, repair, update/rollback,
 uninstall, preserve-data, and full-reset evidence in
 [Windows clean-machine Step 3B](windows-clean-machine-3b.md) as post-release
 hardening evidence. The unsigned installer may trigger SmartScreen or antivirus

@@ -1,5 +1,9 @@
 # AkuBrowser legacy Bridge setup retirement plan
 
+> Historical v0.9.0 decision record. The current v0.9.1 source candidate uses
+> the schema and tuple declared in [the release manifest](../release/release-manifest.json)
+> and follows [the current checklist](stable-release-checklist.md).
+
 Status: retirement recorded; v0.9.0 Windows x64 stable boundary,
 updated 28 August 2026. Chrome Web Store publication is frozen. The active
 release path is the single installed-app installer defined in the [installed-app

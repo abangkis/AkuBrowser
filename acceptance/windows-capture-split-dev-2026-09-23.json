@@ -1,0 +1,85 @@
+{
+  "schemaVersion": 1,
+  "lane": "development-runtime-canary",
+  "date": "2026-09-23",
+  "runtime": {
+    "sidecarDatabaseSchema": 29,
+    "splitFlagEnabled": true,
+    "captureProfile": "original-signed-in-profile",
+    "uiProfile": "isolated-ui-split-cft",
+    "uiBrowser": "pinned-chrome-for-testing"
+  },
+  "liveIdentityReadback": {
+    "uiRootPid": 22136,
+    "captureRootPid": 23852,
+    "sameSidecarParent": true,
+    "uiProduct": "Google Chrome for Testing",
+    "captureProduct": "Google Chrome",
+    "profilesDistinct": true,
+    "uiExtension": "ui-reader-broker",
+    "captureExtension": "AkuBridge",
+    "captureHostVisibleAndMinimized": true,
+    "scope": "development-runtime-readback; Job Object separation and packaged first launch not independently verified"
+  },
+  "developmentShutdownReadback": {
+    "path": "Supervisor normal Sidecar stop during idle development rebuild",
+    "gracefulSignalSent": true,
+    "forced": false,
+    "ownedPidsAfter": 0,
+    "restartHealth": "ok",
+    "restartDatabaseSchema": 29,
+    "restartDatabaseHealth": "healthy",
+    "scope": "one normal Sidecar-stop scenario; separate UI-close, capture-root-close, and packaged rollback scenarios remain unverified"
+  },
+  "backgroundBatches": [
+    {
+      "windowUTC": "2026-09-22T23:11:00Z/2026-09-22T23:13:00Z",
+      "result": "foreground-observed-cause-unresolved",
+      "evidence": "Instagram covering sample at 23:12:00.153Z followed by capture-root foreground at 23:12:00.229Z; no Bridge focused-write attempt recorded"
+    },
+    {
+      "windowUTC": "2026-09-22T23:28:41Z/2026-09-22T23:30:09Z",
+      "result": "foreground-observed-cause-unresolved",
+      "sourceResults": {
+        "facebook": "completed",
+        "instagram": "completed",
+        "linkedin": "completed",
+        "x": "completed"
+      },
+      "evidence": "Instagram covering sample at 23:28:54.302Z and X capture-root foreground at 23:29:09.047Z; no Bridge focused-write attempt recorded"
+    },
+    {
+      "windowUTC": "2026-09-22T23:55:00Z/2026-09-22T23:56:15Z",
+      "result": "explicit-reader-action-overlapped-capture",
+      "sourceResults": {"facebook": "completed", "instagram": "completed", "linkedin": "completed", "x": "completed"},
+      "evidence": "Schema 29 audit records accepted open_native_post at 23:55:00.718Z; user confirmed clicking the native-post link. Capture foreground samples during this batch cannot establish background nonactivation."
+    },
+    {
+      "windowUTC": "2026-09-23T00:00:08Z/2026-09-23T00:01:35Z",
+      "result": "explicit-reader-action-overlapped-capture",
+      "sourceResults": {"facebook": "completed", "instagram": "completed", "linkedin": "completed", "x": "completed"},
+      "evidence": "Schema 29 audit records accepted open_native_post at 00:00:12.981Z; user confirmed clicking the native-post link. A 150-second foreground probe saw capture foreground, but the explicit action prevents treating this as a clean background batch."
+    },
+    {
+      "windowUTC": "2026-09-23T00:03:08Z/2026-09-23T00:05:08Z",
+      "result": "clean-background-canary-passed",
+      "sourceResults": {"facebook": "completed", "instagram": "completed", "linkedin": "completed", "x": "completed"},
+      "evidence": "UI was minimized before capture; external probe foreground was verified at start. Across 150 seconds the probe sampled capture=0 and UI=0, with 1472 samples on external windows. Fifteen native traces had no capture-foreground classification, Bridge attempted zero focused writes, and the split action audit had no new action."
+    },
+    {
+      "windowUTC": "2026-09-23T00:11:48Z/2026-09-23T00:13:15Z",
+      "result": "clean-background-canary-passed",
+      "sourceResults": {"facebook": "completed", "instagram": "completed", "linkedin": "completed", "x": "completed"},
+      "evidence": "UI remained open while an external window held foreground before capture. Across 150 seconds the probe sampled capture=0 and UI=0, with 1473 samples on external windows. Sixteen native traces had no capture-foreground classification, Bridge attempted zero focused writes, and the split action audit had no new action."
+    }
+  ],
+  "gates": {
+    "startupAndProfileIsolation": "partial-live-readback",
+    "backgroundNonactivation": "unverified-two-of-five-clean-batches",
+    "foregroundAttribution": "two-recent-batches-attributed-to-confirmed-user-action; older-traces-unresolved",
+    "freshInstallAndUpgrade": "unverified-no-clean-environment",
+    "explicitReaderAndRecovery": "partial-explicit-reader-accepted; recovery-unverified",
+    "shutdownAndRollback": "partial-normal-sidecar-stop; other-shutdown-and-rollback-unverified"
+  },
+  "decision": "keep-experimental-default-off"
+}

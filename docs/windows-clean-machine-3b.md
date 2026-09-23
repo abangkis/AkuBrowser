@@ -1,4 +1,33 @@
-# Windows clean-machine Step 3B — v0.9.0
+# Windows clean-machine Step 3B
+
+## Current v0.9.1 source candidate
+
+Run the installed-app checks below against a frozen v0.9.1 tuple. Read the
+database schema and accepted input versions from that tuple's generated
+manifest; the source manifest is only a build input. Record a fresh install
+and an upgrade from a preserved-data fixture separately. For the capture split,
+complete the [graduation matrix](windows-capture-split-graduation.md) with the
+experimental flag enabled before changing its default. Attach the observed
+process tree, reader activation, background batches, recovery, shutdown,
+rollback, and any covering-window samples to the acceptance receipt. An
+unchecked item remains unverified.
+
+- [ ] Record the installer and checksum, generated tuple manifest, exact source
+      commits, signing state, and pinned Chromium identity.
+- [ ] Install under a clean Windows account and verify launcher, Sidecar,
+      Bridge, reader broker, and UI start without system Chrome or Developer Mode.
+- [ ] Complete onboarding and source readiness for X, LinkedIn, Facebook, and
+      opt-in Instagram; exercise denial, retry, and revocation.
+- [ ] Verify the frozen schema startup on fresh data, then upgrade a separate
+      preserved-data fixture through every accepted migration without data loss.
+- [ ] Exercise explicit native reader activation, background capture, startup
+      recovery, shutdown, and ordinary-path rollback using the split matrix.
+- [ ] Verify repair, update/rollback, ordinary uninstall with preserved data,
+      and explicit full reset against the candidate installer.
+- [ ] Attach screenshots/logs, process and database readbacks, hashes, and a
+      pass/fail decision. Missing evidence leaves this lane unverified.
+
+## Historical v0.9.0 procedure
 
 Use this runbook for independent Windows certification of the AkuBrowser v0.9.0
 x64 release. It validates the one installed-app installer `.exe` and its
