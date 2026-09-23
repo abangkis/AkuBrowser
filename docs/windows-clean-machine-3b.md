@@ -152,6 +152,7 @@ not silently change the frozen candidate.
 
 | Release | Date | Environment | Result | Evidence and observations |
 | --- | --- | --- | --- | --- |
+| v0.9.0-rc.9 | 2026-09-23 | Existing Windows account, preserved RC8 data/profile | Local startup and four-source update passed; independent clean-machine gate open | [Installed-app receipt](../acceptance/windows-installed-app-rc9-2026-09-23.md): installer/manifest verified, X/LinkedIn/Facebook/Instagram completed, ordinary uninstall preserved data/profile, dev runtime restored. Tag exists; GitHub prerelease publication pending. |
 | v0.9.0-rc.8 | 2026-09-23 | Existing Windows account, fresh installed-app state | Partial; clean-machine and source gates open | [Installed-app receipt](../acceptance/windows-installed-app-rc8-2026-09-23.md): initial unsigned launch blocked by Avast One; local exception enabled healthy startup, preserve-data reinstall, repair, and packaged legacy-mode switch. Four source grants were ready; the first update completed X, LinkedIn, and Instagram, while Facebook returned `login_required`. |
 | 0.8.0 | 2026-08-14 | Windows clean-machine flow | Passed before lifecycle UX fix | Development Bridge and local unsigned runtime completed the flow; AkuBrowser Runtime 0.8.0 appeared in Installed apps. The stale repair label was fixed afterward and requires Windows re-verification. |
 
