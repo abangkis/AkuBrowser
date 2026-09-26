@@ -408,10 +408,12 @@ Learning removes this learning ledger; ordinary retrieval remains read-only.
 
 The Timeline UI exposes one compact, accessible, viewport-scoped
 `Related context` right-edge tab at a time and performs a lookup only after its
-action. The owner is the eligible post crossing the 20% reading line, or the
-next post after it has substantially entered the viewport and leaves at least
-320 px for the drawer; a small hysteresis band prevents flicker at post
-boundaries. A collapsed duplicate report cannot
+action. Each opening performs a fresh lookup; a successful result from an earlier
+opening is not reused as current topic knowledge, and responses from superseded
+openings are ignored. The owner is the eligible post crossing the 20% reading
+line, or the next post after it has substantially entered the viewport and
+leaves at least 320 px for the drawer; a small hysteresis band prevents flicker
+at post boundaries. A collapsed duplicate report cannot
 own the tab until `Show report` reveals its post, and `Hide report` removes it
 again. The tab is shown only when the horizontal gap between the post and the
 viewport edge can fit it safely.
