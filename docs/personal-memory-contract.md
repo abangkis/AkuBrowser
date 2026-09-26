@@ -355,11 +355,52 @@ complete runtime cost boundary is recorded in the
 ## Content Context v2
 
 Content Context is an explicit, read-only lookup from one currently visible
-Timeline item into local Personal Memory. The contract is
+Timeline item into captured conversation evidence and local Personal Memory. The contract is
 `GET /api/timeline/{timelineId}/content-context?limit=` with a default limit of
 3 and an accepted range of 1--5. The Sidecar accepts only a final item from a
 completed or partial session whose Timeline batch is visible; missing,
 running, expired, or prepared items cannot request context.
+
+Direct conversation and observed feed-interaction evidence is returned in
+`directContext` before current topic insights and lexical Memory matches. The
+capture Block and result use an additive typed `directContext` array, bounded
+to eight relationships. Each relation records its kind (`quotes`,
+`replies_to`, `feed_comment`, or `feed_reply`), observed actor and profile URL
+when available, observed banner text, evidence origin and capture time, a
+target context object, and optionally one parent context object. Context
+objects distinguish posts from comments and retain bounded public evidence
+such as native identity, permalink, author, text, and media presence. Actual
+quoted media remains in the existing inline quoted-post presentation.
+
+X reply and quote are independent relations. An exact reply reference must
+come from observed native identity, not the first status link or similarity.
+A quote may contain media without text. LinkedIn's feed banner describes an
+observed interaction separately from the original post. A captured comment
+must be attributable to the actor through source identity; a matching display
+name alone cannot select among visible comments. Reply context may include
+the observed parent comment, with a maximum depth of one parent.
+
+Direct context prefers embedded captured evidence, then retained local
+evidence with the same native identity. Missing bodies remain explicit
+`reference_only` or `partial` objects; `captured` indicates available captured
+content, not a guarantee that the complete conversation was observed. Missing
+evidence does not establish that a post was deleted or private. A banner
+alone does not establish personal acquaintance or the platform's exact feed
+ranking reason. Confirmed relationships remain eligible when there are no
+lexical query terms and do not consume the Memory-match limit. Duplicate
+references are bounded without collapsing distinct interaction roles.
+
+The drawer renders this conversation section first and provides native source
+links where available. Topical relevance feedback does not suppress factual
+conversation relations. Capture and local resolution do not create additional
+Timeline posts, Memory ownership, or Living Topic membership. No missing
+relationship is acquired merely by opening the drawer.
+
+Existing stored observations remain readable without a database migration.
+Legacy embedded quotes can supply direct evidence; ambiguous legacy reply URLs
+are not promoted into verified reply targets. Development activation must load
+the matching Sidecar build before reloading the updated Bridge and source tabs:
+older Sidecar strict payload decoders do not accept the new capture field.
 
 The Sidecar derives bounded query features locally from the persisted Timeline
 `WhatChanged` (title-like text), source evidence text, `WhyItMatters` (summary),
@@ -384,8 +425,9 @@ most two Living Topic insights. Each topic insight must come from the newest
 `isCurrent` snapshot, contain only supported claims, and report active evidence
 count, version, update time, and a deterministic match reason. Historical,
 partial, unavailable, mixed, and uncertain topic knowledge is not eligible. It
-never returns full content,
-provenance, audit rows, identity digests, or provider payloads. An empty result
+does not expose raw provenance rows, audit rows, identity digests, or provider
+payloads. Direct context exposes only its bounded public source evidence and
+evidence origin; Memory matches retain the public Library projection. An empty result
 is successful. The operation opens no Saved/Keep state and performs no memory,
 Timeline, preference, action, or provenance write.
 

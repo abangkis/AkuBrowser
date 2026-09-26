@@ -89,6 +89,35 @@ not broaden acquisition, and does not authorize Bookmark work. A future Ask
 this topic path remains unimplemented and requires its own cited, read-only
 answer contract.
 
+## Related Context: conversation and feed interactions
+
+The approved local continuation makes direct conversation and observed feed
+interactions the first section of Related Context, ahead of current Living
+Topic understanding and related local Memory. X reply targets and quoted posts
+are independent relationships; one post can carry both. LinkedIn keeps the
+post author separate from the actor named in a feed banner, the visible
+comment or reply, its parent comment, and the root post.
+
+Implementation proceeds through a typed evidence contract, conservative
+capture attribution, local resolution by exact native identity, and the
+item-scoped drawer. Embedded captured evidence is preferred; retained local
+evidence can fill an exact reference. A banner without its comment body remains
+an explicit partial reference. A hidden, absent, or ambiguous parent must not
+be invented from text similarity, author name, or card position. Existing
+source evidence is retained without creating duplicate Timeline items or
+implicitly enrolling context objects into Personal Memory or Living Topics.
+
+The acceptance boundary includes X reply plus quote, media-only quotes,
+self-link rejection, LinkedIn banner-only cases, unrelated visible comments,
+collapsed reply parents, and confirmed direct context with no lexical search
+terms. Structural context remains independent of topical relevance feedback.
+Source and synthetic-fixture validation must be distinguished from acceptance
+on live authenticated X and LinkedIn pages.
+
+A later, explicit context-acquisition operation may retrieve missing evidence
+from a validated native target. It is not part of this local continuation:
+opening the drawer remains a local read, and does not start recursive capture.
+
 ## Phase 2: Bookmark Import and Management
 
 This phase is frozen until the user explicitly authorizes Bookmark Import or
