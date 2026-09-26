@@ -25,9 +25,10 @@ Chrome Web Store publication remains frozen; macOS/Linux remain deferred.
 - [ ] Complete [Windows clean-machine Step 3B](windows-clean-machine-3b.md),
       including real fresh-install and same-version upgrade database behavior;
       record this as an open post-RC gate if no clean environment is available.
-- [ ] Record the open [Windows capture split graduation](windows-capture-split-graduation.md)
-      gates in RC notes. Split is already the source default; preserve the
-      ordinary launch path as an RC rollback option.
+- [ ] Record the owner-accepted [Windows capture split graduation](windows-capture-split-graduation.md)
+      and its remaining unverified installed-app checks in RC notes. Split is
+      already the source default; preserve the ordinary launch path as an RC
+      rollback option.
 - [ ] Reconcile the generated manifest, frozen SHAs, acceptance receipts, and
       release notes before publishing an installer and its checksum.
 

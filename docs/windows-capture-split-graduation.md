@@ -1,9 +1,12 @@
 # Windows capture split graduation
 
-Status: **owner-approved default for new Windows tuples; packaging acceptance
-still open**. On 2026-09-23 the owner accepted the remaining development
-uncertainty and approved the launcher default change. This is the acceptance
-record for the Windows split UI/capture path. Use one frozen
+Status: **owner-accepted as passed for Windows capture split on 2026-09-26**.
+The owner accepted the split after reviewing the live two-process runtime and
+the development canary, including its known evidence limits. This product
+decision supersedes the earlier 2026-09-23 default-only approval. Individual
+unobserved checks remain unverified and belong to Windows installed-app
+acceptance; they are not retroactively marked as measured passes. This is the
+acceptance record for the Windows split UI/capture path. Use one frozen
 AkuBrowser/AkuBridge/AkuSidecar source tuple and record its full commit SHAs,
 generated installer hash, pinned UI Chromium hash, and database schema before
 starting. Keep the ordinary single-process launch available for rollback.
@@ -15,7 +18,7 @@ AkuBridge. Do not copy profiles, cookies, or credentials between them. See the
 [containment contract](../../AkuSidecar/docs/windows-capture-containment.md), and
 [reader-broker packaging contract](windows-reader-broker-packaging.md).
 
-## Acceptance evidence and open gates
+## Acceptance evidence and remaining verification
 
 | Gate | Evidence to record | Pass condition |
 | --- | --- | --- |
@@ -27,12 +30,12 @@ AkuBridge. Do not copy profiles, cookies, or credentials between them. See the
 | Shutdown | Close UI, close capture root, and normal Sidecar stop in separate runs; process-tree and port readback | Both owned Chromium trees and Sidecar exit; no orphaned reader broker or listener remains. |
 | Rollback | Launch the same data/profile through the ordinary path after normal split shutdown | Legacy launch works without copying, resetting, or deleting either profile. |
 
-Treat missing observations as **unverified**, not passed. The clean-machine
+The owner accepts Windows capture split as passed at the product-decision level.
+Treat missing observations as **unverified**, not measured passes. The clean-machine
 installer/upgrade checks belong to the current [Step 3B](windows-clean-machine-3b.md)
 lane. A development-runtime canary may establish a narrower fact, but cannot
-substitute for packaged install/upgrade evidence. The owner approved changing
-the source default with these gaps visible; release publication remains a
-separate decision. Record screenshots and
+substitute for packaged install/upgrade evidence. Record those limits in any
+future RC notes; release publication remains a separate decision. Record screenshots and
 bounded telemetry with the acceptance artifact; do not include post bodies,
 URLs, cookies, or credentials.
 
@@ -99,16 +102,16 @@ validated policy and repeated comparison. The original Supervisor
 configuration was restored byte-for-byte and split mode returned healthy.
 One split restart exposed the capture host visible but not minimized; a later
 restart showed it minimized. The cause is unresolved, so startup-host behavior
-remains an open gate. Packaged rollback is still unverified. No clean Windows x64 VM/account is
+remains a follow-up verification item. Packaged rollback is still unverified. No clean Windows x64 VM/account is
 currently available for fresh install and upgrade acceptance. A local
 v0.9.1 installed-app tuple and unsigned installer were built from clean
 AkuBrowser `7b1d693`, AkuSidecar `4b74396`, and AkuBridge `d36fda4` commits;
 the tuple and installer verifiers passed, and the installer SHA-256 is recorded
 in the development receipt. This proves package structure and hashes, not
 installation or upgrade behavior. Repeated
-visible-workflow acceptance, live automatic startup recovery, capture host UX,
-and packaged shutdown/rollback checks also remain open. The split is now the
-source default for new Windows tuples, while these acceptance gaps remain
-explicitly open. The
+visible-workflow checks, live automatic startup recovery, capture host UX,
+and packaged shutdown/rollback checks also remain unverified. The split is the
+source default for new Windows tuples and owner-accepted as passed, while these
+verification limits remain explicit. The
 [development canary receipt](../acceptance/windows-capture-split-dev-2026-09-23.json)
 records the current failed and unverified gates without post content or URLs.
