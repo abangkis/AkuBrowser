@@ -516,8 +516,7 @@ func (t Tuple) SidecarRuntimeArgs(paths LaunchPaths, legacySingleProcess bool) [
 	args := t.SidecarArgs(paths)
 	if t.Manifest.WindowsCaptureSplit {
 		if legacySingleProcess {
-			// Override a leftover development environment opt-in as well.
-			args = append(args, "--experimental-windows-capture-split=false")
+			args = append(args, "--windows-capture-split=false")
 		} else {
 			args = append(args, "--windows-capture-split")
 		}

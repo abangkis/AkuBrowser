@@ -44,7 +44,7 @@ func TestLoadActiveTupleValidFixtureAndArguments(t *testing.T) {
 	if got := tuple.SidecarRuntimeArgs(paths, false); got[len(got)-1] != "--windows-capture-split" {
 		t.Fatalf("split runtime args=%q", got)
 	}
-	if got := tuple.SidecarRuntimeArgs(paths, true); got[len(got)-1] != "--experimental-windows-capture-split=false" {
+	if got := tuple.SidecarRuntimeArgs(paths, true); got[len(got)-1] != "--windows-capture-split=false" {
 		t.Fatalf("rollback runtime args=%q", got)
 	}
 }

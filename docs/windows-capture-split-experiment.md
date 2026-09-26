@@ -4,10 +4,10 @@ New installed Windows tuples declare `windowsCaptureSplit: true`; their launcher
 passes `--windows-capture-split` by default. Older tuples remain on the original
 launch path. Start the installed launcher with `--legacy-single-process` after
 normal shutdown to use the original path with the same data and capture profile.
-The development `--experimental-windows-capture-split` flag and environment
-variable remain accepted as compatibility aliases. The loopback port must be
-11122. macOS/Linux retain the existing launch/extension path. A source change
-alone does not switch an already installed runtime; a verified new tuple must
+The development-only experimental flag and environment alias have been retired;
+use `--windows-capture-split` for a development split launch. The loopback port
+must be 11122. macOS/Linux retain the existing launch/extension path. A source
+change alone does not switch an already installed runtime; a verified new tuple must
 be installed and activated.
 
 The original `--browser-profile` (or runtime `app-profile`) stays exclusively
@@ -104,7 +104,7 @@ outcomes separately; retain the legacy launch path as a rollback switch.
 
 Fallback reference: `pre-headful-capture-split-2026-09-21`. For an installed
 split tuple, use `AkuBrowserLauncher.exe --legacy-single-process` after normal
-shutdown. For a development launch, omit both split flags and the compatibility
-environment variable. The original authenticated profile resumes the ordinary
+shutdown. For a development launch, omit `--windows-capture-split` or set it to
+`false`. The original authenticated profile resumes the ordinary
 single-process role; the separate UI profile is left intact. No profile
 deletion, copy-back, or automatic Git reset is part of fallback.
