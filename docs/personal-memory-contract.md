@@ -363,22 +363,25 @@ running, expired, or prepared items cannot request context.
 
 Direct conversation and observed feed-interaction evidence is returned in
 `directContext` before current topic insights and lexical Memory matches. The
-capture Block and result use an additive typed `directContext` array, bounded
-to eight relationships. Each relation records its kind (`quotes`,
-`replies_to`, `feed_comment`, or `feed_reply`), observed actor and profile URL
-when available, observed banner text, evidence origin and capture time, a
-target context object, and optionally one parent context object. Context
-objects distinguish posts from comments and retain bounded public evidence
-such as native identity, permalink, author, text, and media presence. Actual
-quoted media remains in the existing inline quoted-post presentation.
+captured Block and projection use an additive typed `directContext` array,
+bounded to eight relationships. Capture can retain X quote metadata alongside
+the post so Timeline can render its inline quoted-post card. The Related Context
+projection omits X `quotes`; it returns X `replies_to` and LinkedIn
+`feed_comment` or `feed_reply` relations. Returned relations can record an
+observed actor and profile URL when available, observed banner text, evidence
+origin and capture time, a target context object, and optionally one parent
+context object. Context objects distinguish posts from comments and retain
+bounded public evidence such as native identity, permalink, author, text, and
+media presence.
 
-X reply and quote are independent relations. An exact reply reference must
-come from observed native identity, not the first status link or similarity.
-A quote may contain media without text. LinkedIn's feed banner describes an
-observed interaction separately from the original post. A captured comment
-must be attributable to the actor through source identity; a matching display
-name alone cannot select among visible comments. Reply context may include
-the observed parent comment, with a maximum depth of one parent.
+An exact X reply reference must come from observed native identity, not the
+first status link or similarity. The quoted post stays visible in the Timeline
+card and does not create a Related Context cue, API relation, or drawer badge.
+LinkedIn's feed banner describes an observed interaction separately from the
+original post. A captured comment must be attributable to the actor through
+source identity; a matching display name alone cannot select among visible
+comments. Reply context may include the observed parent comment, with a
+maximum depth of one parent.
 
 Direct context prefers embedded captured evidence, then retained local
 evidence with the same native identity. Missing bodies remain explicit
@@ -397,8 +400,9 @@ Timeline posts, Memory ownership, or Living Topic membership. No missing
 relationship is acquired merely by opening the drawer.
 
 Existing stored observations remain readable without a database migration.
-Legacy embedded quotes can supply direct evidence; ambiguous legacy reply URLs
-are not promoted into verified reply targets. Development activation must load
+Legacy embedded X quotes remain available for the inline Timeline card but are
+not promoted into Related Context; ambiguous legacy reply URLs are not
+promoted into verified reply targets. Development activation must load
 the matching Sidecar build before reloading the updated Bridge and source tabs:
 older Sidecar strict payload decoders do not accept the new capture field.
 
@@ -459,6 +463,20 @@ at post boundaries. A collapsed duplicate report cannot
 own the tab until `Show report` reveals its post, and `Hide report` removes it
 again. The tab is shown only when the horizontal gap between the post and the
 viewport edge can fit it safely.
+
+The tab adds a compact conversation icon and subtle accent when the loaded
+Timeline evidence contains a supported direct relationship. Its accessible
+name and tooltip describe the observed relationship kinds. This cue uses local
+metadata only, has no numeric count, and does not prefetch context. An
+unmarked tab makes no claim that conversation context is absent. Legacy
+unverified reply URLs and inline X quotes do not create the cue.
+
+Inside the drawer, text badges identify X replies, LinkedIn comments, and
+replies to comments. Observed actor/parent names appear only when supported by
+the returned evidence. A separate neutral availability badge identifies
+content not captured or a partial capture. Media-only content is still
+captured evidence. Relationship badges remain distinct from availability and
+topical feedback.
 
 Only one item-scoped drawer can be open globally. Activating another post
 atomically closes the previous drawer and anchors the same right-side surface
