@@ -259,6 +259,11 @@ try {
         }
     }
 
+    $headlessWorkerDirectory = Join-Path $versionRoot "headless-worker"
+    $headlessWorkerResultText = & (Join-Path $PSScriptRoot "stage-headless-worker.ps1") -DestinationDirectory $headlessWorkerDirectory
+    $headlessWorkerProvenance = ($headlessWorkerResultText | Out-String) | ConvertFrom-Json
+    Assert-True ([string]$headlessWorkerProvenance.status -eq "ok") "Headless collection worker staging did not report success."
+
     $versionC2pa = Join-Path $versionRoot "c2patool.exe"
     Copy-Item -LiteralPath $C2paToolPath -Destination $versionC2pa -Force
     $licenseDirectory = Join-Path $versionRoot "third-party\c2patool"
@@ -384,6 +389,7 @@ try {
         bridgeVersion = [string]$release.components.akuBridge.version
         bridgeContract = [string]$release.components.akuBridge.contractVersion
         sidecarPath = "AkuSidecar.exe"
+        headlessWorkerPath = "headless-worker"
         configPath = "config/sidecar.json"
         chromiumPath = $chromiumExecutableRelative
         windowsCaptureSplit = $true
@@ -495,6 +501,18 @@ try {
         }
         rootFiles = $rootFiles
         provenance = [ordered]@{
+            headlessWorker = [ordered]@{
+                protocol = 1
+                nodeVersion = [string]$headlessWorkerProvenance.nodeVersion
+                nodeSha256 = [string]$headlessWorkerProvenance.nodeSha256
+                distributionSha256 = [string]$headlessWorkerProvenance.distributionSha256
+                workerLicenseSha256 = [string]$headlessWorkerProvenance.workerLicenseSha256
+                officialDistributionUrl = [string]$headlessWorkerProvenance.officialDistributionUrl
+                licenses = @(
+                    "runtime/versions/$($release.version)/headless-worker/LICENSE",
+                    "runtime/versions/$($release.version)/headless-worker/LICENSE-AkuSidecar"
+                )
+            }
             c2patool = [ordered]@{
                 version = [string]$c2paPin.version
                 sha256 = $c2paHash

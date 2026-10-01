@@ -66,6 +66,7 @@ Assert-True ($manifest.windowsCaptureSplit -eq $true -and $manifest.health.port 
 Assert-True ($manifest.version -eq $current.version) "Active pointer and bundle manifest versions differ."
 Assert-True ($manifest.bridgeIdentity.profile -eq "production-app" -and $manifest.bridgeIdentity.distribution -eq "installed-app") "Bundle manifest Bridge identity is not production-app installed-app."
 Assert-True ($manifest.bridgeIdentity.runtimeLifecycle -eq "managed" -and $manifest.bridgeIdentity.runtimeAcquisition -eq "bundled-installer") "Bundle manifest Bridge lifecycle metadata is unexpected."
+Assert-True ([string]$manifest.headlessWorkerPath -eq "headless-worker") "Bundle manifest does not identify the adjacent headless worker runtime."
 Assert-True ($manifest.storage.userDataRoot -eq "local-app-data" -and $manifest.storage.browserProfileRoot -eq "local-app-data") "Bundle storage roots are not local-app-data."
 Assert-True ($manifest.health.host -eq "127.0.0.1" -and $manifest.health.path -eq "/api/health" -and $manifest.health.timeoutMs -ge 1000) "Bundle health contract is not bounded loopback health."
 
@@ -78,6 +79,11 @@ foreach ($required in @(
     "runtime\versions\$($current.version)\chromium\pin.json",
     "runtime\versions\$($current.version)\chromium\bin\chrome.exe",
     "runtime\versions\$($current.version)\c2patool.exe",
+    "runtime\versions\$($current.version)\headless-worker\node.exe",
+    "runtime\versions\$($current.version)\headless-worker\worker.mjs",
+    "runtime\versions\$($current.version)\headless-worker\node.pin.json",
+    "runtime\versions\$($current.version)\headless-worker\LICENSE",
+    "runtime\versions\$($current.version)\headless-worker\LICENSE-AkuSidecar",
     "runtime\versions\$($current.version)\config\sidecar.json"
 )) {
     Assert-True (Test-Path -LiteralPath (Join-Path $ArtifactDirectory $required) -PathType Leaf) "Artifact is missing $required"
@@ -116,6 +122,17 @@ foreach ($path in $actualPayload) {
 $pin = Read-Json (Join-Path $versionRoot "chromium\pin.json")
 Assert-True ([string]$pin.executable.Replace("\", "/") -eq "bin/chrome.exe") "Staged Chromium pin points outside bin/chrome.exe."
 Assert-True ((Get-Sha256 (Join-Path $versionRoot "chromium\bin\chrome.exe")) -eq ([string]$pin.executableSha256).ToLowerInvariant()) "Staged Chromium executable does not match pin.json."
+$headlessWorkerPin = Read-Json (Join-Path $versionRoot "headless-worker\node.pin.json")
+$headlessNodePath = Join-Path $versionRoot "headless-worker\node.exe"
+$headlessLicensePath = Join-Path $versionRoot "headless-worker\LICENSE"
+Assert-True ([int]$headlessWorkerPin.protocol -eq 1 -and [string]$headlessWorkerPin.nodeVersion -match '^\d+\.\d+\.\d+$') "Staged headless worker pin protocol or Node version is invalid."
+Assert-True ((Get-Sha256 $headlessNodePath) -eq ([string]$headlessWorkerPin.nodeSha256).ToLowerInvariant()) "Staged headless-worker node.exe does not match node.pin.json."
+Assert-True ((Get-Sha256 $headlessLicensePath) -eq ([string]$headlessWorkerPin.licenseSha256).ToLowerInvariant()) "Staged headless-worker LICENSE does not match node.pin.json."
+Assert-True ((Get-Sha256 (Join-Path $versionRoot "headless-worker\LICENSE-AkuSidecar")) -eq ([string]$installManifest.provenance.headlessWorker.workerLicenseSha256).ToLowerInvariant()) "Staged headless-worker sources do not retain the AkuSidecar license recorded in install provenance."
+Assert-True ([string]$headlessWorkerPin.officialDistributionUrl -like "https://nodejs.org/dist/v$($headlessWorkerPin.nodeVersion)/node-v$($headlessWorkerPin.nodeVersion)-win-x64.zip") "Staged headless worker pin does not identify the exact official Node.js archive."
+Assert-True ([string]$installManifest.provenance.headlessWorker.nodeSha256 -eq [string]$headlessWorkerPin.nodeSha256 -and [string]$installManifest.provenance.headlessWorker.distributionSha256 -eq [string]$headlessWorkerPin.distributionSha256) "Install provenance and headless worker pin differ."
+Assert-True ([string]$installManifest.provenance.headlessWorker.nodeVersion -eq [string]$headlessWorkerPin.nodeVersion -and [string]$installManifest.provenance.headlessWorker.officialDistributionUrl -eq [string]$headlessWorkerPin.officialDistributionUrl) "Install provenance records a different Node.js distribution."
+Assert-True (@($installManifest.provenance.headlessWorker.licenses).Count -eq 2) "Install provenance does not record both Node.js and AkuSidecar worker licenses."
 $config = Read-Json (Join-Path $versionRoot "config\sidecar.json")
 Assert-True (@($config.bridge.trustedExtensionOrigins).Count -eq 1 -and [string]$config.bridge.trustedExtensionOrigins[0] -eq [string]$manifest.bridgeIdentity.origin) "Sidecar config does not trust exactly the manifest Bridge origin."
 Assert-True ($config.deployment.mode -eq "production-installed-app" -and $config.deployment.runtimeInstallKind -eq "installed" -and $config.deployment.bridgeIdentityProfile -eq "production-app") "Sidecar config does not record installed-app production metadata."

@@ -122,6 +122,11 @@ function ConvertTo-NativeArgument([string] $Value) {
 
 foreach ($required in @(
     "AkuSidecar.exe",
+    "headless-worker\node.exe",
+    "headless-worker\worker.mjs",
+    "headless-worker\node.pin.json",
+    "headless-worker\LICENSE",
+    "headless-worker\LICENSE-AkuSidecar",
     "c2patool.exe",
     "third-party\c2patool\LICENSE-MIT",
     "third-party\c2patool\LICENSE-APACHE",
@@ -175,6 +180,7 @@ $artifactRelease = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "relea
 $artifactManifest = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "artifact-manifest.json") -Raw | ConvertFrom-Json
 $bridgeManifest = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "AkuBridge\manifest.json") -Raw | ConvertFrom-Json
 $packageConfig = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "config\sidecar.json") -Raw | ConvertFrom-Json
+$headlessWorkerPin = Get-Content -LiteralPath (Join-Path $ArtifactDirectory "headless-worker\node.pin.json") -Raw | ConvertFrom-Json
 Assert-True ($artifactRelease.version -eq $release.version) "Artifact release version differs from AkuBrowser."
 Assert-True ($bridgeManifest.version_name -eq $release.components.akuBridge.version) "Bundled AkuBridge product version differs from the release tuple."
 Assert-True ($bridgeManifest.version -eq $release.components.akuBridge.chromeVersion) "Bundled AkuBridge Chrome version differs from the release tuple."
@@ -190,6 +196,17 @@ Assert-True ($artifactManifest.bridgeIdentity.profile -eq $bridgeIdentityProfile
 Assert-True ($artifactManifest.bridgeIdentity.distribution -eq $bridgeIdentity.distribution) "Artifact provenance records the wrong Bridge distribution."
 Assert-True ($artifactManifest.bridgeIdentity.authority -eq "config/bridge-identities.json") "Artifact provenance does not record the Bridge identity authority."
 Assert-True ($artifactManifest.bridgeIdentity.extensionOrigin -eq $bridgeExtensionOrigin) "Artifact provenance records the wrong Bridge extension origin."
+$headlessNodeHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $ArtifactDirectory "headless-worker\node.exe")).Hash.ToLowerInvariant()
+$headlessLicenseHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $ArtifactDirectory "headless-worker\LICENSE")).Hash.ToLowerInvariant()
+Assert-True ([int]$headlessWorkerPin.protocol -eq 1 -and [string]$headlessWorkerPin.nodeVersion -match '^\d+\.\d+\.\d+$') "Packaged headless worker pin protocol or Node version is invalid."
+Assert-True ([string]$headlessWorkerPin.nodeSha256 -eq $headlessNodeHash) "Packaged headless-worker node.exe does not match node.pin.json."
+Assert-True ([string]$artifactManifest.bundledTools.headlessWorker.nodeVersion -eq [string]$headlessWorkerPin.nodeVersion) "Artifact provenance records a different Node.js version."
+Assert-True ([string]$headlessWorkerPin.licenseSha256 -eq $headlessLicenseHash) "Packaged headless-worker LICENSE does not match node.pin.json."
+Assert-True ([string]$artifactManifest.bundledTools.headlessWorker.workerLicenseSha256 -eq ((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $ArtifactDirectory "headless-worker\LICENSE-AkuSidecar")).Hash.ToLowerInvariant())) "Artifact provenance does not record the AkuSidecar worker license hash."
+Assert-True (@($artifactManifest.bundledTools.headlessWorker.licenses).Count -eq 2) "Artifact provenance does not record both Node.js and AkuSidecar worker licenses."
+Assert-True ([string]$headlessWorkerPin.officialDistributionUrl -like "https://nodejs.org/dist/v$($headlessWorkerPin.nodeVersion)/node-v$($headlessWorkerPin.nodeVersion)-win-x64.zip") "Packaged headless worker pin does not identify the exact official Node.js archive."
+Assert-True ([string]$artifactManifest.bundledTools.headlessWorker.nodeSha256 -eq $headlessNodeHash) "Artifact provenance does not record the bundled Node executable hash."
+Assert-True ([string]$artifactManifest.bundledTools.headlessWorker.distributionSha256 -eq [string]$headlessWorkerPin.distributionSha256) "Artifact provenance does not record the verified official Node archive hash."
 $c2paToolPath = Join-Path $ArtifactDirectory "c2patool.exe"
 $c2paToolHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $c2paToolPath).Hash.ToLowerInvariant()
 Assert-True ($c2paToolHash -eq $artifactRelease.components.c2paTool.sha256) "Bundled c2patool SHA-256 differs from the release pin."

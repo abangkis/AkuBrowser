@@ -167,6 +167,10 @@ finally {
         }
     }
 }
+$headlessWorkerDirectory = Join-Path $artifactRoot "headless-worker"
+$headlessWorkerResultText = & (Join-Path $PSScriptRoot "stage-headless-worker.ps1") -DestinationDirectory $headlessWorkerDirectory
+$headlessWorkerProvenance = ($headlessWorkerResultText | Out-String) | ConvertFrom-Json
+Assert-True ([string]$headlessWorkerProvenance.status -eq "ok") "Headless collection worker staging did not report success."
 Copy-Item -LiteralPath $C2paToolPath -Destination $c2paToolOutput
 $c2paLicenseOutput = Join-Path $artifactRoot "third-party\c2patool"
 New-Item -ItemType Directory -Force -Path $c2paLicenseOutput | Out-Null
@@ -266,6 +270,17 @@ $artifactManifest = [ordered]@{
                 "third-party/c2patool/LICENSE-APACHE",
                 "third-party/c2patool/THIRD-PARTY-NOTICE.md"
             )
+        }
+        headlessWorker = [ordered]@{
+            protocol = 1
+            nodeVersion = [string]$headlessWorkerProvenance.nodeVersion
+            nodeSha256 = [string]$headlessWorkerProvenance.nodeSha256
+            distributionSha256 = [string]$headlessWorkerProvenance.distributionSha256
+            workerLicenseSha256 = [string]$headlessWorkerProvenance.workerLicenseSha256
+            officialDistributionUrl = [string]$headlessWorkerProvenance.officialDistributionUrl
+            file = "headless-worker/node.exe"
+            pinFile = "headless-worker/node.pin.json"
+            licenses = @("headless-worker/LICENSE", "headless-worker/LICENSE-AkuSidecar")
         }
     }
 }

@@ -8,8 +8,10 @@
 ## v0.9.0 RC9 source candidate
 
 The installer bundles AkuBrowserLauncher, AkuSidecar, the internal
-`production-app` AkuBridge payload, pinned Chromium, c2patool, configuration,
-and checksums in one tuple. It does not require system Chrome, Developer Mode,
+`production-app` AkuBridge payload, pinned Chromium, the headless collection
+worker and its pinned Node.js runtime, c2patool, configuration, and checksums
+in one tuple. Node.js and its complete upstream license file are stored beside
+the worker sources under `headless-worker`. It does not require system Chrome, Developer Mode,
 manual extension loading, or a separate runtime installer. Codex App/App Server
 is an external prerequisite. The optional Gemini provider uses a user-supplied
 key through the Sidecar credential flow. The candidate covers X, LinkedIn,

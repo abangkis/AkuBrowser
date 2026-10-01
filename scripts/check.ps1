@@ -46,6 +46,12 @@ $nativeHostManifestSource = Get-Content -LiteralPath (Join-Path $bridgeRoot "nat
 $sourceCatalog = Get-Content -LiteralPath (Join-Path $bridgeRoot "source-catalog.js") -Raw
 $responseEvidenceAdapter = Get-Content -LiteralPath (Join-Path $bridgeRoot "x-response-evidence-adapter.js") -Raw
 $windowsPreviewTest = Get-Content -LiteralPath (Join-Path $browserRoot "scripts\test-windows-preview.ps1") -Raw
+$headlessNodePin = Read-Json (Join-Path $browserRoot "release\headless-worker\node.pin.json")
+Assert-True ([int]$headlessNodePin.protocol -eq 1 -and [string]$headlessNodePin.platform -eq "win-x64") "Headless worker Node.js release pin protocol or platform is invalid."
+Assert-True ([string]$headlessNodePin.officialDistributionUrl -eq "https://nodejs.org/dist/v$($headlessNodePin.nodeVersion)/node-v$($headlessNodePin.nodeVersion)-win-x64.zip") "Headless worker Node.js pin does not identify the official Windows x64 distribution."
+Assert-True ([string]$headlessNodePin.distributionSha256 -match '^[0-9a-f]{64}$') "Headless worker Node.js distribution pin is not a SHA-256 digest."
+$headlessPackagingTest = & (Join-Path $browserRoot "scripts\test-headless-worker-packaging.ps1")
+Assert-True ((($headlessPackagingTest | Out-String) | ConvertFrom-Json).status -eq "ok") "Headless worker packaging helper fixture test failed."
 
 Assert-True ($releaseManifest.version -eq "0.9.0") "AkuBrowser release line is unexpected; advance it only after closing the v0.9.0 RC series."
 Assert-True ($releaseManifest.channel -eq "stable") "AkuBrowser release manifest must declare the stable channel for the stable candidate."
