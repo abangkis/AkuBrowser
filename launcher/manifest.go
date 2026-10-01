@@ -83,6 +83,7 @@ type BundleManifest struct {
 	ConfigPath          string         `json:"configPath"`
 	ChromiumPath        string         `json:"chromiumPath"`
 	WindowsCaptureSplit bool           `json:"windowsCaptureSplit,omitempty"`
+	HeadlessWorkerPath  string         `json:"headlessWorkerPath,omitempty"`
 	BridgeExtensionPath string         `json:"bridgeExtensionPath"`
 	BridgeIdentity      BridgeIdentity `json:"bridgeIdentity"`
 	Storage             StoragePolicy  `json:"storage"`
@@ -257,6 +258,18 @@ func (m BundleManifest) validate() error {
 		for _, required := range []string{"chromium/pin.json", "ui-reader-broker/manifest.json", "ui-reader-broker/content.js", "ui-reader-broker/service-worker.js", "aku-reader-broker.exe", "com.akubrowser.reader_activation.json"} {
 			if _, ok := seen[required]; !ok {
 				return fmt.Errorf("Windows capture split requires declared payload %q", required)
+			}
+		}
+	}
+	if m.HeadlessWorkerPath != "" {
+		expected := filepath.ToSlash(filepath.Join(filepath.Dir(m.SidecarPath), "headless-worker"))
+		if m.HeadlessWorkerPath != expected {
+			return errors.New("headless worker must be adjacent to Sidecar at headless-worker")
+		}
+		for _, name := range []string{"node.exe", "worker.mjs", "node.pin.json", "LICENSE", "LICENSE-AkuSidecar"} {
+			required := m.HeadlessWorkerPath + "/" + name
+			if _, ok := seen[strings.ToLower(required)]; !ok {
+				return fmt.Errorf("headless worker requires declared payload %q", required)
 			}
 		}
 	}
