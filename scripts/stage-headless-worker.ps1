@@ -79,6 +79,63 @@ function Read-NodePin([string] $Path) {
     return $pin
 }
 
+function Resolve-VerifiedNodeFiles([string] $Archive, [string] $Root, $Pin, [string] $ArchiveHash) {
+    # The archive has already passed the official release SHA-256 pin. Derive
+    # file digests from its entries rather than trusting mutable cache metadata.
+    # Read only the two shipped files; never expand npm and the entire archive.
+    $cache = Join-Path $Root ("files-" + $Pin.nodeVersion + "-" + $ArchiveHash)
+    $cache = Assert-ContainedPath $cache @($Root) "Extracted Node.js cache"
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $zip = [IO.Compression.ZipFile]::OpenRead($Archive)
+    $files = @()
+    try {
+        foreach ($name in @('node.exe', [string]$Pin.licenseFile)) {
+            $entryName = "node-v$($Pin.nodeVersion)-win-x64/$name"
+            $matches = @($zip.Entries | Where-Object { $_.FullName -ceq $entryName })
+            Assert-True ($matches.Count -eq 1) "Official Node.js archive must contain exactly one $entryName."
+            $entry = $matches[0]
+            $stream = $entry.Open()
+            $digest = [Security.Cryptography.SHA256]::Create()
+            try { $expected = [BitConverter]::ToString($digest.ComputeHash($stream)).Replace('-', '').ToLowerInvariant() }
+            finally { $stream.Dispose(); $digest.Dispose() }
+            $files += @{ Name = $name; Entry = $entry; Hash = $expected }
+        }
+        $valid = Test-Path -LiteralPath $cache -PathType Container
+        if ($valid) {
+            Assert-True (((Get-Item -LiteralPath $cache -Force).Attributes -band [IO.FileAttributes]::ReparsePoint) -eq 0) "Extracted Node.js cache is a reparse point."
+            Assert-NoReparsePoints $cache "Extracted Node.js cache"
+            foreach ($file in $files) {
+                $path = Join-Path $cache $file.Name
+                if (-not (Test-Path -LiteralPath $path -PathType Leaf) -or (Get-Sha256 $path) -ne $file.Hash) { $valid = $false }
+            }
+        }
+        if ($valid) { return @{ Directory = $cache; Reused = $true } }
+        $fresh = Join-Path $Root (".node-files-" + [Guid]::NewGuid().ToString('n'))
+        New-Item -ItemType Directory -Path $fresh | Out-Null
+        try {
+            foreach ($file in $files) {
+                $path = Join-Path $fresh $file.Name
+                [IO.Compression.ZipFileExtensions]::ExtractToFile($file.Entry, $path)
+                Assert-True ((Get-Sha256 $path) -eq $file.Hash) "Extracted Node.js file checksum differs from the verified archive."
+            }
+            if (Test-Path -LiteralPath $cache) {
+                # Quarantine only this validated, project-contained cache path.
+                Assert-NoReparsePoints $cache "Extracted Node.js cache"
+                Move-Item -LiteralPath $cache -Destination ($cache + '.invalid-' + [Guid]::NewGuid().ToString('n'))
+            }
+            Move-Item -LiteralPath $fresh -Destination $cache
+        }
+        finally {
+            if (Test-Path -LiteralPath $fresh) {
+                $fresh = Assert-ContainedPath $fresh @($Root) "Temporary Node.js cache"
+                Remove-Item -LiteralPath $fresh -Recurse -Force
+            }
+        }
+        return @{ Directory = $cache; Reused = $false }
+    }
+    finally { $zip.Dispose() }
+}
+
 $browserBuildRoot = Join-Path $browserRoot "build"
 $browserArtifactRoot = Join-Path $browserRoot "artifacts"
 $sidecarBuildRoot = Join-Path $sidecarRoot "build"
@@ -162,16 +219,11 @@ $stageParent = Split-Path -Parent $DestinationDirectory
 New-Item -ItemType Directory -Force -Path $stageParent | Out-Null
 $stageDirectory = Join-Path $stageParent (".headless-worker-stage-" + [Guid]::NewGuid().ToString("n"))
 New-Item -ItemType Directory -Force -Path $stageDirectory | Out-Null
-$expandedArchive = Join-Path $CacheRoot (".expanded-" + [Guid]::NewGuid().ToString("n"))
-New-Item -ItemType Directory -Force -Path $expandedArchive | Out-Null
 
 try {
-    Expand-Archive -LiteralPath $ArchivePath -DestinationPath $expandedArchive -Force
-    $expectedArchiveRoot = "node-v$($pin.nodeVersion)-win-x64"
-    $nodeSource = Join-Path $expandedArchive (Join-Path $expectedArchiveRoot "node.exe")
-    $licenseSource = Join-Path $expandedArchive (Join-Path $expectedArchiveRoot ([string]$pin.licenseFile))
-    Assert-True (Test-Path -LiteralPath $nodeSource -PathType Leaf) "Official Node.js archive is missing $expectedArchiveRoot/node.exe."
-    Assert-True (Test-Path -LiteralPath $licenseSource -PathType Leaf) "Official Node.js archive is missing $expectedArchiveRoot/$($pin.licenseFile)."
+    $nodeFiles = Resolve-VerifiedNodeFiles $ArchivePath $CacheRoot $pin $actualArchiveHash
+    $nodeSource = Join-Path $nodeFiles.Directory 'node.exe'
+    $licenseSource = Join-Path $nodeFiles.Directory ([string]$pin.licenseFile)
 
     Copy-Item -LiteralPath $nodeSource -Destination (Join-Path $stageDirectory "node.exe")
     Copy-Item -LiteralPath $licenseSource -Destination (Join-Path $stageDirectory ([string]$pin.licenseFile))
@@ -219,13 +271,11 @@ try {
         licenseSha256 = $licenseHash
         workerLicenseSha256 = $workerLicenseHash
         workerSourceFiles = $sourceFiles.Count
+        nodeFilesCacheReused = [bool]$nodeFiles.Reused
     } | ConvertTo-Json -Depth 6
 }
 finally {
     if (Test-Path -LiteralPath $stageDirectory) {
         Remove-Item -LiteralPath $stageDirectory -Recurse -Force -ErrorAction SilentlyContinue
-    }
-    if (Test-Path -LiteralPath $expandedArchive) {
-        Remove-Item -LiteralPath $expandedArchive -Recurse -Force -ErrorAction SilentlyContinue
     }
 }
