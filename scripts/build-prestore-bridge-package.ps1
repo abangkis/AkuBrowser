@@ -38,6 +38,13 @@ $verification = $verificationJson | ConvertFrom-Json
 
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 $stagingRoot = Join-Path $OutputDirectory "bridge-staging"
+$zipPath = Join-Path $OutputDirectory "AkuBridge-$($verification.version)-prestore-unpacked.zip"
+$receiptPath = Join-Path $OutputDirectory "AkuBridge-$($verification.version)-prestore-unpacked.receipt.json"
+. (Join-Path $PSScriptRoot "output-lifecycle.ps1")
+$outputOwnership = Start-AkuOutput -Family "prestore-bridge-package" -Paths @($zipPath, "$zipPath.sha256", $receiptPath) -ReserveBytes 16777216
+$stagingOwnership = $null
+try {
+$stagingOwnership = Start-AkuOutput -Family "prestore-bridge-staging" -Paths @($stagingRoot) -ReserveBytes 16777216
 if (Test-Path -LiteralPath $stagingRoot) {
     $resolved = (Resolve-Path -LiteralPath $stagingRoot).Path
     if (-not $resolved.StartsWith($OutputDirectory, [StringComparison]::OrdinalIgnoreCase)) {
@@ -100,3 +107,10 @@ Write-Host "Pre-Store Bridge package: $zipPath"
 Write-Host "Extension ID: $($identity.extensionId)"
 Write-Host "SHA256: $zipHash"
 Write-Host "Receipt: $receiptPath"
+Complete-AkuOutput -Id $stagingOwnership
+Complete-AkuOutput -Id $outputOwnership
+} catch {
+    if ($stagingOwnership) { Complete-AkuOutput -Id $stagingOwnership -Failed }
+    Complete-AkuOutput -Id $outputOwnership -Failed
+    throw
+}

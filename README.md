@@ -249,6 +249,7 @@ never leaves Windows.
 - [Living Topics Thin Slice contract](docs/living-topics-thin-slice-contract.md)
 - [Living Topics Full Stage 1 contract](docs/living-topics-full-stage-1-contract.md)
 - [Preview release](docs/preview-release.md)
+- [Build output retention and acceptance state](docs/build-output-lifecycle.md)
 - [Stable release checklist](docs/stable-release-checklist.md)
 - [Windows clean-machine Step 3B](docs/windows-clean-machine-3b.md)
 - [Windows preview acceptance](docs/windows-preview-acceptance.md)

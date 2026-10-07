@@ -34,6 +34,13 @@ $verification = $verificationJson | ConvertFrom-Json
 
 New-Item -ItemType Directory -Force -Path $OutputDirectory | Out-Null
 $stagingRoot = Join-Path $OutputDirectory "staging"
+$zipPath = Join-Path $OutputDirectory "AkuBrowser-$($verification.version)-chrome-web-store.zip"
+$receiptPath = Join-Path $OutputDirectory "AkuBrowser-$($verification.version)-chrome-web-store.receipt.json"
+. (Join-Path $PSScriptRoot "output-lifecycle.ps1")
+$outputOwnership = Start-AkuOutput -Family "chrome-store-package" -Paths @($zipPath, $receiptPath) -ReserveBytes 16777216
+$stagingOwnership = $null
+try {
+$stagingOwnership = Start-AkuOutput -Family "chrome-store-staging" -Paths @($stagingRoot) -ReserveBytes 16777216
 if (Test-Path -LiteralPath $stagingRoot) {
     $resolvedStaging = (Resolve-Path -LiteralPath $stagingRoot).Path
     if (-not $resolvedStaging.StartsWith($OutputDirectory, [System.StringComparison]::OrdinalIgnoreCase)) {
@@ -106,3 +113,10 @@ Remove-Item -LiteralPath $stagingRoot -Recurse -Force
 Write-Host "Chrome Web Store package: $zipPath"
 Write-Host "SHA256: $zipHash"
 Write-Host "Receipt: $receiptPath"
+Complete-AkuOutput -Id $stagingOwnership
+Complete-AkuOutput -Id $outputOwnership
+} catch {
+    if ($stagingOwnership) { Complete-AkuOutput -Id $stagingOwnership -Failed }
+    Complete-AkuOutput -Id $outputOwnership -Failed
+    throw
+}

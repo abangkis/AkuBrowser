@@ -126,8 +126,8 @@ if ([string]::IsNullOrWhiteSpace($ChromiumRoot)) {
     $ChromiumRoot = Join-Path $sidecarRoot "runtime\chromium"
 }
 if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
-    $c2paSource = (Read-Json $releaseManifestPath).components.c2paTool.workspaceSource
-    $C2paToolPath = Join-Path $workspaceRoot $c2paSource
+    $C2paToolPath = (& (Join-Path $PSScriptRoot "provision-shared-c2patool.ps1") | Out-String).Trim()
+    Assert-True (-not [string]::IsNullOrWhiteSpace($C2paToolPath)) "The shared c2patool could not be provisioned."
 }
 $OutputRoot = Get-FullPath $OutputRoot
 $ChromiumRoot = Get-FullPath $ChromiumRoot
@@ -209,6 +209,8 @@ $artifactName = "AkuBrowser-$($release.version)-windows-x64-installed-app"
 $artifactRoot = Join-Path $OutputRoot $artifactName
 $versionRoot = Join-Path $artifactRoot (Join-Path "runtime\versions" ([string]$release.version))
 $artifactCreated = $false
+. (Join-Path $PSScriptRoot 'output-lifecycle.ps1')
+$outputOwner = Start-AkuOutput -Family 'windows-installed-app' -Paths @($artifactRoot)
 try {
     Reset-ArtifactPath $artifactRoot $OutputRoot
     New-Item -ItemType Directory -Force -Path $versionRoot | Out-Null
@@ -526,6 +528,7 @@ try {
         }
     }
     Write-Utf8NoBom (Join-Path $artifactRoot "install-manifest.json") ($installManifest | ConvertTo-Json -Depth 12)
+    Complete-AkuOutput -Id $outputOwner
 
     [ordered]@{
         status = "ok"
@@ -556,5 +559,6 @@ catch {
     if ($artifactCreated -and (Test-Path -LiteralPath $artifactRoot)) {
         Reset-ArtifactPath $artifactRoot $OutputRoot
     }
+    Complete-AkuOutput -Id $outputOwner -Failed
     throw
 }

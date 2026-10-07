@@ -12,6 +12,9 @@ if (-not (Test-Path -LiteralPath $ArchivePath -PathType Leaf)) {
 $root = Join-Path $browserRoot ('build/node-cache-tests/' + [Guid]::NewGuid().ToString('n'))
 $cache = Join-Path $root 'cache'
 $source = Join-Path $root 'worker'
+. (Join-Path $PSScriptRoot 'output-lifecycle.ps1')
+$outputOwner = Start-AkuOutput -Family 'node-cache-test' -Paths @($root) -ReserveBytes 402653184
+try {
 New-Item -ItemType Directory -Path $root -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $sidecarRoot 'internal/collection/headless/worker') -Destination $source -Recurse
 function Invoke-Stage([string] $Name) {
@@ -42,3 +45,8 @@ try {
 }
 if (-not $rejected -or (Test-Path -LiteralPath (Join-Path $root 'rejected'))) { throw 'An untrusted archive was accepted or promoted.' }
 [ordered]@{ status = 'ok'; cold = $true; warm = $true; freshWorkerSources = $true; corruptCacheRecovered = $true; untrustedArchiveRejected = $true; evidenceRoot = $root } | ConvertTo-Json
+Complete-AkuOutput -Id $outputOwner
+} catch {
+    Complete-AkuOutput -Id $outputOwner -Failed
+    throw
+}

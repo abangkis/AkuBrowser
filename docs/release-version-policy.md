@@ -46,7 +46,7 @@ An automated tuple check or local build does not prove this installed upgrade.
 | GitHub prerelease tag | `v0.9.0-rc.8` |
 | AkuBrowser installed app and AkuSidecar | `0.9.0` |
 | AkuBridge package / Chrome manifest | `0.9.2` / `0.9.2.0` |
-| Bridge runtime revision | `source-adapters-v111` |
+| Bridge runtime revision | `source-adapters-v112` |
 | Windows installer | `AkuBrowserSetup-0.9.0-windows-x64.exe` |
 
 Do not edit this table to imply that a historical `0.9.1` development canary

@@ -119,9 +119,9 @@ function Resolve-VerifiedNodeFiles([string] $Archive, [string] $Root, $Pin, [str
                 Assert-True ((Get-Sha256 $path) -eq $file.Hash) "Extracted Node.js file checksum differs from the verified archive."
             }
             if (Test-Path -LiteralPath $cache) {
-                # Quarantine only this validated, project-contained cache path.
+                # This exact cache is reconstructable from the verified archive.
                 Assert-NoReparsePoints $cache "Extracted Node.js cache"
-                Move-Item -LiteralPath $cache -Destination ($cache + '.invalid-' + [Guid]::NewGuid().ToString('n'))
+                Remove-Item -LiteralPath $cache -Recurse -ErrorAction Stop
             }
             Move-Item -LiteralPath $fresh -Destination $cache
         }
@@ -150,6 +150,12 @@ $pin = Read-NodePin $PinPath
 $archiveName = "node-v$($pin.nodeVersion)-win-x64.zip"
 $expectedArchiveHash = ([string]$pin.distributionSha256).ToLowerInvariant()
 
+$cacheOwnership = $null
+if ($CacheRoot.StartsWith($browserBuildRoot.TrimEnd('\') + '\', [StringComparison]::OrdinalIgnoreCase)) {
+    . (Join-Path $PSScriptRoot "output-lifecycle.ps1")
+    $cacheOwnership = Start-AkuOutput -Family "headless-node-cache" -Paths @($CacheRoot) -ReserveBytes 402653184
+}
+try {
 New-Item -ItemType Directory -Force -Path $CacheRoot | Out-Null
 if ([string]::IsNullOrWhiteSpace($ArchivePath)) {
     $versionCache = Join-Path $CacheRoot ([string]$pin.nodeVersion)
@@ -261,6 +267,7 @@ try {
     }
     Move-Item -LiteralPath $stageDirectory -Destination $DestinationDirectory
 
+    if ($cacheOwnership) { Complete-AkuOutput -Id $cacheOwnership }
     [ordered]@{
         status = "ok"
         destinationDirectory = $DestinationDirectory
@@ -278,4 +285,8 @@ finally {
     if (Test-Path -LiteralPath $stageDirectory) {
         Remove-Item -LiteralPath $stageDirectory -Recurse -Force -ErrorAction SilentlyContinue
     }
+}
+} catch {
+    if ($cacheOwnership) { Complete-AkuOutput -Id $cacheOwnership -Failed }
+    throw
 }

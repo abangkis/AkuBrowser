@@ -16,8 +16,10 @@ $bridgeIdentityRegistryPath = Join-Path $browserRoot "config\bridge-identities.j
 & node (Join-Path $PSScriptRoot "check-runtime-identity.mjs") $workspaceRoot
 if ($LASTEXITCODE -ne 0) { throw "Runtime identity contract check failed before Windows preview build." }
 if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
-    $c2paSource = (Get-Content -LiteralPath $releaseManifestPath -Raw | ConvertFrom-Json).components.c2paTool.workspaceSource
-    $C2paToolPath = Join-Path $workspaceRoot $c2paSource
+    $C2paToolPath = (& (Join-Path $PSScriptRoot "provision-shared-c2patool.ps1") | Out-String).Trim()
+    if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
+        throw "The shared c2patool could not be provisioned."
+    }
 }
 $C2paToolPath = [IO.Path]::GetFullPath($C2paToolPath)
 
@@ -125,6 +127,9 @@ $artifactName = "AkuBrowser-$($release.version)-windows-x64"
 $artifactRoot = Join-Path $OutputRoot $artifactName
 $zipPath = Join-Path $OutputRoot "$artifactName.zip"
 $zipChecksumPath = "$zipPath.sha256"
+. (Join-Path $PSScriptRoot 'output-lifecycle.ps1')
+$outputOwner = Start-AkuOutput -Family 'windows-preview' -Paths @($artifactRoot, $zipPath, $zipChecksumPath) -ReserveBytes 1610612736
+try {
 Reset-ArtifactPath $artifactRoot $OutputRoot -Directory
 Reset-ArtifactPath $zipPath $OutputRoot
 Reset-ArtifactPath $zipChecksumPath $OutputRoot
@@ -300,6 +305,7 @@ $checksumLines | Set-Content -LiteralPath $checksumPath -Encoding ASCII
 Compress-Archive -Path (Join-Path $artifactRoot "*") -DestinationPath $zipPath -CompressionLevel Optimal
 $zipHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $zipPath).Hash.ToLowerInvariant()
 "$zipHash  $([IO.Path]::GetFileName($zipPath))" | Set-Content -LiteralPath $zipChecksumPath -Encoding ASCII
+Complete-AkuOutput -Id $outputOwner
 
 [ordered]@{
     status = "ok"
@@ -318,3 +324,7 @@ $zipHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $zipPath).Hash.ToLowerIn
     bridgeIdentityProfile = $bridgeIdentityProfile
     bridgeExtensionOrigin = $bridgeExtensionOrigin
 } | ConvertTo-Json -Depth 8
+} catch {
+    Complete-AkuOutput -Id $outputOwner -Failed
+    throw
+}

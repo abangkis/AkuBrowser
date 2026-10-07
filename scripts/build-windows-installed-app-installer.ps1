@@ -79,6 +79,9 @@ if ($VerifyOnly) {
 }
 
 $compiler = Find-NsisCompiler $NsisPath
+. (Join-Path $PSScriptRoot 'output-lifecycle.ps1')
+$outputOwner = Start-AkuOutput -Family 'windows-installed-app-installer' -Paths @($outputFile, $checksumFile) -ReserveBytes 536870912
+try {
 if (Test-Path -LiteralPath $outputFile) { Remove-Item -LiteralPath $outputFile -Force }
 if (Test-Path -LiteralPath $checksumFile) { Remove-Item -LiteralPath $checksumFile -Force }
 $arguments = @(
@@ -111,3 +114,8 @@ $result = [ordered]@{
     releaseReady = $true
 }
 $result | ConvertTo-Json -Depth 4
+Complete-AkuOutput -Id $outputOwner
+} catch {
+    Complete-AkuOutput -Id $outputOwner -Failed
+    throw
+}

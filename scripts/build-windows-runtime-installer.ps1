@@ -219,8 +219,8 @@ $OutputRoot = [IO.Path]::GetFullPath($OutputRoot)
 New-Item -ItemType Directory -Force -Path $OutputRoot | Out-Null
 
 if ([string]::IsNullOrWhiteSpace($C2paToolPath)) {
-    $c2paSource = $release.components.c2paTool.workspaceSource
-    $C2paToolPath = Join-Path $workspaceRoot $c2paSource
+    $C2paToolPath = (& (Join-Path $PSScriptRoot "provision-shared-c2patool.ps1") | Out-String).Trim()
+    Assert-True (-not [string]::IsNullOrWhiteSpace($C2paToolPath)) "The shared c2patool could not be provisioned."
 }
 $C2paToolPath = [IO.Path]::GetFullPath($C2paToolPath)
 Assert-True (Test-Path -LiteralPath $C2paToolPath -PathType Leaf) "The pinned c2patool binary was not found: $C2paToolPath"
@@ -280,6 +280,18 @@ $artifactName = "AkuBrowserRuntimeSetup-$sidecarVersion$suffix.exe"
 $artifactPath = Join-Path $OutputRoot $artifactName
 $checksumPath = "$artifactPath.sha256"
 $buildRoot = Join-Path $OutputRoot ".runtime-installer-build"
+. (Join-Path $PSScriptRoot 'output-lifecycle.ps1')
+$managedOutputs = @($artifactPath, $checksumPath)
+if (-not [string]::IsNullOrWhiteSpace($UpdateSigningPrivateKeyPath)) {
+    $managedOutputs += @( (Join-Path $OutputRoot "AkuSidecar-$sidecarVersion-windows-x64.zip"), (Join-Path $OutputRoot "AkuSidecar-$sidecarVersion-windows-x64.zip.sha256") )
+    if ($sidecarVersion -eq [string]$release.version -and [string]$release.components.akuBridge.version -eq [string]$release.version -and [string]$release.components.akuSidecar.runtimeRevision -eq [string]$release.components.akuBridge.runtimeRevision) {
+        $managedOutputs += @( (Join-Path $OutputRoot "AkuBrowserRuntime-$($release.version)-windows-x64.zip"), (Join-Path $OutputRoot "AkuBrowserRuntime-$($release.version)-windows-x64.zip.sha256") )
+    }
+}
+$outputOwner = Start-AkuOutput -Family 'windows-runtime-installer' -Paths $managedOutputs -ReserveBytes 1073741824
+$stagingOwner = $null
+try {
+$stagingOwner = Start-AkuOutput -Family 'windows-runtime-installer-staging' -Paths @($buildRoot) -ReserveBytes 536870912
 Reset-Path $buildRoot $OutputRoot -Directory
 Reset-Path $artifactPath $OutputRoot
 Reset-Path $checksumPath $OutputRoot
@@ -639,6 +651,8 @@ if (-not $UnsignedLocalCandidate -and -not $UnsignedStableCandidate) {
 $artifactHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $artifactPath).Hash.ToLowerInvariant()
 "$artifactHash  $artifactName" | Set-Content -LiteralPath $checksumPath -Encoding ASCII
 Reset-Path $buildRoot $OutputRoot
+Complete-AkuOutput -Id $stagingOwner
+Complete-AkuOutput -Id $outputOwner -Pin:(-not $UnsignedLocalCandidate)
 
 [ordered]@{
     status = "ok"
@@ -656,3 +670,8 @@ Reset-Path $buildRoot $OutputRoot
     sourceCommits = $sourceCommits
     sourceDirty = @($dirty)
 } | ConvertTo-Json -Depth 8
+} catch {
+    if ($stagingOwner) { Complete-AkuOutput -Id $stagingOwner -Failed }
+    Complete-AkuOutput -Id $outputOwner -Failed
+    throw
+}

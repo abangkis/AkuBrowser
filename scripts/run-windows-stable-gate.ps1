@@ -130,6 +130,8 @@ if (Test-Path -LiteralPath $OutputRoot) {
 $finalOutputRoot = $OutputRoot
 $buildingRoot = "$finalOutputRoot.building"
 Assert-True (-not (Test-Path -LiteralPath $buildingRoot)) "A prior incomplete stable-gate staging directory exists: $buildingRoot"
+. (Join-Path $PSScriptRoot "output-lifecycle.ps1")
+$outputOwnership = Start-AkuOutput -Family "windows-stable-gate" -Paths @($finalOutputRoot, $buildingRoot) -ReserveBytes 3221225472
 New-Item -ItemType Directory -Path $buildingRoot | Out-Null
 $OutputRoot = $buildingRoot
 $publishRoot = Join-Path $OutputRoot "publish"
@@ -306,11 +308,13 @@ $kitManifest = [ordered]@{
 }
 Write-Utf8NoBom (Join-Path $OutputRoot "release-kit.json") ($kitManifest | ConvertTo-Json -Depth 10)
 Move-Item -LiteralPath $OutputRoot -Destination $finalOutputRoot
+Complete-AkuOutput -Id $outputOwnership -Pin
 }
 catch {
     if (Test-Path -LiteralPath $buildingRoot) {
         Remove-Item -LiteralPath $buildingRoot -Recurse -Force
     }
+    Complete-AkuOutput -Id $outputOwnership -Failed
     throw
 }
 

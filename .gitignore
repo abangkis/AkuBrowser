@@ -4,6 +4,7 @@ node_modules/
 # Build and test output
 dist/
 build/
+acceptance-state/
 coverage/
 .nyc_output/
 artifacts/

@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "classes": {
+    "build": { "root": "build", "maxCountPerFamily": 3, "maxAgeDays": 7, "maxBytes": 4294967296 },
+    "artifacts": { "root": "artifacts", "maxCountPerFamily": 2, "maxAgeDays": 30, "maxBytes": 4294967296 }
+  }
+}
