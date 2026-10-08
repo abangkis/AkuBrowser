@@ -283,7 +283,12 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     const manager = new OutputLifecycle(root);
     let result;
     if (command === 'cleanup') result = manager.cleanup({ apply: !!options.apply });
-    else if (command === 'begin') result = manager.begin({ family: options.family, className: options.class, outputs: JSON.parse(options.outputs), reserveBytes: Number(options.reserve ?? 1073741824), ownerPid: Number(options['owner-pid'] || process.ppid) });
+    else if (command === 'begin') {
+      const outputsJson = options['outputs-base64'] === undefined
+        ? options.outputs
+        : Buffer.from(options['outputs-base64'], 'base64').toString('utf8');
+      result = manager.begin({ family: options.family, className: options.class, outputs: JSON.parse(outputsJson), reserveBytes: Number(options.reserve ?? 1073741824), ownerPid: Number(options['owner-pid'] || process.ppid) });
+    }
     else if (command === 'finish') result = manager.finish(options.id, options.state || 'complete', { pin: !!options.pin });
     else if (command === 'measure') result = measure(options.path);
     else throw new Error('Usage: build-output-lifecycle.mjs cleanup|begin|finish|measure [named options]');

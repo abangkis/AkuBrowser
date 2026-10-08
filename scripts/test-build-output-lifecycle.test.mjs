@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { spawn } from 'node:child_process';
+import { spawn, execFileSync } from 'node:child_process';
 import { OutputLifecycle } from './build-output-lifecycle.mjs';
 
 const repository = path.dirname(path.dirname(fileURLToPath(import.meta.url)));
@@ -25,6 +25,49 @@ function output(f, name, content = 'candidate', family = 'package') {
   fs.mkdirSync(p); fs.writeFileSync(path.join(p, 'generated.bin'), content);
   f.manager.finish(admission.id, 'complete');
   return { p, id: admission.id };
+}
+
+for (const shell of ['powershell.exe', 'pwsh.exe']) {
+  test(`${shell} producer adapter preserves single and multiple output paths`, { skip: process.platform !== 'win32' }, (t) => {
+    try {
+      execFileSync(shell, ['-NoProfile', '-NonInteractive', '-Command', '$PSVersionTable.PSVersion.ToString()'], { windowsHide: true, stdio: 'pipe' });
+    } catch (error) {
+      if (shell === 'pwsh.exe' && error.code === 'ENOENT') { t.skip('PowerShell 7 is not installed'); return; }
+      throw error;
+    }
+    const f = fixture(t);
+    fs.mkdirSync(path.join(f.root, 'scripts'));
+    fs.mkdirSync(path.join(f.root, 'config'));
+    fs.writeFileSync(path.join(f.root, 'config/build-retention.json'), JSON.stringify(f.manager.policy));
+    for (const name of ['output-lifecycle.ps1', 'build-output-lifecycle.mjs']) {
+      fs.copyFileSync(path.join(repository, 'scripts', name), path.join(f.root, 'scripts', name));
+    }
+    const paths = [path.join(f.root, 'build/single path'), path.join(f.root, 'build/multiple path'), path.join(f.root, 'build/teks \u00e9 \u65e5')];
+    const script = `
+$ErrorActionPreference = 'Stop'
+$ProgressPreference = 'SilentlyContinue'
+. (Join-Path $env:AKU_LIFECYCLE_TEST_ROOT 'scripts/output-lifecycle.ps1')
+$paths = $env:AKU_LIFECYCLE_TEST_PATHS | ConvertFrom-Json
+$single = Start-AkuOutput -Family 'single' -Paths @($paths[0]) -ReserveBytes 0
+Complete-AkuOutput -Id $single
+$multiple = Start-AkuOutput -Family 'multiple' -Paths @($paths[1], $paths[2]) -ReserveBytes 0
+Complete-AkuOutput -Id $multiple
+@($single, $multiple) | ConvertTo-Json -Compress
+`;
+    const stdout = execFileSync(shell, ['-NoProfile', '-NonInteractive', '-ExecutionPolicy', 'Bypass', '-EncodedCommand', Buffer.from(script, 'utf16le').toString('base64')], {
+      windowsHide: true, encoding: 'utf8', timeout: 60000,
+      env: { ...process.env, AKU_LIFECYCLE_TEST_ROOT: f.root, AKU_LIFECYCLE_TEST_PATHS: JSON.stringify(paths) },
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+    const ids = JSON.parse(stdout);
+    assert.equal(ids.length, 2);
+    const records = f.manager.records();
+    assert.equal(records.length, 2);
+    assert.deepEqual(records.find((r) => r.id === ids[0]).outputs, [paths[0]]);
+    assert.deepEqual(records.find((r) => r.id === ids[1]).outputs, paths.slice(1));
+    assert.ok(records.every((r) => r.state === 'complete' && r.reservedBytes === 0));
+    assert.ok(paths.every((p) => !fs.existsSync(p)), 'Admission should not create the output directories');
+  });
 }
 
 test('dry-run creates no registry and cannot adopt unregistered source/state', (t) => {
