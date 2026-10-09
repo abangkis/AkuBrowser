@@ -410,11 +410,30 @@ The Sidecar derives bounded query features locally from the persisted Timeline
 `WhatChanged` (title-like text), source evidence text, `WhyItMatters` (summary),
 and topic tags/facets. FTS5 is only the bounded candidate generator and may
 over-fetch a small local pool. A deterministic relevance engine then extracts
-structured topic anchors, admits substantively related candidates, ranks them,
-and produces the public match reason. Generic one-token overlap, common prose,
-and generic phrases cannot admit a candidate by themselves; BM25 candidate
-order may break ties but is not the relevance decision. Returning zero matches
-is valid and preferable to filling the drawer with weak context.
+structured subject features, admits substantively related candidates, ranks them,
+and produces the public match reason. Automatic relevance (`content-context-v3`)
+requires a supported subject relationship: a matching product/model and related
+feature or issue, or a focused technical topic. An author name, attribution,
+company/category such as OpenAI or AI, generic prose, or "usage" alone cannot
+admit a candidate, including when the overlap is in a summary. Tags and facets
+are hints and cannot establish an otherwise unsupported subject relationship.
+Model/version identities and qualifiers remain complete: GPT-6.1, Step 5 Preview
+and Opus 5.5 cannot match through a shared numeric fragment. Phrase features
+retain actual adjacent source positions and field/label boundaries.
+Free-standing technical phrases use a conservative explicit vocabulary; less
+common topics and paraphrases may be omitted rather than admitted through
+ordinary word overlap.
+
+Related Context and explicit Library search have separate admission policies.
+Intentional Library queries retain broader lexical and metadata discovery; the
+automatic relevance gate does not narrow user-authored Library searches.
+FTS5 still retrieves at most 24 local candidates, with complete model identities
+quoted as phrases rather than separate OR terms, with bounded whole-identity
+spellings for compact forms such as Step5Preview. Final admission still checks
+the complete canonical identity. BM25 candidate order may break
+ties but is not the relevance decision. Returning zero matches is valid and
+preferable to filling the drawer with weak context, regardless of the number
+of memories sharing a broad company tag. No provider or embedding is added.
 
 The complete path remains local and makes no provider, browser, media, or
 Bridge call. Exact source/evidence-key, permalink, and platform-id matches are
@@ -424,7 +443,8 @@ bounded and deterministic for the same stored state.
 
 The response contains at most five existing public Library projections and a
 deterministic `matchReason` naming only matching public fields such as title,
-summary, author, tags, facets, or retained text. It may additionally contain at
+summary, tags, facets, or retained text. Authors remain visible in the public
+Memory projection but do not establish automatic relevance. It may additionally contain at
 most two Living Topic insights. Each topic insight must come from the newest
 `isCurrent` snapshot, contain only supported claims, and report active evidence
 count, version, update time, and a deterministic match reason. Historical,
@@ -640,8 +660,9 @@ weaker sibling-topic matches in explicit Library search.
 - Library HTTP reads validate bounds, hide internal fields, return 404 for
   tombstones, and expose distinct narrow Remove and Forget permanently
   mutations;
-- Content Context uses FTS5 only for bounded candidate generation, rejects
-  generic single-term or generic-phrase matches, permits a successful empty
+- Content Context uses FTS5 only for bounded candidate generation, requires
+  supported subject relationships and complete model/version identities,
+  keeps explicit Library search broader, permits a successful empty
   result, and returns deterministic ordering and substantive public reasons
   for the same stored state without provider or write activity;
 - only one eligible post owns the viewport-scoped Related context tab at a
