@@ -32,6 +32,14 @@ GitHub's prerelease flag describes the publication state. Record both in notes.
 
 ## Same-version RC upgrades
 
+Installation, clean-machine acceptance, same-version upgrade, repair/uninstall,
+and live post-install collection tests require the user's explicit confirmation
+before execution. Creating or publishing an RC does not authorize those tests.
+Source tests, candidate probes, payload checks, and installer/checksum verification
+may run as part of the authorized build without installing or activating it.
+For RC11, the user explicitly deferred installation and related manual acceptance;
+record those checks as not performed, never as passed.
+
 Multiple RCs can share the installer filename and `runtime/versions/0.9.0`
 path. The installer overwrites that path and updates `runtime/current.json`
 only after staging. Before claiming upgrade readiness, test install over the
