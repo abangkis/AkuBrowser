@@ -411,7 +411,7 @@ The Sidecar derives bounded query features locally from the persisted Timeline
 and topic tags/facets. FTS5 is only the bounded candidate generator and may
 over-fetch a small local pool. A deterministic relevance engine then extracts
 structured subject features, admits substantively related candidates, ranks them,
-and produces the public match reason. Automatic relevance (`content-context-v3`)
+and produces the public match reason. Automatic relevance (`content-context-v4`)
 requires a supported subject relationship: a matching product/model and related
 feature or issue, or a focused technical topic. An author name, attribution,
 company/category such as OpenAI or AI, generic prose, or "usage" alone cannot
@@ -423,6 +423,22 @@ retain actual adjacent source positions and field/label boundaries.
 Free-standing technical phrases use a conservative explicit vocabulary; less
 common topics and paraphrases may be omitted rather than admitted through
 ordinary word overlap.
+
+Audience and editorial descriptors such as developers, community, competitive,
+international, custom, and workflows cannot supply the extra feature for a
+shared product or country. A second shared named subject cannot supply that
+feature either. Ordinary word features must be corroborated in the Timeline's
+`WhatChanged` or source text and the Memory's title or retained text; generated
+significance and summaries alone cannot supply them. The matching subject must
+also be present in those primary fields, so an incidental summary mention cannot
+give it another product's feature. The conservative technical
+vocabulary (for example stabilization), and exact adjacent technical phrases,
+remain eligible in summaries. Generic performance alone and the
+`Indonesia`/`Indonesian` subject echo are not an additional issue. Match reasons name the
+actual shared feature or issue. Primary features receive the bounded retrieval
+budget before significance prose. Automatic
+matching and FTS retrieval share the bounded `reset`/`resets` equivalence; this
+is not general stemming and never changes complete model/version identities.
 
 Related Context and explicit Library search have separate admission policies.
 Intentional Library queries retain broader lexical and metadata discovery; the
