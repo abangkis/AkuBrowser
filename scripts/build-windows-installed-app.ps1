@@ -229,9 +229,9 @@ try {
         $env:GOOS = "windows"
         $env:GOARCH = "amd64"
         $env:CGO_ENABLED = "0"
-        $env:GOCACHE = Join-Path $cacheRoot "build"
-        $env:GOMODCACHE = Join-Path $cacheRoot "mod"
-        $env:GOTMPDIR = Join-Path $cacheRoot "tmp"
+        if ([string]::IsNullOrWhiteSpace($env:GOCACHE)) { $env:GOCACHE = Join-Path $cacheRoot "build" }
+        if ([string]::IsNullOrWhiteSpace($env:GOMODCACHE)) { $env:GOMODCACHE = Join-Path $cacheRoot "mod" }
+        if ([string]::IsNullOrWhiteSpace($env:GOTMPDIR)) { $env:GOTMPDIR = Join-Path $cacheRoot "tmp" }
         foreach ($directory in @($env:GOCACHE, $env:GOMODCACHE, $env:GOTMPDIR)) {
             New-Item -ItemType Directory -Force -Path $directory | Out-Null
         }

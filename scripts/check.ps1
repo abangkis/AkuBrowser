@@ -159,7 +159,16 @@ foreach ($schema in $schemas) {
 
 Push-Location $sidecarRoot
 try {
-    & go test -p 1 ./...
+    # Disposable build directories may contain incomplete diagnostic Go files.
+    # Test every tracked source package without discovering those local fixtures.
+    $trackedGoFiles = @(& git -C $sidecarRoot ls-files '*.go')
+    if ($LASTEXITCODE -ne 0 -or $trackedGoFiles.Count -eq 0) { throw 'Cannot enumerate tracked AkuSidecar Go sources.' }
+    $sourcePackages = @($trackedGoFiles | ForEach-Object {
+        $directory = Split-Path -Parent $_
+        if ([string]::IsNullOrWhiteSpace($directory)) { '.' }
+        else { './' + $directory.Replace('\', '/') }
+    } | Sort-Object -Unique)
+    & go test -p 1 @sourcePackages
     if ($LASTEXITCODE -ne 0) { throw "AkuSidecar tests failed." }
     & node --test --test-isolation=none `
         (Join-Path $sidecarRoot "test\capture-surface-release-barrier.test.mjs") `
