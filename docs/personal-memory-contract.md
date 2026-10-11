@@ -411,7 +411,7 @@ The Sidecar derives bounded query features locally from the persisted Timeline
 and topic tags/facets. FTS5 is only the bounded candidate generator and may
 over-fetch a small local pool. A deterministic relevance engine then extracts
 structured subject features, admits substantively related candidates, ranks them,
-and produces the public match reason. Automatic relevance (`content-context-v4`)
+and produces the public match reason. Automatic relevance (`content-context-v5`)
 requires a supported subject relationship: a matching product/model and related
 feature or issue, or a focused technical topic. An author name, attribution,
 company/category such as OpenAI or AI, generic prose, or "usage" alone cannot
@@ -420,6 +420,11 @@ are hints and cannot establish an otherwise unsupported subject relationship.
 Model/version identities and qualifiers remain complete: GPT-6.1, Step 5 Preview
 and Opus 5.5 cannot match through a shared numeric fragment. Phrase features
 retain actual adjacent source positions and field/label boundaries.
+Numeric parsing preserves measurement punctuation and adjacent duration units.
+Percentages (`10%`, `10.5 percent`) and countdowns (`8 hours 40 minutes`,
+`8h40m`, including emphasized `MINNSSSSS`) cannot fabricate version identities
+such as `has 10`, `approximately 8`, or `hrs 40`. Decimal model versions and
+their qualifiers remain exact even when the same post also contains measurements.
 Free-standing technical phrases use a conservative explicit vocabulary; less
 common topics and paraphrases may be omitted rather than admitted through
 ordinary word overlap.
