@@ -29,9 +29,9 @@ X-Aku-Bridge-Contract: aku-browser.bridge.v2
 The active pair is exact:
 
 - AkuBridge product version `0.9.2` / Chrome manifest version `0.9.2.0`;
-- runtime revision `source-adapters-v113`;
+- runtime revision `source-adapters-v114`;
 - focus policy revision `quiet-containment-only-v2`;
-- build id `aku-bridge-0.9.2-source-adapters-v113`; and
+- build id `aku-bridge-0.9.2-source-adapters-v114`; and
 - contract `aku-browser.bridge.v2`.
 
 Heartbeat publication is Bridge-authenticated. AkuSidecar process health is independent from Bridge readiness. A missing
@@ -62,6 +62,25 @@ Raw observation `coverage.status=partial` means bounded viewport coverage and
 does not by itself indicate adapter degradation. AkuSidecar projects the latest
 quality evidence independently as `capturePerformance.outcome` (`complete`,
 `degraded`, or `unavailable`) in Update Inbox diagnostics.
+
+LinkedIn `directContext` may contain multiple observed comments from the
+profile linked in the feed label. `matchBasis: "actor_profile"` means exact
+profile association, never a claim that a particular comment triggered the
+feed. Matched comment/reply kinds follow observed DOM ancestry. The existing
+eight-relation limit applies; the first matched row's `omittedCommentCount`
+reports additional distinct matches in that capture. Reference-only comment
+objects may include a bounded `captureReason` enum for unresolved account,
+missing/hidden comments, unmatched/unresolved authors, missing/ambiguous body,
+or conflicting comment identity, including `comment_read_failed` for read errors.
+`commentReadErrorCount` counts unreadable observed roots without asserting an
+author match. Missing legacy reasons remain unknown. Empty clones cannot veto
+compatible positive evidence; true author/body/parent conflicts remain references.
+At capacity, usable comment bodies precede empty references. Optional context
+failure leaves the independently captured post intact with
+`presentation.directContextStatus: "extraction_failed"`.
+Go validates these optional fields on ingress; they confer no navigation,
+lookup, account or session authority. See Sidecar's
+`docs/headless-windowed-capture-parity.md` for the exact reason tokens.
 
 ## Page relay messages
 
