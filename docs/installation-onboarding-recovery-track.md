@@ -1,7 +1,32 @@
 # Jalur khusus: instalasi, pemulihan, dan onboarding pengguna baru
 
-Status per 14 September 2026: **1 selesai (INST-04), 4 masih terbuka (INST-01, INST-02, INST-03, INST-05).** Mitigasi kode dan uji lokal tidak otomatis menutup kriteria penerimaan instalasi/RC; belum ada RC baru.
+Status synchronized: 2026-11-01. The historical issue checkpoint on 14 September
+recorded **one scoped completion (INST-04) and four open issues
+(INST-01/02/03/05)**. The later RC9 existing-account retest is documented below;
+the old statement that no newer RC existed no longer describes this record.
+Mitigation code and local tests do not close independent installation acceptance.
+
 Tanggal laporan: 5 September 2026. Konteks: pengujian instalasi AkuBrowser v0.9.0 RC3 pada lingkungan pengguna.
+
+## Current status by evidence dimension (2026-11-01)
+
+| Issue | Implemented | Tested | Activated | Acceptance |
+| --- | --- | --- | --- | --- |
+| INST-01: old database | Classification, keep/fresh and supported migration mitigations recorded | Package fixtures; later RC9 preserved an existing database during same-version installation | RC9 existing-account tuple recorded on 2026-09-23 | Open for problematic old-DB recovery and independent installer/upgrade matrix |
+| INST-02: first-launch white window/banner | Native status and explicit Retry window mitigations | Bounded recovery; later RC9 startup passed, but rendered UI was not visually inspected | Historical retry artifacts and RC9 local tuple | Open for causal first-launch diagnosis/banner acceptance; parked investigation remains parked |
+| INST-03: Grant access journey | Onboarding/readiness flow recorded | Local recovery and later existing-account four-source update | RC9 local tuple | Open for uninterrupted fresh-user first-launch/onboarding; preserved-profile capture is not that journey |
+| INST-04: login continuity | Selected isolated-profile policy and guidance | Normal restart, same-version builds and bounded RC9 preserved-profile evidence | Historical local builds/RC9 tuple | Complete only for the selected scope; independent clean-machine/upgrade certification remains separate |
+| INST-05: Gemini | Guidance and provider credential/readiness flow recorded | Fixtures and historical development E2E | Development use recorded; installed real-key/project/quota result not established | Open for installed real-key/project/quota acceptance |
+
+The [RC9 receipt](../acceptance/windows-installed-app-rc9-2026-09-23.md)
+records healthy startup, a completed four-source update and data preservation
+on an existing Windows account. It explicitly excludes clean-machine proof,
+rendered-UI inspection, full reset and schema rollback. It therefore supplements
+the issue evidence without closing those broader gates. See the
+[release checklist](stable-release-checklist.md) and
+[workspace status index](../../AkuSidecar/docs/roadmap-status.md).
+No installation, runtime, credential, profile or configuration change is made
+by this synchronization. The original issue narrative below remains historical.
 
 Keputusan pengguna, 13 September 2026: investigasi akar penyebab layar putih pada peluncuran pertama (INST-02) diparkir sementara agar isu lain dapat dilanjutkan. Avast ada di kedua perangkat yang mengalami gejala, tetapi belum ada log yang mengaitkan Avast dengan kejadian terkini; jangan nyatakan sebagai akar masalah atau ubah pengecualian antivirus. Sejak itu, retry manual native sudah diuji berhasil, tetapi peluncuran pertama tetap putih dan INST-02/03 belum diterima sebagai alur tanpa hambatan.
 

@@ -1,11 +1,19 @@
 # AkuBrowser installed-app distribution contract
 
 > Current source-candidate note: this contract records the earlier v0.9.0 Windows
-> release. The v0.9.0-rc.8 source candidate has since advanced its Sidecar schema;
-> use [the RC8 release guide](preview-release.md) and
+> release. Later candidates advanced the Sidecar schema;
+> use [the current release guide](preview-release.md) and
 > [stable release checklist](stable-release-checklist.md) for current candidate
 > gates. Do not attribute source-candidate metadata to a published installer
 > until the generated tuple and artifact have been verified.
+
+Status synchronization: 2026-11-01. The release guide/checklist records RC9 as
+the later published prerelease and links its existing-account acceptance receipt.
+The phased migration and historical schema/version values below are not a new
+source freeze. See the [four-dimension release status](stable-release-checklist.md#source-and-release-status-synchronization-2026-11-01)
+and [workspace index](../../AkuSidecar/docs/roadmap-status.md): newer implemented
+and tested Sidecar cleanup is not recorded as activated or installed-app accepted.
+No contract, release scope, runtime or acceptance gate is changed here.
 
 Status: **v0.9.0 stable for Windows x64; intentionally unsigned**. Phase 0 identity,
 the Windows launcher vertical slice, the local Windows tuple builder, and the

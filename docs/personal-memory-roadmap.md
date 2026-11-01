@@ -8,6 +8,28 @@ implemented behavior remains governed by the
 phase does not become an active contract until its own design and acceptance
 checks are approved.
 
+## Status synchronization (2026-11-01)
+
+This update preserves the accepted sequence. Implementation/graduation below
+is recorded by the existing local contracts; no feature tests or runtime checks
+were rerun for this documentation update. Cross-component commit and receipt
+scope is recorded in the [workspace status index](../../AkuSidecar/docs/roadmap-status.md).
+
+| Stage | Implemented | Tested | Activated | Acceptance |
+| --- | --- | --- | --- | --- |
+| Personal Memory / Library foundation | Existing local contract and implementation | Historical foundation/source acceptance | Not re-established for the current process here | Local foundation boundary recorded; automatic `ComposeSession` ingestion remains a separate later milestone |
+| Living Topics Thin Slice | Implemented | Historical contract acceptance | No fresh artifact/runtime identity established here | Graduated local stage; no discovery, schedule or notification authority |
+| Full Stage 1 | Implemented local activation/review | Historical contract acceptance | No fresh artifact/runtime identity established here | Graduated local scope; not broader Living Topics Full |
+| Local knowledge use | Move/Undo, lifecycle/current knowledge, Library Search and Related Context implemented | Historical local/source acceptance; live-source context acceptance remains separately scoped | No fresh artifact/runtime identity established here | Local continuation recorded; not permission for external acquisition |
+| Ask this topic | Unimplemented | Not established | Not established | Separate cited, read-only answer contract required |
+| Bookmark Import and Management | Frozen | Not established | Not established | Explicit authorization required; no implicit start after local-stage completion |
+| Broader discovery / Keep Up | Deferred | Not established | Not established | External discovery, schedules and notifications do not inherit local-stage graduation |
+
+`Activated` means a dated artifact/runtime receipt, not the local topic
+activation/review feature named by Full Stage 1. Lack of fresh runtime evidence
+here does not revoke earlier local-stage acceptance. Code cleanup in Sidecar
+through `ae1a535` changes neither this sequence nor these product boundaries.
+
 ## Accepted sequence
 
 ```text

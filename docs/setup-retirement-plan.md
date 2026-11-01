@@ -1,8 +1,19 @@
 # AkuBrowser legacy Bridge setup retirement plan
 
-> Historical v0.9.0 decision record. The current v0.9.0-rc.8 source candidate uses
-> the schema and tuple declared in [the release manifest](../release/release-manifest.json)
-> and follows [the current checklist](stable-release-checklist.md).
+> Historical v0.9.0 decision record. For the later recorded RC9 tuple and current
+> candidate gates use [the release guide](preview-release.md) and
+> [the current checklist](stable-release-checklist.md). Historical schema/version
+> values below are not metadata for the latest source or a new installer.
+
+## Status synchronization (2026-11-01)
+
+| Implemented | Tested | Activated | Acceptance |
+| --- | --- | --- | --- |
+| Legacy setup deletion and documentation retirement recorded complete | Historical development migration/retirement checks | Historical installed-app lane and later RC9 local installation; no new rollout here | Retirement remains complete; independent clean-machine, signing and whole-tuple rollback gaps are separate release work |
+
+See the [workspace evidence index](../../AkuSidecar/docs/roadmap-status.md).
+This update neither reopens the frozen Web Store lane nor treats the remaining
+release gates as unfinished setup deletion. The dated record below is preserved.
 
 Status: retirement recorded; v0.9.0 Windows x64 stable boundary,
 updated 28 August 2026. Chrome Web Store publication is frozen. The active

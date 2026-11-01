@@ -11,6 +11,21 @@ v0.9.1 development canary forward as acceptance for a newer RC. Follow the
 before changing the product line or creating a tag.
 Chrome Web Store publication remains frozen; macOS/Linux remain deferred.
 
+## Source and release status synchronization (2026-11-01)
+
+| Scope | Implemented | Tested | Activated | Acceptance |
+| --- | --- | --- | --- | --- |
+| Frozen RC9 | Existing published-candidate machinery and frozen source tuple | Structural/hash/launcher checks and existing-account four-source receipt | RC9 local installation recorded on 2026-09-23 | Local retest passed; independent clean-machine and broader repair/rollback gates remain open |
+| Newer Sidecar cleanup through `ae1a535` | Production factory/helpers and Engine work/scheduler/execution/finalization separated | Source equivalence, Go regression and Windows builds at their recorded payloads | No activation receipt for these cleanup commits | No installed-app, clean-machine or new-release acceptance inferred |
+| Signing / whole-tuple rollback | Remaining hardening gaps | No new acceptance established here | No new rollout | Existing deferred/open boundaries preserved |
+
+Cross-component evidence is in the [workspace status index](../../AkuSidecar/docs/roadmap-status.md).
+RC9 publication is the state recorded by release documents; remote tags/releases
+were not queried in this documentation update. The Browser checkout also has
+pre-existing build/cache changes, so it is not a newly frozen release tuple.
+No checkboxes below are promoted by source compilation, and no installer,
+release, runtime activation or trial is performed here.
+
 ## Next v0.9.0 RC candidate gates
 
 - [ ] Freeze clean AkuBrowser, AkuBridge, and AkuSidecar commits and reconcile
