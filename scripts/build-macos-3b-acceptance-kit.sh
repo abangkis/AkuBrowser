@@ -149,8 +149,6 @@ try {
 }
 NODE
 
-node "$browser_root/scripts/project-bridge-package-identity.mjs" "$identity_registry" "$unpacked_root" acceptance >/dev/null
-
 if [[ -z "$output_root" ]]; then
   output_root="$browser_root/artifacts/stable-${sidecar_version}-macos-3b"
 fi
@@ -187,6 +185,8 @@ for (const entry of verification.files) {
   fs.copyFileSync(source, destination);
 }
 NODE
+
+node "$browser_root/scripts/project-bridge-package-identity.mjs" "$identity_registry" "$unpacked_root" acceptance >/dev/null
 
 package_fingerprint_json="$(node "$browser_root/scripts/fingerprint-extension-directory.mjs" "$unpacked_root")"
 bridge_zip="$acceptance_root/$unpacked_name.zip"
