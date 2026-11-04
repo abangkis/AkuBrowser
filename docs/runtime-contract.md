@@ -284,6 +284,33 @@ replacement. This is a source-workspace and release-time dependency only.
 Standalone AkuBridge and AkuSidecar builds, tests, and running processes do not
 read this verifier, the release manifest, or sibling repositories.
 
+For source-only integration, invoke the same checker explicitly from AkuBrowser:
+
+```text
+node scripts/check-runtime-identity.mjs .. --source-candidate
+```
+
+This mode reads the fixed `contracts/source-candidate-identity.json` authority,
+whose `aku.source-candidate-identity.v1` schema permits only the declared
+authority and component identity fields. Missing/malformed manifests, unknown
+fields/options, inconsistent component revisions and mismatched source values
+fail closed without falling back to the release manifest or inferring an identity
+from the running application. The candidate pins Bridge 0.9.2 / Chrome 0.9.2.0,
+Sidecar 0.9.0 and source-adapters-v118; it retains the v2 contract and focus policy.
+
+Source declarations and current source READMEs must match the candidate exactly.
+The retained release contract and v1/v2 examples are still checked against
+`release/release-manifest.json`, currently v116, without rewriting those files.
+Output identifies both authorities, `scope: source-candidate-only`,
+`releaseQualified: false` and `runtimeDependency: false`. This does not qualify
+an installer, update, activation or published release.
+
+The existing invocation without `--source-candidate` retains its release
+authority, checks and output contract. Existing release/preview builders and
+local-release reconciliation continue using that default mode; candidate
+success cannot make a source/release mismatch pass their gates. No automatic
+mode selection, arbitrary manifest override or mismatch bypass is supported.
+
 Native Messaging protocol v1 remains a bounded migration lane. Bridge may
 fall back once so the current runtime remains usable, but it records that the
 internal update host needs a one-time installer refresh. Candidate probe v1

@@ -23,7 +23,7 @@ function capture(text, pattern, label, mismatches) {
 }
 
 function compare(label, actual, expected, mismatches) {
-  if (actual !== undefined && actual !== expected) {
+  if (actual !== expected) {
     mismatches.push(`${label}: found ${JSON.stringify(actual)}, expected ${JSON.stringify(expected)}`);
   }
 }
@@ -34,7 +34,62 @@ function requireText(label, text, expectedText, mismatches) {
   }
 }
 
-export async function verifyRuntimeIdentity(workspaceRoot) {
+function identityTuple(reference) {
+  const components = reference.components;
+  const tuple = {
+    productVersion: components?.akuBridge?.version,
+    chromeVersion: components?.akuBridge?.chromeVersion,
+    runtimeRevision: components?.akuBridge?.runtimeRevision,
+    focusPolicyRevision: components?.akuBridge?.focusPolicyRevision,
+    contractVersion: components?.akuBridge?.contractVersion,
+    sidecarVersion: components?.akuSidecar?.version,
+    sidecarRuntimeRevision: components?.akuSidecar?.runtimeRevision,
+  };
+  tuple.buildId = `aku-bridge-${tuple.productVersion}-${tuple.runtimeRevision}`;
+  return tuple;
+}
+
+function requireKeys(value, keys, label) {
+  if (!value || typeof value !== "object" || Array.isArray(value) ||
+      Object.keys(value).length !== keys.length || keys.some((key) => !Object.hasOwn(value, key))) {
+    throw new Error(`${label} must contain exactly: ${keys.join(", ")}`);
+  }
+}
+
+async function readSourceCandidate(browserRoot) {
+  try {
+    const candidate = await readJson(path.join(browserRoot, "contracts", "source-candidate-identity.json"));
+    requireKeys(candidate, ["schema", "authorityRepository", "components"], "candidate");
+    if (candidate.schema !== "aku.source-candidate-identity.v1" || candidate.authorityRepository !== "AkuBrowser") {
+      throw new Error("unsupported schema or authorityRepository");
+    }
+    requireKeys(candidate.components, ["akuBridge", "akuSidecar"], "components");
+    const { akuBridge, akuSidecar } = candidate.components;
+    requireKeys(akuBridge, ["version", "chromeVersion", "runtimeRevision", "focusPolicyRevision", "contractVersion"], "akuBridge");
+    requireKeys(akuSidecar, ["version", "runtimeRevision"], "akuSidecar");
+    for (const [name, component] of Object.entries(candidate.components)) {
+      for (const [key, value] of Object.entries(component)) {
+        if (typeof value !== "string" || !value || value.trim() !== value) throw new Error(`${name}.${key} must be a nonempty trimmed string`);
+      }
+      if (!/^\d+\.\d+\.\d+$/.test(component.version)) throw new Error(`${name}.version must have three numeric parts`);
+      if (!/^source-adapters-v[1-9][0-9]*$/.test(component.runtimeRevision)) throw new Error(`${name}.runtimeRevision is invalid`);
+    }
+    if (!/^\d+\.\d+\.\d+\.\d+$/.test(akuBridge.chromeVersion)) throw new Error("akuBridge.chromeVersion must have four numeric parts");
+    if (!/^aku-browser\.bridge\.v[1-9][0-9]*$/.test(akuBridge.contractVersion)) throw new Error("akuBridge.contractVersion is invalid");
+    if (akuBridge.runtimeRevision !== akuSidecar.runtimeRevision) throw new Error("component runtime revisions must match");
+    return candidate;
+  } catch (error) {
+    throw new Error(`Invalid source candidate identity: ${error.message}`);
+  }
+}
+
+export async function verifyRuntimeIdentity(workspaceRoot, options = {}) {
+  if (!options || typeof options !== "object" || Array.isArray(options) ||
+      Object.keys(options).some((key) => key !== "sourceCandidate") ||
+      (Object.hasOwn(options, "sourceCandidate") && typeof options.sourceCandidate !== "boolean")) {
+    throw new Error("Invalid identity checker options: only sourceCandidate (boolean) is supported");
+  }
+  const sourceCandidate = Object.hasOwn(options, "sourceCandidate") && options.sourceCandidate;
   const browserRoot = path.join(workspaceRoot, "AkuBrowser");
   const bridgeRoot = path.join(workspaceRoot, "AkuBridge");
   const sidecarRoot = path.join(workspaceRoot, "AkuSidecar");
@@ -52,20 +107,13 @@ export async function verifyRuntimeIdentity(workspaceRoot) {
   const sidecarReadme = await readText(path.join(sidecarRoot, "README.md"));
   const bridgeContract = await readText(path.join(browserRoot, "contracts", "bridge-contract-v2.md"));
 
-  const canonical = {
-    productVersion: release.components?.akuBridge?.version,
-    chromeVersion: release.components?.akuBridge?.chromeVersion,
-    runtimeRevision: release.components?.akuBridge?.runtimeRevision,
-    focusPolicyRevision: release.components?.akuBridge?.focusPolicyRevision,
-    contractVersion: release.components?.akuBridge?.contractVersion,
-    sidecarVersion: release.components?.akuSidecar?.version,
-    sidecarRuntimeRevision: release.components?.akuSidecar?.runtimeRevision,
-  };
-  canonical.buildId = `aku-bridge-${canonical.productVersion}-${canonical.runtimeRevision}`;
+  const releaseCanonical = identityTuple(release);
+  const canonical = sourceCandidate ? identityTuple(await readSourceCandidate(browserRoot)) : releaseCanonical;
+  const authority = sourceCandidate ? "AkuBrowser/contracts/source-candidate-identity.json" : "AkuBrowser/release/release-manifest.json";
 
   compare("release distribution authority", release.distribution?.authorityRepository, "AkuBrowser", mismatches);
-  if (!/^source-adapters-v[1-9][0-9]*$/.test(canonical.runtimeRevision ?? "")) {
-    mismatches.push(`release runtime revision: invalid ${JSON.stringify(canonical.runtimeRevision)}`);
+  if (!/^source-adapters-v[1-9][0-9]*$/.test(releaseCanonical.runtimeRevision ?? "")) {
+    mismatches.push(`release runtime revision: invalid ${JSON.stringify(releaseCanonical.runtimeRevision)}`);
   }
 
   compare("AkuBridge package version", bridgePackage.version, canonical.productVersion, mismatches);
@@ -137,8 +185,10 @@ export async function verifyRuntimeIdentity(workspaceRoot) {
     mismatches,
   );
 
-  requireText("AkuBrowser Bridge contract", bridgeContract, `runtime revision \`${canonical.runtimeRevision}\``, mismatches);
-  requireText("AkuBrowser Bridge contract", bridgeContract, `build id \`${canonical.buildId}\``, mismatches);
+  // The retained release contract and examples keep their release authority in
+  // both modes. Candidate success never requalifies a historical release tuple.
+  requireText("AkuBrowser Bridge contract", bridgeContract, `runtime revision \`${releaseCanonical.runtimeRevision}\``, mismatches);
+  requireText("AkuBrowser Bridge contract", bridgeContract, `build id \`${releaseCanonical.buildId}\``, mismatches);
   requireText("AkuBridge README", bridgeReadme, `runtime **\`${canonical.runtimeRevision}\`**`, mismatches);
   requireText("AkuSidecar README", sidecarReadme, `AkuBridge \`${canonical.productVersion}\` / \`${canonical.runtimeRevision}\``, mismatches);
 
@@ -148,41 +198,54 @@ export async function verifyRuntimeIdentity(workspaceRoot) {
     "native-runtime-v1-ensure-request.json",
   ]) {
     const example = (await readJson(path.join(browserRoot, "contracts", "examples", file))).extension;
-    compare(`${file} product version`, example.productVersion, canonical.productVersion, mismatches);
-    compare(`${file} runtime revision`, example.runtimeRevision, canonical.runtimeRevision, mismatches);
-    compare(`${file} Bridge contract`, example.bridgeContractVersion, canonical.contractVersion, mismatches);
+    compare(`${file} product version`, example.productVersion, releaseCanonical.productVersion, mismatches);
+    compare(`${file} runtime revision`, example.runtimeRevision, releaseCanonical.runtimeRevision, mismatches);
+    compare(`${file} Bridge contract`, example.bridgeContractVersion, releaseCanonical.contractVersion, mismatches);
   }
   for (const file of ["native-runtime-ready-response.json", "native-runtime-v1-ready-response.json"]) {
     const runtime = (await readJson(path.join(browserRoot, "contracts", "examples", file))).runtime;
-    compare(`${file} Sidecar version`, runtime.version, canonical.sidecarVersion, mismatches);
-    compare(`${file} Sidecar runtime revision`, runtime.runtimeRevision, canonical.sidecarRuntimeRevision, mismatches);
-    compare(`${file} Bridge contract`, runtime.bridgeContractVersion, canonical.contractVersion, mismatches);
+    compare(`${file} Sidecar version`, runtime.version, releaseCanonical.sidecarVersion, mismatches);
+    compare(`${file} Sidecar runtime revision`, runtime.runtimeRevision, releaseCanonical.sidecarRuntimeRevision, mismatches);
+    compare(`${file} Bridge contract`, runtime.bridgeContractVersion, releaseCanonical.contractVersion, mismatches);
   }
 
   if (mismatches.length > 0) {
     throw new Error([
       "Runtime identity contract mismatch.",
-      `Canonical authority: AkuBrowser/release/release-manifest.json (${canonical.buildId})`,
+      `Canonical authority: ${authority} (${canonical.buildId})`,
       ...mismatches.map((message) => `- ${message}`),
     ].join("\n"));
   }
 
   return {
     status: "ok",
-    authority: "AkuBrowser/release/release-manifest.json",
+    authority,
     productVersion: canonical.productVersion,
     chromeVersion: canonical.chromeVersion,
     runtimeRevision: canonical.runtimeRevision,
     buildId: canonical.buildId,
     contractVersion: canonical.contractVersion,
-    scope: "development-and-release-only",
+    scope: sourceCandidate ? "source-candidate-only" : "development-and-release-only",
     runtimeDependency: false,
+    ...(sourceCandidate ? {
+      referenceAuthority: "AkuBrowser/release/release-manifest.json",
+      referenceRuntimeRevision: releaseCanonical.runtimeRevision,
+      releaseQualified: false,
+    } : {}),
   };
 }
 
 async function main() {
-  const workspaceRoot = path.resolve(process.argv[2] ?? path.join(scriptDirectory, "..", ".."));
-  const result = await verifyRuntimeIdentity(workspaceRoot);
+  const usage = "usage: node scripts/check-runtime-identity.mjs [workspace-root] [--source-candidate]";
+  let root;
+  let sourceCandidate = false;
+  for (const argument of process.argv.slice(2)) {
+    if (argument === "--source-candidate" && !sourceCandidate) sourceCandidate = true;
+    else if (argument.startsWith("-") || root !== undefined) throw new Error(usage);
+    else root = argument;
+  }
+  const workspaceRoot = path.resolve(root ?? path.join(scriptDirectory, "..", ".."));
+  const result = await verifyRuntimeIdentity(workspaceRoot, { sourceCandidate });
   process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
 }
 
