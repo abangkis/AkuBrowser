@@ -191,7 +191,7 @@ suffix=""
 [[ "$unsigned_preview" -eq 1 ]] && suffix="-unsigned"
 versioned_package="$output_root/AkuBrowserRuntimeSetup-${sidecar_version}-macos-universal${suffix}.pkg"
 stable_package="$output_root/AkuBrowserRuntimeSetup${suffix}.pkg"
-build_root="$(mktemp -d "${TMPDIR:-/tmp}/akubrowser-macos-installer.XXXXXX")"
+build_root="$(mktemp -d "$source_build_temp_root/akubrowser-macos-installer.XXXXXX")"
 
 payload_root="$build_root/payload"
 component_package="$build_root/AkuBrowserRuntime.pkg"
