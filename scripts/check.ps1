@@ -3,6 +3,11 @@ param(
     [switch] $DistributionOnly
 )
 
+. (Join-Path $PSScriptRoot 'source-cache.ps1')
+$sourceBuildRepository = Split-Path -Parent $PSScriptRoot
+$sourceBuildEnvironment = $null
+try {
+    $sourceBuildEnvironment = Enter-SourceBuildEnvironment -Repository $sourceBuildRepository -RunName 'check'
 $ErrorActionPreference = "Stop"
 $browserRoot = Split-Path -Parent $PSScriptRoot
 $workspaceRoot = Split-Path -Parent $browserRoot
@@ -10,13 +15,6 @@ $bridgeRoot = Join-Path $workspaceRoot "AkuBridge"
 $sidecarRoot = Join-Path $workspaceRoot "AkuSidecar"
 $installerRoot = Join-Path $browserRoot "installer\windows"
 $launcherRoot = Join-Path $browserRoot "launcher"
-$cacheRoot = Join-Path $workspaceRoot ".go-cache"
-if ([string]::IsNullOrWhiteSpace($env:GOCACHE)) { $env:GOCACHE = Join-Path $cacheRoot "build" }
-if ([string]::IsNullOrWhiteSpace($env:GOMODCACHE)) { $env:GOMODCACHE = Join-Path $cacheRoot "mod" }
-if ([string]::IsNullOrWhiteSpace($env:GOTMPDIR)) { $env:GOTMPDIR = Join-Path $cacheRoot "tmp" }
-foreach ($directory in @($env:GOCACHE, $env:GOMODCACHE, $env:GOTMPDIR)) {
-    New-Item -ItemType Directory -Force -Path $directory | Out-Null
-}
 
 function Read-Json([string]$Path) {
     return Get-Content -LiteralPath $Path -Raw | ConvertFrom-Json
@@ -211,3 +209,9 @@ finally { Pop-Location }
     preferenceAuthority = $sidecarConfig.preference.mode
     boundedLoadDefault = $sidecarConfig.capture.profile
 } | ConvertTo-Json
+}
+finally {
+    if ($null -ne $sourceBuildEnvironment) {
+        Exit-SourceBuildEnvironment -Context $sourceBuildEnvironment
+    }
+}

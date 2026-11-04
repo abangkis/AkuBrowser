@@ -89,16 +89,35 @@ update_public_key="$(node --input-type=module -e '
   console.log(receipt.publicKey.base64);
 ' "$final_receipt")"
 
-go_cache="${TMPDIR:-/tmp}/akubrowser-go-cache"
-go_mod_cache="${TMPDIR:-/tmp}/akubrowser-go-mod-cache"
-mkdir -p "$go_cache" "$go_mod_cache"
+source_cache_helper="$browser_root/scripts/source-cache.mjs"
+go_cache="$(node "$source_cache_helper" "$browser_root" GoBuild)"
+go_mod_cache="$(node "$source_cache_helper" "$browser_root" GoModules)"
+source_build_temp_root="$browser_root/.cache/source-build-temp"
+go_temp_dir="${GOTMPDIR:-}"
+owns_go_temp_dir=0
+building_root=""
+owns_building_root=0
+cleanup_source_build_temp() {
+  if [[ "$owns_building_root" -eq 1 && -n "$building_root" && -d "$building_root" ]]; then rm -rf -- "$building_root"; fi
+  if [[ "$owns_go_temp_dir" -eq 1 && -n "$go_temp_dir" && -d "$go_temp_dir" ]]; then
+    case "$go_temp_dir" in "$source_build_temp_root"/*) rm -rf -- "$go_temp_dir" ;; esac
+  fi
+}
+trap cleanup_source_build_temp EXIT
+mkdir -p "$source_build_temp_root" "$go_cache" "$go_mod_cache"
+if [[ -z "$go_temp_dir" ]]; then
+  go_temp_dir="$(mktemp -d "$source_build_temp_root/macos-3b-acceptance-kit.XXXXXX")"
+  owns_go_temp_dir=1
+else
+  mkdir -p "$go_temp_dir"
+fi
+run_go() { GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=0 GOTMPDIR="$go_temp_dir" GOCACHE="$go_cache" GOMODCACHE="$go_mod_cache" go "$@"; }
 for signed_manifest in \
   "$final_kit/publish/AkuSidecarUpdate-macos-universal.json" \
   "$final_kit/publish/AkuBrowserRuntimeUpdate-macos-universal.json"; do
   [[ ! -f "$signed_manifest" ]] || (
     cd "$browser_root/installer/windows"
-    GOCACHE="$go_cache" GOMODCACHE="$go_mod_cache" \
-      go run -buildvcs=false ./cmd/sign-update-manifest \
+    run_go run -buildvcs=false ./cmd/sign-update-manifest \
         -verify-signed "$signed_manifest" \
         -public-key "$update_public_key"
   )
@@ -147,13 +166,13 @@ if [[ -e "$output_root" ]]; then
 fi
 building_root="$output_root.building"
 [[ ! -e "$building_root" ]] || die "prior incomplete Step 3B staging exists: $building_root"
+mkdir "$building_root"
+owns_building_root=1
 acceptance_root="$building_root/acceptance"
 unpacked_name="AkuBridge-${bridge_version}-prestore-unpacked"
 unpacked_root="$acceptance_root/$unpacked_name"
 installer_name="AkuBrowserRuntimeSetup-${sidecar_version}-macos-universal-unsigned-local.pkg"
 mkdir -p "$unpacked_root"
-cleanup() { [[ ! -d "$building_root" ]] || rm -rf -- "$building_root"; }
-trap cleanup EXIT
 
 verification_json="$(node "$bridge_root/scripts/verify-extension-package.mjs")"
 node --input-type=module - "$bridge_root" "$unpacked_root" "$verification_json" <<'NODE'
@@ -277,7 +296,7 @@ NODE
 
 rm -rf -- "$installer_stage"
 mv "$building_root" "$output_root"
-trap - EXIT
+owns_building_root=0
 echo "macOS Step 3B acceptance kit: $output_root"
 echo "Load unpacked: $output_root/acceptance/$unpacked_name"
 echo "Installer: $output_root/acceptance/$installer_name"

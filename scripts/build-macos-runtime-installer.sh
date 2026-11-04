@@ -147,14 +147,41 @@ if [[ -n "$update_signing_private_key" ]]; then
   die "macOS builds no longer accept an update private key; use the Windows signing finalizer"
 fi
 
-go_cache="${TMPDIR:-/tmp}/akubrowser-go-cache"
-go_mod_cache="${TMPDIR:-/tmp}/akubrowser-go-mod-cache"
-mkdir -p "$go_cache" "$go_mod_cache"
+source_cache_helper="$browser_root/scripts/source-cache.mjs"
+go_cache="$(node "$source_cache_helper" "$browser_root" GoBuild)"
+go_mod_cache="$(node "$source_cache_helper" "$browser_root" GoModules)"
+npm_cache="$(node "$source_cache_helper" "$browser_root" Npm)"
+npm_package_cache="$(node --input-type=module - "$source_cache_helper" "$npm_cache" "$bridge_root" <<'NODE'
+import { pathToFileURL } from 'node:url';
+const [helperPath, cachePath, targetDirectory] = process.argv.slice(2);
+const { rebaseSourceBuildCachePath } = await import(pathToFileURL(helperPath).href);
+console.log(rebaseSourceBuildCachePath(cachePath, process.cwd(), targetDirectory));
+NODE
+)"
+source_build_temp_root="$browser_root/.cache/source-build-temp"
+go_temp_dir="${GOTMPDIR:-}"
+owns_go_temp_dir=0
+build_root=""
+cleanup_source_build_temp() {
+  if [[ "$owns_go_temp_dir" -eq 1 && -n "$go_temp_dir" && -d "$go_temp_dir" ]]; then
+    case "$go_temp_dir" in "$source_build_temp_root"/*) rm -rf -- "$go_temp_dir" ;; esac
+  fi
+  if [[ -n "$build_root" && -d "$build_root" ]]; then rm -rf -- "$build_root"; fi
+}
+trap cleanup_source_build_temp EXIT
+mkdir -p "$source_build_temp_root" "$go_cache" "$go_mod_cache" "$npm_cache"
+if [[ -z "$go_temp_dir" ]]; then
+  go_temp_dir="$(mktemp -d "$source_build_temp_root/macos-runtime-installer.XXXXXX")"
+  owns_go_temp_dir=1
+else
+  mkdir -p "$go_temp_dir"
+fi
+run_go() { GIT_TERMINAL_PROMPT=0 GCM_INTERACTIVE=0 GOTMPDIR="$go_temp_dir" GOCACHE="$go_cache" GOMODCACHE="$go_mod_cache" go "$@"; }
 
 if [[ "$skip_validation" -eq 0 ]]; then
-  (cd "$bridge_root/native-host" && GOCACHE="$go_cache" GOMODCACHE="$go_mod_cache" go test -buildvcs=false ./...)
-  (cd "$sidecar_root" && GOCACHE="$go_cache" GOMODCACHE="$go_mod_cache" go test -buildvcs=false -p 1 ./...)
-  (cd "$bridge_root" && npm run check)
+  (cd "$bridge_root/native-host" && run_go test -count=1 -buildvcs=false ./...)
+  (cd "$sidecar_root" && run_go test -count=1 -buildvcs=false -p 1 ./...)
+  (cd "$bridge_root" && npm_config_cache="$npm_package_cache" npm run check)
 fi
 
 mkdir -p "$output_root"
@@ -165,7 +192,7 @@ suffix=""
 versioned_package="$output_root/AkuBrowserRuntimeSetup-${sidecar_version}-macos-universal${suffix}.pkg"
 stable_package="$output_root/AkuBrowserRuntimeSetup${suffix}.pkg"
 build_root="$(mktemp -d "${TMPDIR:-/tmp}/akubrowser-macos-installer.XXXXXX")"
-trap 'rm -rf -- "$build_root"' EXIT
+
 payload_root="$build_root/payload"
 component_package="$build_root/AkuBrowserRuntime.pkg"
 distribution_file="$build_root/Distribution.xml"
@@ -180,8 +207,8 @@ mkdir -p "$host_root" "$version_root/config" "$version_root/schemas" "$install_r
 
 build_universal_go() {
   local package_root="$1" package_path="$2" output="$3" ldflags="$4"
-  (cd "$package_root" && GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 GOCACHE="$go_cache" GOMODCACHE="$go_mod_cache" go build -buildvcs=false -trimpath -ldflags "$ldflags" -o "$build_root/$output-x64" "$package_path")
-  (cd "$package_root" && GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 GOCACHE="$go_cache" GOMODCACHE="$go_mod_cache" go build -buildvcs=false -trimpath -ldflags "$ldflags" -o "$build_root/$output-arm64" "$package_path")
+  (cd "$package_root" && GOOS=darwin GOARCH=amd64 CGO_ENABLED=0 run_go build -buildvcs=false -trimpath -ldflags "$ldflags" -o "$build_root/$output-x64" "$package_path")
+  (cd "$package_root" && GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 run_go build -buildvcs=false -trimpath -ldflags "$ldflags" -o "$build_root/$output-arm64" "$package_path")
   lipo -create "$build_root/$output-x64" "$build_root/$output-arm64" -output "$output"
   chmod 755 "$output"
 }

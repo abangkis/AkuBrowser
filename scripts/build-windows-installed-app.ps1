@@ -6,6 +6,11 @@ param(
     [switch] $AllowDirty
 )
 
+. (Join-Path $PSScriptRoot 'source-cache.ps1')
+$sourceBuildRepository = Split-Path -Parent $PSScriptRoot
+$sourceBuildEnvironment = $null
+try {
+    $sourceBuildEnvironment = Enter-SourceBuildEnvironment -Repository $sourceBuildRepository -RunName 'windows-installed-app'
 $ErrorActionPreference = "Stop"
 
 $browserRoot = Split-Path -Parent $PSScriptRoot
@@ -216,7 +221,7 @@ try {
     New-Item -ItemType Directory -Force -Path $versionRoot | Out-Null
     $artifactCreated = $true
 
-    $cacheRoot = Join-Path $workspaceRoot ".go-cache"
+
     $savedEnvironment = @{
         GOOS = $env:GOOS
         GOARCH = $env:GOARCH
@@ -229,12 +234,9 @@ try {
         $env:GOOS = "windows"
         $env:GOARCH = "amd64"
         $env:CGO_ENABLED = "0"
-        if ([string]::IsNullOrWhiteSpace($env:GOCACHE)) { $env:GOCACHE = Join-Path $cacheRoot "build" }
-        if ([string]::IsNullOrWhiteSpace($env:GOMODCACHE)) { $env:GOMODCACHE = Join-Path $cacheRoot "mod" }
-        if ([string]::IsNullOrWhiteSpace($env:GOTMPDIR)) { $env:GOTMPDIR = Join-Path $cacheRoot "tmp" }
-        foreach ($directory in @($env:GOCACHE, $env:GOMODCACHE, $env:GOTMPDIR)) {
-            New-Item -ItemType Directory -Force -Path $directory | Out-Null
-        }
+        $env:GOCACHE = $sourceBuildEnvironment.CachePaths.GoBuild
+        $env:GOMODCACHE = $sourceBuildEnvironment.CachePaths.GoModules
+        $env:GOTMPDIR = $sourceBuildEnvironment.TempDirectory
         Push-Location $sidecarRoot
         try {
             & go build -buildvcs=false -trimpath -ldflags "-s -w" -o (Join-Path $versionRoot "AkuSidecar.exe") .\cmd\akusidecar
@@ -561,4 +563,11 @@ catch {
     }
     Complete-AkuOutput -Id $outputOwner -Failed
     throw
+}
+
+}
+finally {
+    if ($null -ne $sourceBuildEnvironment) {
+        Exit-SourceBuildEnvironment -Context $sourceBuildEnvironment
+    }
 }

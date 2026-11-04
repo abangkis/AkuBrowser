@@ -1,18 +1,16 @@
 [CmdletBinding()]
 param([switch] $SkipGoTests)
 
+. (Join-Path $PSScriptRoot 'source-cache.ps1')
+$sourceBuildRepository = Split-Path -Parent $PSScriptRoot
+$sourceBuildEnvironment = $null
+try {
+    $sourceBuildEnvironment = Enter-SourceBuildEnvironment -Repository $sourceBuildRepository -RunName 'windows-runtime-updater'
 $ErrorActionPreference = "Stop"
 $browserRoot = Split-Path -Parent $PSScriptRoot
 $workspaceRoot = Split-Path -Parent $browserRoot
 $bridgeRoot = Join-Path $workspaceRoot "AkuBridge"
 $sidecarRoot = Join-Path $workspaceRoot "AkuSidecar"
-$cacheRoot = Join-Path $workspaceRoot ".go-cache"
-$env:GOCACHE = Join-Path $cacheRoot "build"
-$env:GOMODCACHE = Join-Path $cacheRoot "mod"
-$env:GOTMPDIR = Join-Path $cacheRoot "tmp"
-foreach ($directory in @($env:GOCACHE, $env:GOMODCACHE, $env:GOTMPDIR)) {
-    New-Item -ItemType Directory -Force -Path $directory | Out-Null
-}
 
 function Assert-True([bool] $Condition, [string] $Message) {
     if (-not $Condition) { throw $Message }
@@ -248,3 +246,9 @@ if (-not $SkipGoTests) {
     oneVersionRollback = $true
     boundedAudit = $true
 } | ConvertTo-Json
+}
+finally {
+    if ($null -ne $sourceBuildEnvironment) {
+        Exit-SourceBuildEnvironment -Context $sourceBuildEnvironment
+    }
+}

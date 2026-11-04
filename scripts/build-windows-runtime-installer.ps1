@@ -16,6 +16,11 @@ param(
     [switch] $AllowDirty
 )
 
+. (Join-Path $PSScriptRoot 'source-cache.ps1')
+$sourceBuildRepository = Split-Path -Parent $PSScriptRoot
+$sourceBuildEnvironment = $null
+try {
+    $sourceBuildEnvironment = Enter-SourceBuildEnvironment -Repository $sourceBuildRepository -RunName 'windows-runtime-installer'
 $ErrorActionPreference = "Stop"
 $browserRoot = Split-Path -Parent $PSScriptRoot
 $workspaceRoot = Split-Path -Parent $browserRoot
@@ -302,7 +307,7 @@ $runtimePayload = Join-Path $payloadRoot "runtime\versions\$sidecarVersion"
 New-Item -ItemType Directory -Force -Path $hostPayload | Out-Null
 New-Item -ItemType Directory -Force -Path $runtimePayload | Out-Null
 
-$cacheRoot = Join-Path $workspaceRoot ".go-cache"
+
 $savedEnvironment = @{
     GOOS = $env:GOOS
     GOARCH = $env:GOARCH
@@ -315,12 +320,9 @@ try {
     $env:GOOS = "windows"
     $env:GOARCH = "amd64"
     $env:CGO_ENABLED = "0"
-    $env:GOCACHE = Join-Path $cacheRoot "build"
-    $env:GOMODCACHE = Join-Path $cacheRoot "mod"
-    $env:GOTMPDIR = Join-Path $cacheRoot "tmp"
-    foreach ($directory in @($env:GOCACHE, $env:GOMODCACHE, $env:GOTMPDIR)) {
-        New-Item -ItemType Directory -Force -Path $directory | Out-Null
-    }
+    $env:GOCACHE = $sourceBuildEnvironment.CachePaths.GoBuild
+    $env:GOMODCACHE = $sourceBuildEnvironment.CachePaths.GoModules
+    $env:GOTMPDIR = $sourceBuildEnvironment.TempDirectory
 
     Push-Location (Join-Path $bridgeRoot "native-host")
     try {
@@ -674,4 +676,10 @@ Complete-AkuOutput -Id $outputOwner -Pin:(-not $UnsignedLocalCandidate)
     if ($stagingOwner) { Complete-AkuOutput -Id $stagingOwner -Failed }
     Complete-AkuOutput -Id $outputOwner -Failed
     throw
+}
+}
+finally {
+    if ($null -ne $sourceBuildEnvironment) {
+        Exit-SourceBuildEnvironment -Context $sourceBuildEnvironment
+    }
 }
