@@ -33,6 +33,24 @@ New-Item -ItemType Directory -Force -Path $fixtureDistribution, $fixtureVendor, 
 [IO.File]::WriteAllText((Join-Path $fixtureVendor "source.js"), "export const vendor = true;`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $fixtureTest "worker.test.mjs"), "throw new Error('test files must not ship');`n", [Text.UTF8Encoding]::new($false))
 [IO.File]::WriteAllText((Join-Path $fixtureNodeModules "package.js"), "throw new Error('node_modules must not ship');`n", [Text.UTF8Encoding]::new($false))
+$productionHelpers = @(
+    "native-pilot/owner.mjs",
+    "native-pilot/shared/x-qa-helper.mjs",
+    "native-pilot/shared/worker.test-helper.mjs"
+)
+foreach ($relativePath in $productionHelpers) {
+    $path = Join-Path $sourceRoot $relativePath
+    New-Item -ItemType Directory -Force -Path (Split-Path -Parent $path) | Out-Null
+    [IO.File]::WriteAllText($path, "export const productionHelper = true;`n", [Text.UTF8Encoding]::new($false))
+}
+$colocatedTests = @(
+    "worker.test.mjs", "worker.test.cjs", "worker.test.js",
+    "native-pilot/owner.test.mjs", "native-pilot/owner.test.cjs", "native-pilot/owner.test.js"
+)
+foreach ($relativePath in $colocatedTests) {
+    [IO.File]::WriteAllText((Join-Path $sourceRoot $relativePath), "throw new Error('colocated tests must not ship');`n", [Text.UTF8Encoding]::new($false))
+}
+$expectedSources = @("worker.mjs", "worker-helper.mjs", "package.json", "vendor/source.js") + $productionHelpers
 [IO.Compression.ZipFile]::CreateFromDirectory($archiveRoot, $archivePath)
 $archiveHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $archivePath).Hash.ToLowerInvariant()
 $pin = [ordered]@{
@@ -75,6 +93,22 @@ try {
     Assert-True (Test-Path -LiteralPath (Join-Path $destination "vendor\source.js") -PathType Leaf) "Vendored worker dependency was not staged."
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $destination "test") -PathType Container)) "Worker test files leaked into the runtime package."
     Assert-True (-not (Test-Path -LiteralPath (Join-Path $destination "node_modules") -PathType Container)) "Worker node_modules leaked into the runtime package."
+    foreach ($relativePath in $colocatedTests) {
+        Assert-True (-not (Test-Path -LiteralPath (Join-Path $destination $relativePath))) "Colocated worker test leaked into the runtime package: $relativePath"
+    }
+    foreach ($relativePath in $expectedSources) {
+        $stagedPath = Join-Path $destination $relativePath
+        Assert-True (Test-Path -LiteralPath $stagedPath -PathType Leaf) "Production worker source was not staged: $relativePath"
+        $sourceHash = (Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $sourceRoot $relativePath)).Hash
+        $stagedHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $stagedPath).Hash
+        Assert-True ($stagedHash -eq $sourceHash) "Production worker source bytes changed during staging: $relativePath"
+    }
+    $stagedFiles = @(Get-ChildItem -LiteralPath $destination -Recurse -File -Force | ForEach-Object {
+        $_.FullName.Substring($destination.Length + 1).Replace('\', '/')
+    })
+    $expectedFiles = $expectedSources + @("node.exe", "LICENSE", "LICENSE-AkuSidecar", "node.pin.json")
+    Assert-True (@(Compare-Object $expectedFiles $stagedFiles).Count -eq 0) "Staged runtime inventory differs from the expected production payload."
+    Assert-True ([int]$result.workerSourceFiles -eq $expectedSources.Count) "Staging source count includes excluded files or omits production sources."
 
     $badPinPath = Join-Path $testRoot "bad-node.pin.json"
     $pin.distributionSha256 = "0" * 64
@@ -101,6 +135,9 @@ try {
         nodeSha256 = $manifest.nodeSha256
         distributionSha256 = $manifest.distributionSha256
         stagedSourceFiles = [int]$result.workerSourceFiles
+        colocatedTestsExcluded = $true
+        productionSourcesPreserved = $true
+        exactInventory = $true
         rejectedBadArchiveHash = $rejected
     } | ConvertTo-Json -Depth 5
 }

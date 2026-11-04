@@ -214,7 +214,7 @@ Assert-True ($actualArchiveHash -eq $expectedArchiveHash) "Node.js official dist
 
 $sourceFiles = @(Get-ChildItem -LiteralPath $SourceDirectory -Recurse -File -Force | Where-Object {
     $relativePath = [Uri]::UnescapeDataString(([Uri]((Get-FullPath $SourceDirectory).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar)).MakeRelativeUri([Uri]$_.FullName).ToString())
-    $relativePath -notmatch '(^|/)(test|node_modules|\.git)/'
+    $relativePath -notmatch '(^|/)(test|node_modules|\.git)/' -and $_.Name -notmatch '\.test\.(mjs|cjs|js)$'
 })
 Assert-True ($sourceFiles.Count -gt 0) "No headless worker runtime sources were found in $SourceDirectory"
 Assert-NoReparsePoints $SourceDirectory "Headless worker source"
