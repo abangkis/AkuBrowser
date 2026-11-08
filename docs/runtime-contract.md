@@ -295,8 +295,8 @@ whose `aku.source-candidate-identity.v1` schema permits only the declared
 authority and component identity fields. Missing/malformed manifests, unknown
 fields/options, inconsistent component revisions and mismatched source values
 fail closed without falling back to the release manifest or inferring an identity
-from the running application. The candidate pins Bridge 0.9.2 / Chrome 0.9.2.0,
-Sidecar 0.9.0 and source-adapters-v118; it retains the v2 contract and focus policy.
+from the running application. The candidate pins Bridge 0.9.3 / Chrome 0.9.3.0,
+Sidecar 0.9.0 and source-adapters-v121. It retains the v2 contract and focus policy.
 
 Source declarations and current source READMEs must match the candidate exactly.
 The retained release contract and v1/v2 examples are still checked against
