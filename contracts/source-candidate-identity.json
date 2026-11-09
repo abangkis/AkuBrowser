@@ -3,15 +3,15 @@
   "authorityRepository": "AkuBrowser",
   "components": {
     "akuBridge": {
-      "version": "0.9.3",
-      "chromeVersion": "0.9.3.0",
-      "runtimeRevision": "source-adapters-v121",
+      "version": "0.9.4",
+      "chromeVersion": "0.9.4.0",
+      "runtimeRevision": "source-adapters-v122",
       "focusPolicyRevision": "quiet-containment-only-v2",
       "contractVersion": "aku-browser.bridge.v2"
     },
     "akuSidecar": {
       "version": "0.9.0",
-      "runtimeRevision": "source-adapters-v121"
+      "runtimeRevision": "source-adapters-v122"
     }
   }
 }
