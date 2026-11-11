@@ -5,13 +5,13 @@
     "akuBridge": {
       "version": "0.9.4",
       "chromeVersion": "0.9.4.0",
-      "runtimeRevision": "source-adapters-v123",
+      "runtimeRevision": "source-adapters-v124",
       "focusPolicyRevision": "quiet-containment-only-v2",
       "contractVersion": "aku-browser.bridge.v2"
     },
     "akuSidecar": {
       "version": "0.9.0",
-      "runtimeRevision": "source-adapters-v123"
+      "runtimeRevision": "source-adapters-v124"
     }
   }
 }
